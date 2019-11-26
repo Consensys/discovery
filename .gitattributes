@@ -1,0 +1,7 @@
+* text eol=lf
+*.jar -text
+*.bat -text
+*.pcap binary
+*.blocks binary
+*.dylib binary
+*.so binary

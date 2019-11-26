@@ -1,0 +1,159 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+plugins {
+  id 'java-library'
+  id 'com.diffplug.gradle.spotless' version '3.26.0'
+  id 'com.jfrog.bintray' version '1.8.4'
+  id 'com.github.ben-manes.versions' version '0.27.0'
+  id 'com.github.hierynomus.license' version '0.15.0'
+  id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+  id 'net.ltgt.errorprone' version '1.1.1'
+}
+
+apply from: "${rootDir}/gradle/versions.gradle"
+apply from: "${rootDir}/gradle/check-licenses.gradle"
+defaultTasks 'build', 'checkLicenses'
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+repositories {
+  jcenter()
+  mavenCentral()
+}
+
+dependencies {
+  errorprone("com.google.errorprone:error_prone_core")
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+spotless {
+  java {
+    target fileTree('.') {
+      include '**/*.java'
+      exclude '**.gradle/**'
+    }
+
+    importOrder 'tech.pegasys', 'net.consensys', 'java', ''
+    trimTrailingWhitespace()
+    endWithNewline()
+    googleJavaFormat('1.7')
+  }
+}
+
+license {
+  header rootProject.file("gradle/java.license")
+  skipExistingHeaders true
+  mapping('java', 'SLASHSTAR_STYLE')
+  ext.year = Calendar.getInstance().get(Calendar.YEAR)
+}
+
+task checkSpdxHeader(type: CheckSpdxHeader) {
+  apply plugin: 'groovy'
+
+  rootPath = "${projectDir}"
+  spdxHeader = "* SPDX-License-Identifier: Apache-2.0"
+  filesRegex = "(.*.java)|(.*.groovy)"
+}
+
+tasks.withType(JavaCompile) {
+  options.fork = true
+  options.incremental = true
+  options.compilerArgs += [
+      '-Xlint:unchecked',
+      '-Xlint:cast',
+      '-Xlint:rawtypes',
+      '-Xlint:overloads',
+      '-Xlint:divzero',
+      '-Xlint:finally',
+      '-Xlint:static',
+      '-Werror',
+  ]
+
+  options.errorprone {
+    disableWarningsInGeneratedCode
+    // Our equals need to be symmetric, this checker doesn't respect that.
+    check('EqualsGetClass', CheckSeverity.OFF)
+    // We like to use futures with no return values.
+    check('FutureReturnValueIgnored', CheckSeverity.OFF)
+    // We use the JSR-305 annotations instead of the Google annotations.
+    check('ImmutableEnumChecker', CheckSeverity.OFF)
+
+    check('FieldCanBeFinal', CheckSeverity.OFF)
+    check('InsecureCryptoUsage', CheckSeverity.WARN)
+    check('WildcardImport', CheckSeverity.WARN)
+
+    // This check is broken in Java 12.  See https://github.com/google/error-prone/issues/1257
+    if (JavaVersion.current() == JavaVersion.VERSION_12) {
+      check('Finally', CheckSeverity.OFF)
+    }
+    // This check is broken after Java 12.  See https://github.com/google/error-prone/issues/1352
+    if (JavaVersion.current() > JavaVersion.VERSION_12) {
+      check('TypeParameterUnusedInFormals', CheckSeverity.OFF)
+    }
+  }
+  options.encoding = 'UTF-8'
+
+  jar {
+    baseName project.name
+    manifest {
+      attributes(
+          'Specification-Title': project.name,
+          'Specification-Version': project.version,
+          'Implementation-Title': project.name,
+          'Implementation-Version': calculateVersion()
+      )
+    }
+  }
+}
+
+test {
+  jvmArgs = [
+      '-Xmx4g',
+      '-XX:-UseGCOverheadLimit',
+  ]
+  useJUnitPlatform()
+  reports {
+    junitXml.enabled = true
+  }
+}
+
+javadoc {
+  options.addStringOption('Xdoclint:all', '-quiet')
+  options.addStringOption('Xwerror', '-html5')
+  options.encoding = 'UTF-8'
+}
+
+// Takes the version, and if -SNAPSHOT is part of it replaces SNAPSHOT
+// with the git commit version.
+def calculateVersion() {
+  String version = rootProject.version
+  if (version.endsWith("-SNAPSHOT")) {
+    version = version.replace("-SNAPSHOT", "-dev-" + getCheckedOutGitCommitHash())
+  }
+  return version
+}
+
+def getCheckedOutGitCommitHash() {
+  def gitFolder = "$projectDir/.git/"
+  if (!file(gitFolder).isDirectory()) {
+    // We are in a submodule.  The file's contents are `gitdir: <gitFolder>\n`.
+    // Read the file, cut off the front, and trim the whitespace.
+    gitFolder = file(gitFolder).text.substring(8).trim() + "/"
+  }
+  def takeFromHash = 8
+  /*
+   * '.git/HEAD' contains either
+   *      in case of detached head: the currently checked out commit hash
+   *      otherwise: a reference to a file containing the current commit hash
+   */
+  def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
+  def isCommit = head.length == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+
+  if (isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
+
+  def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
+  refHead.text.trim().take takeFromHash
+}
