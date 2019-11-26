@@ -23,10 +23,25 @@ repositories {
 }
 
 dependencies {
-  errorprone("com.google.errorprone:error_prone_core")
+  implementation 'org.apache.tuweni:tuweni-bytes'
+  implementation 'org.apache.tuweni:tuweni-units'
+  implementation 'org.apache.tuweni:tuweni-crypto'
+  implementation 'org.bouncycastle:bcprov-jdk15on'
+//  implementation 'org.miracl.milagro.amcl:milagro-crypto-java'
+
+  implementation 'com.google.guava:guava'
+  implementation 'org.javatuples:javatuples'
+  implementation 'io.projectreactor:reactor-core'
+  implementation 'io.netty:netty-all'
+  implementation 'io.vertx:vertx-core'
+  implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'org.web3j:core'
+
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+  errorprone("com.google.errorprone:error_prone_core")
 }
 
 spotless {
@@ -47,15 +62,9 @@ license {
   header rootProject.file("gradle/java.license")
   skipExistingHeaders true
   mapping('java', 'SLASHSTAR_STYLE')
+  exclude 'Dockerfile'
+  exclude '*.go'
   ext.year = Calendar.getInstance().get(Calendar.YEAR)
-}
-
-task checkSpdxHeader(type: CheckSpdxHeader) {
-  apply plugin: 'groovy'
-
-  rootPath = "${projectDir}"
-  spdxHeader = "* SPDX-License-Identifier: Apache-2.0"
-  filesRegex = "(.*.java)|(.*.groovy)"
 }
 
 tasks.withType(JavaCompile) {

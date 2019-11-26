@@ -1,11 +1,39 @@
 dependencyManagement {
   dependencies {
-
     dependency 'com.google.errorprone:javac:9+181-r4173-1'
     dependency 'com.google.errorprone:error_prone_check_api:2.3.3'
     dependency 'com.google.errorprone:error_prone_core:2.3.3'
     dependency 'com.google.errorprone:error_prone_annotation:2.3.3'
     dependency 'com.google.errorprone:error_prone_test_helpers:2.3.3'
+
+    dependency 'com.google.guava:guava:27.0.1-jre'
+
+    dependency "io.netty:netty-all:4.1.36.Final"
+    dependency 'io.projectreactor:reactor-core:3.2.5.RELEASE'
+    dependency 'io.vertx:vertx-core:3.8.0'
+
+    dependency 'org.apache.logging.log4j:log4j-api:2.11.1'
+    dependency 'org.apache.logging.log4j:log4j-core:2.11.1'
+
+    dependency 'org.bouncycastle:bcprov-jdk15on:1.60'
+
+    dependency 'org.javatuples:javatuples:1.2'
+
+    dependency 'org.web3j:core:4.2.0'
+
+
+    dependencySet(group: 'org.apache.tuweni', version: '0.9.0') {
+      entry 'tuweni-bytes'
+      entry 'tuweni-config'
+      entry 'tuweni-crypto'
+      entry 'tuweni-junit'
+      entry 'tuweni-kv'
+      entry 'tuweni-plumtree'
+      entry 'tuweni-rlpx'
+      entry 'tuweni-ssz'
+      entry 'tuweni-toml'
+      entry 'tuweni-units'
+    }
 
     dependencySet(group: 'org.junit.jupiter', version: '5.5.2') {
       entry 'junit-jupiter-api'
