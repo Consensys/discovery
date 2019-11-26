@@ -135,6 +135,73 @@ javadoc {
   options.encoding = 'UTF-8'
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+
+def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
+
+apply plugin: 'maven-publish'
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      groupId "tech.pegasys.discv5"
+      version "${project.version}"
+      from components.java
+      artifact sourcesJar
+
+      versionMapping {
+        usage('java-api') { fromResolutionOf('runtimeClasspath') }
+        usage('java-runtime') { fromResolutionResult() }
+      }
+      pom {
+        name = "${project.name}"
+        url = 'http://github.com/PegaSysEng/discv5'
+        licenses {
+          license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        scm {
+          connection = 'scm:git:git://github.com/PegaSysEng/discv5.git'
+          developerConnection = 'scm:git:ssh://github.com/PegaSysEng/discv5.git'
+          url = 'https://github.com/PegaSysEng/discv5'
+        }
+      }
+    }
+  }
+}
+
+bintray {
+  user = bintrayUser
+  key = bintrayKey
+
+  publications = ['mavenJava']
+  override = version.endsWith('SNAPSHOT')
+
+  publish = true
+
+  pkg {
+    repo = 'pegasys-repo'
+    name = 'discv5'
+    userOrg = 'consensys'
+    desc = 'Java implementation of discovery v5'
+    licenses = ['Apache-2.0']
+    websiteUrl = 'https://github.com/PegaSysEng/discv5'
+    issueTrackerUrl = 'https://github.com/PegaSysEng/discv5/issues'
+    vcsUrl = 'https://github.com/PegaSysEng/discv5.git'
+
+    version {
+      name = project.version
+      released = new Date()
+    }
+  }
+}
+
 // Takes the version, and if -SNAPSHOT is part of it replaces SNAPSHOT
 // with the git commit version.
 def calculateVersion() {

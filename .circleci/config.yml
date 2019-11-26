@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Assemble
           command: |
-            ./gradlew --no-daemon --parallel build
+            ./gradlew --no-daemon --parallel build sourcesJar
       - save_cache:
           name: Caching gradle dependencies
           key: deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
@@ -44,9 +44,31 @@ jobs:
       - capture_test_results
       - store_artifacts:
             path: build/libs
+      - persist_to_workspace:
+        root: ~/project
+        paths:
+          - ./
+  publish:
+    executor: medium_executor
+    steps:
+      - prepare
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Publish
+          command: |
+            ./gradlew --no-daemon --parallel bintrayUpload
 
 workflows:
   version: 2
   circleci:
     jobs:
       - build
+      - publish:
+          filters:
+            branches:
+              only:
+                - master
+                - /^release-.*/
+          requires:
+            - build
