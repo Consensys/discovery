@@ -35,13 +35,15 @@ jobs:
           name: Assemble
           command: |
             ./gradlew --no-daemon --parallel build
-      - capture_test_results
       - save_cache:
           name: Caching gradle dependencies
           key: deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
           paths:
             - .gradle
             - ~/.gradle
+      - capture_test_results
+      - store_artifacts:
+            path: build/libs
 
 workflows:
   version: 2
