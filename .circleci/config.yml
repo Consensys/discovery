@@ -45,9 +45,10 @@ jobs:
       - store_artifacts:
             path: build/libs
       - persist_to_workspace:
-        root: ~/project
-        paths:
-          - ./
+            root: ~/project
+            paths:
+              - ./
+
   publish:
     executor: medium_executor
     steps:
