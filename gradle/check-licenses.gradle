@@ -136,7 +136,7 @@ downloadLicenses {
   ]
 
   licenses = [
-      (group('discv5'))            : apache,
+      (group('discovery'))            : apache,
 
       // https://checkerframework.org/manual/#license
       // The more permissive MIT License applies to code that you might want

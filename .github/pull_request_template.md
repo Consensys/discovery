@@ -1,5 +1,5 @@
 <!-- Thanks for sending a pull request! Please check out our contribution guidelines: -->
-<!-- https://github.com/PegaSysEng/discv5/blob/master/CONTRIBUTING.md -->
+<!-- https://github.com/PegaSysEng/discovery/blob/master/CONTRIBUTING.md -->
 
 ## PR Description
 

@@ -1,7 +1,7 @@
 # Contributing
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
-Welcome to the discv5 repository!  The following is a set of guidelines for contributing to this repo and its packages. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+Welcome to the discovery repository!  The following is a set of guidelines for contributing to this repo and its packages. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 #### Table Of Contents
 [Code of Conduct](#code-of-conduct)
@@ -46,7 +46,7 @@ Before creating bug reports, please check the [before-submitting-a-bug-report](#
 #### Before Submitting A Bug Report
 * **Confirm the problem** is reproducible in the latest version of the software
 * **Check the [Debugging Wiki]**. You might be able to find the cause of the problem and fix things yourself. 
-* **Perform a [cursory search of project issues](https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discv5)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
+* **Perform a [cursory search of project issues](https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discovery)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Bug Report?
 Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/).  Issues should provide the following information by filling in the [issue_template.md](.github/issue_template.md).
@@ -85,7 +85,7 @@ Before creating enhancement suggestions, please check the [before-submitting-an-
 #### Before Submitting An Enhancement Suggestion
 
 * **Check the [Debugging Wiki].** You might be able to find the cause of the problem and fix things yourself. 
-* **Perform a [cursory search of project issues](https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discv5)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
+* **Perform a [cursory search of project issues](https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discovery)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Enhancement Suggestion?
 
@@ -183,23 +183,23 @@ We have a set of [coding conventions](https://github.com/hyperledger/besu/blob/m
 | `invalid` | [search][search-label-invalid] | Issues which aren't valid (e.g. user errors). |
 | `do we want this?` | [search][search-label-do-we-want-this] | Seeking stakeholder consensus on proposed feature. |
 
-[search-label-enhancement]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Aenhancement
-[search-label-bug]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Abug
-[search-label-help-wanted]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Ahelp%20wanted
-[search-label-good-first-issue]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Agood%20first%20issue
-[search-label-info-needed]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Ainfo%20needed
-[search-label-needs-reproduction]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Aneeds%20reproduction
-[search-label-blocked]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Ablocked
-[search-label-duplicate]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Aduplicate
-[search-label-wontfix]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Awontfix
-[search-label-invalid]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscv5+label%3Ainvalid
-[search-label-work-in-progress]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscv5+label%3Awork%20in%20progress
-[search-label-requires-changes]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscv5+label%3Arequires%20changes
-[search-label-do-we-want-this]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscv5+label%3Ado%20we%20want%20this
+[search-label-enhancement]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Aenhancement
+[search-label-bug]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Abug
+[search-label-help-wanted]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Ahelp%20wanted
+[search-label-good-first-issue]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Agood%20first%20issue
+[search-label-info-needed]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Ainfo%20needed
+[search-label-needs-reproduction]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Aneeds%20reproduction
+[search-label-blocked]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Ablocked
+[search-label-duplicate]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Aduplicate
+[search-label-wontfix]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Awontfix
+[search-label-invalid]: https://github.com/search?q=is%3Aopen+is%3Aissue+repo%3APegasysEng%2Fdiscovery+label%3Ainvalid
+[search-label-work-in-progress]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscovery+label%3Awork%20in%20progress
+[search-label-requires-changes]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscovery+label%3Arequires%20changes
+[search-label-do-we-want-this]: https://github.com/search?q=is%3Aopen+is%3Apr+repo%3APegasysEng%2Fdiscovery+label%3Ado%20we%20want%20this
 
 [private@pegasys.tech]: mailto:private@pegasys.tech
-[Gitter]: https://gitter.im/PegaSysEng/discv5
-[Wiki]: https://github.com/PegaSysEng/discv5/wiki
-[Debugging Wiki]: https://github.com/PegaSysEng/discv5/wiki/Debugging
+[Gitter]: https://gitter.im/PegaSysEng/discovery
+[Wiki]: https://github.com/PegaSysEng/discovery/wiki
+[Debugging Wiki]: https://github.com/PegaSysEng/discovery/wiki/Debugging
 [CLA.md]: /CLA.md
 [Code Reviews]: /docs/community/code-reviews.md
