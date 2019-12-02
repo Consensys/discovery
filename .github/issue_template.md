@@ -1,9 +1,9 @@
 <!-- Have you done the following? -->
 <!--   * read the Code of Conduct? By filing an Issue, you are expected to -->  
 <!--     comply with it, including treating everyone with respect: -->
-<!--     https://github.com/PegasysEng/discv5/blob/master/CODE-OF-CONDUCT.md -->
+<!--     https://github.com/PegasysEng/discovery/blob/master/CODE-OF-CONDUCT.md -->
 <!--   * Reproduced the issue in the latest version of the software -->
-<!--   * Duplicate Issue check:  https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discv5 -->
+<!--   * Duplicate Issue check:  https://github.com/search?q=+is%3Aissue+repo%3APegasysEng/discovery -->
 <!-- Note:  Not all sections will apply to all issue types. -->
 
 ### Description

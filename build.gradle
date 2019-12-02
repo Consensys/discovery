@@ -1,5 +1,7 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 
+//discovery v5
+
 plugins {
   id 'java-library'
   id 'com.diffplug.gradle.spotless' version '3.26.0'
@@ -148,7 +150,7 @@ apply plugin: 'maven-publish'
 publishing {
   publications {
     mavenJava(MavenPublication) {
-      groupId "tech.pegasys.discv5"
+      groupId "tech.pegasys.discovery"
       version "${project.version}"
       from components.java
       artifact sourcesJar
@@ -159,7 +161,7 @@ publishing {
       }
       pom {
         name = "${project.name}"
-        url = 'http://github.com/PegaSysEng/discv5'
+        url = 'http://github.com/PegaSysEng/discovery'
         licenses {
           license {
             name = 'The Apache License, Version 2.0'
@@ -167,9 +169,9 @@ publishing {
           }
         }
         scm {
-          connection = 'scm:git:git://github.com/PegaSysEng/discv5.git'
-          developerConnection = 'scm:git:ssh://github.com/PegaSysEng/discv5.git'
-          url = 'https://github.com/PegaSysEng/discv5'
+          connection = 'scm:git:git://github.com/PegaSysEng/discovery.git'
+          developerConnection = 'scm:git:ssh://github.com/PegaSysEng/discovery.git'
+          url = 'https://github.com/PegaSysEng/discovery'
         }
       }
     }
@@ -187,13 +189,13 @@ bintray {
 
   pkg {
     repo = 'pegasys-repo'
-    name = 'discv5'
+    name = 'discovery'
     userOrg = 'consensys'
     desc = 'Java implementation of discovery v5'
     licenses = ['Apache-2.0']
-    websiteUrl = 'https://github.com/PegaSysEng/discv5'
-    issueTrackerUrl = 'https://github.com/PegaSysEng/discv5/issues'
-    vcsUrl = 'https://github.com/PegaSysEng/discv5.git'
+    websiteUrl = 'https://github.com/PegaSysEng/discovery'
+    issueTrackerUrl = 'https://github.com/PegaSysEng/discovery/issues'
+    vcsUrl = 'https://github.com/PegaSysEng/discovery.git'
 
     version {
       name = project.version
