@@ -1,16 +1,29 @@
 #!/bin/sh
 set -e
-export TEST_DURATION=60
+#set -o xtrace
 
+## show some system info
 echo "System ip info"
-ip a
 
-echo "Running discovery discv5 for up to 300 seconds."
-(cd /discovery && gradle discv5) & pid=$!
-(sleep 300 && kill -9 $pid) &
+## good for debian
+#ip a
 
-#apt-get update
-#apt-get install net-tools
-#ifconfig
+## good for ubuntu
+ifconfig
 
+echo "Running discovery discv5."
 
+## start the server
+
+## build approach
+#cd /discovery
+#gradle run -x test -x checkLicenses -x spotlessCheck
+
+## run approach
+cd /discovery/build/docker-discovery/discovery/bin && ./discovery
+
+## for timeout operations
+# (gradle run) & pid=$!
+#(sleep 300 && kill -9 $pid) &
+
+#set +o xtrace

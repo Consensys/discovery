@@ -15,7 +15,7 @@
  * The lists of the license we accept.
  */
 license {
-    excludePatterns = ['**/*.md', '**/*.sh'] as Set
+    excludePatterns = ['**/*.md', '**/*.sh', '**/*.xml'] as Set
 }
 
 ext.acceptedLicenses = [

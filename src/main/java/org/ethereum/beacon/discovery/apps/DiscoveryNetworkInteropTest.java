@@ -7,11 +7,14 @@ package org.ethereum.beacon.discovery.apps;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Random;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.DiscoveryManagerImpl;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.format.SerializerFactory;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.EnrFieldV4;
@@ -28,6 +31,7 @@ import org.javatuples.Pair;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNetworkInteropTest {
+  private static final Logger logger = LogManager.getLogger(NettyDiscoveryClientImpl.class);
 
   public static void main(String[] args) throws Exception {
     DiscoveryNetworkInteropTest t = new DiscoveryNetworkInteropTest();
@@ -41,30 +45,27 @@ public class DiscoveryNetworkInteropTest {
   public static final SerializerFactory TEST_SERIALIZER =
       new NodeSerializerFactory(NODE_RECORD_FACTORY);
 
-
   @SuppressWarnings({"unchecked", "rawtypes"})
   public void testLighthouseInterop() throws Exception {
     //    final String remoteHostEnr =
     // "-IS4QJBOCmTBOuIE0_z16nV8P1KOyVVIu1gq2S83H5HBmfFaFuevJT0XyKH35LNVxHK5dotDTwqlc9NiRXosBcQ1bJ8BgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyk";
     final String remoteHostEnr =
-        "-IS4QM5MNwCeleR3p5I1JUvw9JY4xdarw0NYdthidFLjQkR8OmMZe69EaN3brdfSsUsOXoKsaovFr8U71Nw1y_80OfABgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIy0";
-    //
-    // -IS4QOrJvO6_CDyN0dwE9R8NzUR9CK4v0t_Q6l8EKhMhGhCpKXLMQNYUXbMYN-j6kPjAczrQ1uAwWXAI8PjMGXsJxRMBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQJI4MROfzgMfjN1ANb-9fNXFT3xnjzK5NEfNLG4oiMPDoN1ZHCCIy0
+        "-IS4QJxZ43ITU3AsQxvwlkyzZvImNBH9CFu3yxMFWOK5rddgb0WjtIOBlPzs1JOlfi6YbM6Em3Ueu5EW-IdoPynMj4QBgmlkgnY0gmlwhKwSAAOJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIys";
 
     // NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(remoteHostEnr);
     NodeRecord remoteNodeRecord = NodeRecordFactory.DEFAULT.fromBase64(remoteHostEnr);
     //    NodeRecord remoteNodeRecord =
     // NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(remoteHostEnr);
     remoteNodeRecord.verify();
-    System.out.println("remoteEnr:" + remoteNodeRecord.asBase64());
-    System.out.println("remoteNodeId:" + remoteNodeRecord.getNodeId());
-    System.out.println("remoteNodeRecord:" + remoteNodeRecord);
+    logger.debug("remoteEnr:" + remoteNodeRecord.asBase64());
+    logger.debug("remoteNodeId:" + remoteNodeRecord.getNodeId());
+    logger.debug("remoteNodeRecord:" + remoteNodeRecord);
 
     Pair<NodeRecord, byte[]> localNodeInfo = createLocalNodeRecord(9002);
     NodeRecord localNodeRecord = localNodeInfo.getValue0();
-    System.out.println("localNodeEnr:" + localNodeRecord.asBase64());
-    System.out.println("localNodeId:" + localNodeRecord.getNodeId());
-    System.out.println("localNodeRecord:" + localNodeRecord);
+    logger.debug("localNodeEnr:" + localNodeRecord.asBase64());
+    logger.debug("localNodeId:" + localNodeRecord.getNodeId());
+    logger.debug("localNodeRecord:" + localNodeRecord);
 
     byte[] localPrivKey = localNodeInfo.getValue1();
 
@@ -154,8 +155,8 @@ public class DiscoveryNetworkInteropTest {
 
     //    discoveryManager0.findNodes(remoteNodeRecord, 0);
 
-    for (int i = 0; i < 5; i++) {
-      //    while (true) {
+    //    for (int i = 0; i < 5; i++) {
+    while (true) {
       Thread.sleep(5000);
       discoveryManager0.ping(remoteNodeRecord);
     }
@@ -178,7 +179,7 @@ public class DiscoveryNetworkInteropTest {
       //      byte[] pubbytes = new byte[33];
       //      ecp.toBytes(pubbytes, true);
 
-      Bytes localAddressBytes = Bytes.wrap(InetAddress.getByName("127.0.0.1").getAddress());
+      Bytes localAddressBytes = Bytes.wrap(InetAddress.getByName("172.18.0.2").getAddress());
       Bytes localIp1 =
           Bytes.concatenate(Bytes.wrap(new byte[4 - localAddressBytes.size()]), localAddressBytes);
       NodeRecord nodeRecord1 =
@@ -202,9 +203,8 @@ public class DiscoveryNetworkInteropTest {
       nodeRecord1.verify();
       return new Pair(nodeRecord1, privKey1);
     } catch (Exception e) {
-//      e.printStackTrace();
+      //      e.printStackTrace();
     }
     return null;
   }
-
 }

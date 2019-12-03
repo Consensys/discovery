@@ -1,5 +1,7 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 
+import java.text.SimpleDateFormat
+
 //discovery v5
 
 plugins {
@@ -215,6 +217,12 @@ def calculateVersion() {
   return version
 }
 
+def buildTime() {
+  def df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+  df.setTimeZone(TimeZone.getTimeZone("UTC"))
+  return df.format(new Date())
+}
+
 def getCheckedOutGitCommitHash() {
   def gitFolder = "$projectDir/.git/"
   if (!file(gitFolder).isDirectory()) {
@@ -237,11 +245,56 @@ def getCheckedOutGitCommitHash() {
   refHead.text.trim().take takeFromHash
 }
 
-jar { enabled = false }
+jar { enabled = true }
 
 apply plugin: 'application'
 mainClassName = "org.ethereum.beacon.discovery.apps.DiscoveryNetworkInteropTest"
 
-logging.captureStandardOutput(LogLevel.DEBUG)
-logging.captureStandardError(LogLevel.ERROR)
+//logging.captureStandardOutput(LogLevel.DEBUG)
+//logging.captureStandardError(LogLevel.ERROR)
 
+
+// dockerization
+
+installDist { }
+
+distTar {
+  doFirst {
+    delete fileTree(dir: 'build/distributions', include: '*.tar.gz')
+  }
+  compression = Compression.GZIP
+  extension = 'tar.gz'
+}
+
+tasks.register("dockerDistUntar") {
+  dependsOn distTar
+  def dockerBuildDir = "build/docker-discovery/"
+  def distTarFile = distTar.outputs.files.singleFile
+  def distTarFileName = distTar.outputs.files.singleFile.name.replace(".tar.gz", "")
+  def s = "${distTarFile} .... ${distTarFileName}"
+  println "${s}"
+
+  doFirst {
+    new File(dockerBuildDir).mkdir()
+    copy {
+      from tarTree(distTarFile)
+      into(dockerBuildDir)
+    }
+    file("${dockerBuildDir}/${distTarFileName}").renameTo("${dockerBuildDir}/discovery")
+  }
+}
+
+task distDocker(type: Exec) {
+  dependsOn jar
+  dependsOn dockerDistUntar
+
+  def dockerBuildVersion = project.hasProperty('release.releaseVersion') ? project.property('release.releaseVersion') : "${rootProject.version}"
+//  def image = project.hasProperty('release.releaseVersion') ? "pegasyseng/discovery:" + project.property('release.releaseVersion') : "pegasyseng/discovery:${project.version}"
+  def image = "discovery"
+  def dockerBuildDir = "${project.projectDir}/docker-discovery/"
+  println "dockerbuilddir: ${dockerBuildDir}"
+  println "projectDir: ${projectDir}"
+
+  executable "sh"
+  args "-c", "docker build -f src/test/resources/discovery/Dockerfile -t ${image} ."
+}
