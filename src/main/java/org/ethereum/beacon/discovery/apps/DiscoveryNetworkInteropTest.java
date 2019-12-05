@@ -41,7 +41,6 @@ public class DiscoveryNetworkInteropTest {
   public static final SerializerFactory TEST_SERIALIZER =
       new NodeSerializerFactory(NODE_RECORD_FACTORY);
 
-
   @SuppressWarnings({"unchecked", "rawtypes"})
   public void testLighthouseInterop() throws Exception {
     //    final String remoteHostEnr =
@@ -185,7 +184,6 @@ public class DiscoveryNetworkInteropTest {
           NodeRecordFactory.DEFAULT.createFromValues(
               //          NODE_RECORD_FACTORY_NO_VERIFICATION.createFromValues(
               UInt64.ZERO,
-              Bytes.EMPTY,
               Pair.with(EnrField.ID, IdentitySchema.V4),
               Pair.with(EnrField.IP_V4, localIp1),
               Pair.with(
@@ -202,9 +200,8 @@ public class DiscoveryNetworkInteropTest {
       nodeRecord1.verify();
       return new Pair(nodeRecord1, privKey1);
     } catch (Exception e) {
-//      e.printStackTrace();
+      //      e.printStackTrace();
     }
     return null;
   }
-
 }
