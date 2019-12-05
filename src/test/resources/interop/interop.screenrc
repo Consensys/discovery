@@ -1,0 +1,26 @@
+#escape ``
+bind \ other
+defscrollback 10000
+
+attrcolor b ".I"
+termcapinfo xterm 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+defbce "on"
+
+term screen-256color
+#term rxvt-unicode-256color
+#term xterm-256color
+
+#truecolors on
+hardstatus off
+backtick 0 5 5 "/bin/date" '+%Y-%m-%d'
+backtick 1 5 5 "/bin/date" '+%H:%M'
+hardstatus alwayslastline '%{#00ff00}[ %H ][%{#ffffff}%= %{7}%?%-Lw%?%{1;0}%{1}(%{15}%n%f%t%?(%u)%?%{1;0}%{1})%{7}%?%+Lw%?%? %=%{#00ff00}][ %{#00a5ff}%{6}%0` %{#ffffff}%{7}%1`%{#00ff00} ]'
+
+#GREP_COLORS="01;32" egrep -i --color=always "^.*$|$" |
+#| GREP_COLOR="01;31" egrep -x --color=always ".*" | GREP_COLOR="01;32" egrep --color=always "TRACE|$" | GREP_COLOR="01;33" egrep --color=always "discovery|$"
+#GREP_COLORS="1;35;43" egrep -i --color=always "^|.*"
+screen -t discovery  /bin/sh -c 'docker run --rm -ti -p 9002:9002/udp --ip 172.18.0.2 --net=mynet123 discovery | sed $'\''s/TRACE/\E[1;35;43;4m&\E[0m/g'\'' | sed $'\''s/TRACE/\E[1;35;43;5m&\E[0m/g'\''  ; exec bash  '
+split
+focus down
+screen -t rust-libp2p /bin/sh -c 'sleep 7; docker run --rm -ti -p 9003:9003/udp --ip 172.18.0.3 --net=mynet123 rust-libp2p; exec bash '
+focus up
