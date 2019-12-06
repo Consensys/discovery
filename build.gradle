@@ -236,12 +236,3 @@ def getCheckedOutGitCommitHash() {
   def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
   refHead.text.trim().take takeFromHash
 }
-
-jar { enabled = false }
-
-apply plugin: 'application'
-mainClassName = "org.ethereum.beacon.discovery.apps.DiscoveryNetworkInteropTest"
-
-logging.captureStandardOutput(LogLevel.DEBUG)
-logging.captureStandardError(LogLevel.ERROR)
-
