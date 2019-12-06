@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.javatuples.Pair;
 import org.web3j.rlp.RlpEncoder;
@@ -49,12 +50,17 @@ public class NodeRecord {
     this.identitySchemaInterpreter = identitySchemaInterpreter;
   }
 
+  private NodeRecord(IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq) {
+    this.seq = seq;
+    this.signature = MutableBytes.create(96);
+    this.identitySchemaInterpreter = identitySchemaInterpreter;
+  }
+
   public static NodeRecord fromValues(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
-      Bytes signature,
       List<Pair<String, Object>> fieldKeyPairs) {
-    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
+    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
     fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getValue0(), objects.getValue1()));
     return nodeRecord;
   }
