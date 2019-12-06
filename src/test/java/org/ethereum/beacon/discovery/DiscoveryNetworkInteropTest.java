@@ -55,7 +55,6 @@ public class DiscoveryNetworkInteropTest {
         try {
           return NODE_RECORD_FACTORY_NO_VERIFICATION.createFromValues(
               UInt64.valueOf(1),
-              Bytes.EMPTY,
               new ArrayList<Pair<String, Object>>() {
                 {
                   add(Pair.with(EnrField.ID, IdentitySchema.V4));
@@ -221,7 +220,6 @@ public class DiscoveryNetworkInteropTest {
           NodeRecordFactory.DEFAULT.createFromValues(
               //          NODE_RECORD_FACTORY_NO_VERIFICATION.createFromValues(
               UInt64.ZERO,
-              Bytes.EMPTY,
               Pair.with(EnrField.ID, IdentitySchema.V4),
               Pair.with(EnrField.IP_V4, localIp1),
               Pair.with(
@@ -277,7 +275,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord closestNode =
         NODE_RECORD_FACTORY_NO_VERIFICATION.createFromValues(
             UInt64.valueOf(1),
-            Bytes.EMPTY,
             new ArrayList<Pair<String, Object>>() {
               {
                 add(Pair.with(EnrField.ID, IdentitySchema.V4));
@@ -307,7 +304,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord farNode =
         NODE_RECORD_FACTORY_NO_VERIFICATION.createFromValues(
             UInt64.valueOf(1),
-            Bytes.EMPTY,
             new ArrayList<Pair<String, Object>>() {
               {
                 add(Pair.with(EnrField.ID, IdentitySchema.V4));
@@ -350,7 +346,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord nodeRecord1 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
-            Bytes.EMPTY,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
             Pair.with(EnrField.TCP_V4, 9004),
@@ -421,7 +416,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord nodeRecord0 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
-            Bytes.EMPTY,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
             Pair.with(EnrField.TCP_V4, 9001),
@@ -451,7 +445,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord nodeRecord1 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
-            Bytes.EMPTY,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
             Pair.with(EnrField.TCP_V4, 9002),
@@ -471,7 +464,6 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord nodeRecord0 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
-            Bytes.EMPTY,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
             Pair.with(EnrField.TCP_V4, 9001),

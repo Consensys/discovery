@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.EnrFieldV4;
@@ -84,7 +83,6 @@ public class NodeRecordTest {
     NodeRecord nodeRecord0 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
-            MutableBytes.create(96),
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
             Pair.with(EnrField.TCP_V4, 30303),
@@ -97,7 +95,6 @@ public class NodeRecordTest {
     NodeRecord nodeRecord1 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.valueOf(1),
-            MutableBytes.create(96),
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
             Pair.with(EnrField.TCP_V4, 30303),
