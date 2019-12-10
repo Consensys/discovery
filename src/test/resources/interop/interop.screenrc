@@ -19,8 +19,8 @@ hardstatus alwayslastline '%{#00ff00}[ %H ][%{#ffffff}%= %{7}%?%-Lw%?%{1;0}%{1}(
 #GREP_COLORS="01;32" egrep -i --color=always "^.*$|$" |
 #| GREP_COLOR="01;31" egrep -x --color=always ".*" | GREP_COLOR="01;32" egrep --color=always "TRACE|$" | GREP_COLOR="01;33" egrep --color=always "discovery|$"
 #GREP_COLORS="1;35;43" egrep -i --color=always "^|.*"
-screen -t discovery  /bin/sh -c 'docker run --rm -ti -p 9002:9002/udp --ip 172.18.0.2 --net=mynet123 discovery | sed $'\''s/TRACE/\E[1;35;43;4m&\E[0m/g'\'' | sed $'\''s/TRACE/\E[1;35;43;5m&\E[0m/g'\''  ; exec bash  '
+screen -t discovery  /bin/sh -c 'docker run --rm -ti -p 9002:9002/udp --ip 172.18.0.2 --net=mynet123 discovery | sed $'\''s/TRACE/\E[1;35;43;4m&\E[0m/g'\'' ; exec bash  '
 split
 focus down
-screen -t rust-libp2p /bin/sh -c 'sleep 7; docker run --rm -ti -p 9003:9003/udp --ip 172.18.0.3 --net=mynet123 rust-libp2p; exec bash '
+screen -t rust-libp2p /bin/sh -c 'sleep 9; docker run --rm -ti -p 9003:9003/udp --ip 172.18.0.3 --net=mynet123 rust-libp2p; exec bash '
 focus up

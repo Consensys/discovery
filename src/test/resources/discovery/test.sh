@@ -20,7 +20,7 @@ echo "Running discovery discv5."
 #gradle run -x test -x checkLicenses -x spotlessCheck
 
 ## run approach
-/discovery/build/docker-discovery/discovery/bin/discovery
+/discovery/build/install/discovery/bin/discovery
 
 ## for timeout operations
 # (gradle run) & pid=$!

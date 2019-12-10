@@ -27,12 +27,12 @@
   </Appenders>
   <Loggers>
 
-    <Logger name="org.ethereum.beacon.discovery" level="trace" additivity="false">
+    <Logger name="org.ethereum.beacon.discovery" level="DEBUG" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
 
 
-    <Root level="info">
+    <Root level="INFO">
       <AppenderRef ref="Console"/>
     </Root>
   </Loggers>
