@@ -46,7 +46,9 @@ import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 import reactor.core.publisher.Flux;
 
-/** Same as {@link DiscoveryNoNetworkTest} but using real network */
+/**
+ * Same as {@link DiscoveryNoNetworkTest} but using real network
+ */
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNetworkInteropTest {
 
@@ -95,7 +97,7 @@ public class DiscoveryNetworkInteropTest {
     System.out.println("remoteNodeId:" + remoteNodeRecord.getNodeId());
     System.out.println("remoteNodeRecord:" + remoteNodeRecord);
 
-    Pair<NodeRecord, byte[]> localNodeInfo = createLocalNodeRecord(9002);
+    Pair<NodeRecord, byte[]> localNodeInfo = createLocalNodeRecord("127.0.0.1", 9002);
     NodeRecord localNodeRecord = localNodeInfo.getValue0();
     System.out.println("localNodeEnr:" + localNodeRecord.asBase64());
     System.out.println("localNodeId:" + localNodeRecord.getNodeId());
@@ -199,21 +201,18 @@ public class DiscoveryNetworkInteropTest {
   Random rnd = new Random(SEED);
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public Pair<NodeRecord, byte[]> createLocalNodeRecord(int port) {
+  public Pair<NodeRecord, byte[]> createLocalNodeRecord(String address, int port) {
 
+    // set local service node
+    byte[] privKey1 = new byte[32];
+    rnd.nextBytes(privKey1);
+    return createLocalNodeRecord(privKey1, address, port);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public Pair<NodeRecord, byte[]> createLocalNodeRecord(byte[] privKey1, String address, int port) {
     try {
-      // set local service node
-      byte[] privKey1 = new byte[32];
-      rnd.nextBytes(privKey1);
-      //      ECKeyPair keyPair1 = ECKeyPair.create(privKey1);
-
-      //      org.apache.milagro.amcl.SECP256K1.ECP ecp =
-      //          ECP.fromBytes(keyPair1.getPublicKey().toByteArray());
-
-      //      byte[] pubbytes = new byte[33];
-      //      ecp.toBytes(pubbytes, true);
-
-      Bytes localAddressBytes = Bytes.wrap(InetAddress.getByName("127.0.0.1").getAddress());
+      Bytes localAddressBytes = Bytes.wrap(InetAddress.getByName(address).getAddress());
       Bytes localIp1 =
           Bytes.concatenate(Bytes.wrap(new byte[4 - localAddressBytes.size()]), localAddressBytes);
       NodeRecord nodeRecord1 =
@@ -227,7 +226,7 @@ public class DiscoveryNetworkInteropTest {
                   Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey1))),
               //
               // Bytes.wrap(extractBytesFromUnsignedBigInt(keyPair1.getPublicKey()))),
-              Pair.with(EnrField.TCP_V4, port),
+//              Pair.with(EnrField.TCP_V4, port),
               Pair.with(EnrField.UDP_V4, port));
       //      Bytes signature1 = Functions.sign(Bytes.wrap(privKey1),
       // nodeRecord1.serializeNoSignature());
@@ -348,7 +347,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
-            Pair.with(EnrField.TCP_V4, 9004),
+//            Pair.with(EnrField.TCP_V4, 9004),
             Pair.with(EnrField.UDP_V4, 9004),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -418,7 +417,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
-            Pair.with(EnrField.TCP_V4, 9001),
+//            Pair.with(EnrField.TCP_V4, 9001),
             Pair.with(EnrField.UDP_V4, 9001),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -447,7 +446,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
-            Pair.with(EnrField.TCP_V4, 9002),
+//            Pair.with(EnrField.TCP_V4, 9002),
             Pair.with(EnrField.UDP_V4, 9002),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -466,7 +465,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
-            Pair.with(EnrField.TCP_V4, 9001),
+//            Pair.with(EnrField.TCP_V4, 9001),
             Pair.with(EnrField.UDP_V4, 9001),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
