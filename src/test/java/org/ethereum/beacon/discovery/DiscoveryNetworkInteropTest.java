@@ -46,9 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 import reactor.core.publisher.Flux;
 
-/**
- * Same as {@link DiscoveryNoNetworkTest} but using real network
- */
+/** Same as {@link DiscoveryNoNetworkTest} but using real network */
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNetworkInteropTest {
 
@@ -226,7 +224,7 @@ public class DiscoveryNetworkInteropTest {
                   Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey1))),
               //
               // Bytes.wrap(extractBytesFromUnsignedBigInt(keyPair1.getPublicKey()))),
-//              Pair.with(EnrField.TCP_V4, port),
+              //              Pair.with(EnrField.TCP_V4, port),
               Pair.with(EnrField.UDP_V4, port));
       //      Bytes signature1 = Functions.sign(Bytes.wrap(privKey1),
       // nodeRecord1.serializeNoSignature());
@@ -347,7 +345,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
-//            Pair.with(EnrField.TCP_V4, 9004),
+            //            Pair.with(EnrField.TCP_V4, 9004),
             Pair.with(EnrField.UDP_V4, 9004),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -417,7 +415,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
-//            Pair.with(EnrField.TCP_V4, 9001),
+            //            Pair.with(EnrField.TCP_V4, 9001),
             Pair.with(EnrField.UDP_V4, 9001),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -446,7 +444,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp1),
-//            Pair.with(EnrField.TCP_V4, 9002),
+            //            Pair.with(EnrField.TCP_V4, 9002),
             Pair.with(EnrField.UDP_V4, 9002),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
@@ -465,7 +463,7 @@ public class DiscoveryNetworkInteropTest {
             UInt64.ZERO,
             Pair.with(EnrField.ID, IdentitySchema.V4),
             Pair.with(EnrField.IP_V4, localIp),
-//            Pair.with(EnrField.TCP_V4, 9001),
+            //            Pair.with(EnrField.TCP_V4, 9001),
             Pair.with(EnrField.UDP_V4, 9001),
             Pair.with(
                 EnrFieldV4.PKEY_SECP256K1,
