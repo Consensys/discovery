@@ -37,7 +37,6 @@ public class NodeRecordTest {
   public void testLocalhostV4() throws Exception {
     final String expectedHost = "127.0.0.1";
     final Integer expectedUdpPort = 30303;
-    final Integer expectedTcpPort = null;
     final UInt64 expectedSeqNumber = UInt64.valueOf(1);
     final Bytes expectedPublicKey =
         Bytes.fromHexString("03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138");
