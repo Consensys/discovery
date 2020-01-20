@@ -147,7 +147,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @VisibleForTesting
-  Publisher<NetworkParcel> getOutgoingMessages() {
+  public Publisher<NetworkParcel> getOutgoingMessages() {
     return outgoingMessages;
   }
 }

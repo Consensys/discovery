@@ -96,7 +96,8 @@ public class NodeTableImpl implements NodeTable {
 
   /**
    * Returns list of nodes including `nodeId` (if it's found) in logLimit distance from it. Uses
-   * {@link Functions#logDistance(Bytes, Bytes)} as distance function.
+   * {@link Functions#logDistance(Bytes, Bytes)} as distance function. A logLimit of zero implies
+   * finding all nodes from entries.
    */
   @Override
   public List<NodeRecordInfo> findClosestNodes(Bytes nodeId, int logLimit) {
@@ -117,7 +118,9 @@ public class NodeTableImpl implements NodeTable {
       if (upNodesOptional.isPresent()) {
         NodeIndex upNodes = upNodesOptional.get();
         for (Bytes currentNodeId : upNodes.getEntries()) {
-          if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+          if (logLimit == 0) {
+            res.add(getNode(currentNodeId).get());
+          } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
             limitReached = true;
             break;
           } else {
@@ -131,7 +134,9 @@ public class NodeTableImpl implements NodeTable {
         // XXX: iterate in reverse order to reach logDistance limit from the right side
         for (int i = entries.size() - 1; i >= 0; i--) {
           Bytes currentNodeId = entries.get(i);
-          if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+          if (logLimit == 0) {
+            res.add(getNode(currentNodeId).get());
+          } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
             limitReached = true;
             break;
           } else {

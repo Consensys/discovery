@@ -197,6 +197,10 @@ public class NodeRecord {
         + fields.get(EnrFieldV4.IP_V4)
         + ", udpPort="
         + fields.get(EnrFieldV4.UDP_V4)
+        + ", asBase64="
+        + this.asBase64()
+        + ", nodeId="
+        + this.getNodeId()
         + '}';
   }
 }
