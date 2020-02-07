@@ -15,10 +15,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Objects;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
@@ -75,10 +74,8 @@ public class NodeRecord {
 
   public static NodeRecord createNodeRecord(byte[] privateKey, String networkInterface, int port)
       throws UnknownHostException {
-    Bytes addressBytes =
-        Bytes.wrap(InetAddress.getByName(networkInterface).getAddress());
-    Bytes ip =
-        Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
+    Bytes addressBytes = Bytes.wrap(InetAddress.getByName(networkInterface).getAddress());
+    Bytes ip = Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
     NodeRecord nodeRecord =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.ZERO,
@@ -153,14 +150,14 @@ public class NodeRecord {
       return false;
     }
     NodeRecord that = (NodeRecord) o;
-    return Objects.equal(seq, that.seq)
-        && Objects.equal(signature, that.signature)
-        && Objects.equal(fields, that.fields);
+    return Objects.equals(seq, that.seq)
+        && Objects.equals(signature, that.signature)
+        && Objects.equals(fields, that.fields);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(seq, signature, fields);
+    return Objects.hash(seq, signature, fields);
   }
 
   public void verify() {
