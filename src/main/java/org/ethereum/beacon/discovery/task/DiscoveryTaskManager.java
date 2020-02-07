@@ -111,7 +111,7 @@ public class DiscoveryTaskManager {
    * @param nodeRecordUpdatesConsumers consumers are executed when nodeRecord is updated with new
    *     sequence number, so it should be updated in nodeSession
    */
-  @SuppressWarnings({"unchecked"})
+  @SafeVarargs
   public DiscoveryTaskManager(
       DiscoveryManager discoveryManager,
       NodeTable nodeTable,
