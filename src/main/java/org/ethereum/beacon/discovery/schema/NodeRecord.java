@@ -4,7 +4,11 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import com.google.common.base.Objects;
+import static org.ethereum.beacon.discovery.schema.EnrField.IP_V4;
+import static org.ethereum.beacon.discovery.schema.EnrField.UDP_V4;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -13,9 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Objects;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.javatuples.Pair;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -28,6 +35,7 @@ import org.web3j.rlp.RlpType;
  * <p>Node record as described in <a href="https://eips.ethereum.org/EIPS/eip-778">EIP-778</a>
  */
 public class NodeRecord {
+
   /**
    * The canonical encoding of a node record is an RLP list of [signature, seq, k, v, ...]. The
    * maximum encoded size of a node record is 300 bytes. Implementations should reject records
@@ -62,6 +70,26 @@ public class NodeRecord {
       List<Pair<String, Object>> fieldKeyPairs) {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
     fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getValue0(), objects.getValue1()));
+    return nodeRecord;
+  }
+
+  public static NodeRecord createNodeRecord(byte[] privateKey, String networkInterface, int port)
+      throws UnknownHostException {
+    Bytes addressBytes =
+        Bytes.wrap(InetAddress.getByName(networkInterface).getAddress());
+    Bytes ip =
+        Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
+    NodeRecord nodeRecord =
+        NodeRecordFactory.DEFAULT.createFromValues(
+            UInt64.ZERO,
+            Pair.with(EnrField.ID, IdentitySchema.V4),
+            Pair.with(IP_V4, ip),
+            Pair.with(
+                EnrFieldV4.PKEY_SECP256K1,
+                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privateKey))),
+            Pair.with(UDP_V4, port));
+    nodeRecord.sign(Bytes.wrap(privateKey));
+    nodeRecord.verify();
     return nodeRecord;
   }
 
@@ -118,8 +146,12 @@ public class NodeRecord {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     NodeRecord that = (NodeRecord) o;
     return Objects.equal(seq, that.seq)
         && Objects.equal(signature, that.signature)
@@ -194,7 +226,7 @@ public class NodeRecord {
         + "publicKey="
         + fields.get(EnrFieldV4.PKEY_SECP256K1)
         + ", ipV4address="
-        + fields.get(EnrFieldV4.IP_V4)
+        + fields.get(IP_V4)
         + ", udpPort="
         + fields.get(EnrFieldV4.UDP_V4)
         + ", asBase64="
