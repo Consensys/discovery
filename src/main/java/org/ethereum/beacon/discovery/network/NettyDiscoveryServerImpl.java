@@ -9,6 +9,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
@@ -64,6 +66,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
                   @Override
                   public void initChannel(NioDatagramChannel ch) throws Exception {
                     ch.pipeline()
+                        .addFirst(new LoggingHandler(LogLevel.TRACE))
                         .addLast(new DatagramToBytesValue())
                         .addLast(new IncomingMessageSink(incomingSink));
                     synchronized (NettyDiscoveryServerImpl.class) {
