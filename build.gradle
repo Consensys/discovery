@@ -43,6 +43,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+  testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
 
   errorprone("com.google.errorprone:error_prone_core")
 }
