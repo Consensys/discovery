@@ -17,9 +17,4 @@ public abstract class AbstractPacket implements Packet {
   public Bytes getBytes() {
     return bytes;
   }
-
-  @Override
-  public Bytes getBytesValue() {
-    return bytes;
-  }
 }
