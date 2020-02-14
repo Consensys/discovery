@@ -318,8 +318,7 @@ public class NodeSession {
   public synchronized void setStatus(SessionStatus newStatus) {
     logger.debug(
         () ->
-            String.format(
-                "Switching status of node %s from %s to %s", nodeRecord, status, newStatus));
+            String.format("Switching status of node %s from %s to %s", nodeId, status, newStatus));
     this.status = newStatus;
   }
 
