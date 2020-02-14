@@ -15,7 +15,9 @@ public class NetworkParcelV5 implements NetworkParcel {
   private final Optional<InetSocketAddress> replyDestination;
 
   public NetworkParcelV5(
-      Packet packet, Optional<NodeRecord> nodeRecord, final Optional<InetSocketAddress> replyDestination) {
+      Packet packet,
+      Optional<NodeRecord> nodeRecord,
+      final Optional<InetSocketAddress> replyDestination) {
     this.packet = packet;
     this.nodeRecord = nodeRecord;
     this.replyDestination = replyDestination;

@@ -72,11 +72,13 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
       packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
-      final NodeRecord nodeRecord = packet.getNodeRecord();
+      final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
       // TODO: Need to verify that PKEY_SECP256K1 matches the node ID.
       packet.verify(session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
       envelope.put(Field.MESSAGE, packet.getMessage());
-      session.updateNodeRecord(nodeRecord);
+      if (packet.getNodeRecord() != null) {
+        session.updateNodeRecord(packet.getNodeRecord());
+      }
     } catch (AssertionError ex) {
       logger.info(
           String.format(

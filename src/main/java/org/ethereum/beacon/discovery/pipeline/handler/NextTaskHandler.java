@@ -78,10 +78,7 @@ public class NextTaskHandler implements EnvelopeHandler {
     if (session.getStatus().equals(NodeSession.SessionStatus.INITIAL)) {
       RandomPacket randomPacket =
           RandomPacket.create(
-              session.getHomeNodeId(),
-              session.getNodeId(),
-              authTag,
-              new SecureRandom());
+              session.getHomeNodeId(), session.getNodeId(), authTag, new SecureRandom());
       session.setAuthTag(authTag);
       session.sendOutgoing(randomPacket);
       session.setStatus(NodeSession.SessionStatus.RANDOM_PACKET_SENT);

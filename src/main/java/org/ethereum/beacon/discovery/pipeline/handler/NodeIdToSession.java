@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
@@ -109,17 +108,6 @@ public class NodeIdToSession implements EnvelopeHandler {
     if (context == null) {
       final InetSocketAddress remoteSocketAddress = getRemoteSocketAddress(envelope);
       Optional<NodeRecord> nodeRecord = nodeTable.getNode(nodeId).map(NodeRecordInfo::getNode);
-      //              .orElseGet(
-      //                  () ->
-      //                      NodeRecord.fromValues(
-      //                          new WhoAreYouIdentitySchemaInterpreter(),
-      //                          UInt64.ZERO,
-      //                          List.of(
-      //                              Pair.with(WhoAreYouIdentitySchemaInterpreter.NODE_ID_FIELD,
-      // nodeId),
-      //                              Pair.with(EnrField.ID, IdentitySchema.V4),
-      //                              Pair.with(EnrField.IP_V4, getIpBytes(remoteSocketAddress)),
-      //                              Pair.with(EnrField.UDP_V4, remoteSocketAddress.getPort()))));
       SecureRandom random = new SecureRandom();
       context =
           new NodeSession(
@@ -146,12 +134,6 @@ public class NodeIdToSession implements EnvelopeHandler {
           contextBackup.cleanup();
         });
     return Optional.of(context);
-  }
-
-  private Bytes getIpBytes(final InetSocketAddress remoteSocketAddress) {
-    final InetAddress remoteIp = remoteSocketAddress.getAddress();
-    Bytes addressBytes = Bytes.wrap(remoteIp.getAddress());
-    return Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
   }
 
   private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {

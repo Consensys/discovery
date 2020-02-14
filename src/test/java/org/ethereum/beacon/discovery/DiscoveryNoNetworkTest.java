@@ -8,7 +8,7 @@ import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
@@ -35,7 +35,6 @@ import reactor.core.publisher.Flux;
  * Discovery test without real network, instead outgoing stream of each peer is connected with
  * incoming of another and vice versa
  */
-@SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNoNetworkTest {
 
   @Test
@@ -51,15 +50,7 @@ public class DiscoveryNoNetworkTest {
     Database database2 = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage1 =
         nodeTableStorageFactory.createTable(
-            database1,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord1,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord2);
-                  }
-                });
+            database1, TEST_SERIALIZER, (oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
     NodeBucketStorage nodeBucketStorage1 =
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     NodeTableStorage nodeTableStorage2 =
@@ -67,13 +58,7 @@ public class DiscoveryNoNetworkTest {
             database2,
             TEST_SERIALIZER,
             (oldSeq) -> nodeRecord2,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord1);
-                    add(nodePair3.getValue1());
-                  }
-                });
+            () -> List.of(nodeRecord1, nodePair3.getValue1()));
     NodeBucketStorage nodeBucketStorage2 =
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
     SimpleProcessor<Bytes> from1to2 =

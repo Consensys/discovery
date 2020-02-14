@@ -25,10 +25,7 @@ public class AuthTagRepository {
 
   public synchronized void put(Bytes authTag, NodeSession session) {
     logger.trace(
-        () ->
-            String.format(
-                "PUT: authTag[%s] => nodeSession[%s]",
-                authTag, session.getNodeId()));
+        () -> String.format("PUT: authTag[%s] => nodeSession[%s]", authTag, session.getNodeId()));
     authTags.put(authTag, session);
     sessions.put(session, authTag);
   }
