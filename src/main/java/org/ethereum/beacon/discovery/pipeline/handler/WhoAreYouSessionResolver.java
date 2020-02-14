@@ -64,6 +64,11 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
                   "Session resolved: %s in envelope #%s",
                   nodeSessionOptional.get(), envelope.getId()));
     } else {
+      logger.trace(
+          () ->
+              String.format(
+                  "Unexpected WHOAREYOU packet from session %s in state %s",
+                  nodeSessionOptional, nodeSessionOptional.map(NodeSession::getStatus)));
       envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_WHOAREYOU));
       envelope.remove(Field.PACKET_WHOAREYOU);
       envelope.put(Field.BAD_EXCEPTION, new RuntimeException("Not expected WHOAREYOU packet"));

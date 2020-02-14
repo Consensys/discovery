@@ -19,6 +19,4 @@ public interface Packet {
   }
 
   Bytes getBytes();
-
-  Bytes getBytesValue();
 }
