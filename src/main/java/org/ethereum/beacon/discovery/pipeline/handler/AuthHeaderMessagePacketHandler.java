@@ -17,6 +17,7 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrFieldV4;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -62,7 +63,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       Bytes ephemeralPubKey = packet.getEphemeralPubkey();
       Functions.HKDFKeys keys =
           Functions.hkdf_expand(
-              session.getNodeRecord().getNodeId(),
+              session.getNodeId(),
               session.getHomeNodeId(),
               session.getStaticNodeKey(),
               ephemeralPubKey,
@@ -71,9 +72,17 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
       packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
-      packet.verify(
-          session.getIdNonce(), (Bytes) session.getNodeRecord().get(EnrFieldV4.PKEY_SECP256K1));
+      final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
+      // Check the node record matches the ID we expect
+      if (nodeRecord == null || !nodeRecord.getNodeId().equals(session.getNodeId())) {
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
+      packet.verify(session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
       envelope.put(Field.MESSAGE, packet.getMessage());
+      if (packet.getNodeRecord() != null) {
+        session.updateNodeRecord(packet.getNodeRecord());
+      }
     } catch (AssertionError ex) {
       logger.info(
           String.format(
@@ -85,12 +94,16 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getStatus());
       logger.error(error, ex);
-      envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
-      session.cancelAllRequests("Failed to handshake");
+      markHandshakeAsFailed(envelope, session);
       return;
     }
     session.setStatus(AUTHENTICATED);
     envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
     NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
+  }
+
+  private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {
+    envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+    session.cancelAllRequests("Failed to handshake");
   }
 }

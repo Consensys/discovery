@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
+import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Optional;
@@ -84,7 +85,7 @@ public class NodeIdToSession implements EnvelopeHandler {
             String.format(
                 "Envelope %s: Session lookup requested for nodeId %s",
                 envelope.getId(), sessionRequest.getValue0()));
-    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getValue0());
+    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getValue0(), envelope);
     if (nodeSessionOptional.isPresent()) {
       envelope.put(Field.SESSION, nodeSessionOptional.get());
       logger.trace(
@@ -102,37 +103,40 @@ public class NodeIdToSession implements EnvelopeHandler {
     }
   }
 
-  private Optional<NodeSession> getSession(Bytes nodeId) {
+  private Optional<NodeSession> getSession(Bytes nodeId, Envelope envelope) {
     NodeSession context = recentSessions.get(nodeId);
     if (context == null) {
-      Optional<NodeRecordInfo> nodeOptional = nodeTable.getNode(nodeId);
-      if (!nodeOptional.isPresent()) {
-        logger.trace(
-            () -> String.format("Couldn't find node record for nodeId %s, ignoring", nodeId));
-        return Optional.empty();
-      }
-      NodeRecord nodeRecord = nodeOptional.get().getNode();
+      final InetSocketAddress remoteSocketAddress = getRemoteSocketAddress(envelope);
+      Optional<NodeRecord> nodeRecord = nodeTable.getNode(nodeId).map(NodeRecordInfo::getNode);
       SecureRandom random = new SecureRandom();
       context =
           new NodeSession(
+              nodeId,
               nodeRecord,
               homeNodeRecord,
               staticNodeKey,
               nodeTable,
               nodeBucketStorage,
               authTagRepo,
-              packet -> outgoingPipeline.push(new NetworkParcelV5(packet, nodeRecord)),
+              packet ->
+                  outgoingPipeline.push(
+                      new NetworkParcelV5(
+                          packet, nodeRecord, Optional.ofNullable(remoteSocketAddress))),
               random);
       recentSessions.put(nodeId, context);
     }
 
     final NodeSession contextBackup = context;
     sessionExpirationScheduler.put(
-        context.getNodeRecord().getNodeId(),
+        nodeId,
         () -> {
-          recentSessions.remove(contextBackup.getNodeRecord().getNodeId());
+          recentSessions.remove(nodeId);
           contextBackup.cleanup();
         });
     return Optional.of(context);
+  }
+
+  private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {
+    return (InetSocketAddress) envelope.get(Field.REMOTE_SENDER);
   }
 }

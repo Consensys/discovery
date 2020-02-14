@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.RandomPacket;
 import org.ethereum.beacon.discovery.packet.UnknownPacket;
@@ -15,6 +16,7 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -64,10 +66,10 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       session.setIdNonce(idNonce);
       WhoAreYouPacket whoAreYouPacket =
           WhoAreYouPacket.createFromNodeId(
-              session.getNodeRecord().getNodeId(),
+              session.getNodeId(),
               authTag,
               idNonce,
-              session.getNodeRecord().getSeq());
+              session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
       session.sendOutgoing(whoAreYouPacket);
     } catch (AssertionError ex) {
       logger.info(

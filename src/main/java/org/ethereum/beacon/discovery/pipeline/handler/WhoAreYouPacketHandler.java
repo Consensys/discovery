@@ -48,7 +48,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in WhoAreYouPacketHandler, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
+    if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.PACKET_WHOAREYOU, envelope)) {
@@ -62,12 +62,13 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
     WhoAreYouPacket packet = (WhoAreYouPacket) envelope.get(Field.PACKET_WHOAREYOU);
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
     try {
       NodeRecord respRecord = null;
       if (packet.getEnrSeq().compareTo(session.getHomeNodeRecord().getSeq()) < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      Bytes remotePubKey = (Bytes) session.getNodeRecord().getKey(EnrFieldV4.PKEY_SECP256K1);
+      Bytes remotePubKey = (Bytes) nodeRecord.getKey(EnrFieldV4.PKEY_SECP256K1);
       byte[] ephemeralKeyBytes = new byte[32];
       Functions.getRandom().nextBytes(ephemeralKeyBytes);
       ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
@@ -75,7 +76,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       Functions.HKDFKeys hkdfKeys =
           Functions.hkdf_expand(
               session.getHomeNodeId(),
-              session.getNodeRecord().getNodeId(),
+              nodeRecord.getNodeId(),
               Bytes.wrap(ephemeralKeyBytes),
               remotePubKey,
               packet.getIdNonce());
@@ -100,7 +101,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       AuthHeaderMessagePacket response =
           AuthHeaderMessagePacket.create(
               session.getHomeNodeId(),
-              session.getNodeRecord().getNodeId(),
+              nodeRecord.getNodeId(),
               authResponseKey,
               packet.getIdNonce(),
               session.getStaticNodeKey(),
@@ -114,7 +115,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       String error =
           String.format(
               "Verification not passed for message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus());
+              packet, nodeRecord, session.getStatus());
       logger.error(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");
@@ -123,7 +124,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus());
+              packet, nodeRecord, session.getStatus());
       logger.error(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");

@@ -20,7 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.Protocol;
 
 /**
- * {@link DiscoveryV5Message} v5 messages processor. Uses several handlers, one fo each type of v5
+ * {@link DiscoveryV5Message} v5 messages processor. Uses several handlers, one for each type of v5
  * message to handle appropriate message.
  */
 public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<DiscoveryV5Message> {

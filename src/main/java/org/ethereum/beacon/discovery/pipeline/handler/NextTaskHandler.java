@@ -53,7 +53,7 @@ public class NextTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NextTaskHandler, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
+    if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }
     logger.trace(
@@ -78,10 +78,7 @@ public class NextTaskHandler implements EnvelopeHandler {
     if (session.getStatus().equals(NodeSession.SessionStatus.INITIAL)) {
       RandomPacket randomPacket =
           RandomPacket.create(
-              session.getHomeNodeId(),
-              session.getNodeRecord().getNodeId(),
-              authTag,
-              new SecureRandom());
+              session.getHomeNodeId(), session.getNodeId(), authTag, new SecureRandom());
       session.setAuthTag(authTag);
       session.sendOutgoing(randomPacket);
       session.setStatus(NodeSession.SessionStatus.RANDOM_PACKET_SENT);

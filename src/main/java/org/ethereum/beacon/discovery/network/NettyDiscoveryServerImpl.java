@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.FluxSink;
@@ -30,8 +31,8 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private static final int RECREATION_TIMEOUT = 5000;
   private static final int STOPPING_TIMEOUT = 10000;
   private static final Logger logger = LogManager.getLogger(NettyDiscoveryServerImpl.class);
-  private final ReplayProcessor<Bytes> incomingPackets = ReplayProcessor.cacheLast();
-  private final FluxSink<Bytes> incomingSink = incomingPackets.sink();
+  private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
+  private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final Integer udpListenPort;
   private final String udpListenHost;
   private AtomicBoolean listen = new AtomicBoolean(true);
@@ -64,10 +65,10 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
             .handler(
                 new ChannelInitializer<NioDatagramChannel>() {
                   @Override
-                  public void initChannel(NioDatagramChannel ch) throws Exception {
+                  public void initChannel(NioDatagramChannel ch) {
                     ch.pipeline()
                         .addFirst(new LoggingHandler(LogLevel.TRACE))
-                        .addLast(new DatagramToBytesValue())
+                        .addLast(new DatagramToEnvelope())
                         .addLast(new IncomingMessageSink(incomingSink));
                     synchronized (NettyDiscoveryServerImpl.class) {
                       datagramChannel = ch;
@@ -99,7 +100,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   }
 
   @Override
-  public Publisher<Bytes> getIncomingPackets() {
+  public Publisher<Envelope> getIncomingPackets() {
     return incomingPackets;
   }
 

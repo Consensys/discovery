@@ -8,6 +8,7 @@ public enum Field {
   SESSION_LOOKUP, // Node id, requests session lookup
   SESSION, // Node session
   INCOMING, // Raw incoming data
+  REMOTE_SENDER, // InetSocketAddress of remote sender
   PACKET_UNKNOWN, // Unknown packet
   PACKET_WHOAREYOU, // WhoAreYou packet
   PACKET_AUTH_HEADER_MESSAGE, // Auth header message packet

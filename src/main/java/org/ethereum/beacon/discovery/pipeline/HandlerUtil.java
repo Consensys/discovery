@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.pipeline;
 import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class HandlerUtil {
   private static final Logger logger = LogManager.getLogger(HandlerUtil.class);
@@ -22,6 +23,21 @@ public class HandlerUtil {
                   field, envelope.getId()));
       return false;
     }
+  }
+
+  public static boolean requireNodeRecord(Envelope envelope) {
+    if (!requireField(Field.SESSION, envelope)) {
+      return false;
+    }
+    if (((NodeSession) envelope.get(Field.SESSION)).getNodeRecord().isEmpty()) {
+      logger.trace(
+          () ->
+              String.format(
+                  "Requirement not satisfied: node record unknown in envelope %s",
+                  envelope.getId()));
+      return false;
+    }
+    return true;
   }
 
   public static boolean requireCondition(

@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.network;
 
-import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.reactivestreams.Publisher;
 
@@ -15,5 +15,5 @@ public interface DiscoveryServer {
   void stop();
 
   /** Raw incoming packets stream */
-  Publisher<Bytes> getIncomingPackets();
+  Publisher<Envelope> getIncomingPackets();
 }
