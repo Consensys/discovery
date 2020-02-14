@@ -7,11 +7,18 @@ package org.ethereum.beacon.discovery.util;
 import static org.ethereum.beacon.discovery.util.Utils.extractBytesFromUnsignedBigInt;
 import static org.web3j.crypto.Sign.CURVE_PARAMS;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.tuweni.bytes.Bytes;
@@ -33,6 +40,7 @@ public class Functions {
   public static final ECDomainParameters SECP256K1_CURVE =
       new ECDomainParameters(
           CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(), CURVE_PARAMS.getH());
+  public static final int PRIVKEY_SIZE = 32;
   public static final int PUBKEY_SIZE = 64;
   private static final int RECIPIENT_KEY_LENGTH = 16;
   private static final int INITIATOR_KEY_LENGTH = 16;
@@ -125,9 +133,21 @@ public class Functions {
           new GCMParameterSpec(128, nonce.toArray()));
       cipher.updateAAD(aad.toArray());
       return Bytes.wrap(cipher.doFinal(encoded.toArray()));
-    } catch (Exception e) {
+    } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("No AES/GCM cipher provider", e);
+    } catch (InvalidKeyException
+        | InvalidAlgorithmParameterException
+        | NoSuchPaddingException
+        | BadPaddingException
+        | IllegalBlockSizeException e) {
+      throw new RuntimeException("Failed to decrypt message", e);
     }
+  }
+
+  public static ECKeyPair generateECKeyPair() {
+    byte[] keyBytes = new byte[PRIVKEY_SIZE];
+    Functions.getRandom().nextBytes(keyBytes);
+    return ECKeyPair.create(keyBytes);
   }
 
   /** Maps public key to point on {@link #SECP256K1_CURVE} */
@@ -282,6 +302,15 @@ public class Functions {
     @Override
     public int hashCode() {
       return Objects.hashCode(initiatorKey, recipientKey, authResponseKey);
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("initiatorKey", initiatorKey)
+          .add("recipientKey", recipientKey)
+          .add("authResponseKey", authResponseKey)
+          .toString();
     }
   }
 }

@@ -9,6 +9,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.pipeline.Envelope;
 import reactor.core.publisher.FluxSink;
 
 /**
@@ -16,17 +17,17 @@ import reactor.core.publisher.FluxSink;
  * Implementation forwards all incoming packets in {@link FluxSink} provided via constructor, so it
  * could be later linked to processor to form incoming messages stream
  */
-public class IncomingMessageSink extends SimpleChannelInboundHandler<Bytes> {
+public class IncomingMessageSink extends SimpleChannelInboundHandler<Envelope> {
   private static final Logger logger = LogManager.getLogger(IncomingMessageSink.class);
-  private final FluxSink<Bytes> BytesSink;
+  private final FluxSink<Envelope> messageSink;
 
-  public IncomingMessageSink(FluxSink<Bytes> BytesSink) {
-    this.BytesSink = BytesSink;
+  public IncomingMessageSink(FluxSink<Envelope> messageSink) {
+    this.messageSink = messageSink;
   }
 
   @Override
-  protected void channelRead0(ChannelHandlerContext ctx, Bytes msg) throws Exception {
+  protected void channelRead0(ChannelHandlerContext ctx, Envelope msg) {
     logger.trace(() -> String.format("Incoming packet %s in session %s", msg, ctx));
-    BytesSink.next(msg);
+    messageSink.next(msg);
   }
 }

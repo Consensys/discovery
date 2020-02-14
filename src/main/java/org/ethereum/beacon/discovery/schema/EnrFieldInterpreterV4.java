@@ -45,6 +45,6 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
         object,
         o ->
             String.format(
-                "Couldn't encode field %s with value %s: no serializer found.", key, object));
+                "Couldn't encode field %s with value %s of type %s: no serializer found.", key, object, object.getClass()));
   }
 }

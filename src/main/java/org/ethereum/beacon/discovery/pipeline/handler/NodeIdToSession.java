@@ -4,7 +4,10 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -19,9 +23,12 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.schema.EnrField;
+import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.WhoAreYouIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -84,7 +91,7 @@ public class NodeIdToSession implements EnvelopeHandler {
             String.format(
                 "Envelope %s: Session lookup requested for nodeId %s",
                 envelope.getId(), sessionRequest.getValue0()));
-    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getValue0());
+    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getValue0(), envelope);
     if (nodeSessionOptional.isPresent()) {
       envelope.put(Field.SESSION, nodeSessionOptional.get());
       logger.trace(
@@ -102,16 +109,24 @@ public class NodeIdToSession implements EnvelopeHandler {
     }
   }
 
-  private Optional<NodeSession> getSession(Bytes nodeId) {
+  private Optional<NodeSession> getSession(Bytes nodeId, Envelope envelope) {
     NodeSession context = recentSessions.get(nodeId);
     if (context == null) {
       Optional<NodeRecordInfo> nodeOptional = nodeTable.getNode(nodeId);
-      if (!nodeOptional.isPresent()) {
-        logger.trace(
-            () -> String.format("Couldn't find node record for nodeId %s, ignoring", nodeId));
-        return Optional.empty();
-      }
-      NodeRecord nodeRecord = nodeOptional.get().getNode();
+      final InetSocketAddress remoteSocketAddress = getRemoteSocketAddress(envelope);
+      NodeRecord nodeRecord =
+          nodeOptional
+              .map(NodeRecordInfo::getNode)
+              .orElseGet(
+                  () ->
+                      NodeRecord.fromValues(
+                          new WhoAreYouIdentitySchemaInterpreter(),
+                          UInt64.ZERO,
+                          List.of(
+                              Pair.with(WhoAreYouIdentitySchemaInterpreter.NODE_ID_FIELD, nodeId),
+                              Pair.with(EnrField.ID, IdentitySchema.V4),
+                              Pair.with(EnrField.IP_V4, getIpBytes(remoteSocketAddress)),
+                              Pair.with(EnrField.UDP_V4, remoteSocketAddress.getPort()))));
       SecureRandom random = new SecureRandom();
       context =
           new NodeSession(
@@ -121,7 +136,10 @@ public class NodeIdToSession implements EnvelopeHandler {
               nodeTable,
               nodeBucketStorage,
               authTagRepo,
-              packet -> outgoingPipeline.push(new NetworkParcelV5(packet, nodeRecord)),
+              packet ->
+                  outgoingPipeline.push(
+                      new NetworkParcelV5(
+                          packet, nodeRecord, Optional.ofNullable(remoteSocketAddress))),
               random);
       recentSessions.put(nodeId, context);
     }
@@ -134,5 +152,15 @@ public class NodeIdToSession implements EnvelopeHandler {
           contextBackup.cleanup();
         });
     return Optional.of(context);
+  }
+
+  private Bytes getIpBytes(final InetSocketAddress remoteSocketAddress) {
+    final InetAddress remoteIp = remoteSocketAddress.getAddress();
+    Bytes addressBytes = Bytes.wrap(remoteIp.getAddress());
+    return Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
+  }
+
+  private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {
+    return (InetSocketAddress) envelope.get(Field.REMOTE_SENDER);
   }
 }
