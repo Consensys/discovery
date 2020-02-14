@@ -73,7 +73,11 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setRecipientKey(keys.getInitiatorKey());
       packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
       final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
-      // TODO: Need to verify that PKEY_SECP256K1 matches the node ID.
+      // Check the node record matches the ID we expect
+      if (nodeRecord == null || !nodeRecord.getNodeId().equals(session.getNodeId())) {
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
       packet.verify(session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
       envelope.put(Field.MESSAGE, packet.getMessage());
       if (packet.getNodeRecord() != null) {
@@ -90,12 +94,16 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getStatus());
       logger.error(error, ex);
-      envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
-      session.cancelAllRequests("Failed to handshake");
+      markHandshakeAsFailed(envelope, session);
       return;
     }
     session.setStatus(AUTHENTICATED);
     envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
     NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
+  }
+
+  private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {
+    envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+    session.cancelAllRequests("Failed to handshake");
   }
 }
