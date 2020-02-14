@@ -50,7 +50,6 @@ import reactor.core.publisher.ReplayProcessor;
 
 public class DiscoveryManagerImpl implements DiscoveryManager {
   private final ReplayProcessor<NetworkParcel> outgoingMessages = ReplayProcessor.cacheLast();
-  private final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
   private final NettyDiscoveryServer discoveryServer;
   private final Scheduler scheduler;
   private final Pipeline incomingPipeline = new PipelineImpl();
@@ -98,6 +97,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new MessagePacketHandler())
         .addHandler(new MessageHandler(nodeRecordFactory))
         .addHandler(new BadPacketHandler());
+    final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
         .addHandler(new OutgoingParcelHandler(outgoingSink))
         .addHandler(new NodeSessionRequestHandler())
@@ -121,6 +121,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public void stop() {
+    discoveryClient.stop();
     discoveryServer.stop();
   }
 
