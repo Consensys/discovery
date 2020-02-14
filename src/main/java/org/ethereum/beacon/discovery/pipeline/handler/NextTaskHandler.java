@@ -17,7 +17,6 @@ import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
-import org.ethereum.beacon.discovery.pipeline.info.GeneralRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -86,13 +85,7 @@ public class NextTaskHandler implements EnvelopeHandler {
       MessagePacket messagePacket =
           TaskMessageFactory.createPacketFromRequest(requestInfo, authTag, session);
       session.sendOutgoing(messagePacket);
-      RequestInfo sentRequestInfo =
-          new GeneralRequestInfo(
-              requestInfo.getTaskType(),
-              TaskStatus.SENT,
-              requestInfo.getRequestId(),
-              requestInfo.getFuture());
-      session.updateRequestInfo(requestId, sentRequestInfo);
+      session.updateRequestInfo(requestId, requestInfo.withStatus(TaskStatus.SENT));
       tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     }
   }

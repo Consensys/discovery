@@ -25,6 +25,12 @@ public class FindNodeRequestInfo extends GeneralRequestInfo {
     this.remainingNodes = remainingNodes;
   }
 
+  @Override
+  public RequestInfo withStatus(final TaskStatus status) {
+    return new FindNodeRequestInfo(
+        status, getRequestId(), getFuture(), getDistance(), getRemainingNodes());
+  }
+
   public int getDistance() {
     return distance;
   }
