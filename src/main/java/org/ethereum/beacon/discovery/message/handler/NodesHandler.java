@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.task.TaskType;
 
 public class NodesHandler implements MessageHandler<NodesMessage> {
-  private static final Logger logger = LogManager.getLogger(FindNodeHandler.class);
+  private static final Logger logger = LogManager.getLogger(NodesHandler.class);
 
   @Override
   public void handle(NodesMessage message, NodeSession session) {
