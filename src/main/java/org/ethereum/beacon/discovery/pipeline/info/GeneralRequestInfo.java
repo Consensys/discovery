@@ -44,6 +44,11 @@ public class GeneralRequestInfo implements RequestInfo {
   }
 
   @Override
+  public RequestInfo withStatus(final TaskStatus status) {
+    return new GeneralRequestInfo(getTaskType(), status, getRequestId(), getFuture());
+  }
+
+  @Override
   public String toString() {
     return "GeneralRequestInfo{"
         + "taskType="

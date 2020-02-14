@@ -22,4 +22,7 @@ public interface RequestInfo {
 
   /** Future that should be fired when request is fulfilled or cancelled due to errors */
   CompletableFuture<Void> getFuture();
+
+  /** Return a new RequestInfo with the same information as this one but task status changed. */
+  RequestInfo withStatus(TaskStatus status);
 }
