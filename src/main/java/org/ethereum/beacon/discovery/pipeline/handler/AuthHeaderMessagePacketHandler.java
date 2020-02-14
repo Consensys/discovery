@@ -17,6 +17,7 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrFieldV4;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -62,7 +63,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       Bytes ephemeralPubKey = packet.getEphemeralPubkey();
       Functions.HKDFKeys keys =
           Functions.hkdf_expand(
-              session.getNodeRecord().getNodeId(),
+              session.getNodeId(),
               session.getHomeNodeId(),
               session.getStaticNodeKey(),
               ephemeralPubKey,
@@ -71,9 +72,11 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
       packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
-      packet.verify(
-          session.getIdNonce(), (Bytes) session.getNodeRecord().get(EnrFieldV4.PKEY_SECP256K1));
+      final NodeRecord nodeRecord = packet.getNodeRecord();
+      // TODO: Need to verify that PKEY_SECP256K1 matches the node ID.
+      packet.verify(session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
       envelope.put(Field.MESSAGE, packet.getMessage());
+      session.updateNodeRecord(nodeRecord);
     } catch (AssertionError ex) {
       logger.info(
           String.format(

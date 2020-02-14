@@ -11,11 +11,11 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class NetworkParcelV5 implements NetworkParcel {
   private final Packet packet;
-  private final NodeRecord nodeRecord;
+  private final Optional<NodeRecord> nodeRecord;
   private final Optional<InetSocketAddress> replyDestination;
 
   public NetworkParcelV5(
-      Packet packet, NodeRecord nodeRecord, final Optional<InetSocketAddress> replyDestination) {
+      Packet packet, Optional<NodeRecord> nodeRecord, final Optional<InetSocketAddress> replyDestination) {
     this.packet = packet;
     this.nodeRecord = nodeRecord;
     this.replyDestination = replyDestination;
@@ -27,7 +27,7 @@ public class NetworkParcelV5 implements NetworkParcel {
   }
 
   @Override
-  public NodeRecord getNodeRecord() {
+  public Optional<NodeRecord> getNodeRecord() {
     return nodeRecord;
   }
 

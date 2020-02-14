@@ -13,5 +13,5 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 public interface DiscoveryClient {
   void stop();
 
-  void send(Bytes data, NodeRecord recipient, Optional<InetSocketAddress> destination);
+  void send(Bytes data, Optional<NodeRecord> recipient, Optional<InetSocketAddress> destination);
 }

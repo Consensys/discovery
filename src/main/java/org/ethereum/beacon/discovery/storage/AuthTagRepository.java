@@ -28,7 +28,7 @@ public class AuthTagRepository {
         () ->
             String.format(
                 "PUT: authTag[%s] => nodeSession[%s]",
-                authTag, session.getNodeRecord().getNodeId()));
+                authTag, session.getNodeId()));
     authTags.put(authTag, session);
     sessions.put(session, authTag);
   }

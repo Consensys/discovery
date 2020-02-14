@@ -46,7 +46,8 @@ public class NodeSession {
   private final NodeBucketStorage nodeBucketStorage;
   private final Consumer<Packet> outgoing;
   private final Random rnd;
-  private NodeRecord nodeRecord;
+  private final Bytes nodeId;
+  private Optional<NodeRecord> nodeRecord;
   private SessionStatus status = SessionStatus.INITIAL;
   private Bytes idNonce;
   private Bytes initiatorKey;
@@ -57,7 +58,8 @@ public class NodeSession {
   private Bytes staticNodeKey;
 
   public NodeSession(
-      NodeRecord nodeRecord,
+      Bytes nodeId,
+      Optional<NodeRecord> nodeRecord,
       NodeRecord homeNodeRecord,
       Bytes staticNodeKey,
       NodeTable nodeTable,
@@ -65,6 +67,7 @@ public class NodeSession {
       AuthTagRepository authTagRepo,
       Consumer<Packet> outgoing,
       Random rnd) {
+    this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.outgoing = outgoing;
     this.authTagRepo = authTagRepo;
@@ -76,7 +79,11 @@ public class NodeSession {
     this.rnd = rnd;
   }
 
-  public NodeRecord getNodeRecord() {
+  public Bytes getNodeId() {
+    return nodeId;
+  }
+
+  public Optional<NodeRecord> getNodeRecord() {
     return nodeRecord;
   }
 
@@ -86,7 +93,7 @@ public class NodeSession {
             String.format(
                 "NodeRecord updated from %s to %s in session %s",
                 this.nodeRecord, nodeRecord, this));
-    this.nodeRecord = nodeRecord;
+    this.nodeRecord = Optional.of(nodeRecord);
   }
 
   public void sendOutgoing(Packet packet) {
@@ -238,10 +245,13 @@ public class NodeSession {
 
   /** Updates nodeRecord {@link NodeStatus} to ACTIVE of the node associated with this session */
   public synchronized void updateLiveness() {
-    NodeRecordInfo nodeRecordInfo =
-        new NodeRecordInfo(getNodeRecord(), Functions.getTime(), NodeStatus.ACTIVE, 0);
-    nodeTable.save(nodeRecordInfo);
-    nodeBucketStorage.put(nodeRecordInfo);
+    nodeRecord.ifPresent(
+        record -> {
+          NodeRecordInfo nodeRecordInfo =
+              new NodeRecordInfo(record, Functions.getTime(), NodeStatus.ACTIVE, 0);
+          nodeTable.save(nodeRecordInfo);
+          nodeBucketStorage.put(nodeRecordInfo);
+        });
   }
 
   private synchronized RequestInfo clearRequestId(Bytes requestId) {

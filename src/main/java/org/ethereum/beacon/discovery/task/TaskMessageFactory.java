@@ -60,14 +60,14 @@ public class TaskMessageFactory {
 
     return MessagePacket.create(
         session.getHomeNodeId(),
-        session.getNodeRecord().getNodeId(),
+        session.getNodeId(),
         authTag,
         session.getInitiatorKey(),
         DiscoveryV5Message.from(createPing(session, requestId)));
   }
 
   public static PingMessage createPing(NodeSession session, Bytes requestId) {
-    return new PingMessage(requestId, session.getNodeRecord().getSeq());
+    return new PingMessage(requestId, session.getNodeRecord().orElseThrow().getSeq());
   }
 
   public static MessagePacket createFindNodePacket(
@@ -75,7 +75,7 @@ public class TaskMessageFactory {
     FindNodeMessage findNodeMessage = createFindNode(requestId, distance);
     return MessagePacket.create(
         session.getHomeNodeId(),
-        session.getNodeRecord().getNodeId(),
+        session.getNodeId(),
         authTag,
         session.getInitiatorKey(),
         DiscoveryV5Message.from(findNodeMessage));

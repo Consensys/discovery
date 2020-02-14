@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
@@ -106,7 +107,8 @@ public class HandshakeHandlersTest {
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
     NodeSession nodeSessionAt1For2 =
         new NodeSession(
-            nodeRecord2,
+            nodeRecord2.getNodeId(),
+            Optional.of(nodeRecord2),
             nodeRecord1,
             nodePair1.getValue0(),
             nodeTableStorage1.get(),
@@ -120,7 +122,8 @@ public class HandshakeHandlersTest {
         };
     NodeSession nodeSessionAt2For1 =
         new NodeSession(
-            nodeRecord1,
+            nodeRecord1.getNodeId(),
+            Optional.of(nodeRecord1),
             nodeRecord2,
             nodePair2.getValue0(),
             nodeTableStorage2.get(),

@@ -18,7 +18,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 public interface NetworkParcel {
   Packet getPacket();
 
-  NodeRecord getNodeRecord();
+  Optional<NodeRecord> getNodeRecord();
 
   Optional<InetSocketAddress> getReplyDestination();
 }

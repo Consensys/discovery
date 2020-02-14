@@ -66,7 +66,8 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
   }
 
   @Override
-  public void send(Bytes data, NodeRecord recipient, Optional<InetSocketAddress> destination) {
+  public void send(
+      Bytes data, Optional<NodeRecord> recipient, Optional<InetSocketAddress> destination) {
     // From discv5 spec: when responding to a request, the response should be sent to the UDP
     // envelope address of the request.
     // If that's not available (we're initiating the request) then send to the address in the
@@ -79,7 +80,11 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
     channel.flush();
   }
 
-  private InetSocketAddress getInetSocketAddressFromNodeRecord(final NodeRecord recipient) {
+  private InetSocketAddress getInetSocketAddressFromNodeRecord(
+      final Optional<NodeRecord> recipientOptional) {
+    final NodeRecord recipient =
+        recipientOptional.orElseThrow(
+            () -> new RuntimeException("Attempting to send new message to unknown recipient"));
     if (!recipient.getIdentityScheme().equals(IdentitySchema.V4)) {
       String error =
           String.format(
