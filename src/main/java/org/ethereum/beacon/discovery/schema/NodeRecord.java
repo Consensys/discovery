@@ -104,9 +104,16 @@ public class NodeRecord {
     return nodeRecord;
   }
 
-  @SuppressWarnings({"unchecked", "DefaultCharset"})
   public String asBase64() {
-    return new String(Base64.getUrlEncoder().encode(serialize().toArray()));
+    String result = Base64.getUrlEncoder().encodeToString(serialize().toArray());
+    while (result.endsWith("=")) {
+      result = result.substring(0, result.length() - 1);
+    }
+    return result;
+  }
+
+  public String asEnr() {
+    return "enr:" + asBase64();
   }
 
   public IdentitySchema getIdentityScheme() {
