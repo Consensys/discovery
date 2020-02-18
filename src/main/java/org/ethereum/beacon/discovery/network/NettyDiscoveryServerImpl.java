@@ -97,7 +97,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
                     Thread.sleep(RECREATION_TIMEOUT);
                     startServer(group);
                   });
-          future.complete((NioDatagramChannel)this.channel);
+          future.complete((NioDatagramChannel) this.channel);
         });
     return future;
   }
