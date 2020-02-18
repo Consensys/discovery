@@ -301,14 +301,7 @@ public class NodeSession {
 
   @Override
   public String toString() {
-    return "NodeSession{"
-        + "nodeRecord="
-        + nodeRecord
-        + ", homeNodeId="
-        + homeNodeId
-        + ", status="
-        + status
-        + '}';
+    return "NodeSession{" + nodeId + "}";
   }
 
   public synchronized SessionStatus getStatus() {

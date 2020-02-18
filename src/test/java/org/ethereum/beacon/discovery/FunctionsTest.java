@@ -5,14 +5,17 @@
 package org.ethereum.beacon.discovery;
 
 import static org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket.createIdNonceMessage;
+import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
 import org.ethereum.beacon.discovery.util.Utils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 
@@ -170,5 +173,20 @@ public class FunctionsTest {
     Bytes idNonceSig = AuthHeaderMessagePacket.signIdNonce(idNonce, privKey, ephemeralPubkey);
     assert Functions.verifyECDSASignature(
         idNonceSig, Functions.hash(createIdNonceMessage(idNonce, ephemeralPubkey)), pubKey);
+  }
+
+  @Test
+  public void shouldConvertBetweenPublicKeyForms() {
+    final ECKeyPair keyPair = Functions.generateECKeyPair();
+
+    final Bytes privateKey =
+        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
+    final Bytes fullPublicKey =
+        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPublicKey(), PUBKEY_SIZE));
+    final Bytes derivedPublicKey = Functions.derivePublicKeyFromPrivate(privateKey);
+
+    final ECPoint fullPoint = Functions.publicKeyToPoint(fullPublicKey);
+    final ECPoint derivedPoint = Functions.publicKeyToPoint(derivedPublicKey);
+    Assertions.assertEquals(fullPoint, derivedPoint);
   }
 }
