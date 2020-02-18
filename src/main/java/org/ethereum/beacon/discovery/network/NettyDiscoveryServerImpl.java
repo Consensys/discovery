@@ -25,9 +25,8 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
-  private static final int RECREATION_TIMEOUT = 5000;
-  private static final int STOPPING_TIMEOUT = 10000;
   private static final Logger logger = LogManager.getLogger(NettyDiscoveryServerImpl.class);
+  private static final int RECREATION_TIMEOUT = 5000;
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final Integer udpListenPort;
