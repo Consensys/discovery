@@ -52,7 +52,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final NodeRecord homeNodeRecord;
-  private DiscoveryClient discoveryClient;
+  private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
       NodeTable nodeTable,
@@ -110,7 +110,10 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public void stop() {
-    discoveryClient.stop();
+    final DiscoveryClient client = this.discoveryClient;
+    if (client != null) {
+      client.stop();
+    }
     discoveryServer.stop();
   }
 

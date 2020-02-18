@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.BindException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
@@ -24,12 +26,19 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.javatuples.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryIntegrationTest {
   private static final Logger logger = LogManager.getLogger();
   private int nextPort = 9000;
+  private List<DiscoveryManager> managers = new ArrayList<>();
+
+  @AfterEach
+  public void tearDown() {
+    managers.forEach(DiscoveryManager::stop);
+  }
 
   @Test
   public void shouldSuccessfullyCommunicateWithBootnode() throws Exception {
@@ -71,8 +80,10 @@ public class DiscoveryIntegrationTest {
               .build();
       try {
         waitFor(discoveryManager.start());
+        managers.add(discoveryManager);
         return discoveryManager;
       } catch (final Exception e) {
+        discoveryManager.stop();
         if (e.getCause() instanceof BindException) {
           logger.info("Port conflict detected, retrying with new port", e);
         } else {

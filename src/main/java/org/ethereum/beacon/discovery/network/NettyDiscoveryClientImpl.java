@@ -11,7 +11,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -23,9 +22,7 @@ import reactor.core.publisher.Flux;
 
 /** Netty discovery UDP client */
 public class NettyDiscoveryClientImpl implements DiscoveryClient {
-  private static final int STOPPING_TIMEOUT = 10000;
   private static final Logger logger = LogManager.getLogger(NettyDiscoveryClientImpl.class);
-  private AtomicBoolean listen = new AtomicBoolean(false);
   private NioDatagramChannel channel;
 
   /**
@@ -45,25 +42,10 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
                     networkPacket.getNodeRecord(),
                     networkPacket.getReplyDestination()));
     logger.info("UDP discovery client started");
-    listen.set(true);
   }
 
   @Override
-  public void stop() {
-    if (listen.get()) {
-      logger.info("Stopping discovery client");
-      listen.set(false);
-      if (channel != null) {
-        try {
-          channel.close().await(STOPPING_TIMEOUT);
-        } catch (InterruptedException ex) {
-          logger.error("Failed to stop discovery client", ex);
-        }
-      }
-    } else {
-      logger.warn("An attempt to stop already stopping/stopped discovery client");
-    }
-  }
+  public void stop() {}
 
   @Override
   public void send(

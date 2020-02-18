@@ -86,7 +86,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
                   closeFuture -> {
                     if (!listen.get()) {
                       logger.info("Shutting down discovery server");
-                      group.shutdownGracefully().sync();
+                      group.shutdownGracefully();
                       return;
                     }
                     logger.error(
@@ -113,7 +113,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
       logger.info("Stopping discovery server");
       if (channel != null) {
         try {
-          channel.close().await(STOPPING_TIMEOUT);
+          channel.close().sync();
         } catch (InterruptedException ex) {
           logger.error("Failed to stop discovery server", ex);
         }
