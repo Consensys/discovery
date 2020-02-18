@@ -301,7 +301,7 @@ public class NodeSession {
 
   @Override
   public String toString() {
-    return "NodeSession{" + nodeId + "}";
+    return "NodeSession{" + nodeId + " (" + status + ")}";
   }
 
   public synchronized SessionStatus getStatus() {
