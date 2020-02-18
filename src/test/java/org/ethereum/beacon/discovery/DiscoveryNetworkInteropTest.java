@@ -127,7 +127,6 @@ public class DiscoveryNetworkInteropTest {
             localNodeRecord,
             Bytes.wrap(localPrivKey),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-1"),
             Schedulers.createDefault().newSingleThreadDaemon("client-1"));
 
     //    CountDownLatch randomSent1to2 = new CountDownLatch(1);
@@ -377,7 +376,6 @@ public class DiscoveryNetworkInteropTest {
             nodeRecord1,
             Bytes.wrap(privKey1),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-1"),
             Schedulers.createDefault().newSingleThreadDaemon("client-1"));
 
     Flux.from(discoveryManager1.getOutgoingMessages())
@@ -496,7 +494,6 @@ public class DiscoveryNetworkInteropTest {
             nodeRecord1,
             Bytes.wrap(privKey1),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-1"),
             Schedulers.createDefault().newSingleThreadDaemon("client-1"));
 
     // 3) Expect standard 1 => 2 dialog

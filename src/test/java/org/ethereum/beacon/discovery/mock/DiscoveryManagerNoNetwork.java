@@ -57,6 +57,7 @@ public class DiscoveryManagerNoNetwork implements DiscoveryManager {
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final NodeRecordFactory nodeRecordFactory =
       NODE_RECORD_FACTORY_NO_VERIFICATION; // no signature verification
+  private final NodeRecord homeNodeRecord;
 
   public DiscoveryManagerNoNetwork(
       NodeTable nodeTable,
@@ -65,6 +66,7 @@ public class DiscoveryManagerNoNetwork implements DiscoveryManager {
       Bytes homeNodePrivateKey,
       Publisher<Bytes> incomingPackets,
       Scheduler taskScheduler) {
+    homeNodeRecord = homeNode;
     AuthTagRepository authTagRepo = new AuthTagRepository();
     this.incomingPackets = incomingPackets;
     NodeIdToSession nodeIdToSession =
@@ -98,14 +100,20 @@ public class DiscoveryManagerNoNetwork implements DiscoveryManager {
   }
 
   @Override
-  public void start() {
+  public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
     Flux.from(incomingPackets).subscribe(incomingPipeline::push);
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
   public void stop() {}
+
+  @Override
+  public NodeRecord getLocalNodeRecord() {
+    return homeNodeRecord;
+  }
 
   private CompletableFuture<Void> executeTaskImpl(
       NodeRecord nodeRecord, TaskType taskType, TaskOptions taskOptions) {

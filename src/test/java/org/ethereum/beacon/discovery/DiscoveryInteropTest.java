@@ -74,7 +74,6 @@ public class DiscoveryInteropTest {
             nodeRecord1,
             nodePair1.getValue0(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-1"),
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
 
     // 3) Expect standard 1 => 2 dialog

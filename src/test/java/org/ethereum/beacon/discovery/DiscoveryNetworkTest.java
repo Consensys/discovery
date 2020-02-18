@@ -76,7 +76,6 @@ public class DiscoveryNetworkTest {
             nodeRecord1,
             nodePair1.getValue0(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-1"),
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
@@ -85,7 +84,6 @@ public class DiscoveryNetworkTest {
             nodeRecord2,
             nodePair2.getValue0(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("server-2"),
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"));
 
     // 3) Expect standard 1 => 2 dialog

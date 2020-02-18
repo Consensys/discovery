@@ -13,9 +13,11 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
  */
 public interface DiscoveryManager {
 
-  void start();
+  CompletableFuture<Void> start();
 
   void stop();
+
+  NodeRecord getLocalNodeRecord();
 
   /**
    * Initiates FINDNODE with node `nodeRecord`

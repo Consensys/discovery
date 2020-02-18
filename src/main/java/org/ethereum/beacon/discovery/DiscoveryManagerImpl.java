@@ -6,8 +6,6 @@ package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
@@ -51,11 +49,10 @@ import reactor.core.publisher.ReplayProcessor;
 public class DiscoveryManagerImpl implements DiscoveryManager {
   private final ReplayProcessor<NetworkParcel> outgoingMessages = ReplayProcessor.cacheLast();
   private final NettyDiscoveryServer discoveryServer;
-  private final Scheduler scheduler;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
+  private final NodeRecord homeNodeRecord;
   private DiscoveryClient discoveryClient;
-  private CountDownLatch clientStarted = new CountDownLatch(1);
 
   public DiscoveryManagerImpl(
       NodeTable nodeTable,
@@ -63,18 +60,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       NodeRecord homeNode,
       Bytes homeNodePrivateKey,
       NodeRecordFactory nodeRecordFactory,
-      Scheduler serverScheduler,
       Scheduler taskScheduler) {
+    homeNodeRecord = homeNode;
     AuthTagRepository authTagRepo = new AuthTagRepository();
-    this.scheduler = serverScheduler;
     this.discoveryServer =
         new NettyDiscoveryServerImpl(
             ((Bytes) homeNode.get(EnrField.IP_V4)), (int) homeNode.get(EnrField.UDP_V4));
-    discoveryServer.useDatagramChannel(
-        channel -> {
-          discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channel);
-          clientStarted.countDown();
-        });
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             homeNode,
@@ -107,22 +98,25 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public void start() {
+  public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
     Flux.from(discoveryServer.getIncomingPackets()).subscribe(incomingPipeline::push);
-    discoveryServer.start(scheduler);
-    try {
-      clientStarted.await(2, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to start client", e);
-    }
+    return discoveryServer
+        .start()
+        .thenAccept(
+            channel -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channel));
   }
 
   @Override
   public void stop() {
     discoveryClient.stop();
     discoveryServer.stop();
+  }
+
+  @Override
+  public NodeRecord getLocalNodeRecord() {
+    return homeNodeRecord;
   }
 
   private CompletableFuture<Void> executeTaskImpl(
