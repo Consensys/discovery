@@ -106,10 +106,8 @@ public class NodeRecord {
 
   public String asBase64() {
     String result = Base64.getUrlEncoder().encodeToString(serialize().toArray());
-    while (result.endsWith("=")) {
-      result = result.substring(0, result.length() - 1);
-    }
-    return result;
+    final int firstPaddingChar = result.indexOf('=');
+    return firstPaddingChar > 0 ? result.substring(0, firstPaddingChar) : result;
   }
 
   public String asEnr() {
