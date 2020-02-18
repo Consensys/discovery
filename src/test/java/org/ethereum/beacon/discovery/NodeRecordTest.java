@@ -18,6 +18,7 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.EnrFieldV4;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
+import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -113,5 +114,49 @@ public class NodeRecordTest {
       exceptionThrown.set(true);
     }
     assertTrue(exceptionThrown.get());
+  }
+
+  @Test
+  public void shouldNotIncludePaddingInBase64() {
+    final int port = 30303;
+    final Bytes ip = Bytes.fromHexString("0x7F000001");
+    final Bytes nodeId =
+        Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
+    final Bytes privateKey =
+        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final int seq = 1;
+
+    NodeRecord nodeRecord =
+        new NodeRecordFactory(new IdentitySchemaV4Interpreter())
+            .createFromValues(
+                UInt64.valueOf(seq),
+                Pair.with(EnrField.ID, IdentitySchema.V4),
+                Pair.with(EnrFieldV4.IP_V4, ip),
+                Pair.with(EnrFieldV4.UDP_V4, port),
+                Pair.with(
+                    EnrFieldV4.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
+    nodeRecord.sign(privateKey);
+    assertEquals(nodeId, nodeRecord.getNodeId());
+    assertEquals(
+        "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8",
+        nodeRecord.asEnr());
+  }
+
+  @Test
+  public void shouldDecodeEnr() {
+    final NodeRecordFactory nodeRecordFactory =
+        new NodeRecordFactory(new IdentitySchemaV4Interpreter());
+    final NodeRecord nodeRecord =
+        nodeRecordFactory.fromBase64(
+            "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
+    final Bytes nodeId =
+        Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
+    assertEquals(nodeId, nodeRecord.getNodeId());
+    assertEquals(UInt64.valueOf(1), nodeRecord.getSeq());
+    assertEquals(
+        Bytes.fromHexString("03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138"),
+        nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
+    assertEquals(Bytes.fromHexString("0x7F000001"), nodeRecord.get(EnrField.IP_V4));
+    assertEquals(30303, nodeRecord.get(EnrField.UDP_V4));
   }
 }
