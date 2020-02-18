@@ -4,13 +4,13 @@
 
 package org.ethereum.beacon.discovery.network;
 
+import java.util.concurrent.CompletableFuture;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.reactivestreams.Publisher;
 
 /** Discovery server which listens to incoming messages according to setup */
 public interface DiscoveryServer {
-  void start(Scheduler scheduler);
+  CompletableFuture<?> start();
 
   void stop();
 
