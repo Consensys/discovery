@@ -10,8 +10,9 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class IdentitySchemaV4InterpreterMock extends IdentitySchemaV4Interpreter {
   @Override
-  public void verify(NodeRecord nodeRecord) {
+  public boolean isValid(NodeRecord nodeRecord) {
     // Don't verify signature
+    return true;
   }
 
   @Override

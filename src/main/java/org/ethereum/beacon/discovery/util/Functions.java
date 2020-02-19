@@ -21,6 +21,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -37,6 +39,7 @@ import org.web3j.crypto.Sign;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
+  private static final Logger logger = LogManager.getLogger();
   public static final ECDomainParameters SECP256K1_CURVE =
       new ECDomainParameters(
           CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(), CURVE_PARAMS.getH());
@@ -88,16 +91,21 @@ public class Functions {
         new ECDSASignature(
             new BigInteger(1, signature.slice(0, 32).toArray()),
             new BigInteger(1, signature.slice(32).toArray()));
-    for (int recId = 0; recId < 4; ++recId) {
-      BigInteger calculatedPubKey = Sign.recoverFromSignature(recId, ecdsaSignature, x.toArray());
-      if (calculatedPubKey == null) {
-        continue;
+    try {
+      for (int recId = 0; recId < 4; ++recId) {
+        BigInteger calculatedPubKey = Sign.recoverFromSignature(recId, ecdsaSignature, x.toArray());
+        if (calculatedPubKey == null) {
+          continue;
+        }
+        if (Arrays.areEqual(
+            pubKeyUncompressed.toArray(),
+            extractBytesFromUnsignedBigInt(calculatedPubKey, PUBKEY_SIZE))) {
+          return true;
+        }
       }
-      if (Arrays.areEqual(
-          pubKeyUncompressed.toArray(),
-          extractBytesFromUnsignedBigInt(calculatedPubKey, PUBKEY_SIZE))) {
-        return true;
-      }
+    } catch (final IllegalArgumentException e) {
+      logger.trace("Failed to verify ECDSA signature", e);
+      return false;
     }
     return false;
   }

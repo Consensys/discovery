@@ -23,10 +23,8 @@ public interface IdentitySchemaInterpreter {
   void sign(NodeRecord nodeRecord, Object signOptions);
 
   /** Verifies that `nodeRecord` is of scheme implementation */
-  default void verify(NodeRecord nodeRecord) {
-    if (!nodeRecord.getIdentityScheme().equals(getScheme())) {
-      throw new RuntimeException("Interpreter and node record schemes do not match!");
-    }
+  default boolean isValid(NodeRecord nodeRecord) {
+    return nodeRecord.getIdentityScheme().equals(getScheme());
   }
 
   /** Delivers nodeId according to identity scheme scheme */

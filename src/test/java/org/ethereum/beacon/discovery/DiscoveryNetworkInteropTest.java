@@ -89,7 +89,7 @@ public class DiscoveryNetworkInteropTest {
     NodeRecord remoteNodeRecord = NodeRecordFactory.DEFAULT.fromBase64(remoteHostEnr);
     //    NodeRecord remoteNodeRecord =
     // NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(remoteHostEnr);
-    remoteNodeRecord.verify();
+    Assertions.assertTrue(remoteNodeRecord.isValid());
     Assertions.assertNotNull(remoteNodeRecord);
     System.out.println("remoteEnr:" + remoteNodeRecord.asBase64());
     System.out.println("remoteNodeId:" + remoteNodeRecord.getNodeId());
@@ -229,7 +229,7 @@ public class DiscoveryNetworkInteropTest {
       // nodeRecord1.serializeNoSignature());
       //      nodeRecord1.setSignature(signature1);
       nodeRecord1.sign(Bytes.wrap(privKey1));
-      nodeRecord1.verify();
+      Assertions.assertTrue(nodeRecord1.isValid());
       return new Pair(nodeRecord1, privKey1);
     } catch (Exception e) {
       e.printStackTrace();
@@ -351,7 +351,7 @@ public class DiscoveryNetworkInteropTest {
                 Bytes.wrap(extractBytesFromUnsignedBigInt(keyPair1.getPublicKey(), PUBKEY_SIZE))));
     Bytes signature1 = Functions.sign(Bytes.wrap(privKey1), nodeRecord1.serializeNoSignature());
     nodeRecord1.setSignature(signature1);
-    nodeRecord1.verify();
+    Assertions.assertTrue(nodeRecord1.isValid());
 
     /// use discovery manager to connect to a remote discv5 peer
     Database database0 = Database.inMemoryDB();
@@ -449,7 +449,7 @@ public class DiscoveryNetworkInteropTest {
                 Bytes.wrap(extractBytesFromUnsignedBigInt(keyPair1.getPublicKey(), PUBKEY_SIZE))));
     Bytes signature1 = Functions.sign(Bytes.wrap(privKey1), nodeRecord1.serializeNoSignature());
     nodeRecord1.setSignature(signature1);
-    nodeRecord1.verify();
+    Assertions.assertTrue(nodeRecord1.isValid());
 
     // set remote service
     byte[] privKey = new byte[32];
@@ -468,7 +468,7 @@ public class DiscoveryNetworkInteropTest {
                 Bytes.wrap(extractBytesFromUnsignedBigInt(keyPair.getPublicKey(), PUBKEY_SIZE))));
     Bytes signature0 = Functions.sign(Bytes.wrap(privKey), nodeRecord0.serializeNoSignature());
     nodeRecord0.setSignature(signature0);
-    nodeRecord0.verify();
+    Assertions.assertTrue(nodeRecord0.isValid());
 
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
 

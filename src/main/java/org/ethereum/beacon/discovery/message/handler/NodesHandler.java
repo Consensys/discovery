@@ -56,9 +56,12 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
         .getNodeRecords()
         .forEach(
             nodeRecordV5 -> {
-              nodeRecordV5.verify();
+              if (!nodeRecordV5.isValid()) {
+                logger.debug("Rejecting invalid node record {}", nodeRecordV5);
+                return;
+              }
               NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
-              if (!session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isPresent()) {
+              if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
                 session.getNodeTable().save(nodeRecordInfo);
               }
               session.putRecordInBucket(nodeRecordInfo);

@@ -4,23 +4,31 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
 public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
+  private static final Logger logger = LogManager.getLogger();
+
   @Override
-  public void verify(NodeRecord nodeRecord) {
-    IdentitySchemaInterpreter.super.verify(nodeRecord);
+  public boolean isValid(NodeRecord nodeRecord) {
+    if (!IdentitySchemaInterpreter.super.isValid(nodeRecord)) {
+      return false;
+    }
     if (nodeRecord.get(EnrFieldV4.PKEY_SECP256K1) == null) {
-      throw new RuntimeException(
-          String.format(
-              "Field %s not exists but required for scheme %s",
-              EnrFieldV4.PKEY_SECP256K1, getScheme()));
+      logger.trace(
+          "Field {} does not exist but required for scheme {}",
+          EnrFieldV4.PKEY_SECP256K1,
+          getScheme());
+      return false;
     }
     Bytes pubKey = (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1); // compressed
-    assert Functions.verifyECDSASignature(
+    return Functions.verifyECDSASignature(
         nodeRecord.getSignature(), Functions.hashKeccak(nodeRecord.serializeNoSignature()), pubKey);
   }
 
@@ -31,8 +39,8 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public Bytes getNodeId(NodeRecord nodeRecord) {
-    verify(nodeRecord);
     Bytes pkey = (Bytes) nodeRecord.getKey(EnrFieldV4.PKEY_SECP256K1);
+    Preconditions.checkNotNull(pkey, "Missing PKEY_SECP256K1 field");
     ECPoint pudDestPoint = Functions.publicKeyToPoint(pkey);
     Bytes xPart =
         Bytes.wrap(

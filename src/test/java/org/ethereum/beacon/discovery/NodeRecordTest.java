@@ -7,12 +7,12 @@ package org.ethereum.beacon.discovery;
 import static org.ethereum.beacon.discovery.TestUtil.SEED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetAddress;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
@@ -91,7 +91,7 @@ public class NodeRecordTest {
                 EnrFieldV4.PKEY_SECP256K1,
                 Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
     nodeRecord0.sign(Bytes.wrap(privKey));
-    nodeRecord0.verify();
+    assertTrue(nodeRecord0.isValid());
     NodeRecord nodeRecord1 =
         NodeRecordFactory.DEFAULT.createFromValues(
             UInt64.valueOf(1),
@@ -103,17 +103,11 @@ public class NodeRecordTest {
                 EnrFieldV4.PKEY_SECP256K1,
                 Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
     nodeRecord1.sign(Bytes.wrap(privKey));
-    nodeRecord1.verify();
+    assertTrue(nodeRecord1.isValid());
     assertNotEquals(nodeRecord0.serialize(), nodeRecord1.serialize());
     assertNotEquals(nodeRecord0.getSignature(), nodeRecord1.getSignature());
     nodeRecord1.setSignature(nodeRecord0.getSignature());
-    AtomicBoolean exceptionThrown = new AtomicBoolean(false);
-    try {
-      nodeRecord1.verify();
-    } catch (AssertionError ex) {
-      exceptionThrown.set(true);
-    }
-    assertTrue(exceptionThrown.get());
+    assertFalse(nodeRecord1.isValid());
   }
 
   @Test
