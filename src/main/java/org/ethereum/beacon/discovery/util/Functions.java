@@ -9,6 +9,7 @@ import static org.web3j.crypto.Sign.CURVE_PARAMS;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -84,7 +85,7 @@ public class Functions {
    * @return whether `signature` reflects message `x` signed with `pubkey`
    */
   public static boolean verifyECDSASignature(Bytes signature, Bytes x, Bytes pubKey) {
-    assert pubKey.size() == 33;
+    Preconditions.checkArgument(pubKey.size() == 33, "Invalid public key size");
     ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
     Bytes pubKeyUncompressed = Bytes.wrap(ecPoint.getEncoded(false)).slice(1);
     ECDSASignature ecdsaSignature =
