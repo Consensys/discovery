@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.packet;
 
+import com.google.common.base.Preconditions;
 import java.math.BigInteger;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
@@ -46,10 +47,12 @@ import org.web3j.rlp.RlpString;
  */
 @SuppressWarnings({"DefaultCharset"})
 public class AuthHeaderMessagePacket extends AbstractPacket {
+
   private static final Logger logger = LogManager.getLogger();
   public static final String AUTH_SCHEME_NAME = "gcm";
   public static final Bytes DISCOVERY_ID_NONCE = Bytes.wrap("discovery-id-nonce".getBytes());
   private static final Bytes ZERO_NONCE = Bytes.wrap(new byte[12]);
+  public static final BigInteger AUTH_HEADER_VERSION = BigInteger.valueOf(5);
   private EphemeralPubKeyDecoded decodedEphemeralPubKeyPt = null;
   private MessagePtDecoded decodedMessagePt = null;
 
@@ -121,6 +124,10 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
 
   public boolean isValid(Bytes expectedIdNonce, Bytes remoteNodePubKey) {
     verifyDecode();
+    if (!AUTH_SCHEME_NAME.equals(decodedEphemeralPubKeyPt.authSchemeName)) {
+      logger.trace("Incorrect auth scheme name: {}", decodedEphemeralPubKeyPt.authSchemeName);
+      return false;
+    }
     if (!expectedIdNonce.equals(getIdNonce())) {
       logger.trace("Incorrect IdNonce");
       return false;
@@ -194,8 +201,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     // [auth-tag, id-nonce, auth-scheme-name, ephemeral-pubkey, auth-response]
     blank.authTag = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(0)).getBytes());
     blank.idNonce = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(1)).getBytes());
-    assert AUTH_SCHEME_NAME.equals(
-        new String(((RlpString) authHeaderParts.getValues().get(2)).getBytes()));
+    blank.authSchemeName = new String(((RlpString) authHeaderParts.getValues().get(2)).getBytes());
     blank.ephemeralPubkey = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(3)).getBytes());
     blank.authResponse = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(4)).getBytes());
     this.decodedEphemeralPubKeyPt = blank;
@@ -216,8 +222,10 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
             authResponseKey, ZERO_NONCE, decodedEphemeralPubKeyPt.authResponse, Bytes.EMPTY);
     RlpList authResponsePtParts =
         (RlpList) RlpDecoder.decode(authResponsePt.toArray()).getValues().get(0);
-    assert BigInteger.valueOf(5)
-        .equals(((RlpString) authResponsePtParts.getValues().get(0)).asPositiveBigInteger());
+    Preconditions.checkArgument(
+        AUTH_HEADER_VERSION.equals(
+            ((RlpString) authResponsePtParts.getValues().get(0)).asPositiveBigInteger()),
+        "Invalid auth header version");
     blank.idNonceSig = Bytes.wrap(((RlpString) authResponsePtParts.getValues().get(1)).getBytes());
     RlpList nodeRecordDataList = ((RlpList) authResponsePtParts.getValues().get(2));
     blank.nodeRecord =
@@ -263,6 +271,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     private Bytes tag;
     private Bytes authTag;
     private Bytes idNonce;
+    private String authSchemeName;
     private Bytes ephemeralPubkey;
     private Bytes authResponse;
     private Bytes messageEncrypted;

@@ -42,14 +42,6 @@ public class MessagePacketHandler implements EnvelopeHandler {
     try {
       packet.decode(session.getRecipientKey());
       envelope.put(Field.MESSAGE, packet.getMessage());
-    } catch (AssertionError ex) {
-      logger.error(
-          String.format(
-              "Verification not passed for message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus()));
-      envelope.remove(Field.PACKET_MESSAGE);
-      envelope.put(Field.BAD_PACKET, packet);
-      return;
     } catch (Exception ex) {
       String error =
           String.format(

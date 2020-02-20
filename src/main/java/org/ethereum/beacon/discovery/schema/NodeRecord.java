@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import static org.ethereum.beacon.discovery.schema.EnrField.IP_V4;
 
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -160,7 +161,7 @@ public class NodeRecord {
   }
 
   private RlpList asRlpImpl(boolean withSignature) {
-    assert getSeq() != null;
+    Preconditions.checkNotNull(getSeq(), "Missing sequence number");
     // content   = [seq, k, v, ...]
     // signature = sign(content)
     // record    = [signature, seq, k, v, ...]
@@ -192,7 +193,8 @@ public class NodeRecord {
   private Bytes serializeImpl(boolean withSignature) {
     RlpType rlpRecord = withSignature ? asRlp() : asRlpNoSignature();
     byte[] bytes = RlpEncoder.encode(rlpRecord);
-    assert bytes.length <= MAX_ENCODED_SIZE;
+    Preconditions.checkArgument(
+        bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
     return Bytes.wrap(bytes);
   }
 

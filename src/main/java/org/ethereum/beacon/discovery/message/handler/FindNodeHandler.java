@@ -69,7 +69,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
                 MessagePacket.create(
                     session.getHomeNodeId(),
                     session.getNodeId(),
-                    session.getAuthTag().get(),
+                    session.getAuthTag().orElseThrow(),
                     session.getInitiatorKey(),
                     DiscoveryV5Message.from(
                         new NodesMessage(

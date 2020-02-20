@@ -8,6 +8,7 @@ import static org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket.creat
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
@@ -151,7 +152,7 @@ public class FunctionsTest {
 
     Bytes message =
         Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
-    assert Functions.verifyECDSASignature(idNonceSig, Functions.hash(message), pubKey);
+    assertTrue(Functions.verifyECDSASignature(idNonceSig, Functions.hash(message), pubKey));
   }
 
   @Test
@@ -171,8 +172,9 @@ public class FunctionsTest {
                             ECKeyPair.create(privKey.toArray()).getPublicKey(), 64)))
                 .getEncoded(true));
     Bytes idNonceSig = AuthHeaderMessagePacket.signIdNonce(idNonce, privKey, ephemeralPubkey);
-    assert Functions.verifyECDSASignature(
-        idNonceSig, Functions.hash(createIdNonceMessage(idNonce, ephemeralPubkey)), pubKey);
+    assertTrue(
+        Functions.verifyECDSASignature(
+            idNonceSig, Functions.hash(createIdNonceMessage(idNonce, ephemeralPubkey)), pubKey));
   }
 
   @Test

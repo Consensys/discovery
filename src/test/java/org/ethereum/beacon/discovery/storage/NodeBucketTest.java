@@ -33,8 +33,9 @@ public class NodeBucketTest {
 
     long lastRetrySaved = -1L;
     for (NodeRecordInfo nodeRecordInfo : nodeBucket.getNodeRecords()) {
-      assert nodeRecordInfo.getLastRetry()
-          >= lastRetrySaved; // Assert sorted by last retry, latest retry in the end
+      assertTrue(
+          nodeRecordInfo.getLastRetry()
+              >= lastRetrySaved); // Assert sorted by last retry, latest retry in the end
       lastRetrySaved = nodeRecordInfo.getLastRetry();
     }
     NodeRecordInfo willNotInsertNode =

@@ -526,13 +526,13 @@ public class DiscoveryNetworkInteropTest {
     discoveryManager1.start();
     discoveryManager1.findNodes(nodeRecord0, 0);
 
-    //    assert randomSent1to2.await(10, TimeUnit.SECONDS);
-    //    assert whoareyouSent2to1.await(10, TimeUnit.SECONDS);
+    //    assertTrue(randomSent1to2.await(10, TimeUnit.SECONDS));
+    //    assertTrue(whoareyouSent2to1.await(10, TimeUnit.SECONDS));
     //    int distance1To2 = Functions.logDistance(nodeRecord1.getNodeId(),
     // nodeRecord2.getNodeId());
     //    assertFalse(nodeBucketStorage1.get(distance1To2).isPresent());
-    //    assert authPacketSent1to2.await(10, TimeUnit.SECONDS);
-    //    assert nodesSent2to1.await(10, TimeUnit.SECONDS);
+    //    assertTrue(authPacketSent1to2.await(10, TimeUnit.SECONDS));
+    //    assertTrue(nodesSent2to1.await(10, TimeUnit.SECONDS));
     //    Thread.sleep(500);
     // 1 sent findnodes to 2, received only (2) in answer, because 3 is not checked
     // 1 added 2 to its nodeBuckets, because its now checked, but not before

@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.packet;
 
+import com.google.common.base.Preconditions;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.type.Hashes;
 
@@ -43,7 +44,7 @@ public class UnknownPacket extends AbstractPacket {
   //
   // src-node-id      = xor(sha256(dest-node-id), tag)
   public Bytes getSourceNodeId(Bytes destNodeId) {
-    assert !isWhoAreYouPacket(destNodeId);
+    Preconditions.checkArgument(!isWhoAreYouPacket(destNodeId));
     Bytes xorTag = getBytes().slice(0, 32);
     return Hashes.sha256(destNodeId).xor(xorTag);
   }

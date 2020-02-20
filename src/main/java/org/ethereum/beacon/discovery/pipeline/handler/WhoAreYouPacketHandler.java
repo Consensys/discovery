@@ -64,6 +64,16 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
     final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
     try {
+      if (!packet.isValid(session.getHomeNodeId(), session.getAuthTag().orElseThrow())) {
+        logger.error(
+            "Verification not passed for message [{}] from node {} in status {}",
+            packet,
+            nodeRecord,
+            session.getStatus());
+        envelope.remove(Field.PACKET_WHOAREYOU);
+        session.cancelAllRequests("Bad WHOAREYOU received from node");
+        return;
+      }
       NodeRecord respRecord = null;
       if (packet.getEnrSeq().compareTo(session.getHomeNodeRecord().getSeq()) < 0) {
         respRecord = session.getHomeNodeRecord();
@@ -111,15 +121,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               hkdfKeys.getInitiatorKey(),
               DiscoveryV5Message.from(message));
       session.sendOutgoing(response);
-    } catch (AssertionError ex) {
-      String error =
-          String.format(
-              "Verification not passed for message [%s] from node %s in status %s",
-              packet, nodeRecord, session.getStatus());
-      logger.error(error, ex);
-      envelope.remove(Field.PACKET_WHOAREYOU);
-      session.cancelAllRequests("Bad WHOAREYOU received from node");
-      return;
     } catch (Throwable ex) {
       String error =
           String.format(
