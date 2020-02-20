@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery.storage;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,7 +48,7 @@ public class NodeTableStorageFactoryImpl implements NodeTableStorageFactory {
           .get()
           .forEach(
               nodeRecord -> {
-                nodeRecord.verify();
+                checkArgument(nodeRecord.isValid(), "Invalid bootnode: " + nodeRecord.asEnr());
                 NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecord);
                 nodeTableStorage.get().save(nodeRecordInfo);
               });
@@ -59,7 +61,7 @@ public class NodeTableStorageFactoryImpl implements NodeTableStorageFactory {
             .map(nr -> nr.getNode().getSeq())
             .orElse(UInt64.ZERO);
     NodeRecord updatedHomeNodeRecord = homeNodeProvider.apply(oldSeq);
-    updatedHomeNodeRecord.verify();
+    checkArgument(updatedHomeNodeRecord.isValid(), "Local node record is invalid");
     nodeTableStorage.getHomeNodeSource().set(NodeRecordInfo.createDefault(updatedHomeNodeRecord));
 
     return nodeTableStorage;

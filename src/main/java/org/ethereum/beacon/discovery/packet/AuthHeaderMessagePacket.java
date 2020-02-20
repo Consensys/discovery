@@ -6,6 +6,8 @@ package org.ethereum.beacon.discovery.packet;
 
 import java.math.BigInteger;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.DiscoveryMessage;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
@@ -44,6 +46,7 @@ import org.web3j.rlp.RlpString;
  */
 @SuppressWarnings({"DefaultCharset"})
 public class AuthHeaderMessagePacket extends AbstractPacket {
+  private static final Logger logger = LogManager.getLogger();
   public static final String AUTH_SCHEME_NAME = "gcm";
   public static final Bytes DISCOVERY_ID_NONCE = Bytes.wrap("discovery-id-nonce".getBytes());
   private static final Bytes ZERO_NONCE = Bytes.wrap(new byte[12]);
@@ -116,13 +119,20 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     return create(tag, authHeader, encryptedData);
   }
 
-  public void verify(Bytes expectedIdNonce, Bytes remoteNodePubKey) {
+  public boolean isValid(Bytes expectedIdNonce, Bytes remoteNodePubKey) {
     verifyDecode();
-    assert expectedIdNonce.equals(getIdNonce());
-    assert Functions.verifyECDSASignature(
+    if (!expectedIdNonce.equals(getIdNonce())) {
+      logger.trace("Incorrect IdNonce");
+      return false;
+    }
+    if (!Functions.verifyECDSASignature(
         getIdNonceSig(),
         Functions.hash(createIdNonceMessage(getIdNonce(), getEphemeralPubkey())),
-        remoteNodePubKey);
+        remoteNodePubKey)) {
+      logger.trace("Invalid signature");
+      return false;
+    }
+    return true;
   }
 
   public Bytes getHomeNodeId(Bytes destNodeId) {

@@ -72,28 +72,43 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
       packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
-      final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
-      // Check the node record matches the ID we expect
-      if (nodeRecord == null || !nodeRecord.getNodeId().equals(session.getNodeId())) {
+      if (packet.getNodeRecord() != null && !packet.getNodeRecord().isValid()) {
+        logger.info(
+            String.format(
+                "Node record not valid for message [%s] from node %s in status %s",
+                packet, session.getNodeRecord(), session.getStatus()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      packet.verify(session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
+      final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
+      // Check the node record matches the ID we expect
+      if (nodeRecord == null || !nodeRecord.getNodeId().equals(session.getNodeId())) {
+        logger.info(
+            String.format(
+                "Incorrect node ID for message [%s] from node %s in status %s",
+                packet, session.getNodeRecord(), session.getStatus()));
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
+      if (!packet.isValid(
+          session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1))) {
+        logger.info(
+            String.format(
+                "Packet verification not passed for message [%s] from node %s in status %s",
+                packet, session.getNodeRecord(), session.getStatus()));
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
       envelope.put(Field.MESSAGE, packet.getMessage());
       if (packet.getNodeRecord() != null) {
         session.updateNodeRecord(packet.getNodeRecord());
       }
-    } catch (AssertionError ex) {
-      logger.info(
-          String.format(
-              "Verification not passed for message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus()));
     } catch (Exception ex) {
-      String error =
+      logger.error(
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus());
-      logger.error(error, ex);
+              packet, session.getNodeRecord(), session.getStatus()),
+          ex);
       markHandshakeAsFailed(envelope, session);
       return;
     }

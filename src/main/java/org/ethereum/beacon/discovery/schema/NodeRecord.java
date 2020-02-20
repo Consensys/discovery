@@ -5,10 +5,7 @@
 package org.ethereum.beacon.discovery.schema;
 
 import static org.ethereum.beacon.discovery.schema.EnrField.IP_V4;
-import static org.ethereum.beacon.discovery.schema.EnrField.UDP_V4;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -21,7 +18,6 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.util.Functions;
 import org.javatuples.Pair;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -69,24 +65,6 @@ public class NodeRecord {
       List<Pair<String, Object>> fieldKeyPairs) {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
     fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getValue0(), objects.getValue1()));
-    return nodeRecord;
-  }
-
-  public static NodeRecord createNodeRecord(byte[] privateKey, String networkInterface, int port)
-      throws UnknownHostException {
-    Bytes addressBytes = Bytes.wrap(InetAddress.getByName(networkInterface).getAddress());
-    Bytes ip = Bytes.concatenate(Bytes.wrap(new byte[4 - addressBytes.size()]), addressBytes);
-    NodeRecord nodeRecord =
-        NodeRecordFactory.DEFAULT.createFromValues(
-            UInt64.ZERO,
-            Pair.with(EnrField.ID, IdentitySchema.V4),
-            Pair.with(IP_V4, ip),
-            Pair.with(
-                EnrFieldV4.PKEY_SECP256K1,
-                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privateKey))),
-            Pair.with(UDP_V4, port));
-    nodeRecord.sign(Bytes.wrap(privateKey));
-    nodeRecord.verify();
     return nodeRecord;
   }
 
@@ -165,8 +143,8 @@ public class NodeRecord {
     return Objects.hash(seq, signature, fields);
   }
 
-  public void verify() {
-    identitySchemaInterpreter.verify(this);
+  public boolean isValid() {
+    return identitySchemaInterpreter.isValid(this);
   }
 
   public void sign(Object signOptions) {
