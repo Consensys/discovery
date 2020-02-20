@@ -22,7 +22,7 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
   public void handle(NodesMessage message, NodeSession session) {
     // NODES total count handling
     Optional<RequestInfo> requestInfoOpt = session.getRequestId(message.getRequestId());
-    if (!requestInfoOpt.isPresent()) {
+    if (requestInfoOpt.isEmpty()) {
       throw new RuntimeException(
           String.format(
               "Request #%s not found in session %s when handling message %s",

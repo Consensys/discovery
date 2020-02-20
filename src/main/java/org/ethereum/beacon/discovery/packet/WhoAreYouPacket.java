@@ -71,10 +71,10 @@ public class WhoAreYouPacket extends AbstractPacket {
     return decoded.enrSeq;
   }
 
-  public void verify(Bytes destNodeId, Bytes expectedAuthTag) {
+  public boolean isValid(Bytes destNodeId, Bytes expectedAuthTag) {
     decode();
-    assert Functions.hash(Bytes.concatenate(destNodeId, MAGIC_BYTES)).equals(decoded.magic);
-    assert expectedAuthTag.equals(getAuthTag());
+    return Functions.hash(Bytes.concatenate(destNodeId, MAGIC_BYTES)).equals(decoded.magic)
+        && expectedAuthTag.equals(getAuthTag());
   }
 
   private synchronized void decode() {

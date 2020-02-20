@@ -45,8 +45,6 @@ public class MessagePacket extends AbstractPacket {
     return create(tag, authTag, encryptedData);
   }
 
-  public void verify(Bytes expectedAuthTag) {}
-
   public Bytes getHomeNodeId(Bytes destNodeId) {
     verifyDecode();
     return Functions.hash(destNodeId).xor(decoded.tag, MutableBytes.create(decoded.tag.size()));

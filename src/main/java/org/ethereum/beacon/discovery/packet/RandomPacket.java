@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.packet;
 
+import com.google.common.base.Preconditions;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -34,7 +35,10 @@ public class RandomPacket extends AbstractPacket {
   }
 
   public static RandomPacket create(Bytes tag, Bytes authTag, Bytes randomBytes) {
-    assert randomBytes.size() >= MIN_RANDOM_BYTES; // At least 44 bytes, spec defined
+    // At least 44 bytes, spec defined
+    Preconditions.checkArgument(
+        randomBytes.size() >= MIN_RANDOM_BYTES,
+        "Random bytes must be at least " + MIN_RANDOM_BYTES + " bytes");
     byte[] authTagRlp = RlpEncoder.encode(RlpString.create(authTag.toArray()));
     Bytes authTagEncoded = Bytes.wrap(authTagRlp);
     return new RandomPacket(Bytes.concatenate(tag, authTagEncoded, randomBytes));

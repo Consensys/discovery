@@ -71,11 +71,6 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
               idNonce,
               session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
       session.sendOutgoing(whoAreYouPacket);
-    } catch (AssertionError ex) {
-      logger.info(
-          String.format(
-              "Verification not passed for message [%s] from node %s in status %s",
-              unknownPacket, session.getNodeRecord(), session.getStatus()));
     } catch (Exception ex) {
       String error =
           String.format(

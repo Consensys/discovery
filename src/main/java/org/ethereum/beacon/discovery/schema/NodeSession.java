@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.beacon.discovery.task.TaskStatus.AWAIT;
 
 import java.util.HashSet;
@@ -238,9 +240,12 @@ public class NodeSession {
   }
 
   public synchronized void clearRequestId(Bytes requestId, TaskType taskType) {
-    RequestInfo requestInfo = clearRequestId(requestId);
+    final RequestInfo requestInfo = clearRequestId(requestId);
+    checkNotNull(requestInfo, "Attempting to clear an unknown request");
+    checkArgument(
+        taskType.equals(requestInfo.getTaskType()),
+        "Attempting to clear a request but task type did not match");
     requestInfo.getFuture().complete(null);
-    assert taskType.equals(requestInfo.getTaskType());
   }
 
   /** Updates nodeRecord {@link NodeStatus} to ACTIVE of the node associated with this session */

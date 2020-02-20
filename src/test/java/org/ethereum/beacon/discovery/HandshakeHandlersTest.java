@@ -151,7 +151,7 @@ public class HandshakeHandlersTest {
     CompletableFuture<Void> future = new CompletableFuture<>();
     nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
-    assert outgoing1PacketsSemaphore.tryAcquire(1, 1, TimeUnit.SECONDS);
+    assertTrue(outgoing1PacketsSemaphore.tryAcquire(1, 1, TimeUnit.SECONDS));
     outgoing1PacketsSemaphore.release();
 
     // Node2 handle AuthHeaderPacket and finish handshake
@@ -184,7 +184,7 @@ public class HandshakeHandlersTest {
 
     MessageHandler messageHandler = new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION);
     messageHandler.handle(envelopeAt1From2WithMessage);
-    assert outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS);
+    assertTrue(outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS));
 
     // Node 2 handles message from Node 1
     MessagePacketHandler messagePacketHandler2 = new MessagePacketHandler();

@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -105,11 +106,11 @@ public class DiscoveryInteropTest {
     int distance = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
     discoveryManager1.findNodes(nodeRecord2, distance);
 
-    assert randomSent1to2.await(1, TimeUnit.SECONDS);
-    //    assert whoareyouSent2to1.await(1, TimeUnit.SECONDS);
+    assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
+    //    assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));
     int distance1To2 = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
     Assertions.assertFalse(nodeBucketStorage1.get(distance1To2).isPresent());
-    assert authPacketSent1to2.await(1, TimeUnit.SECONDS);
+    assertTrue(authPacketSent1to2.await(1, TimeUnit.SECONDS));
     Thread.sleep(1000);
     // 1 sent findnodes to 2, received only (2) in answer
     // 1 added 2 to its nodeBuckets, because its now checked, but not before

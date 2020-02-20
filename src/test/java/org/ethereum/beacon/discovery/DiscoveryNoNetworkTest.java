@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -134,12 +135,12 @@ public class DiscoveryNoNetworkTest {
     discoveryManager1.start();
     discoveryManager1.findNodes(nodeRecord2, 0);
 
-    assert randomSent1to2.await(1, TimeUnit.SECONDS);
-    assert whoareyouSent2to1.await(1, TimeUnit.SECONDS);
+    assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
+    assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));
     int distance1To2 = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
     assertFalse(nodeBucketStorage1.get(distance1To2).isPresent());
-    assert authPacketSent1to2.await(1, TimeUnit.SECONDS);
-    assert nodesSent2to1.await(1, TimeUnit.SECONDS);
+    assertTrue(authPacketSent1to2.await(1, TimeUnit.SECONDS));
+    assertTrue(nodesSent2to1.await(1, TimeUnit.SECONDS));
     Thread.sleep(50);
     // 1 sent findnodes to 2, received 0 nodes in answer, because 3 is not checked
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
