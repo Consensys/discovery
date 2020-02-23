@@ -4,23 +4,15 @@
 
 package org.ethereum.beacon.discovery;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.format.SerializerFactory;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
-import org.ethereum.beacon.discovery.schema.EnrField;
-import org.ethereum.beacon.discovery.schema.EnrFieldV4;
-import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.storage.NodeSerializerFactory;
-import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 
 public class TestUtil {
   public static final NodeRecordFactory NODE_RECORD_FACTORY =
@@ -39,17 +31,8 @@ public class TestUtil {
    *
    * @return <code><private key, node record></code>
    */
-  public static Pair<Bytes, NodeRecord> generateUnverifiedNode(int port) {
+  public static NodeInfo generateUnverifiedNode(int port) {
     return generateNode(port, false);
-  }
-
-  /** Parses string representation of IPv4. Say, `127.0.0.1` */
-  public static Bytes parseStringIP(String ip) {
-    try {
-      return Bytes.wrap(InetAddress.getByName(ip).getAddress());
-    } catch (UnknownHostException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   /**
@@ -60,35 +43,42 @@ public class TestUtil {
    * @param verification whether to use valid signature
    * @return <code><private key, node record></code>
    */
-  @SuppressWarnings({"DoubleBraceInitialization"})
-  public static Pair<Bytes, NodeRecord> generateNode(int port, boolean verification) {
+  public static NodeInfo generateNode(int port, boolean verification) {
     final Random rnd = new Random(SEED);
-    final Bytes finalLocalIp = parseStringIP(LOCALHOST);
-    ;
     for (int i = 0; i < port; ++i) {
       rnd.nextBoolean(); // skip according to input
     }
     byte[] privateKey = new byte[32];
     rnd.nextBytes(privateKey);
 
-    NodeRecordFactory nodeRecordFactory =
-        verification ? NODE_RECORD_FACTORY : NODE_RECORD_FACTORY_NO_VERIFICATION;
     NodeRecord nodeRecord =
-        nodeRecordFactory.createFromValues(
-            UInt64.valueOf(1),
-            new ArrayList<Pair<String, Object>>() {
-              {
-                add(Pair.with(EnrField.ID, IdentitySchema.V4));
-                add(Pair.with(EnrField.IP_V4, finalLocalIp));
-                add(Pair.with(EnrField.UDP_V4, port));
-                add(
-                    Pair.with(
-                        EnrFieldV4.PKEY_SECP256K1,
-                        Functions.derivePublicKeyFromPrivate(Bytes.wrap(privateKey))));
-              }
-            });
+        new NodeRecordBuilder()
+            .seq(1)
+            .nodeRecordFactory(
+                verification ? NODE_RECORD_FACTORY : NODE_RECORD_FACTORY_NO_VERIFICATION)
+            .privateKey(Bytes.wrap(privateKey))
+            .address(LOCALHOST, port)
+            .build();
 
     nodeRecord.sign(Bytes.wrap(privateKey));
-    return Pair.with(Bytes.wrap(privateKey), nodeRecord);
+    return new NodeInfo(Bytes.wrap(privateKey), nodeRecord);
+  }
+
+  public static class NodeInfo {
+    private final Bytes privateKey;
+    private final NodeRecord nodeRecord;
+
+    public NodeInfo(final Bytes privateKey, final NodeRecord nodeRecord) {
+      this.privateKey = privateKey;
+      this.nodeRecord = nodeRecord;
+    }
+
+    public Bytes getPrivateKey() {
+      return privateKey;
+    }
+
+    public NodeRecord getNodeRecord() {
+      return nodeRecord;
+    }
   }
 }

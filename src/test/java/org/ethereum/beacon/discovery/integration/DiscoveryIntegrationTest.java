@@ -17,18 +17,14 @@ import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.DiscoveryManagerBuilder;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
-import org.ethereum.beacon.discovery.schema.EnrField;
-import org.ethereum.beacon.discovery.schema.EnrFieldV4;
-import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
@@ -80,23 +76,20 @@ public class DiscoveryIntegrationTest {
 
     int maxPort = nextPort + 10;
     for (int port = nextPort++; port < maxPort; port = nextPort++) {
-      final NodeRecordFactory nodeRecordFactory =
-          signNodeRecord
-              ? NodeRecordFactory.DEFAULT
-              // We're not signing the record so use an identity schema that won't check the
-              // signature locally. The other side should still validate it.
-              : new NodeRecordFactory(new IdentitySchemaV4InterpreterMock());
-      final NodeRecord nodeRecord =
-          nodeRecordFactory.createFromValues(
-              UInt64.ONE,
-              Pair.with(EnrField.ID, IdentitySchema.V4),
-              Pair.with(EnrField.IP_V4, Bytes.fromHexString("0x7F000001")),
-              Pair.with(EnrField.UDP_V4, port),
-              Pair.with(
-                  EnrFieldV4.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
+      final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
-        nodeRecord.sign(privateKey);
+        nodeRecordBuilder.privateKey(privateKey);
+      } else {
+        // We're not signing the record so use an identity schema that won't check the
+        // signature locally. The other side should still validate it.
+        nodeRecordBuilder.nodeRecordFactory(
+            new NodeRecordFactory(new IdentitySchemaV4InterpreterMock()));
       }
+      final NodeRecord nodeRecord =
+          nodeRecordBuilder
+              .address("127.0.0.1", port)
+              .publicKey(Functions.derivePublicKeyFromPrivate(privateKey))
+              .build();
       final DiscoveryManager discoveryManager =
           new DiscoveryManagerBuilder()
               .localNodeRecord(nodeRecord)

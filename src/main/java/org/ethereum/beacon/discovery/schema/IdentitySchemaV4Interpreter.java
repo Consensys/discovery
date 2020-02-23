@@ -52,8 +52,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
-  public void sign(NodeRecord nodeRecord, Object signOptions) {
-    Bytes privateKey = (Bytes) signOptions;
+  public void sign(NodeRecord nodeRecord, Bytes privateKey) {
     Bytes signature =
         Functions.sign(privateKey, Functions.hashKeccak(nodeRecord.serializeNoSignature()));
     nodeRecord.setSignature(signature);

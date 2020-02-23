@@ -26,7 +26,6 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.javatuples.Pair;
 
 /**
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
@@ -62,7 +61,6 @@ public class NodeIdToSession implements EnvelopeHandler {
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public void handle(Envelope envelope) {
     logger.trace(
         () ->
@@ -77,15 +75,14 @@ public class NodeIdToSession implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NodeIdToSession, requirements are satisfied!", envelope.getId()));
 
-    Pair<Bytes, Runnable> sessionRequest =
-        (Pair<Bytes, Runnable>) envelope.get(Field.SESSION_LOOKUP);
+    SessionLookup sessionRequest = (SessionLookup) envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
         () ->
             String.format(
                 "Envelope %s: Session lookup requested for nodeId %s",
-                envelope.getId(), sessionRequest.getValue0()));
-    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getValue0(), envelope);
+                envelope.getId(), sessionRequest.getNodeId()));
+    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getNodeId(), envelope);
     if (nodeSessionOptional.isPresent()) {
       envelope.put(Field.SESSION, nodeSessionOptional.get());
       logger.trace(
@@ -98,8 +95,8 @@ public class NodeIdToSession implements EnvelopeHandler {
           () ->
               String.format(
                   "Envelope %s: Session not resolved for nodeId %s",
-                  envelope.getId(), sessionRequest.getValue0()));
-      sessionRequest.getValue1().run();
+                  envelope.getId(), sessionRequest.getNodeId()));
+      sessionRequest.onMissingSession();
     }
   }
 

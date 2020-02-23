@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
@@ -27,7 +27,6 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
@@ -37,10 +36,10 @@ public class DiscoveryNetworkTest {
   @Test
   public void test() throws Exception {
     // 1) start 2 nodes
-    Pair<Bytes, NodeRecord> nodePair1 = TestUtil.generateNode(30303, true);
-    Pair<Bytes, NodeRecord> nodePair2 = TestUtil.generateNode(30304, true);
-    NodeRecord nodeRecord1 = nodePair1.getValue1();
-    NodeRecord nodeRecord2 = nodePair2.getValue1();
+    NodeInfo nodePair1 = TestUtil.generateNode(30303, true);
+    NodeInfo nodePair2 = TestUtil.generateNode(30304, true);
+    NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
+    NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     Database database1 = Database.inMemoryDB();
     Database database2 = Database.inMemoryDB();
@@ -75,7 +74,7 @@ public class DiscoveryNetworkTest {
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             nodeRecord1,
-            nodePair1.getValue0(),
+            nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
     DiscoveryManagerImpl discoveryManager2 =
@@ -83,7 +82,7 @@ public class DiscoveryNetworkTest {
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             nodeRecord2,
-            nodePair2.getValue0(),
+            nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"));
 

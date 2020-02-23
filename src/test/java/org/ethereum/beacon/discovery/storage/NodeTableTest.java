@@ -29,7 +29,7 @@ public class NodeTableTest {
   final String LOCALHOST_BASE64 =
       "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMRo9bfkceoY0W04hSgYU5Q1R_mmq3Qp9pBPMAIduKrAYN1ZHCCdl8=";
   private Function<UInt64, NodeRecord> HOME_NODE_SUPPLIER =
-      (oldSeq) -> TestUtil.generateUnverifiedNode(30303).getValue1();
+      (oldSeq) -> TestUtil.generateUnverifiedNode(30303).getNodeRecord();
 
   @Test
   public void testCreate() throws Exception {
@@ -74,7 +74,7 @@ public class NodeTableTest {
             });
 
     // node is adjusted to be close to localhostEnr
-    NodeRecord closestNode = TestUtil.generateUnverifiedNode(30267).getValue1();
+    NodeRecord closestNode = TestUtil.generateUnverifiedNode(30267).getNodeRecord();
     nodeTableStorage.get().save(new NodeRecordInfo(closestNode, -1L, NodeStatus.ACTIVE, 0));
     assertEquals(
         nodeTableStorage
@@ -85,7 +85,7 @@ public class NodeTableTest {
             .get(EnrFieldV4.PKEY_SECP256K1),
         closestNode.get(EnrFieldV4.PKEY_SECP256K1));
     // node is adjusted to be far from localhostEnr
-    NodeRecord farNode = TestUtil.generateUnverifiedNode(30304).getValue1();
+    NodeRecord farNode = TestUtil.generateUnverifiedNode(30304).getNodeRecord();
     nodeTableStorage.get().save(new NodeRecordInfo(farNode, -1L, NodeStatus.ACTIVE, 0));
     List<NodeRecordInfo> closestNodes =
         nodeTableStorage.get().findClosestNodes(closestNode.getNodeId(), 254);

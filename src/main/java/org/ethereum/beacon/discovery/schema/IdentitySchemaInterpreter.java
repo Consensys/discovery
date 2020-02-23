@@ -20,7 +20,7 @@ public interface IdentitySchemaInterpreter {
   IdentitySchema getScheme();
 
   /* Signs nodeRecord, modifying it */
-  void sign(NodeRecord nodeRecord, Object signOptions);
+  void sign(NodeRecord nodeRecord, Bytes privateKey);
 
   /** Verifies that `nodeRecord` is of scheme implementation */
   default boolean isValid(NodeRecord nodeRecord) {

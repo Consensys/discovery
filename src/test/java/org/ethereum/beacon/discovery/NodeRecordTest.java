@@ -20,9 +20,9 @@ import org.ethereum.beacon.discovery.schema.EnrFieldV4;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -79,30 +79,19 @@ public class NodeRecordTest {
     Random rnd = new Random(SEED);
     byte[] privKey = new byte[32];
     rnd.nextBytes(privKey);
-    Bytes localIp = Bytes.wrap(InetAddress.getByName("127.0.0.1").getAddress());
     NodeRecord nodeRecord0 =
-        NodeRecordFactory.DEFAULT.createFromValues(
-            UInt64.ZERO,
-            Pair.with(EnrField.ID, IdentitySchema.V4),
-            Pair.with(EnrField.IP_V4, localIp),
-            //            Pair.with(EnrField.TCP_V4, 30303),
-            Pair.with(EnrField.UDP_V4, 30303),
-            Pair.with(
-                EnrFieldV4.PKEY_SECP256K1,
-                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
-    nodeRecord0.sign(Bytes.wrap(privKey));
+        new NodeRecordBuilder()
+            .seq(0)
+            .address("127.0.0.1", 30303)
+            .privateKey(Bytes.wrap(privKey))
+            .build();
     assertTrue(nodeRecord0.isValid());
     NodeRecord nodeRecord1 =
-        NodeRecordFactory.DEFAULT.createFromValues(
-            UInt64.valueOf(1),
-            Pair.with(EnrField.ID, IdentitySchema.V4),
-            Pair.with(EnrField.IP_V4, localIp),
-            //            Pair.with(EnrField.TCP_V4, 30303),
-            Pair.with(EnrField.UDP_V4, 30303),
-            Pair.with(
-                EnrFieldV4.PKEY_SECP256K1,
-                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
-    nodeRecord1.sign(Bytes.wrap(privKey));
+        new NodeRecordBuilder()
+            .seq(1)
+            .address("127.0.0.1", 30303)
+            .privateKey(Bytes.wrap(privKey))
+            .build();
     assertTrue(nodeRecord1.isValid());
     assertNotEquals(nodeRecord0.serialize(), nodeRecord1.serialize());
     assertNotEquals(nodeRecord0.getSignature(), nodeRecord1.getSignature());
@@ -124,10 +113,10 @@ public class NodeRecordTest {
         new NodeRecordFactory(new IdentitySchemaV4Interpreter())
             .createFromValues(
                 UInt64.valueOf(seq),
-                Pair.with(EnrField.ID, IdentitySchema.V4),
-                Pair.with(EnrFieldV4.IP_V4, ip),
-                Pair.with(EnrFieldV4.UDP_V4, port),
-                Pair.with(
+                new EnrField(EnrField.ID, IdentitySchema.V4),
+                new EnrField(EnrFieldV4.IP_V4, ip),
+                new EnrField(EnrFieldV4.UDP_V4, port),
+                new EnrField(
                     EnrFieldV4.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
     nodeRecord.sign(privateKey);
     assertEquals(nodeId, nodeRecord.getNodeId());

@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.javatuples.Pair;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -63,9 +62,9 @@ public class NodeRecord {
   public static NodeRecord fromValues(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
-      List<Pair<String, Object>> fieldKeyPairs) {
+      List<EnrField> fieldKeyPairs) {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
-    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getValue0(), objects.getValue1()));
+    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getName(), objects.getValue()));
     return nodeRecord;
   }
 
@@ -148,8 +147,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(Object signOptions) {
-    identitySchemaInterpreter.sign(this, signOptions);
+  public void sign(Bytes privateKey) {
+    identitySchemaInterpreter.sign(this, privateKey);
   }
 
   public RlpList asRlp() {

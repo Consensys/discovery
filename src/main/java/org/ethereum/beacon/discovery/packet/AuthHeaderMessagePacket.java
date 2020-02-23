@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.javatuples.Pair;
+import org.ethereum.beacon.discovery.util.RlpUtil.DecodedList;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -195,9 +195,9 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     }
     EphemeralPubKeyDecoded blank = new EphemeralPubKeyDecoded();
     blank.tag = Bytes.wrap(getBytes().slice(0, 32));
-    Pair<RlpList, Bytes> decodeRes = RlpUtil.decodeFirstList(getBytes().slice(32));
-    blank.messageEncrypted = decodeRes.getValue1();
-    RlpList authHeaderParts = (RlpList) decodeRes.getValue0().getValues().get(0);
+    DecodedList decodeRes = RlpUtil.decodeFirstList(getBytes().slice(32));
+    blank.messageEncrypted = decodeRes.getRemainingData();
+    RlpList authHeaderParts = (RlpList) decodeRes.getList().getValues().get(0);
     // [auth-tag, id-nonce, auth-scheme-name, ephemeral-pubkey, auth-response]
     blank.authTag = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(0)).getBytes());
     blank.idNonce = Bytes.wrap(((RlpString) authHeaderParts.getValues().get(1)).getBytes());
