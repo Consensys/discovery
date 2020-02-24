@@ -20,14 +20,14 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     if (!IdentitySchemaInterpreter.super.isValid(nodeRecord)) {
       return false;
     }
-    if (nodeRecord.get(EnrFieldV4.PKEY_SECP256K1) == null) {
+    if (nodeRecord.get(EnrField.PKEY_SECP256K1) == null) {
       logger.trace(
           "Field {} does not exist but required for scheme {}",
-          EnrFieldV4.PKEY_SECP256K1,
+          EnrField.PKEY_SECP256K1,
           getScheme());
       return false;
     }
-    Bytes pubKey = (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1); // compressed
+    Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
     return Functions.verifyECDSASignature(
         nodeRecord.getSignature(), Functions.hashKeccak(nodeRecord.serializeNoSignature()), pubKey);
   }
@@ -39,7 +39,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public Bytes getNodeId(NodeRecord nodeRecord) {
-    Bytes pkey = (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1);
+    Bytes pkey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
     Preconditions.checkNotNull(pkey, "Missing PKEY_SECP256K1 field");
     ECPoint pudDestPoint = Functions.publicKeyToPoint(pkey);
     Bytes xPart =

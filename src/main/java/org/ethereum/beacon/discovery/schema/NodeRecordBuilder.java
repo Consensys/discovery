@@ -37,7 +37,7 @@ public class NodeRecordBuilder {
   }
 
   public NodeRecordBuilder publicKey(final Bytes publicKey) {
-    fields.add(new EnrField(EnrFieldV4.PKEY_SECP256K1, publicKey));
+    fields.add(new EnrField(EnrField.PKEY_SECP256K1, publicKey));
     return this;
   }
 

@@ -23,6 +23,11 @@ public class EnrField {
   public static final String TCP_V6 = "tcp6";
   // IPv6-specific UDP port
   public static final String UDP_V6 = "udp6";
+
+  /* ENR v4 Identity Schema */
+  // Compressed secp256k1 public key, 33 bytes
+  public static final String PKEY_SECP256K1 = "secp256k1";
+
   private final String name;
   private final Object value;
 

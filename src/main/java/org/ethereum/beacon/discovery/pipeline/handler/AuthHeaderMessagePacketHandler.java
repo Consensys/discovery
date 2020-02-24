@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
-import org.ethereum.beacon.discovery.schema.EnrFieldV4;
+import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -90,8 +90,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      if (!packet.isValid(
-          session.getIdNonce(), (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1))) {
+      if (!packet.isValid(session.getIdNonce(), (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
         logger.info(
             String.format(
                 "Packet verification not passed for message [%s] from node %s in status %s",

@@ -199,11 +199,11 @@ public class NodeRecord {
   public String toString() {
     return "NodeRecordV4{"
         + "publicKey="
-        + fields.get(EnrFieldV4.PKEY_SECP256K1)
+        + fields.get(EnrField.PKEY_SECP256K1)
         + ", ipV4address="
         + fields.get(IP_V4)
         + ", udpPort="
-        + fields.get(EnrFieldV4.UDP_V4)
+        + fields.get(EnrField.UDP_V4)
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="
