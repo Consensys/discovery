@@ -105,6 +105,6 @@ public class DiscoverySystemBuilder {
             schedulers.newSingleThreadDaemon("tasks-" + clientNumber),
             true,
             true);
-    return new DiscoverySystem(discoveryManager, discoveryTaskManager, nodeTable);
+    return new DiscoverySystem(discoveryManager, discoveryTaskManager, nodeTable, bootnodes);
   }
 }

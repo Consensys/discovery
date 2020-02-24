@@ -3,8 +3,11 @@
  */
 package org.ethereum.beacon.discovery;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
@@ -12,21 +15,40 @@ import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystem {
+  private static final Logger LOG = LogManager.getLogger();
   private final DiscoveryManager discoveryManager;
   private final DiscoveryTaskManager taskManager;
   private final NodeTable nodeTable;
+  private final List<NodeRecord> bootnodes;
 
   DiscoverySystem(
       final DiscoveryManager discoveryManager,
       final DiscoveryTaskManager taskManager,
-      final NodeTable nodeTable) {
+      final NodeTable nodeTable,
+      final List<NodeRecord> bootnodes) {
     this.discoveryManager = discoveryManager;
     this.taskManager = taskManager;
     this.nodeTable = nodeTable;
+    this.bootnodes = bootnodes;
   }
 
   public CompletableFuture<Void> start() {
-    return discoveryManager.start().thenRun(taskManager::start);
+    return discoveryManager.start().thenRun(taskManager::start).thenCompose(__ -> pingBootnodes());
+  }
+
+  private CompletableFuture<Void> pingBootnodes() {
+    return CompletableFuture.allOf(
+        bootnodes.stream()
+            .map(
+                bootnode ->
+                    discoveryManager
+                        .ping(bootnode)
+                        .exceptionally(
+                            e -> {
+                              LOG.debug("Failed to ping bootnode: " + bootnode);
+                              return null;
+                            }))
+            .toArray(CompletableFuture[]::new));
   }
 
   public void stop() {
