@@ -33,22 +33,19 @@ public class DiscoverySystem {
   }
 
   public CompletableFuture<Void> start() {
-    return discoveryManager.start().thenRun(taskManager::start).thenCompose(__ -> pingBootnodes());
+    return discoveryManager.start().thenRun(taskManager::start).thenRun(this::pingBootnodes);
   }
 
-  private CompletableFuture<Void> pingBootnodes() {
-    return CompletableFuture.allOf(
-        bootnodes.stream()
-            .map(
-                bootnode ->
-                    discoveryManager
-                        .ping(bootnode)
-                        .exceptionally(
-                            e -> {
-                              LOG.debug("Failed to ping bootnode: " + bootnode);
-                              return null;
-                            }))
-            .toArray(CompletableFuture[]::new));
+  private void pingBootnodes() {
+    bootnodes.forEach(
+        bootnode ->
+            discoveryManager
+                .ping(bootnode)
+                .exceptionally(
+                    e -> {
+                      LOG.debug("Failed to ping bootnode: " + bootnode);
+                      return null;
+                    }));
   }
 
   public void stop() {
