@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
@@ -49,7 +50,6 @@ import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.task.TaskOptions;
 import org.ethereum.beacon.discovery.task.TaskType;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
@@ -58,11 +58,11 @@ public class HandshakeHandlersTest {
   @Test
   public void authHandlerWithMessageRoundTripTest() throws Exception {
     // Node1
-    Pair<Bytes, NodeRecord> nodePair1 = TestUtil.generateUnverifiedNode(30303);
-    NodeRecord nodeRecord1 = nodePair1.getValue1();
+    NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
+    NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     // Node2
-    Pair<Bytes, NodeRecord> nodePair2 = TestUtil.generateUnverifiedNode(30304);
-    NodeRecord nodeRecord2 = nodePair2.getValue1();
+    NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
+    NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     Random rnd = new Random();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     Database database1 = Database.inMemoryDB();
@@ -110,7 +110,7 @@ public class HandshakeHandlersTest {
             nodeRecord2.getNodeId(),
             Optional.of(nodeRecord2),
             nodeRecord1,
-            nodePair1.getValue0(),
+            nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             authTagRepository1,
@@ -125,7 +125,7 @@ public class HandshakeHandlersTest {
             nodeRecord1.getNodeId(),
             Optional.of(nodeRecord1),
             nodeRecord2,
-            nodePair2.getValue0(),
+            nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             new AuthTagRepository(),
@@ -146,7 +146,7 @@ public class HandshakeHandlersTest {
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
         WhoAreYouPacket.createFromNodeId(
-            nodePair1.getValue1().getNodeId(), authTag, idNonce, UInt64.ZERO));
+            nodePair1.getNodeRecord().getNodeId(), authTag, idNonce, UInt64.ZERO));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     CompletableFuture<Void> future = new CompletableFuture<>();
     nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);

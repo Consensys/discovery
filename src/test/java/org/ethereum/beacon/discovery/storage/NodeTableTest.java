@@ -19,7 +19,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.database.Database;
-import org.ethereum.beacon.discovery.schema.EnrFieldV4;
+import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
@@ -29,7 +29,7 @@ public class NodeTableTest {
   final String LOCALHOST_BASE64 =
       "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMRo9bfkceoY0W04hSgYU5Q1R_mmq3Qp9pBPMAIduKrAYN1ZHCCdl8=";
   private Function<UInt64, NodeRecord> HOME_NODE_SUPPLIER =
-      (oldSeq) -> TestUtil.generateUnverifiedNode(30303).getValue1();
+      (oldSeq) -> TestUtil.generateUnverifiedNode(30303).getNodeRecord();
 
   @Test
   public void testCreate() throws Exception {
@@ -50,8 +50,8 @@ public class NodeTableTest {
     assertTrue(extendedEnr.isPresent());
     NodeRecordInfo nodeRecord2 = extendedEnr.get();
     assertEquals(
-        nodeRecord.get(EnrFieldV4.PKEY_SECP256K1),
-        nodeRecord2.getNode().get(EnrFieldV4.PKEY_SECP256K1));
+        nodeRecord.get(EnrField.PKEY_SECP256K1),
+        nodeRecord2.getNode().get(EnrField.PKEY_SECP256K1));
     assertEquals(
         nodeTableStorage.get().getHomeNode().getNodeId(),
         HOME_NODE_SUPPLIER.apply(UInt64.ZERO).getNodeId());
@@ -74,7 +74,7 @@ public class NodeTableTest {
             });
 
     // node is adjusted to be close to localhostEnr
-    NodeRecord closestNode = TestUtil.generateUnverifiedNode(30267).getValue1();
+    NodeRecord closestNode = TestUtil.generateUnverifiedNode(30267).getNodeRecord();
     nodeTableStorage.get().save(new NodeRecordInfo(closestNode, -1L, NodeStatus.ACTIVE, 0));
     assertEquals(
         nodeTableStorage
@@ -82,23 +82,23 @@ public class NodeTableTest {
             .getNode(closestNode.getNodeId())
             .get()
             .getNode()
-            .get(EnrFieldV4.PKEY_SECP256K1),
-        closestNode.get(EnrFieldV4.PKEY_SECP256K1));
+            .get(EnrField.PKEY_SECP256K1),
+        closestNode.get(EnrField.PKEY_SECP256K1));
     // node is adjusted to be far from localhostEnr
-    NodeRecord farNode = TestUtil.generateUnverifiedNode(30304).getValue1();
+    NodeRecord farNode = TestUtil.generateUnverifiedNode(30304).getNodeRecord();
     nodeTableStorage.get().save(new NodeRecordInfo(farNode, -1L, NodeStatus.ACTIVE, 0));
     List<NodeRecordInfo> closestNodes =
         nodeTableStorage.get().findClosestNodes(closestNode.getNodeId(), 254);
     assertEquals(2, closestNodes.size());
     Set<Bytes> publicKeys = new HashSet<>();
-    closestNodes.forEach(n -> publicKeys.add((Bytes) n.getNode().get(EnrFieldV4.PKEY_SECP256K1)));
-    assertTrue(publicKeys.contains(localHostNode.get(EnrFieldV4.PKEY_SECP256K1)));
-    assertTrue(publicKeys.contains(closestNode.get(EnrFieldV4.PKEY_SECP256K1)));
+    closestNodes.forEach(n -> publicKeys.add((Bytes) n.getNode().get(EnrField.PKEY_SECP256K1)));
+    assertTrue(publicKeys.contains(localHostNode.get(EnrField.PKEY_SECP256K1)));
+    assertTrue(publicKeys.contains(closestNode.get(EnrField.PKEY_SECP256K1)));
     List<NodeRecordInfo> farNodes = nodeTableStorage.get().findClosestNodes(farNode.getNodeId(), 1);
     assertEquals(1, farNodes.size());
     assertEquals(
-        farNodes.get(0).getNode().get(EnrFieldV4.PKEY_SECP256K1),
-        farNode.get(EnrFieldV4.PKEY_SECP256K1));
+        farNodes.get(0).getNode().get(EnrField.PKEY_SECP256K1),
+        farNode.get(EnrField.PKEY_SECP256K1));
   }
 
   /**

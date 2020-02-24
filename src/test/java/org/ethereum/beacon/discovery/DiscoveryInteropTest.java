@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.packet.RandomPacket;
@@ -23,7 +23,6 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
 import reactor.core.publisher.Flux;
 
@@ -47,9 +46,9 @@ public class DiscoveryInteropTest {
   @SuppressWarnings({"DoubleBraceInitialization"})
   public void testInterop() throws Exception {
     // 1) start 2 nodes
-    Pair<Bytes, NodeRecord> nodePair1 = TestUtil.generateNode(40412, true);
-    System.out.println(String.format("Node %s started", nodePair1.getValue1().getNodeId()));
-    NodeRecord nodeRecord1 = nodePair1.getValue1();
+    NodeInfo nodePair1 = TestUtil.generateNode(40412, true);
+    System.out.println(String.format("Node %s started", nodePair1.getNodeRecord().getNodeId()));
+    NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 =
         NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(
             "-IS4QHa5-0-OmPRchyyBf9jHIWnQlZXthveUPp5_DoDnMMB0V9ChlzNq_fhFixvIr8xOQcKrYsWjjeIBoUIS8HSuWbgBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMOLLdCQcDE_I6BZvGnmgXVsN2VgTp0sJRSnzF9XDnSNYN1ZHCCdl8"); // Geth node
@@ -73,7 +72,7 @@ public class DiscoveryInteropTest {
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             nodeRecord1,
-            nodePair1.getValue0(),
+            nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
 

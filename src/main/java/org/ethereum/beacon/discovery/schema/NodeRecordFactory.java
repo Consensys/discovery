@@ -12,7 +12,6 @@ import java.util.Map;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.Utils;
-import org.javatuples.Pair;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -29,15 +28,14 @@ public class NodeRecordFactory {
     }
   }
 
-  @SafeVarargs
-  public final NodeRecord createFromValues(UInt64 seq, Pair<String, Object>... fieldKeyPairs) {
+  public final NodeRecord createFromValues(UInt64 seq, EnrField... fieldKeyPairs) {
     return createFromValues(seq, Arrays.asList(fieldKeyPairs));
   }
 
-  public NodeRecord createFromValues(UInt64 seq, List<Pair<String, Object>> fieldKeyPairs) {
-    Pair<String, Object> schemePair = null;
-    for (Pair<String, Object> pair : fieldKeyPairs) {
-      if (EnrField.ID.equals(pair.getValue0())) {
+  public NodeRecord createFromValues(UInt64 seq, List<EnrField> fieldKeyPairs) {
+    EnrField schemePair = null;
+    for (EnrField pair : fieldKeyPairs) {
+      if (EnrField.ID.equals(pair.getName())) {
         schemePair = pair;
         break;
       }
@@ -46,12 +44,12 @@ public class NodeRecordFactory {
       throw new RuntimeException("ENR scheme (ID) is not defined in key-value pairs");
     }
 
-    IdentitySchemaInterpreter identitySchemaInterpreter = interpreters.get(schemePair.getValue1());
+    IdentitySchemaInterpreter identitySchemaInterpreter = interpreters.get(schemePair.getValue());
     if (identitySchemaInterpreter == null) {
       throw new RuntimeException(
           String.format(
               "No ethereum record interpreter found for identity scheme %s",
-              schemePair.getValue1()));
+              schemePair.getValue()));
     }
 
     return NodeRecord.fromValues(identitySchemaInterpreter, seq, fieldKeyPairs);

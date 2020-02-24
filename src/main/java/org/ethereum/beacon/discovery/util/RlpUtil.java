@@ -12,7 +12,6 @@ import java.util.function.Function;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
-import org.javatuples.Pair;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -59,9 +58,9 @@ public class RlpUtil {
   /**
    * @return first rlp list in provided data, plus remaining data starting from the end of this list
    */
-  public static Pair<RlpList, Bytes> decodeFirstList(Bytes data) {
+  public static DecodedList decodeFirstList(Bytes data) {
     int len = RlpUtil.calcListLen(data);
-    return Pair.with(RlpDecoder.decode(data.slice(0, len).toArray()), data.slice(len));
+    return new DecodedList(RlpDecoder.decode(data.slice(0, len).toArray()), data.slice(len));
   }
 
   /**
@@ -99,5 +98,23 @@ public class RlpUtil {
 
   private static RlpString fromBytesValue(Bytes bytes) {
     return RlpString.create(bytes.toArray());
+  }
+
+  public static class DecodedList {
+    private final RlpList list;
+    private final Bytes remainingData;
+
+    public DecodedList(final RlpList list, final Bytes remainingData) {
+      this.list = list;
+      this.remainingData = remainingData;
+    }
+
+    public RlpList getList() {
+      return list;
+    }
+
+    public Bytes getRemainingData() {
+      return remainingData;
+    }
   }
 }

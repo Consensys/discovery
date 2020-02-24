@@ -16,13 +16,12 @@ import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
-import org.ethereum.beacon.discovery.schema.EnrFieldV4;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -56,7 +55,7 @@ public class NodeRecordTest {
     assertEquals(expectedUdpPort, nodeRecord.get(EnrField.UDP_V4));
     //    assertEquals(expectedTcpPort, nodeRecord.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecord.getSeq());
-    assertEquals(expectedPublicKey, nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
+    assertEquals(expectedPublicKey, nodeRecord.get(EnrField.PKEY_SECP256K1));
     assertEquals(expectedSignature, nodeRecord.getSignature());
 
     String localhostEnrRestored = nodeRecord.asBase64();
@@ -70,7 +69,7 @@ public class NodeRecordTest {
     assertEquals(expectedUdpPort, nodeRecordRestored.get(EnrField.UDP_V4));
     //    assertEquals(expectedTcpPort, nodeRecordRestored.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecordRestored.getSeq());
-    assertEquals(expectedPublicKey, nodeRecordRestored.get(EnrFieldV4.PKEY_SECP256K1));
+    assertEquals(expectedPublicKey, nodeRecordRestored.get(EnrField.PKEY_SECP256K1));
     assertEquals(expectedSignature, nodeRecordRestored.getSignature());
   }
 
@@ -79,30 +78,19 @@ public class NodeRecordTest {
     Random rnd = new Random(SEED);
     byte[] privKey = new byte[32];
     rnd.nextBytes(privKey);
-    Bytes localIp = Bytes.wrap(InetAddress.getByName("127.0.0.1").getAddress());
     NodeRecord nodeRecord0 =
-        NodeRecordFactory.DEFAULT.createFromValues(
-            UInt64.ZERO,
-            Pair.with(EnrField.ID, IdentitySchema.V4),
-            Pair.with(EnrField.IP_V4, localIp),
-            //            Pair.with(EnrField.TCP_V4, 30303),
-            Pair.with(EnrField.UDP_V4, 30303),
-            Pair.with(
-                EnrFieldV4.PKEY_SECP256K1,
-                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
-    nodeRecord0.sign(Bytes.wrap(privKey));
+        new NodeRecordBuilder()
+            .seq(0)
+            .address("127.0.0.1", 30303)
+            .privateKey(Bytes.wrap(privKey))
+            .build();
     assertTrue(nodeRecord0.isValid());
     NodeRecord nodeRecord1 =
-        NodeRecordFactory.DEFAULT.createFromValues(
-            UInt64.valueOf(1),
-            Pair.with(EnrField.ID, IdentitySchema.V4),
-            Pair.with(EnrField.IP_V4, localIp),
-            //            Pair.with(EnrField.TCP_V4, 30303),
-            Pair.with(EnrField.UDP_V4, 30303),
-            Pair.with(
-                EnrFieldV4.PKEY_SECP256K1,
-                Functions.derivePublicKeyFromPrivate(Bytes.wrap(privKey))));
-    nodeRecord1.sign(Bytes.wrap(privKey));
+        new NodeRecordBuilder()
+            .seq(1)
+            .address("127.0.0.1", 30303)
+            .privateKey(Bytes.wrap(privKey))
+            .build();
     assertTrue(nodeRecord1.isValid());
     assertNotEquals(nodeRecord0.serialize(), nodeRecord1.serialize());
     assertNotEquals(nodeRecord0.getSignature(), nodeRecord1.getSignature());
@@ -124,11 +112,11 @@ public class NodeRecordTest {
         new NodeRecordFactory(new IdentitySchemaV4Interpreter())
             .createFromValues(
                 UInt64.valueOf(seq),
-                Pair.with(EnrField.ID, IdentitySchema.V4),
-                Pair.with(EnrFieldV4.IP_V4, ip),
-                Pair.with(EnrFieldV4.UDP_V4, port),
-                Pair.with(
-                    EnrFieldV4.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
+                new EnrField(EnrField.ID, IdentitySchema.V4),
+                new EnrField(EnrField.IP_V4, ip),
+                new EnrField(EnrField.UDP_V4, port),
+                new EnrField(
+                    EnrField.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
     nodeRecord.sign(privateKey);
     assertEquals(nodeId, nodeRecord.getNodeId());
     assertEquals(
@@ -149,7 +137,7 @@ public class NodeRecordTest {
     assertEquals(UInt64.valueOf(1), nodeRecord.getSeq());
     assertEquals(
         Bytes.fromHexString("03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138"),
-        nodeRecord.get(EnrFieldV4.PKEY_SECP256K1));
+        nodeRecord.get(EnrField.PKEY_SECP256K1));
     assertEquals(Bytes.fromHexString("0x7F000001"), nodeRecord.get(EnrField.IP_V4));
     assertEquals(30303, nodeRecord.get(EnrField.UDP_V4));
   }

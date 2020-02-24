@@ -8,6 +8,8 @@ import static org.ethereum.beacon.discovery.schema.NodeStatus.DEAD;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -96,6 +98,8 @@ public class DiscoveryTaskManager {
   private final Consumer<NodeRecord>[] nodeRecordUpdatesConsumers;
   private boolean resetDead;
   private boolean removeDead;
+  private CompletableFuture<Void> liveCheckSchedule;
+  private CompletableFuture<Void> recursiveLookupSchedule;
 
   /**
    * @param discoveryManager Discovery manager
@@ -135,13 +139,26 @@ public class DiscoveryTaskManager {
     this.nodeRecordUpdatesConsumers = nodeRecordUpdatesConsumers;
   }
 
-  public void start() {
-    scheduler.executeAtFixedRate(
-        Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
-    scheduler.executeAtFixedRate(
-        Duration.ZERO,
-        Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
-        this::recursiveLookupTask);
+  public synchronized void start() {
+    liveCheckSchedule =
+        scheduler.executeAtFixedRate(
+            Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
+    recursiveLookupSchedule =
+        scheduler.executeAtFixedRate(
+            Duration.ZERO,
+            Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
+            this::recursiveLookupTask);
+  }
+
+  public synchronized void stop() {
+    safeCancel(liveCheckSchedule);
+    safeCancel(recursiveLookupSchedule);
+  }
+
+  private void safeCancel(final Future<?> future) {
+    if (future != null) {
+      future.cancel(true);
+    }
   }
 
   private void liveCheckTask() {

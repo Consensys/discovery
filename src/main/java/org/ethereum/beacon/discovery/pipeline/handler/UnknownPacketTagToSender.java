@@ -13,7 +13,6 @@ import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.javatuples.Pair;
 
 /**
  * Assuming we have some unknown packet in {@link Field#PACKET_UNKNOWN}, resolves sender node id
@@ -51,16 +50,15 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
     Bytes fromNodeId = unknownPacket.getSourceNodeId(homeNodeId);
     envelope.put(
         Field.SESSION_LOOKUP,
-        Pair.with(
+        new SessionLookup(
             fromNodeId,
-            (Runnable)
-                () -> {
-                  envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
-                  envelope.put(
-                      Field.BAD_EXCEPTION,
-                      new RuntimeException(
-                          String.format("Session couldn't be created for nodeId %s", fromNodeId)));
-                  envelope.remove(Field.PACKET_UNKNOWN);
-                }));
+            () -> {
+              envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
+              envelope.put(
+                  Field.BAD_EXCEPTION,
+                  new RuntimeException(
+                      String.format("Session couldn't be created for nodeId %s", fromNodeId)));
+              envelope.remove(Field.PACKET_UNKNOWN);
+            }));
   }
 }

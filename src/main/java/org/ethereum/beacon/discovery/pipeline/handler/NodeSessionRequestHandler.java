@@ -11,7 +11,6 @@ import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.javatuples.Pair;
 
 /**
  * Searches for node in {@link Field#NODE} and requests session resolving using {@link
@@ -38,6 +37,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
 
     envelope.put(
         Field.SESSION_LOOKUP,
-        Pair.with(((NodeRecord) envelope.get(Field.NODE)).getNodeId(), (Runnable) () -> {}));
+        new SessionLookup(((NodeRecord) envelope.get(Field.NODE)).getNodeId(), () -> {}));
   }
 }

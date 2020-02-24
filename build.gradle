@@ -32,7 +32,6 @@ dependencies {
 //  implementation 'org.miracl.milagro.amcl:milagro-crypto-java'
 
   implementation 'com.google.guava:guava'
-  implementation 'org.javatuples:javatuples'
   implementation 'io.projectreactor:reactor-core'
   implementation 'io.netty:netty-all'
   implementation 'io.vertx:vertx-core'

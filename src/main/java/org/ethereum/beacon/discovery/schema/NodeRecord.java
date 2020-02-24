@@ -10,16 +10,13 @@ import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.javatuples.Pair;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -63,9 +60,9 @@ public class NodeRecord {
   public static NodeRecord fromValues(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
-      List<Pair<String, Object>> fieldKeyPairs) {
+      List<EnrField> fieldKeyPairs) {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
-    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getValue0(), objects.getValue1()));
+    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getName(), objects.getValue()));
     return nodeRecord;
   }
 
@@ -105,6 +102,10 @@ public class NodeRecord {
     return fields.get(key);
   }
 
+  public boolean containsKey(String key) {
+    return fields.containsKey(key);
+  }
+
   public UInt64 getSeq() {
     return seq;
   }
@@ -115,14 +116,6 @@ public class NodeRecord {
 
   public void setSignature(Bytes signature) {
     this.signature = signature;
-  }
-
-  public Set<String> getKeys() {
-    return new HashSet<>(fields.keySet());
-  }
-
-  public Object getKey(String key) {
-    return fields.get(key);
   }
 
   @Override
@@ -148,8 +141,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(Object signOptions) {
-    identitySchemaInterpreter.sign(this, signOptions);
+  public void sign(Bytes privateKey) {
+    identitySchemaInterpreter.sign(this, privateKey);
   }
 
   public RlpList asRlp() {
@@ -206,11 +199,11 @@ public class NodeRecord {
   public String toString() {
     return "NodeRecordV4{"
         + "publicKey="
-        + fields.get(EnrFieldV4.PKEY_SECP256K1)
+        + fields.get(EnrField.PKEY_SECP256K1)
         + ", ipV4address="
         + fields.get(IP_V4)
         + ", udpPort="
-        + fields.get(EnrFieldV4.UDP_V4)
+        + fields.get(EnrField.UDP_V4)
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="

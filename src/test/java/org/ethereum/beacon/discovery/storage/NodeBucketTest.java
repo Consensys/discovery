@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 public class NodeBucketTest {
 
   private NodeRecordInfo generateUniqueRecord(int portInc) {
-    NodeRecord nodeRecord = TestUtil.generateUnverifiedNode(30303 + portInc).getValue1();
+    NodeRecord nodeRecord = TestUtil.generateUnverifiedNode(30303 + portInc).getNodeRecord();
     return new NodeRecordInfo(nodeRecord, 0L, NodeStatus.ACTIVE, 0);
   }
 

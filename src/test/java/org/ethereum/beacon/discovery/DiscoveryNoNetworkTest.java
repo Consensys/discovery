@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.mock.DiscoveryManagerNoNetwork;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
@@ -28,7 +29,6 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
@@ -41,11 +41,11 @@ public class DiscoveryNoNetworkTest {
   @Test
   public void test() throws Exception {
     // 1) start 2 nodes
-    Pair<Bytes, NodeRecord> nodePair1 = TestUtil.generateUnverifiedNode(30303);
-    Pair<Bytes, NodeRecord> nodePair2 = TestUtil.generateUnverifiedNode(30304);
-    Pair<Bytes, NodeRecord> nodePair3 = TestUtil.generateUnverifiedNode(40412);
-    NodeRecord nodeRecord1 = nodePair1.getValue1();
-    NodeRecord nodeRecord2 = nodePair2.getValue1();
+    NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
+    NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
+    NodeInfo nodePair3 = TestUtil.generateUnverifiedNode(40412);
+    NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
+    NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     Database database1 = Database.inMemoryDB();
     Database database2 = Database.inMemoryDB();
@@ -59,7 +59,7 @@ public class DiscoveryNoNetworkTest {
             database2,
             TEST_SERIALIZER,
             (oldSeq) -> nodeRecord2,
-            () -> List.of(nodeRecord1, nodePair3.getValue1()));
+            () -> List.of(nodeRecord1, nodePair3.getNodeRecord()));
     NodeBucketStorage nodeBucketStorage2 =
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
     SimpleProcessor<Bytes> from1to2 =
@@ -73,7 +73,7 @@ public class DiscoveryNoNetworkTest {
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             nodeRecord1,
-            nodePair1.getValue0(),
+            nodePair1.getPrivateKey(),
             from2to1,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
     DiscoveryManagerNoNetwork discoveryManager2 =
@@ -81,7 +81,7 @@ public class DiscoveryNoNetworkTest {
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             nodeRecord2,
-            nodePair2.getValue0(),
+            nodePair2.getPrivateKey(),
             from1to2,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"));
 
