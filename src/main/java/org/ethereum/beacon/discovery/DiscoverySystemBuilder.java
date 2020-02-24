@@ -96,14 +96,15 @@ public class DiscoverySystemBuilder {
             nodeRecordFactory,
             schedulers.newSingleThreadDaemon("client-" + clientNumber));
 
-    final DiscoveryTaskManager discoveryTaskManager = new DiscoveryTaskManager(
-        discoveryManager,
-        nodeTable,
-        nodeBucketStorage,
-        localNodeRecord,
-        schedulers.newSingleThreadDaemon("tasks-" + clientNumber),
-        true,
-        true);
+    final DiscoveryTaskManager discoveryTaskManager =
+        new DiscoveryTaskManager(
+            discoveryManager,
+            nodeTable,
+            nodeBucketStorage,
+            localNodeRecord,
+            schedulers.newSingleThreadDaemon("tasks-" + clientNumber),
+            true,
+            true);
     return new DiscoverySystem(discoveryManager, discoveryTaskManager, nodeTable);
   }
 }

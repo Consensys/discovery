@@ -139,12 +139,14 @@ public class DiscoveryTaskManager {
   }
 
   public void start() {
-    liveCheckSchedule = scheduler.executeAtFixedRate(
-        Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
-    recursiveLookupSchedule = scheduler.executeAtFixedRate(
-        Duration.ZERO,
-        Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
-        this::recursiveLookupTask);
+    liveCheckSchedule =
+        scheduler.executeAtFixedRate(
+            Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
+    recursiveLookupSchedule =
+        scheduler.executeAtFixedRate(
+            Duration.ZERO,
+            Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
+            this::recursiveLookupTask);
   }
 
   public void stop() {
