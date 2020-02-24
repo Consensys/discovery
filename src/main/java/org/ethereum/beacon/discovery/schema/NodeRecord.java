@@ -10,11 +10,9 @@ import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
@@ -104,6 +102,10 @@ public class NodeRecord {
     return fields.get(key);
   }
 
+  public boolean containsKey(String key) {
+    return fields.containsKey(key);
+  }
+
   public UInt64 getSeq() {
     return seq;
   }
@@ -114,14 +116,6 @@ public class NodeRecord {
 
   public void setSignature(Bytes signature) {
     this.signature = signature;
-  }
-
-  public Set<String> getKeys() {
-    return new HashSet<>(fields.keySet());
-  }
-
-  public Object getKey(String key) {
-    return fields.get(key);
   }
 
   @Override

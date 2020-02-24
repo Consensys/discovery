@@ -17,8 +17,8 @@ import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.DiscoveryManager;
-import org.ethereum.beacon.discovery.DiscoveryManagerBuilder;
+import org.ethereum.beacon.discovery.DiscoverySystem;
+import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
@@ -32,17 +32,17 @@ import org.web3j.crypto.ECKeyPair;
 public class DiscoveryIntegrationTest {
   private static final Logger logger = LogManager.getLogger();
   private int nextPort = 9000;
-  private List<DiscoveryManager> managers = new ArrayList<>();
+  private List<DiscoverySystem> managers = new ArrayList<>();
 
   @AfterEach
   public void tearDown() {
-    managers.forEach(DiscoveryManager::stop);
+    managers.forEach(DiscoverySystem::stop);
   }
 
   @Test
   public void shouldSuccessfullyCommunicateWithBootnode() throws Exception {
-    final DiscoveryManager bootnode = createDiscoveryClient();
-    final DiscoveryManager client = createDiscoveryClient(bootnode.getLocalNodeRecord());
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
     final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
@@ -57,18 +57,18 @@ public class DiscoveryIntegrationTest {
 
   @Test
   public void shouldNotSuccessfullyPingBootnodeWhenNodeRecordIsNotSigned() throws Exception {
-    final DiscoveryManager bootnode = createDiscoveryClient();
-    final DiscoveryManager client = createDiscoveryClient(false, bootnode.getLocalNodeRecord());
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client = createDiscoveryClient(false, bootnode.getLocalNodeRecord());
 
     final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
     assertThrows(TimeoutException.class, () -> waitFor(pingResult));
   }
 
-  private DiscoveryManager createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
+  private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
 
-  private DiscoveryManager createDiscoveryClient(
+  private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
     final ECKeyPair keyPair = Functions.generateECKeyPair();
     final Bytes privateKey =
@@ -90,18 +90,18 @@ public class DiscoveryIntegrationTest {
               .address("127.0.0.1", port)
               .publicKey(Functions.derivePublicKeyFromPrivate(privateKey))
               .build();
-      final DiscoveryManager discoveryManager =
-          new DiscoveryManagerBuilder()
+      final DiscoverySystem discoverySystem =
+          new DiscoverySystemBuilder()
               .localNodeRecord(nodeRecord)
               .privateKey(privateKey)
               .bootnodes(bootnodes)
               .build();
       try {
-        waitFor(discoveryManager.start());
-        managers.add(discoveryManager);
-        return discoveryManager;
+        waitFor(discoverySystem.start());
+        managers.add(discoverySystem);
+        return discoverySystem;
       } catch (final Exception e) {
-        discoveryManager.stop();
+        discoverySystem.stop();
         if (e.getCause() instanceof BindException) {
           logger.info("Port conflict detected, retrying with new port", e);
         } else {

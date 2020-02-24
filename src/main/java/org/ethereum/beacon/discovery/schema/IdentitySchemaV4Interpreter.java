@@ -39,7 +39,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public Bytes getNodeId(NodeRecord nodeRecord) {
-    Bytes pkey = (Bytes) nodeRecord.getKey(EnrFieldV4.PKEY_SECP256K1);
+    Bytes pkey = (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1);
     Preconditions.checkNotNull(pkey, "Missing PKEY_SECP256K1 field");
     ECPoint pudDestPoint = Functions.publicKeyToPoint(pkey);
     Bytes xPart =

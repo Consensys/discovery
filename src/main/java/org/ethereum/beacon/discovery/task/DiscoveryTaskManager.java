@@ -8,6 +8,7 @@ import static org.ethereum.beacon.discovery.schema.NodeStatus.DEAD;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -96,6 +97,8 @@ public class DiscoveryTaskManager {
   private final Consumer<NodeRecord>[] nodeRecordUpdatesConsumers;
   private boolean resetDead;
   private boolean removeDead;
+  private CompletableFuture<Void> liveCheckSchedule;
+  private CompletableFuture<Void> recursiveLookupSchedule;
 
   /**
    * @param discoveryManager Discovery manager
@@ -136,12 +139,17 @@ public class DiscoveryTaskManager {
   }
 
   public void start() {
-    scheduler.executeAtFixedRate(
+    liveCheckSchedule = scheduler.executeAtFixedRate(
         Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
-    scheduler.executeAtFixedRate(
+    recursiveLookupSchedule = scheduler.executeAtFixedRate(
         Duration.ZERO,
         Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
         this::recursiveLookupTask);
+  }
+
+  public void stop() {
+    liveCheckSchedule.cancel(true);
+    recursiveLookupSchedule.cancel(true);
   }
 
   private void liveCheckTask() {

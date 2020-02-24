@@ -33,8 +33,7 @@ public class NodeRecordBuilder {
   }
 
   public NodeRecordBuilder seq(final int seq) {
-    this.seq = UInt64.valueOf(seq);
-    return this;
+    return seq(UInt64.valueOf(seq));
   }
 
   public NodeRecordBuilder publicKey(final Bytes publicKey) {
@@ -49,12 +48,17 @@ public class NodeRecordBuilder {
   }
 
   public NodeRecordBuilder address(final String ipAddress, final int port) {
+    return address(ipAddress, port, port);
+  }
+
+  public NodeRecordBuilder address(final String ipAddress, final int udpPort, final int tcpPort) {
     try {
       final InetAddress inetAddress = InetAddress.getByName(ipAddress);
       final Bytes address = Bytes.wrap(inetAddress.getAddress());
       final boolean isIpV6 = inetAddress instanceof Inet6Address;
       fields.add(new EnrField(isIpV6 ? EnrField.IP_V6 : EnrField.IP_V4, address));
-      fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP_V4, port));
+      fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP_V4, udpPort));
+      fields.add(new EnrField(isIpV6 ? EnrField.TCP_V6 : EnrField.TCP_V4, tcpPort));
     } catch (UnknownHostException e) {
       throw new IllegalArgumentException("Unable to resolve address: " + ipAddress);
     }

@@ -78,7 +78,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       if (packet.getEnrSeq().compareTo(session.getHomeNodeRecord().getSeq()) < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      Bytes remotePubKey = (Bytes) nodeRecord.getKey(EnrFieldV4.PKEY_SECP256K1);
+      Bytes remotePubKey = (Bytes) nodeRecord.get(EnrFieldV4.PKEY_SECP256K1);
       byte[] ephemeralKeyBytes = new byte[32];
       Functions.getRandom().nextBytes(ephemeralKeyBytes);
       ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
