@@ -22,7 +22,7 @@ public class PingHandler implements MessageHandler<PingMessage> {
             message.getRequestId(),
             nodeRecord.getSeq(),
             ((Bytes) nodeRecord.get(EnrField.IP_V4)), // bytes4
-            (int) nodeRecord.get(EnrField.UDP_V4));
+            (int) nodeRecord.get(EnrField.UDP));
     session.sendOutgoing(
         MessagePacket.create(
             session.getHomeNodeId(),
