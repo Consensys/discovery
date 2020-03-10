@@ -65,11 +65,6 @@ public class NodeRecordBuilder {
     return this;
   }
 
-  public NodeRecordBuilder field(final String name, final Object value) {
-    fields.add(new EnrField(name, value));
-    return this;
-  }
-
   public NodeRecord build() {
     fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
     final NodeRecord nodeRecord = nodeRecordFactory.createFromValues(seq, fields);
