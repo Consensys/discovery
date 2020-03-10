@@ -56,6 +56,22 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
+  public void shouldCompleteFindnodesFutureWhenNoNodesAreFound() throws Exception {
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
+    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    waitFor(pingResult);
+    assertTrue(pingResult.isDone());
+    assertFalse(pingResult.isCompletedExceptionally());
+
+    final CompletableFuture<Void> findNodesResult =
+        client.findNodes(bootnode.getLocalNodeRecord(), 10);
+    waitFor(findNodesResult);
+    assertTrue(findNodesResult.isDone());
+    assertFalse(findNodesResult.isCompletedExceptionally());
+  }
+
+  @Test
   public void shouldNotSuccessfullyPingBootnodeWhenNodeRecordIsNotSigned() throws Exception {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(false, bootnode.getLocalNodeRecord());
