@@ -203,7 +203,7 @@ public class NodeRecord {
         + ", ipV4address="
         + fields.get(IP_V4)
         + ", udpPort="
-        + fields.get(EnrField.UDP_V4)
+        + fields.get(EnrField.UDP)
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="

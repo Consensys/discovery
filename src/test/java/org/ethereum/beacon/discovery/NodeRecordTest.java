@@ -52,7 +52,7 @@ public class NodeRecordTest {
     assertArrayEquals(
         InetAddress.getByName(expectedHost).getAddress(),
         ((Bytes) nodeRecord.get(EnrField.IP_V4)).toArray());
-    assertEquals(expectedUdpPort, nodeRecord.get(EnrField.UDP_V4));
+    assertEquals(expectedUdpPort, nodeRecord.get(EnrField.UDP));
     //    assertEquals(expectedTcpPort, nodeRecord.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecord.getSeq());
     assertEquals(expectedPublicKey, nodeRecord.get(EnrField.PKEY_SECP256K1));
@@ -66,7 +66,7 @@ public class NodeRecordTest {
     assertArrayEquals(
         InetAddress.getByName(expectedHost).getAddress(),
         ((Bytes) nodeRecordRestored.get(EnrField.IP_V4)).toArray());
-    assertEquals(expectedUdpPort, nodeRecordRestored.get(EnrField.UDP_V4));
+    assertEquals(expectedUdpPort, nodeRecordRestored.get(EnrField.UDP));
     //    assertEquals(expectedTcpPort, nodeRecordRestored.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecordRestored.getSeq());
     assertEquals(expectedPublicKey, nodeRecordRestored.get(EnrField.PKEY_SECP256K1));
@@ -114,7 +114,7 @@ public class NodeRecordTest {
                 UInt64.valueOf(seq),
                 new EnrField(EnrField.ID, IdentitySchema.V4),
                 new EnrField(EnrField.IP_V4, ip),
-                new EnrField(EnrField.UDP_V4, port),
+                new EnrField(EnrField.UDP, port),
                 new EnrField(
                     EnrField.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
     nodeRecord.sign(privateKey);
@@ -139,6 +139,6 @@ public class NodeRecordTest {
         Bytes.fromHexString("03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138"),
         nodeRecord.get(EnrField.PKEY_SECP256K1));
     assertEquals(Bytes.fromHexString("0x7F000001"), nodeRecord.get(EnrField.IP_V4));
-    assertEquals(30303, nodeRecord.get(EnrField.UDP_V4));
+    assertEquals(30303, nodeRecord.get(EnrField.UDP));
   }
 }

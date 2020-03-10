@@ -65,7 +65,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     AuthTagRepository authTagRepo = new AuthTagRepository();
     this.discoveryServer =
         new NettyDiscoveryServerImpl(
-            ((Bytes) homeNode.get(EnrField.IP_V4)), (int) homeNode.get(EnrField.UDP_V4));
+            ((Bytes) homeNode.get(EnrField.IP_V4)), (int) homeNode.get(EnrField.UDP));
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             homeNode,

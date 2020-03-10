@@ -77,7 +77,7 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
     try {
       return new InetSocketAddress(
           InetAddress.getByAddress(((Bytes) recipient.get(EnrField.IP_V4)).toArray()), // bytes4
-          (int) recipient.get(EnrField.UDP_V4));
+          (int) recipient.get(EnrField.UDP));
     } catch (UnknownHostException e) {
       String error = String.format("Failed to resolve host for node record: %s", recipient);
       logger.error(error);

@@ -14,9 +14,9 @@ public class EnrField {
   // IPv4 address
   public static final String IP_V4 = "ip";
   // TCP port, integer
-  public static final String TCP_V4 = "tcp";
+  public static final String TCP = "tcp";
   // UDP port, integer
-  public static final String UDP_V4 = "udp";
+  public static final String UDP = "udp";
   // IPv6 address
   public static final String IP_V6 = "ip6";
   // IPv6-specific TCP port

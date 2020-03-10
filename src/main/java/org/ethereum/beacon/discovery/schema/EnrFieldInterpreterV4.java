@@ -23,8 +23,8 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
     fieldDecoders.put(
         EnrField.ID, rlpString -> IdentitySchema.fromString(new String(rlpString.getBytes())));
     fieldDecoders.put(EnrField.IP_V4, rlpString -> Bytes.wrap(rlpString.getBytes()));
-    fieldDecoders.put(EnrField.TCP_V4, rlpString -> rlpString.asPositiveBigInteger().intValue());
-    fieldDecoders.put(EnrField.UDP_V4, rlpString -> rlpString.asPositiveBigInteger().intValue());
+    fieldDecoders.put(EnrField.TCP, rlpString -> rlpString.asPositiveBigInteger().intValue());
+    fieldDecoders.put(EnrField.UDP, rlpString -> rlpString.asPositiveBigInteger().intValue());
     fieldDecoders.put(EnrField.IP_V6, rlpString -> Bytes.wrap(rlpString.getBytes()));
     fieldDecoders.put(EnrField.TCP_V6, rlpString -> rlpString.asPositiveBigInteger().intValue());
     fieldDecoders.put(EnrField.UDP_V6, rlpString -> rlpString.asPositiveBigInteger().intValue());
