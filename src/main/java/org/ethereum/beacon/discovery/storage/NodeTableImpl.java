@@ -6,11 +6,17 @@ package org.ethereum.beacon.discovery.storage;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.DataSource;
 import org.ethereum.beacon.discovery.database.HoleyList;
@@ -94,6 +100,14 @@ public class NodeTableImpl implements NodeTable {
     return nodeTable.get(nodeId);
   }
 
+  @Override
+  public Stream<NodeRecordInfo> streamClosestNodes(Bytes nodeId, int logLimit) {
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(
+            new ClosestNodeIterator(nodeId, logLimit), Spliterator.ORDERED),
+        false);
+  }
+
   /**
    * Returns list of nodes including `nodeId` (if it's found) in logLimit distance from it. Uses
    * {@link Functions#logDistance(Bytes, Bytes)} as distance function. A logLimit of zero implies
@@ -101,58 +115,88 @@ public class NodeTableImpl implements NodeTable {
    */
   @Override
   public List<NodeRecordInfo> findClosestNodes(Bytes nodeId, int logLimit) {
-    long start = getNodeIndex(nodeId);
-    boolean limitReached = false;
-    long currentIndexUp = start;
-    long currentIndexDown = start;
-    Set<NodeRecordInfo> res = new HashSet<>();
-    while (!limitReached) {
-      Optional<NodeIndex> upNodesOptional =
-          currentIndexUp >= NUMBER_OF_INDEXES ? Optional.empty() : indexTable.get(currentIndexUp);
-      Optional<NodeIndex> downNodesOptional =
-          currentIndexDown < 0 ? Optional.empty() : indexTable.get(currentIndexDown);
-      if (currentIndexUp >= NUMBER_OF_INDEXES && currentIndexDown < 0) {
-        // Bounds are reached from both top and bottom
-        break;
-      }
-      if (upNodesOptional.isPresent()) {
-        NodeIndex upNodes = upNodesOptional.get();
-        for (Bytes currentNodeId : upNodes.getEntries()) {
-          if (logLimit == 0) {
-            res.add(getNode(currentNodeId).get());
-          } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
-            limitReached = true;
-            break;
-          } else {
-            res.add(getNode(currentNodeId).get());
-          }
-        }
-      }
-      if (downNodesOptional.isPresent()) {
-        NodeIndex downNodes = downNodesOptional.get();
-        List<Bytes> entries = downNodes.getEntries();
-        // XXX: iterate in reverse order to reach logDistance limit from the right side
-        for (int i = entries.size() - 1; i >= 0; i--) {
-          Bytes currentNodeId = entries.get(i);
-          if (logLimit == 0) {
-            res.add(getNode(currentNodeId).get());
-          } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
-            limitReached = true;
-            break;
-          } else {
-            res.add(getNode(currentNodeId).get());
-          }
-        }
-      }
-      currentIndexUp++;
-      currentIndexDown--;
-    }
-
-    return new ArrayList<>(res);
+    return streamClosestNodes(nodeId, logLimit).collect(Collectors.toList());
   }
 
   @Override
   public NodeRecord getHomeNode() {
     return homeNodeSource.get().map(NodeRecordInfo::getNode).orElse(null);
+  }
+
+  private class ClosestNodeIterator implements Iterator<NodeRecordInfo> {
+    private final Bytes nodeId;
+    private final int logLimit;
+    private boolean limitReached = false;
+    private long currentIndexUp;
+    private long currentIndexDown;
+    private Iterator<NodeRecordInfo> currentBatch = Collections.emptyIterator();
+
+    public ClosestNodeIterator(final Bytes nodeId, final int logLimit) {
+      this.nodeId = nodeId;
+      this.logLimit = logLimit;
+      final long start = getNodeIndex(nodeId);
+      this.currentIndexUp = start;
+      this.currentIndexDown = start;
+    }
+
+    @Override
+    public boolean hasNext() {
+      if (!currentBatch.hasNext()) {
+        loadNextBatch();
+      }
+      return currentBatch.hasNext();
+    }
+
+    @Override
+    public NodeRecordInfo next() {
+      return currentBatch.next();
+    }
+
+    private void loadNextBatch() {
+      // TODO: Feels like this should actually order by distance, not be a HashSet...
+      Set<NodeRecordInfo> res = new HashSet<>();
+      while (!limitReached && res.isEmpty()) {
+        Optional<NodeIndex> upNodesOptional =
+            currentIndexUp >= NUMBER_OF_INDEXES ? Optional.empty() : indexTable.get(currentIndexUp);
+        Optional<NodeIndex> downNodesOptional =
+            currentIndexDown < 0 ? Optional.empty() : indexTable.get(currentIndexDown);
+        if (currentIndexUp >= NUMBER_OF_INDEXES && currentIndexDown < 0) {
+          // Bounds are reached from both top and bottom
+          break;
+        }
+        if (upNodesOptional.isPresent()) {
+          NodeIndex upNodes = upNodesOptional.get();
+          for (Bytes currentNodeId : upNodes.getEntries()) {
+            if (logLimit == 0) {
+              res.add(getNode(currentNodeId).orElseThrow());
+            } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+              limitReached = true;
+              break;
+            } else {
+              res.add(getNode(currentNodeId).orElseThrow());
+            }
+          }
+        }
+        if (downNodesOptional.isPresent()) {
+          NodeIndex downNodes = downNodesOptional.get();
+          List<Bytes> entries = downNodes.getEntries();
+          // XXX: iterate in reverse order to reach logDistance limit from the right side
+          for (int i = entries.size() - 1; i >= 0; i--) {
+            Bytes currentNodeId = entries.get(i);
+            if (logLimit == 0) {
+              res.add(getNode(currentNodeId).orElseThrow());
+            } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+              limitReached = true;
+              break;
+            } else {
+              res.add(getNode(currentNodeId).orElseThrow());
+            }
+          }
+        }
+        currentIndexUp++;
+        currentIndexDown--;
+      }
+      this.currentBatch = res.iterator();
+    }
   }
 }
