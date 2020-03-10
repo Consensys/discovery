@@ -33,7 +33,7 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
         requestInfo.getRemainingNodes() == null
             ? message.getTotal() - 1
             : requestInfo.getRemainingNodes() - 1;
-    if (newNodesCount == 0) {
+    if (newNodesCount <= 0) {
       session.clearRequestId(message.getRequestId(), TaskType.FINDNODE);
     } else {
       session.updateRequestInfo(
