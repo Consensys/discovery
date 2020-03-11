@@ -10,19 +10,20 @@ import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
- * Sends {@link TaskType#FINDNODE} to closest NodeRecords added via {@link #add(NodeRecordInfo,
- * Runnable, Runnable)}. Tasks is called failed if timeout is reached and reply from node is not
+ * Sends {@link TaskType#FINDNODE} to closest NodeRecords added via {@link #add(NodeRecord, int,
+ * Runnable, Consumer)}. Tasks is called failed if timeout is reached and reply from node is not
  * received.
  */
 public class RecursiveLookupTasks {
-  private static final int DEFAULT_DISTANCE = 100;
   private final Scheduler scheduler;
   private final DiscoveryManager discoveryManager;
   private final Set<Bytes> currentTasks = Sets.newConcurrentHashSet();
@@ -36,31 +37,33 @@ public class RecursiveLookupTasks {
         new ExpirationScheduler<>(timeout.get(ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
   }
 
-  public void add(NodeRecordInfo nodeRecordInfo, Runnable successCallback, Runnable failCallback) {
+  public void add(
+      NodeRecord nodeRecord,
+      int distance,
+      Runnable successCallback,
+      Consumer<Throwable> failCallback) {
     synchronized (this) {
-      if (currentTasks.contains(nodeRecordInfo.getNode().getNodeId())) {
+      if (currentTasks.contains(nodeRecord.getNodeId())) {
         return;
       }
-      currentTasks.add(nodeRecordInfo.getNode().getNodeId());
+      currentTasks.add(nodeRecord.getNodeId());
     }
 
     scheduler.execute(
         () -> {
-          CompletableFuture<Void> retry =
-              discoveryManager.findNodes(nodeRecordInfo.getNode(), DEFAULT_DISTANCE);
+          CompletableFuture<Void> retry = discoveryManager.findNodes(nodeRecord, distance);
           taskTimeouts.put(
-              nodeRecordInfo.getNode().getNodeId(),
+              nodeRecord.getNodeId(),
               () ->
                   retry.completeExceptionally(
-                      new RuntimeException("Timeout for node recursive lookup task")));
+                      new TimeoutException("Timeout for node recursive lookup task")));
           retry.whenComplete(
               (aVoid, throwable) -> {
+                currentTasks.remove(nodeRecord.getNodeId());
                 if (throwable != null) {
-                  failCallback.run();
-                  currentTasks.remove(nodeRecordInfo.getNode().getNodeId());
+                  failCallback.accept(throwable);
                 } else {
                   successCallback.run();
-                  currentTasks.remove(nodeRecordInfo.getNode().getNodeId());
                 }
               });
         });

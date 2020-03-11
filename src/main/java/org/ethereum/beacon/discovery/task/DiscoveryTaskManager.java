@@ -13,7 +13,10 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -25,9 +28,9 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
+  private static final Logger LOG = LogManager.getLogger();
   private static final int LIVE_CHECK_DISTANCE = 100;
-  private static final int RECURSIVE_LOOKUP_DISTANCE = 100;
-  private static final int STATUS_EXPIRATION_SECONDS = 600;
+  static final int STATUS_EXPIRATION_SECONDS = 600;
   private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RETRY_TIMEOUT_SECONDS = 60;
@@ -52,7 +55,7 @@ public class DiscoveryTaskManager {
    *
    * <p>In all other cases method returns true, meaning node is ready for ping check
    */
-  private final Predicate<NodeRecordInfo> LIVE_CHECK_NODE_RULE =
+  private static final Predicate<NodeRecordInfo> LIVE_CHECK_NODE_RULE =
       nodeRecord -> {
         long currentTime = Functions.getTime();
         if (nodeRecord.getStatus() == NodeStatus.ACTIVE
@@ -80,19 +83,13 @@ public class DiscoveryTaskManager {
    *   <li>Node is ACTIVE and last connection retry was not too much time ago
    * </ul>
    */
-  private final Predicate<NodeRecordInfo> RECURSIVE_LOOKUP_NODE_RULE =
-      nodeRecord -> {
-        long currentTime = Functions.getTime();
-        if (nodeRecord.getStatus() == NodeStatus.ACTIVE
-            && nodeRecord.getLastRetry() > currentTime - STATUS_EXPIRATION_SECONDS) {
-          return true;
-        }
-
-        return false;
-      };
+  static final Predicate<NodeRecordInfo> RECURSIVE_LOOKUP_NODE_RULE =
+      nodeRecord ->
+          nodeRecord.getStatus() == NodeStatus.ACTIVE
+              && nodeRecord.getLastRetry() > Functions.getTime() - STATUS_EXPIRATION_SECONDS;
 
   /** Checks whether node is eligible to be considered as dead */
-  private final Predicate<NodeRecordInfo> DEAD_RULE =
+  private static final Predicate<NodeRecordInfo> DEAD_RULE =
       nodeRecord -> nodeRecord.getRetry() >= MAX_RETRIES;
 
   private final Consumer<NodeRecord>[] nodeRecordUpdatesConsumers;
@@ -220,22 +217,33 @@ public class DiscoveryTaskManager {
   }
 
   private void recursiveLookupTask() {
-    List<NodeRecordInfo> nodes = nodeTable.findClosestNodes(homeNodeId, RECURSIVE_LOOKUP_DISTANCE);
-    nodes.stream()
-        .filter(RECURSIVE_LOOKUP_NODE_RULE)
-        .forEach(
-            nodeRecord ->
-                recursiveLookupTasks.add(
-                    nodeRecord,
-                    () -> {},
-                    () ->
-                        updateNode(
-                            nodeRecord,
-                            new NodeRecordInfo(
-                                nodeRecord.getNode(),
-                                Functions.getTime(),
-                                NodeStatus.SLEEP,
-                                (nodeRecord.getRetry() + 1)))));
+    new RecursiveLookupTask(nodeTable, this::findNodes, Bytes32.random()).execute();
+  }
+
+  private CompletableFuture<Void> findNodes(
+      final NodeRecordInfo nodeRecordInfo, final int distance) {
+    final CompletableFuture<Void> result = new CompletableFuture<>();
+    recursiveLookupTasks.add(
+        nodeRecordInfo.getNode(),
+        distance,
+        () -> {
+          updateNode(
+              nodeRecordInfo,
+              new NodeRecordInfo(
+                  nodeRecordInfo.getNode(), Functions.getTime(), NodeStatus.ACTIVE, 0));
+          result.complete(null);
+        },
+        error -> {
+          updateNode(
+              nodeRecordInfo,
+              new NodeRecordInfo(
+                  nodeRecordInfo.getNode(),
+                  Functions.getTime(),
+                  NodeStatus.SLEEP,
+                  (nodeRecordInfo.getRetry() + 1)));
+          result.completeExceptionally(error);
+        });
+    return result;
   }
 
   void onNodeRecordUpdate(NodeRecord nodeRecord) {
@@ -256,6 +264,10 @@ public class DiscoveryTaskManager {
     } else {
       onNodeRecordUpdate(newNodeRecordInfo.getNode());
     }
+    LOG.trace(
+        "Updating node {} to status {}",
+        newNodeRecordInfo.getNode().getNodeId(),
+        newNodeRecordInfo.getStatus());
     nodeTable.save(newNodeRecordInfo);
     nodeBucketStorage.put(newNodeRecordInfo);
   }
