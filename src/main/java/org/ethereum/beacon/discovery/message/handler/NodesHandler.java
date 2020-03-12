@@ -82,7 +82,6 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
     final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
     final int requestedDistance = requestInfo.getDistance();
     if (actualDistance != requestedDistance) {
-
       logger.debug(
           "Rejecting node record {} received from {} because distance was not {}.",
           nodeRecordV5.getNodeId(),

@@ -81,8 +81,10 @@ class NodesHandlerTest {
   @Test
   public void shouldRejectReceivedRecordsThatAreNotAtCorrectDistance() {
     final NodeInfo nodeInfo = TestUtil.generateNode(9000);
+    final int distance = Functions.logDistance(PEER_ID, nodeInfo.getNodeRecord().getNodeId());
     final FindNodeRequestInfo requestInfo =
-        new FindNodeRequestInfo(TaskStatus.SENT, REQUEST_ID, new CompletableFuture<>(), 0, null);
+        new FindNodeRequestInfo(
+            TaskStatus.SENT, REQUEST_ID, new CompletableFuture<>(), distance - 1, null);
     when(session.getRequestId(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = Collections.singletonList(nodeInfo.getNodeRecord());
     final NodesMessage message =
