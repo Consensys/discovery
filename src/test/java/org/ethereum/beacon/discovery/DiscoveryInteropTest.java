@@ -46,7 +46,7 @@ public class DiscoveryInteropTest {
   @SuppressWarnings({"DoubleBraceInitialization"})
   public void testInterop() throws Exception {
     // 1) start 2 nodes
-    NodeInfo nodePair1 = TestUtil.generateNode(40412, true);
+    NodeInfo nodePair1 = TestUtil.generateNode(40412);
     System.out.println(String.format("Node %s started", nodePair1.getNodeRecord().getNodeId()));
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 =

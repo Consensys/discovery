@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import com.google.common.base.Objects;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.web3j.rlp.RlpDecoder;
@@ -36,12 +37,13 @@ public class NodeRecordInfo {
   }
 
   public static NodeRecordInfo fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
-    RlpList internalList = (RlpList) RlpDecoder.decode(bytes.toArray()).getValues().get(0);
+    final Iterator<RlpType> values =
+        ((RlpList) RlpDecoder.decode(bytes.toArray()).getValues().get(0)).getValues().iterator();
     return new NodeRecordInfo(
-        nodeRecordFactory.fromBytes(((RlpString) internalList.getValues().get(0)).getBytes()),
-        ((RlpString) internalList.getValues().get(1)).asPositiveBigInteger().longValue(),
-        NodeStatus.fromNumber(((RlpString) internalList.getValues().get(2)).getBytes()[0]),
-        ((RlpString) internalList.getValues().get(1)).asPositiveBigInteger().intValue());
+        nodeRecordFactory.fromBytes(((RlpString) values.next()).getBytes()),
+        ((RlpString) values.next()).asPositiveBigInteger().longValue(),
+        NodeStatus.fromNumber(((RlpString) values.next()).getBytes()[0]),
+        ((RlpString) values.next()).asPositiveBigInteger().intValue());
   }
 
   public Bytes toRlpBytes() {
