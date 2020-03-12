@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -28,6 +29,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
+
   private static final Logger LOG = LogManager.getLogger();
   private static final int LIVE_CHECK_DISTANCE = 100;
   static final int STATUS_EXPIRATION_SECONDS = 600;
@@ -35,6 +37,7 @@ public class DiscoveryTaskManager {
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RETRY_TIMEOUT_SECONDS = 60;
   private static final int MAX_RETRIES = 10;
+  private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
   private final Scheduler scheduler;
   private final Bytes homeNodeId;
   private final LiveCheckTasks liveCheckTasks;
@@ -217,33 +220,37 @@ public class DiscoveryTaskManager {
   }
 
   private void recursiveLookupTask() {
-    new RecursiveLookupTask(nodeTable, this::findNodes, Bytes32.random()).execute();
+    new RecursiveLookupTask(
+            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
+        .execute();
   }
 
   private CompletableFuture<Void> findNodes(
       final NodeRecordInfo nodeRecordInfo, final int distance) {
-    final CompletableFuture<Void> result = new CompletableFuture<>();
-    recursiveLookupTasks.add(
-        nodeRecordInfo.getNode(),
-        distance,
-        () -> {
-          updateNode(
-              nodeRecordInfo,
-              new NodeRecordInfo(
-                  nodeRecordInfo.getNode(), Functions.getTime(), NodeStatus.ACTIVE, 0));
-          result.complete(null);
-        },
-        error -> {
-          updateNode(
-              nodeRecordInfo,
-              new NodeRecordInfo(
-                  nodeRecordInfo.getNode(),
-                  Functions.getTime(),
-                  NodeStatus.SLEEP,
-                  (nodeRecordInfo.getRetry() + 1)));
-          result.completeExceptionally(error);
+    final CompletableFuture<Void> searchResult =
+        recursiveLookupTasks.add(nodeRecordInfo.getNode(), distance);
+    searchResult.handle(
+        (__, error) -> {
+          if (error != null) {
+            if (error instanceof TimeoutException) {
+              updateNode(
+                  nodeRecordInfo,
+                  new NodeRecordInfo(
+                      nodeRecordInfo.getNode(),
+                      Functions.getTime(),
+                      NodeStatus.SLEEP,
+                      (nodeRecordInfo.getRetry() + 1)));
+            }
+          } else {
+            updateNode(
+                nodeRecordInfo,
+                new NodeRecordInfo(
+                    nodeRecordInfo.getNode(), Functions.getTime(), NodeStatus.ACTIVE, 0));
+          }
+          return null;
         });
-    return result;
+
+    return searchResult;
   }
 
   void onNodeRecordUpdate(NodeRecord nodeRecord) {

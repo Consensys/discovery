@@ -46,10 +46,13 @@ class RecursiveLookupTaskTest {
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDFFFF");
   public static final Bytes PEER4_ID =
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDAAAA");
+  public static final Bytes PEER5_ID =
+      Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD9999");
   public static final NodeRecordInfo PEER1 = createPeer(PEER1_ID);
   public static final NodeRecordInfo PEER2 = createPeer(PEER2_ID);
   public static final NodeRecordInfo PEER3 = createPeer(PEER3_ID);
   public static final NodeRecordInfo PEER4 = createPeer(PEER4_ID);
+  public static final NodeRecordInfo PEER5 = createPeer(PEER5_ID);
 
   private final Bytes TARGET =
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
@@ -59,7 +62,7 @@ class RecursiveLookupTaskTest {
   private final Map<NodeRecordInfo, CompletableFuture<Void>> findNodeRequests = new HashMap<>();
 
   private final RecursiveLookupTask task =
-      new RecursiveLookupTask(nodeTable, findNodesAction, TARGET);
+      new RecursiveLookupTask(nodeTable, findNodesAction, 4, TARGET);
 
   @BeforeEach
   public void setUp() {
@@ -176,6 +179,35 @@ class RecursiveLookupTaskTest {
 
     verifyNoMoreInteractions(findNodesAction);
     // Should now be done because all nodes have been queried
+    assertTrue(complete.isDone());
+  }
+
+  @Test
+  public void shouldStopWhenTotalQueryLimitIsReached() {
+    when(nodeTable.streamClosestNodes(TARGET, 0))
+        .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4, PEER5));
+
+    final CompletableFuture<Void> complete = task.execute();
+
+    verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
+    verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
+    verify(findNodesAction).findNodes(PEER3, Functions.logDistance(TARGET, PEER3_ID));
+    verifyNoMoreInteractions(findNodesAction);
+    assertFalse(complete.isDone());
+
+    // Requests complete
+    findNodeRequests.get(PEER1).complete(null);
+    findNodeRequests.get(PEER2).complete(null);
+    findNodeRequests.get(PEER3).complete(null);
+
+    // There are two peers remaining but only 1 request before we hit the total request limit
+    verify(findNodesAction).findNodes(PEER4, Functions.logDistance(TARGET, PEER4_ID));
+    verifyNoMoreInteractions(findNodesAction);
+    assertFalse(complete.isDone());
+
+    // And when that last request completes, we're done.
+    findNodeRequests.get(PEER4).complete(null);
+    verifyNoMoreInteractions(findNodesAction);
     assertTrue(complete.isDone());
   }
 

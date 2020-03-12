@@ -24,14 +24,17 @@ public class RecursiveLookupTask {
   private final Bytes targetNodeId;
   private final Set<Bytes> queriedNodeIds = new HashSet<>();
   private int availableQuerySlots = MAX_CONCURRENT_QUERIES;
+  private int remainingTotalQueryLimit;
   private final CompletableFuture<Void> future = new CompletableFuture<>();
 
   public RecursiveLookupTask(
       final NodeTable nodeTable,
       final FindNodesAction sendFindNodesRequest,
+      final int totalQueryLimit,
       final Bytes targetNodeId) {
     this.nodeTable = nodeTable;
     this.sendFindNodesRequest = sendFindNodesRequest;
+    this.remainingTotalQueryLimit = totalQueryLimit;
     this.targetNodeId = targetNodeId;
   }
 
@@ -53,10 +56,11 @@ public class RecursiveLookupTask {
         .streamClosestNodes(targetNodeId, 0)
         .filter(DiscoveryTaskManager.RECURSIVE_LOOKUP_NODE_RULE)
         .filter(record -> !queriedNodeIds.contains(record.getNode().getNodeId()))
-        .limit(availableQuerySlots)
+        .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit))
         .forEach(this::queryPeer);
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
-      // We didn't send any new queries so must have run out of possible nodes to query.
+      // We didn't send any new queries so must have run out of possible nodes to query or reached
+      // the query limit.
       future.complete(null);
     }
   }
@@ -64,6 +68,7 @@ public class RecursiveLookupTask {
   private void queryPeer(final NodeRecordInfo peer) {
     queriedNodeIds.add(peer.getNode().getNodeId());
     availableQuerySlots--;
+    remainingTotalQueryLimit--;
     sendFindNodesRequest
         .findNodes(peer, Functions.logDistance(peer.getNode().getNodeId(), targetNodeId))
         .whenComplete(
