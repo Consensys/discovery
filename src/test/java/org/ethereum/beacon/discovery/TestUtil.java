@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.format.SerializerFactory;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
@@ -27,12 +28,22 @@ public class TestUtil {
 
   /**
    * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
-   * same port. Signature is not valid if verified.
+   * same port. Signature is not validated.
    *
    * @return <code><private key, node record></code>
    */
   public static NodeInfo generateUnverifiedNode(int port) {
-    return generateNode(port, false);
+    return generateNode(port, false, true);
+  }
+
+  /**
+   * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
+   * same port. Validation will fail.
+   *
+   * @return <code><private key, node record></code>
+   */
+  public static NodeInfo generateInvalidNode(int port) {
+    return generateNode(port, true, false);
   }
 
   /**
@@ -40,10 +51,22 @@ public class TestUtil {
    * same port.
    *
    * @param port listen port
-   * @param verification whether to use valid signature
    * @return <code><private key, node record></code>
    */
-  public static NodeInfo generateNode(int port, boolean verification) {
+  public static NodeInfo generateNode(int port) {
+    return generateNode(port, true, true);
+  }
+
+  /**
+   * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
+   * same port.
+   *
+   * @param port listen port
+   * @param verification whether to verify signatures
+   * @param sign whether or not to sign the record
+   * @return <code><private key, node record></code>
+   */
+  private static NodeInfo generateNode(int port, boolean verification, boolean sign) {
     final Random rnd = new Random(SEED);
     for (int i = 0; i < port; ++i) {
       rnd.nextBoolean(); // skip according to input
@@ -60,7 +83,9 @@ public class TestUtil {
             .address(LOCALHOST, port)
             .build();
 
-    nodeRecord.sign(Bytes.wrap(privateKey));
+    if (!sign) {
+      nodeRecord.setSignature(Bytes32.ZERO);
+    }
     return new NodeInfo(Bytes.wrap(privateKey), nodeRecord);
   }
 

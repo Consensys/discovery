@@ -36,8 +36,8 @@ public class DiscoveryNetworkTest {
   @Test
   public void test() throws Exception {
     // 1) start 2 nodes
-    NodeInfo nodePair1 = TestUtil.generateNode(30303, true);
-    NodeInfo nodePair2 = TestUtil.generateNode(30304, true);
+    NodeInfo nodePair1 = TestUtil.generateNode(30303);
+    NodeInfo nodePair2 = TestUtil.generateNode(30304);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
