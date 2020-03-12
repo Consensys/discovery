@@ -10,10 +10,12 @@ import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.task.TaskType;
+import org.ethereum.beacon.discovery.util.Functions;
 
 public class NodesHandler implements MessageHandler<NodesMessage> {
   private static final Logger logger = LogManager.getLogger(NodesHandler.class);
@@ -60,11 +62,28 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
                 logger.debug("Rejecting invalid node record {}", nodeRecordV5);
                 return;
               }
+              if (hasIncorrectDistance(session, requestInfo, nodeRecordV5)) {
+                logger.debug(
+                    "Rejecting node record {} received from {} because distance was not {}.",
+                    nodeRecordV5.getNodeId(),
+                    session.getNodeId(),
+                    requestInfo.getDistance());
+                return;
+              }
               NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
               if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
                 session.getNodeTable().save(nodeRecordInfo);
               }
               session.putRecordInBucket(nodeRecordInfo);
             });
+  }
+
+  private boolean hasIncorrectDistance(
+      final NodeSession session,
+      final FindNodeRequestInfo requestInfo,
+      final NodeRecord nodeRecordV5) {
+    final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
+    final int requestedDistance = requestInfo.getDistance();
+    return actualDistance != requestedDistance;
   }
 }
