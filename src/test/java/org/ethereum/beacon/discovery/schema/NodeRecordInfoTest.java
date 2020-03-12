@@ -15,16 +15,11 @@ class NodeRecordInfoTest {
   @Test
   public void shouldRoundTripViaRlp() {
     final NodeInfo nodeInfo = TestUtil.generateNode(9000, true);
-    final NodeRecordInfo nodeRecordInfo = new NodeRecordInfo(
-        nodeInfo.getNodeRecord(),
-        4982924L,
-        NodeStatus.SLEEP,
-        1);
+    final NodeRecordInfo nodeRecordInfo =
+        new NodeRecordInfo(nodeInfo.getNodeRecord(), 4982924L, NodeStatus.SLEEP, 1);
 
     final Bytes rlp = nodeRecordInfo.toRlpBytes();
-    final NodeRecordInfo result = NodeRecordInfo.fromRlpBytes(
-        rlp,
-        NodeRecordFactory.DEFAULT);
+    final NodeRecordInfo result = NodeRecordInfo.fromRlpBytes(rlp, NodeRecordFactory.DEFAULT);
     assertEquals(nodeRecordInfo, result);
   }
 }
