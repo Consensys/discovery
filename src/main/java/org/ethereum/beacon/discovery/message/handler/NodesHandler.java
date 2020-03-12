@@ -54,22 +54,11 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
             String.format(
                 "Received %s node records in session %s. Total buckets expected: %s",
                 message.getNodeRecordsSize(), session, message.getTotal()));
-    message
-        .getNodeRecords()
+    message.getNodeRecords().stream()
+        .filter(this::isValid)
+        .filter(record -> hasCorrectDistance(session, requestInfo, record))
         .forEach(
             nodeRecordV5 -> {
-              if (!nodeRecordV5.isValid()) {
-                logger.debug("Rejecting invalid node record {}", nodeRecordV5);
-                return;
-              }
-              if (hasIncorrectDistance(session, requestInfo, nodeRecordV5)) {
-                logger.debug(
-                    "Rejecting node record {} received from {} because distance was not {}.",
-                    nodeRecordV5.getNodeId(),
-                    session.getNodeId(),
-                    requestInfo.getDistance());
-                return;
-              }
               NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
               if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
                 session.getNodeTable().save(nodeRecordInfo);
@@ -78,12 +67,29 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
             });
   }
 
-  private boolean hasIncorrectDistance(
+  private boolean isValid(final NodeRecord record) {
+    if (!record.isValid()) {
+      logger.debug("Rejecting invalid node record {}", record);
+      return false;
+    }
+    return true;
+  }
+
+  private boolean hasCorrectDistance(
       final NodeSession session,
       final FindNodeRequestInfo requestInfo,
       final NodeRecord nodeRecordV5) {
     final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
     final int requestedDistance = requestInfo.getDistance();
-    return actualDistance != requestedDistance;
+    if (actualDistance != requestedDistance) {
+
+      logger.debug(
+          "Rejecting node record {} received from {} because distance was not {}.",
+          nodeRecordV5.getNodeId(),
+          session.getNodeId(),
+          requestInfo.getDistance());
+      return false;
+    }
+    return true;
   }
 }
