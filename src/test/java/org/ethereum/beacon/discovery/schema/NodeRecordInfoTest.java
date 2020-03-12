@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class NodeRecordInfoTest {
   @Test
   public void shouldRoundTripViaRlp() {
-    final NodeInfo nodeInfo = TestUtil.generateNode(9000, true);
+    final NodeInfo nodeInfo = TestUtil.generateNode(9000);
     final NodeRecordInfo nodeRecordInfo =
         new NodeRecordInfo(nodeInfo.getNodeRecord(), 4982924L, NodeStatus.SLEEP, 1);
 

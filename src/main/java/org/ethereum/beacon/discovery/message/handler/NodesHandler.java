@@ -10,10 +10,12 @@ import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.task.TaskType;
+import org.ethereum.beacon.discovery.util.Functions;
 
 public class NodesHandler implements MessageHandler<NodesMessage> {
   private static final Logger logger = LogManager.getLogger(NodesHandler.class);
@@ -52,19 +54,41 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
             String.format(
                 "Received %s node records in session %s. Total buckets expected: %s",
                 message.getNodeRecordsSize(), session, message.getTotal()));
-    message
-        .getNodeRecords()
+    message.getNodeRecords().stream()
+        .filter(this::isValid)
+        .filter(record -> hasCorrectDistance(session, requestInfo, record))
         .forEach(
             nodeRecordV5 -> {
-              if (!nodeRecordV5.isValid()) {
-                logger.debug("Rejecting invalid node record {}", nodeRecordV5);
-                return;
-              }
               NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
               if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
                 session.getNodeTable().save(nodeRecordInfo);
               }
               session.putRecordInBucket(nodeRecordInfo);
             });
+  }
+
+  private boolean isValid(final NodeRecord record) {
+    if (!record.isValid()) {
+      logger.debug("Rejecting invalid node record {}", record);
+      return false;
+    }
+    return true;
+  }
+
+  private boolean hasCorrectDistance(
+      final NodeSession session,
+      final FindNodeRequestInfo requestInfo,
+      final NodeRecord nodeRecordV5) {
+    final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
+    final int requestedDistance = requestInfo.getDistance();
+    if (actualDistance != requestedDistance) {
+      logger.debug(
+          "Rejecting node record {} received from {} because distance was not {}.",
+          nodeRecordV5.getNodeId(),
+          session.getNodeId(),
+          requestInfo.getDistance());
+      return false;
+    }
+    return true;
   }
 }
