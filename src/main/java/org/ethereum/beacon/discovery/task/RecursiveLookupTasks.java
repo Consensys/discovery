@@ -34,7 +34,7 @@ public class RecursiveLookupTasks {
     this.discoveryManager = discoveryManager;
     this.scheduler = scheduler;
     this.taskTimeouts =
-        new ExpirationScheduler<>(timeout.get(ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
+        new ExpirationScheduler<>(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
   public void add(
