@@ -35,9 +35,9 @@ public class DiscoveryTaskManager {
   static final int STATUS_EXPIRATION_SECONDS = 600;
   private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
+  private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
   private static final int RETRY_TIMEOUT_SECONDS = 60;
   private static final int MAX_RETRIES = 10;
-  private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
   private final Scheduler scheduler;
   private final Bytes homeNodeId;
   private final LiveCheckTasks liveCheckTasks;
