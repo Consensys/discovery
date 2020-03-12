@@ -153,7 +153,6 @@ public class NodeTableImpl implements NodeTable {
     }
 
     private void loadNextBatch() {
-      // TODO: Feels like this should actually order by distance, not be a HashSet...
       Set<NodeRecordInfo> res = new HashSet<>();
       while (!limitReached && res.isEmpty()) {
         Optional<NodeIndex> upNodesOptional =
