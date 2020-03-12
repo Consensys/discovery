@@ -10,6 +10,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
@@ -22,6 +24,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
  * received.
  */
 public class LiveCheckTasks {
+  private static final Logger logger = LogManager.getLogger();
   private final Scheduler scheduler;
   private final DiscoveryManager discoveryManager;
   private final Set<Bytes> currentTasks = Sets.newConcurrentHashSet();
@@ -31,7 +34,7 @@ public class LiveCheckTasks {
     this.discoveryManager = discoveryManager;
     this.scheduler = scheduler;
     this.taskTimeouts =
-        new ExpirationScheduler<>(timeout.get(ChronoUnit.NANOS), TimeUnit.NANOSECONDS);
+        new ExpirationScheduler<>(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
   public void add(NodeRecordInfo nodeRecordInfo, Runnable successCallback, Runnable failCallback) {
@@ -44,14 +47,14 @@ public class LiveCheckTasks {
 
     scheduler.execute(
         () -> {
-          CompletableFuture<Void> retry = discoveryManager.ping(nodeRecordInfo.getNode());
-          taskTimeouts.put(
-              nodeRecordInfo.getNode().getNodeId(),
-              () ->
-                  retry.completeExceptionally(new RuntimeException("Timeout for node check task")));
-          retry.whenComplete(
+          CompletableFuture<Void> ping = discoveryManager.ping(nodeRecordInfo.getNode());
+          addTimeout(nodeRecordInfo, ping);
+          ping.whenComplete(
               (aVoid, throwable) -> {
                 if (throwable != null) {
+                  logger.trace(
+                      () -> "Liveness check failed for " + nodeRecordInfo.getNode().getNodeId(),
+                      throwable);
                   failCallback.run();
                   currentTasks.remove(nodeRecordInfo.getNode().getNodeId());
                 } else {
@@ -60,5 +63,11 @@ public class LiveCheckTasks {
                 }
               });
         });
+  }
+
+  private void addTimeout(final NodeRecordInfo nodeRecordInfo, final CompletableFuture<Void> ping) {
+    taskTimeouts.put(
+        nodeRecordInfo.getNode().getNodeId(),
+        () -> ping.completeExceptionally(new RuntimeException("Timeout for node check task")));
   }
 }
