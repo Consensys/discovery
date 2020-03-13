@@ -59,8 +59,8 @@ public class RecursiveLookupTask {
         .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit))
         .forEach(this::queryPeer);
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
-      // We didn't send any new queries so must have run out of possible nodes to query or reached
-      // the query limit.
+      // There are no in-progress queries even after we looked for more to send so must have run out
+      // of possible nodes to query or reached the query limit.
       future.complete(null);
     }
   }
