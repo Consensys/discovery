@@ -43,9 +43,9 @@ public class RecursiveLookupTasks {
     final CompletableFuture<Void> result = new CompletableFuture<>();
     scheduler.execute(
         () -> {
-          CompletableFuture<Void> retry = discoveryManager.findNodes(nodeRecord, distance);
-          addTimeout(nodeRecord, retry);
-          retry.whenComplete(
+          CompletableFuture<Void> request = discoveryManager.findNodes(nodeRecord, distance);
+          addTimeout(nodeRecord, request);
+          request.whenComplete(
               (aVoid, throwable) -> {
                 currentTasks.remove(nodeRecord.getNodeId());
                 if (throwable != null) {

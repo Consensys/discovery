@@ -178,8 +178,6 @@ class RecursiveLookupTaskTest {
     findNodeRequests.get(PEER3).complete(null);
 
     verifyNoMoreInteractions(findNodesAction);
-    // Should now be done because all nodes have been queried
-    assertTrue(complete.isDone());
   }
 
   @Test
