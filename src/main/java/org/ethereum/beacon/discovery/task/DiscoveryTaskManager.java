@@ -25,7 +25,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
-  private static final int LIVE_CHECK_DISTANCE = 100;
+  private static final int CONCURRENT_LIVENESS_CHECK_LIMIT = 5;
   private static final int RECURSIVE_LOOKUP_DISTANCE = 100;
   private static final int STATUS_EXPIRATION_SECONDS = 600;
   private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
@@ -162,7 +162,7 @@ public class DiscoveryTaskManager {
   }
 
   private void liveCheckTask() {
-    List<NodeRecordInfo> nodes = nodeTable.findClosestNodes(homeNodeId, LIVE_CHECK_DISTANCE);
+    List<NodeRecordInfo> nodes = nodeTable.findClosestNodes(homeNodeId, 0);
 
     // Dead nodes handling
     nodes.stream()
@@ -200,6 +200,7 @@ public class DiscoveryTaskManager {
     // Live check task
     closestNodes
         .filter(LIVE_CHECK_NODE_RULE)
+        .limit(CONCURRENT_LIVENESS_CHECK_LIMIT)
         .forEach(
             nodeRecord ->
                 liveCheckTasks.add(
