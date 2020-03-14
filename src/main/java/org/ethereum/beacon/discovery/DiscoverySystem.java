@@ -82,6 +82,6 @@ public class DiscoverySystem {
 
   public Stream<NodeRecordInfo> streamKnownNodes() {
     // 0 indicates no limit to the number of nodes to return.
-    return nodeTable.findClosestNodes(Bytes32.ZERO, 0).stream();
+    return nodeTable.streamClosestNodes(Bytes32.ZERO, 0);
   }
 }

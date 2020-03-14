@@ -38,5 +38,7 @@ dependencyManagement {
       entry 'junit-jupiter-api'
       entry 'junit-jupiter-engine'
     }
+
+    dependency 'org.mockito:mockito-core:3.1.0'
   }
 }
