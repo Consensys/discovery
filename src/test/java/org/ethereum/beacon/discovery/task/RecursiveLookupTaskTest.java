@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -248,6 +249,16 @@ class RecursiveLookupTaskTest {
     @Override
     public Bytes getNodeId(final NodeRecord nodeRecord) {
       return (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
+    }
+
+    @Override
+    public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
+      return Optional.empty();
     }
   }
 }
