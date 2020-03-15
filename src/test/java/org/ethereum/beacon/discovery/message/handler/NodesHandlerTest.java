@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery.message.handler;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -44,7 +45,7 @@ class NodesHandlerTest {
   }
 
   @Test
-  public void shouldAddReceivedRecordsToNodeTable() {
+  public void shouldAddReceivedRecordsToNodeTableButNotNodeBuckets() {
     final NodeInfo nodeInfo = TestUtil.generateNode(9000);
     final int distance = Functions.logDistance(PEER_ID, nodeInfo.getNodeRecord().getNodeId());
     final FindNodeRequestInfo requestInfo =
@@ -58,7 +59,7 @@ class NodesHandlerTest {
 
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeInfo.getNodeRecord());
     verify(nodeTable).save(nodeRecordInfo);
-    verify(session).putRecordInBucket(nodeRecordInfo);
+    verify(session, never()).putRecordInBucket(nodeRecordInfo);
     verify(session).clearRequestId(REQUEST_ID, TaskType.FINDNODE);
   }
 
