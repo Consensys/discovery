@@ -84,4 +84,8 @@ public class DiscoverySystem {
     // 0 indicates no limit to the number of nodes to return.
     return nodeTable.streamClosestNodes(Bytes32.ZERO, 0);
   }
+
+  public CompletableFuture<Void> searchForNewPeers() {
+    return taskManager.searchForNewPeers();
+  }
 }

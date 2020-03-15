@@ -35,7 +35,7 @@ public class DiscoveryTaskManager {
   private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
-  private static final int RETRY_TIMEOUT_SECONDS = 60;
+  private static final int RETRY_TIMEOUT_SECONDS = 10;
   private static final int MAX_RETRIES = 10;
   private final Scheduler scheduler;
   private final Bytes homeNodeId;
@@ -146,7 +146,7 @@ public class DiscoveryTaskManager {
         scheduler.executeAtFixedRate(
             Duration.ZERO,
             Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
-            this::recursiveLookupTask);
+            this::searchForNewPeers);
   }
 
   public synchronized void stop() {
@@ -219,8 +219,8 @@ public class DiscoveryTaskManager {
                                 (nodeRecord.getRetry() + 1)))));
   }
 
-  private void recursiveLookupTask() {
-    new RecursiveLookupTask(
+  public CompletableFuture<Void> searchForNewPeers() {
+    return new RecursiveLookupTask(
             nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
         .execute();
   }
