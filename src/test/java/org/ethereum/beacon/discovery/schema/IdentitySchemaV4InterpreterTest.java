@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +18,9 @@ import org.junit.jupiter.api.Test;
 class IdentitySchemaV4InterpreterTest {
 
   private static final Bytes PUB_KEY =
-      Bytes.fromHexString("0x0295A5A50F083697FF8557F3C6FE0CDF8E8EC2141D15F19A5A45571ED9C38CE181");
+      Bytes.fromHexString("0x02197B9014C6C0500CF168BD1F17A3B4A1307251849A5ECEEE0B5EBC76A7EBDB37");
+  private static final Bytes PRIV_KEY =
+      Bytes.fromHexString("0x2E953344686E18C99CDE5292D822D4427BDC5B473F3A6D69D6D0D897D9595110");
   private static final Bytes IPV6_LOCALHOST =
       Bytes.fromHexString("0x00000000000000000000000000000001");
 
@@ -147,6 +150,64 @@ class IdentitySchemaV4InterpreterTest {
         getTcpAddressForNodeRecordWithFields(
             new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.TCP_V6, 1234));
     assertThat(result).contains(new InetSocketAddress("::1", 1234));
+  }
+
+  @Test
+  public void shouldUpdateIpV4AddressAndPort() {
+    final NodeRecord initialRecord =
+        createNodeRecord(
+            new EnrField(EnrField.IP_V4, Bytes.wrap(new byte[4])),
+            new EnrField(EnrField.UDP, 3030));
+    final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
+    final NodeRecord newRecord =
+        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+
+    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.get(EnrField.IP_V4))
+        .isEqualTo(Bytes.wrap(newSocketAddress.getAddress().getAddress()));
+  }
+
+  @Test
+  public void shouldUpdateIpV6AddressAndPort() throws Exception {
+    final NodeRecord initialRecord =
+        createNodeRecord(
+            new EnrField(EnrField.IP_V6, Bytes.wrap(new byte[16])),
+            new EnrField(EnrField.UDP_V6, 3030));
+    final InetSocketAddress newSocketAddress =
+        new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
+    final NodeRecord newRecord =
+        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+
+    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
+  }
+
+  @Test
+  public void shouldSwitchFromIpV4ToIpV6() throws Exception {
+    final NodeRecord initialRecord =
+        createNodeRecord(
+            new EnrField(EnrField.IP_V4, Bytes.wrap(new byte[4])),
+            new EnrField(EnrField.UDP, 3030));
+    final InetSocketAddress newSocketAddress =
+        new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
+    final NodeRecord newRecord =
+        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+
+    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
+  }
+
+  @Test
+  public void shouldSwitchFromIpV6ToIpV4() {
+    final NodeRecord initialRecord =
+        createNodeRecord(
+            new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.UDP_V6, 3030));
+    final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
+    final NodeRecord newRecord =
+        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+
+    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(Bytes.wrap(new byte[] {127, 0, 0, 1}));
   }
 
   private Optional<InetSocketAddress> getTcpAddressForNodeRecordWithFields(

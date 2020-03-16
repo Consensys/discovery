@@ -23,9 +23,9 @@ public class PongMessage implements V5Message {
   // 16 or 4 byte IP address of the intended recipient
   private final Bytes recipientIp;
   // recipient UDP port, a 16-bit integer
-  private final Integer recipientPort;
+  private final int recipientPort;
 
-  public PongMessage(Bytes requestId, UInt64 enrSeq, Bytes recipientIp, Integer recipientPort) {
+  public PongMessage(Bytes requestId, UInt64 enrSeq, Bytes recipientIp, int recipientPort) {
     this.requestId = requestId;
     this.enrSeq = enrSeq;
     this.recipientIp = recipientIp;
@@ -53,7 +53,7 @@ public class PongMessage implements V5Message {
     return recipientIp;
   }
 
-  public Integer getRecipientPort() {
+  public int getRecipientPort() {
     return recipientPort;
   }
 

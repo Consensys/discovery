@@ -11,12 +11,14 @@ import java.net.InetSocketAddress;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.TestUtil;
+import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,8 @@ class NodeIdToSessionTest {
 
   private static final Bytes STATIC_NODE_KEY = Bytes.fromHexString("0x1234");
   public static final Bytes NODE_ID = Bytes.fromHexString("0x888888");
-  private final NodeRecord homeNodeRecord = TestUtil.generateNode(9000).getNodeRecord();
+  private final NodeInfo homeNodeInfo = TestUtil.generateNode(9000);
+  private final NodeRecord homeNodeRecord = homeNodeInfo.getNodeRecord();
   private final NodeBucketStorage nodeBucketStorage = mock(NodeBucketStorage.class);
   private final AuthTagRepository authTagRepository = mock(AuthTagRepository.class);
   private final NodeTable nodeTable = mock(NodeTable.class);
@@ -33,7 +36,7 @@ class NodeIdToSessionTest {
 
   private final NodeIdToSession handler =
       new NodeIdToSession(
-          homeNodeRecord,
+          new LocalNodeRecordStore(homeNodeRecord, homeNodeInfo.getPrivateKey()),
           STATIC_NODE_KEY,
           nodeBucketStorage,
           authTagRepository,

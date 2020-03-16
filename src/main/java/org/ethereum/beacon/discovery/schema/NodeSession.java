@@ -28,6 +28,7 @@ import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -44,8 +45,8 @@ public class NodeSession {
   public static final int REQUEST_ID_SIZE = 8;
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
   private static final int CLEANUP_DELAY_SECONDS = 60;
-  private final NodeRecord homeNodeRecord;
   private final Bytes homeNodeId;
+  private final LocalNodeRecordStore localNodeRecordStore;
   private final AuthTagRepository authTagRepo;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
@@ -67,7 +68,7 @@ public class NodeSession {
       Bytes nodeId,
       Optional<NodeRecord> nodeRecord,
       InetSocketAddress remoteAddress,
-      NodeRecord homeNodeRecord,
+      LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
@@ -77,12 +78,12 @@ public class NodeSession {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
+    this.localNodeRecordStore = localNodeRecordStore;
     this.authTagRepo = authTagRepo;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
-    this.homeNodeRecord = homeNodeRecord;
     this.staticNodeKey = staticNodeKey;
-    this.homeNodeId = homeNodeRecord.getNodeId();
+    this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
   }
@@ -311,7 +312,7 @@ public class NodeSession {
   }
 
   public NodeRecord getHomeNodeRecord() {
-    return homeNodeRecord;
+    return localNodeRecordStore.getLocalNodeRecord();
   }
 
   @Override

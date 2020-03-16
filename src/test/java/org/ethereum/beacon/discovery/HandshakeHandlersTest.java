@@ -44,6 +44,7 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
@@ -106,12 +107,14 @@ public class HandshakeHandlersTest {
           outgoing1PacketsSemaphore.release(1);
         };
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
+    final LocalNodeRecordStore localNodeRecordStoreAt1 =
+        new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey());
     NodeSession nodeSessionAt1For2 =
         new NodeSession(
             nodeRecord2.getNodeId(),
             Optional.of(nodeRecord2),
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
-            nodeRecord1,
+            localNodeRecordStoreAt1,
             nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
@@ -127,7 +130,7 @@ public class HandshakeHandlersTest {
             nodeRecord1.getNodeId(),
             Optional.of(nodeRecord1),
             nodeRecord1.getUdpAddress().orElseThrow(),
-            nodeRecord2,
+            new LocalNodeRecordStore(nodeRecord2, nodePair2.getPrivateKey()),
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
@@ -185,7 +188,8 @@ public class HandshakeHandlersTest {
     assertNull(envelopeAt1From2WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
 
-    MessageHandler messageHandler = new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION);
+    MessageHandler messageHandler =
+        new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1);
     messageHandler.handle(envelopeAt1From2WithMessage);
     assertTrue(outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS));
 

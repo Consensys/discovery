@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
@@ -100,6 +101,10 @@ public class NodeRecord {
 
   public Object get(String key) {
     return fields.get(key);
+  }
+
+  public void forEachField(BiConsumer<String, Object> consumer) {
+    fields.forEach(consumer);
   }
 
   public boolean containsKey(String key) {
@@ -201,6 +206,10 @@ public class NodeRecord {
 
   public Optional<InetSocketAddress> getUdpAddress() {
     return identitySchemaInterpreter.getUdpAddress(this);
+  }
+
+  public NodeRecord withNewAddress(final InetSocketAddress newAddress, final Bytes privateKey) {
+    return identitySchemaInterpreter.createWithNewAddress(this, newAddress, privateKey);
   }
 
   @Override

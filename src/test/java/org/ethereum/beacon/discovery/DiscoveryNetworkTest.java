@@ -22,6 +22,7 @@ import org.ethereum.beacon.discovery.packet.UnknownPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
@@ -72,7 +73,7 @@ public class DiscoveryNetworkTest {
         new DiscoveryManagerImpl(
             nodeTableStorage1.get(),
             nodeBucketStorage1,
-            nodeRecord1,
+            new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey()),
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
@@ -80,7 +81,7 @@ public class DiscoveryNetworkTest {
         new DiscoveryManagerImpl(
             nodeTableStorage2.get(),
             nodeBucketStorage2,
-            nodeRecord2,
+            new LocalNodeRecordStore(nodeRecord2, nodePair2.getPrivateKey()),
             nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"));

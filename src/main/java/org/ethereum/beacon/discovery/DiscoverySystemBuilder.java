@@ -16,6 +16,7 @@ import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorageImpl;
 import org.ethereum.beacon.discovery.storage.NodeSerializerFactory;
@@ -87,11 +88,13 @@ public class DiscoverySystemBuilder {
     final NodeBucketStorage nodeBucketStorage =
         new NodeBucketStorageImpl(database, serializerFactory, localNodeRecord);
     final int clientNumber = COUNTER.incrementAndGet();
+    final LocalNodeRecordStore localNodeRecordStore =
+        new LocalNodeRecordStore(localNodeRecord, privateKey);
     final DiscoveryManager discoveryManager =
         new DiscoveryManagerImpl(
             nodeTable,
             nodeBucketStorage,
-            localNodeRecord,
+            localNodeRecordStore,
             privateKey,
             nodeRecordFactory,
             schedulers.newSingleThreadDaemon("client-" + clientNumber));

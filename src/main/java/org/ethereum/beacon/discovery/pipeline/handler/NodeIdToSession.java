@@ -26,6 +26,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 
@@ -36,7 +37,7 @@ import org.ethereum.beacon.discovery.storage.NodeTable;
 public class NodeIdToSession implements EnvelopeHandler {
   private static final int CLEANUP_DELAY_SECONDS = 180;
   private static final Logger logger = LogManager.getLogger(NodeIdToSession.class);
-  private final NodeRecord homeNodeRecord;
+  private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
   private final AuthTagRepository authTagRepo;
@@ -47,13 +48,13 @@ public class NodeIdToSession implements EnvelopeHandler {
       new ExpirationScheduler<>(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
 
   public NodeIdToSession(
-      NodeRecord homeNodeRecord,
+      LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeBucketStorage nodeBucketStorage,
       AuthTagRepository authTagRepo,
       NodeTable nodeTable,
       Pipeline outgoingPipeline) {
-    this.homeNodeRecord = homeNodeRecord;
+    this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
     this.authTagRepo = authTagRepo;
@@ -101,7 +102,7 @@ public class NodeIdToSession implements EnvelopeHandler {
         key.nodeId,
         nodeRecord,
         key.remoteSocketAddress,
-        homeNodeRecord,
+        localNodeRecordStore,
         staticNodeKey,
         nodeTable,
         nodeBucketStorage,

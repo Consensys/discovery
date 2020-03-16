@@ -5,9 +5,12 @@
 package org.ethereum.beacon.discovery.schema;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +21,9 @@ import org.ethereum.beacon.discovery.util.Utils;
 
 public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   private static final Logger logger = LogManager.getLogger();
+
+  private static final ImmutableSet<String> ADDRESS_FIELD_NAMES =
+      ImmutableSet.of(EnrField.IP_V4, EnrField.IP_V6, EnrField.UDP, EnrField.UDP_V6);
 
   @Override
   public boolean isValid(NodeRecord nodeRecord) {
@@ -74,6 +80,22 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.TCP)
         .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP_V6))
         .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP));
+  }
+
+  @Override
+  public NodeRecord createWithNewAddress(
+      final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
+    final List<EnrField> fields = new ArrayList<>();
+    nodeRecord.forEachField(
+        (name, value) -> {
+          if (!ADDRESS_FIELD_NAMES.contains(name)) {
+            fields.add(new EnrField(name, value));
+          }
+        });
+    NodeRecordBuilder.addFieldsForUdpAddress(fields, newAddress.getAddress(), newAddress.getPort());
+    final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
+    sign(newRecord, privateKey);
+    return newRecord;
   }
 
   private static Optional<InetSocketAddress> addressFromFields(

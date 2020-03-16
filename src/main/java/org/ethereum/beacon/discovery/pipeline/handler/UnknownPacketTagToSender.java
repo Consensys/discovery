@@ -12,7 +12,6 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
  * Assuming we have some unknown packet in {@link Field#PACKET_UNKNOWN}, resolves sender node id
@@ -23,8 +22,8 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(UnknownPacketTagToSender.class);
   private final Bytes homeNodeId;
 
-  public UnknownPacketTagToSender(NodeRecord homeNodeRecord) {
-    this.homeNodeId = homeNodeRecord.getNodeId();
+  public UnknownPacketTagToSender(final Bytes nodeId) {
+    this.homeNodeId = nodeId;
   }
 
   @Override

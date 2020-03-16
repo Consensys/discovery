@@ -54,15 +54,20 @@ public class NodeRecordBuilder {
   public NodeRecordBuilder address(final String ipAddress, final int udpPort, final int tcpPort) {
     try {
       final InetAddress inetAddress = InetAddress.getByName(ipAddress);
-      final Bytes address = Bytes.wrap(inetAddress.getAddress());
-      final boolean isIpV6 = inetAddress instanceof Inet6Address;
-      fields.add(new EnrField(isIpV6 ? EnrField.IP_V6 : EnrField.IP_V4, address));
-      fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP, udpPort));
-      fields.add(new EnrField(isIpV6 ? EnrField.TCP_V6 : EnrField.TCP, tcpPort));
+      addFieldsForUdpAddress(fields, inetAddress, udpPort);
+      fields.add(new EnrField(EnrField.TCP, tcpPort));
     } catch (UnknownHostException e) {
       throw new IllegalArgumentException("Unable to resolve address: " + ipAddress);
     }
     return this;
+  }
+
+  static void addFieldsForUdpAddress(
+      final List<EnrField> fields, final InetAddress inetAddress, final int udpPort) {
+    final Bytes address = Bytes.wrap(inetAddress.getAddress());
+    final boolean isIpV6 = inetAddress instanceof Inet6Address;
+    fields.add(new EnrField(isIpV6 ? EnrField.IP_V6 : EnrField.IP_V4, address));
+    fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP, udpPort));
   }
 
   public NodeRecord build() {
