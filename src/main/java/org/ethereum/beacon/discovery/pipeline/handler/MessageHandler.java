@@ -15,15 +15,17 @@ import org.ethereum.beacon.discovery.processor.DiscoveryV5MessageProcessor;
 import org.ethereum.beacon.discovery.processor.MessageProcessor;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
 public class MessageHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(MessageHandler.class);
   private final MessageProcessor messageProcessor;
 
-  public MessageHandler(NodeRecordFactory nodeRecordFactory) {
+  public MessageHandler(
+      NodeRecordFactory nodeRecordFactory, final LocalNodeRecordStore localNodeRecordStore) {
     this.messageProcessor =
-        new MessageProcessor(new DiscoveryV5MessageProcessor(nodeRecordFactory));
-    ;
+        new MessageProcessor(
+            new DiscoveryV5MessageProcessor(nodeRecordFactory, localNodeRecordStore));
   }
 
   @Override

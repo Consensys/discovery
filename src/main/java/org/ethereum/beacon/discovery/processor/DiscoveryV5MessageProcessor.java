@@ -18,6 +18,7 @@ import org.ethereum.beacon.discovery.message.handler.PongHandler;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.Protocol;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
 /**
  * {@link DiscoveryV5Message} v5 messages processor. Uses several handlers, one for each type of v5
@@ -31,9 +32,10 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<Di
 
   private final NodeRecordFactory nodeRecordFactory;
 
-  public DiscoveryV5MessageProcessor(NodeRecordFactory nodeRecordFactory) {
+  public DiscoveryV5MessageProcessor(
+      NodeRecordFactory nodeRecordFactory, final LocalNodeRecordStore localNodeRecordStore) {
     messageHandlers.put(MessageCode.PING, new PingHandler());
-    messageHandlers.put(MessageCode.PONG, new PongHandler());
+    messageHandlers.put(MessageCode.PONG, new PongHandler(localNodeRecordStore));
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
     this.nodeRecordFactory = nodeRecordFactory;

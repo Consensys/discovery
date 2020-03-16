@@ -37,6 +37,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.TaskOptions;
@@ -51,20 +52,21 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NettyDiscoveryServer discoveryServer;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
-  private final NodeRecord homeNodeRecord;
+  private final LocalNodeRecordStore localNodeRecordStore;
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
-      NodeRecord homeNode,
+      LocalNodeRecordStore localNodeRecordStore,
       Bytes homeNodePrivateKey,
       NodeRecordFactory nodeRecordFactory,
       Scheduler taskScheduler) {
-    homeNodeRecord = homeNode;
+    this.localNodeRecordStore = localNodeRecordStore;
+    final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     AuthTagRepository authTagRepo = new AuthTagRepository();
     final InetSocketAddress listenAddress =
-        homeNode
+        homeNodeRecord
             .getUdpAddress()
             .orElseThrow(
                 () ->
@@ -73,7 +75,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     this.discoveryServer = new NettyDiscoveryServerImpl(listenAddress);
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
-            homeNode,
+            localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
             authTagRepo,
@@ -81,9 +83,9 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             outgoingPipeline);
     incomingPipeline
         .addHandler(new IncomingDataPacker())
-        .addHandler(new WhoAreYouAttempt(homeNode.getNodeId()))
+        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
         .addHandler(new WhoAreYouSessionResolver(authTagRepo))
-        .addHandler(new UnknownPacketTagToSender(homeNode))
+        .addHandler(new UnknownPacketTagToSender(homeNodeRecord.getNodeId()))
         .addHandler(nodeIdToSession)
         .addHandler(new UnknownPacketTypeByStatus())
         .addHandler(new NotExpectedIncomingPacketHandler())
@@ -91,7 +93,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(
             new AuthHeaderMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler())
-        .addHandler(new MessageHandler(nodeRecordFactory))
+        .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
@@ -124,7 +126,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public NodeRecord getLocalNodeRecord() {
-    return homeNodeRecord;
+    return localNodeRecordStore.getLocalNodeRecord();
   }
 
   private CompletableFuture<Void> executeTaskImpl(

@@ -53,4 +53,12 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
     return Optional.empty();
   }
+
+  @Override
+  public NodeRecord createWithNewAddress(
+      final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
+    final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
+    sign(newRecord, privateKey);
+    return newRecord;
+  }
 }

@@ -4,6 +4,7 @@
 package org.ethereum.beacon.discovery.integration;
 
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.BindException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +38,7 @@ import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryIntegrationTest {
   private static final Logger logger = LogManager.getLogger();
+  public static final String LOCALHOST = "127.0.0.1";
   private int nextPort = 9000;
   private List<DiscoverySystem> managers = new ArrayList<>();
 
@@ -134,22 +137,47 @@ public class DiscoveryIntegrationTest {
     waitFor(node2OnDifferentPort.ping(node1.getLocalNodeRecord()));
   }
 
+  @Test
+  public void shouldUpdateLocalNodeRecord() throws Exception {
+    final DiscoverySystem node1 = createDiscoveryClient();
+    final DiscoverySystem node2 = createDiscoveryClient("0.0.0.0", node1.getLocalNodeRecord());
+
+    assertThat(node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress())
+        .isEqualTo(InetAddress.getByName("0.0.0.0"));
+    waitFor(node2.ping(node1.getLocalNodeRecord()));
+
+    // Address should have been updated. Most likely to 127.0.0.1 but it might be something else
+    // if the system is configured unusually or uses IPv6 in preference to v4.
+    final InetAddress updatedAddress =
+        node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
+    assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+  }
+
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final ECKeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(true, keyPair, bootnodes);
+    return createDiscoveryClient(true, LOCALHOST, keyPair, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(signNodeRecord, Functions.generateECKeyPair(), bootnodes);
+    return createDiscoveryClient(
+        signNodeRecord, LOCALHOST, Functions.generateECKeyPair(), bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
-      final boolean signNodeRecord, final ECKeyPair keyPair, final NodeRecord... bootnodes)
+      final String ipAddress, final NodeRecord... bootnodes) throws Exception {
+    return createDiscoveryClient(true, ipAddress, Functions.generateECKeyPair(), bootnodes);
+  }
+
+  private DiscoverySystem createDiscoveryClient(
+      final boolean signNodeRecord,
+      final String ipAddress,
+      final ECKeyPair keyPair,
+      final NodeRecord... bootnodes)
       throws Exception {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
@@ -167,7 +195,7 @@ public class DiscoveryIntegrationTest {
       }
       final NodeRecord nodeRecord =
           nodeRecordBuilder
-              .address("127.0.0.1", port)
+              .address(ipAddress, port)
               .publicKey(Functions.derivePublicKeyFromPrivate(privateKey))
               .build();
       final DiscoverySystem discoverySystem =
