@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
@@ -33,7 +34,6 @@ import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouAttempt;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouSessionResolver;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
-import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
@@ -63,9 +63,14 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler) {
     homeNodeRecord = homeNode;
     AuthTagRepository authTagRepo = new AuthTagRepository();
-    this.discoveryServer =
-        new NettyDiscoveryServerImpl(
-            ((Bytes) homeNode.get(EnrField.IP_V4)), (int) homeNode.get(EnrField.UDP));
+    final InetSocketAddress listenAddress =
+        homeNode
+            .getUdpAddress()
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Local node record must contain an IP and UDP port"));
+    this.discoveryServer = new NettyDiscoveryServerImpl(listenAddress);
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             homeNode,

@@ -4,15 +4,15 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import static org.ethereum.beacon.discovery.schema.EnrField.IP_V4;
-
 import com.google.common.base.Preconditions;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
@@ -195,15 +195,21 @@ public class NodeRecord {
     return identitySchemaInterpreter.getNodeId(this);
   }
 
+  public Optional<InetSocketAddress> getTcpAddress() {
+    return identitySchemaInterpreter.getTcpAddress(this);
+  }
+
+  public Optional<InetSocketAddress> getUdpAddress() {
+    return identitySchemaInterpreter.getUdpAddress(this);
+  }
+
   @Override
   public String toString() {
     return "NodeRecordV4{"
         + "publicKey="
         + fields.get(EnrField.PKEY_SECP256K1)
-        + ", ipV4address="
-        + fields.get(IP_V4)
-        + ", udpPort="
-        + fields.get(EnrField.UDP)
+        + ", udpAddress="
+        + getUdpAddress()
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="
