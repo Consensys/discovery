@@ -4,7 +4,8 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
@@ -15,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.network.NetworkParcelV5;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -82,9 +82,8 @@ public class NodeIdToSession implements EnvelopeHandler {
   }
 
   private NodeSession getOrCreateSession(Bytes nodeId, Envelope envelope) {
-    SessionKey sessionKey = SessionKey.create(nodeId, envelope);
-    NodeSession context =
-        recentSessions.computeIfAbsent(sessionKey, key -> createNodeSession(nodeId, envelope));
+    SessionKey sessionKey = new SessionKey(nodeId, getRemoteSocketAddress(envelope));
+    NodeSession context = recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
 
     sessionExpirationScheduler.put(
         sessionKey,
@@ -95,44 +94,36 @@ public class NodeIdToSession implements EnvelopeHandler {
     return context;
   }
 
-  private NodeSession createNodeSession(final Bytes nodeId, final Envelope envelope) {
-    final InetSocketAddress remoteSocketAddress = getRemoteSocketAddress(envelope);
-    Optional<NodeRecord> nodeRecord = nodeTable.getNode(nodeId).map(NodeRecordInfo::getNode);
+  private NodeSession createNodeSession(final SessionKey key) {
+    Optional<NodeRecord> nodeRecord = nodeTable.getNode(key.nodeId).map(NodeRecordInfo::getNode);
     SecureRandom random = new SecureRandom();
     return new NodeSession(
-        nodeId,
+        key.nodeId,
         nodeRecord,
+        key.remoteSocketAddress,
         homeNodeRecord,
         staticNodeKey,
         nodeTable,
         nodeBucketStorage,
         authTagRepo,
-        packet ->
-            outgoingPipeline.push(
-                new NetworkParcelV5(packet, nodeRecord, Optional.ofNullable(remoteSocketAddress))),
+        outgoingPipeline::push,
         random);
   }
 
   private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {
-    return (InetSocketAddress) envelope.get(Field.REMOTE_SENDER);
+    return Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
+        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress())
+        .orElseThrow();
   }
 
   private static class SessionKey {
     private final Bytes nodeId;
-    private final InetSocketAddress remoteSender;
+    private final InetSocketAddress remoteSocketAddress;
 
-    private SessionKey(final Bytes nodeId, final InetSocketAddress remoteSender) {
-      Preconditions.checkNotNull(remoteSender);
+    private SessionKey(final Bytes nodeId, final InetSocketAddress remoteSocketAddress) {
+      checkNotNull(remoteSocketAddress);
       this.nodeId = nodeId;
-      this.remoteSender = remoteSender;
-    }
-
-    public static SessionKey create(final Bytes nodeId, final Envelope envelope) {
-      final InetSocketAddress inetSocketAddress =
-          Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
-              .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress())
-              .orElse(null);
-      return new SessionKey(nodeId, inetSocketAddress);
+      this.remoteSocketAddress = remoteSocketAddress;
     }
 
     @Override
@@ -144,12 +135,13 @@ public class NodeIdToSession implements EnvelopeHandler {
         return false;
       }
       final SessionKey that = (SessionKey) o;
-      return Objects.equals(nodeId, that.nodeId) && Objects.equals(remoteSender, that.remoteSender);
+      return Objects.equals(nodeId, that.nodeId)
+          && Objects.equals(remoteSocketAddress, that.remoteSocketAddress);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(nodeId, remoteSender);
+      return Objects.hash(nodeId, remoteSocketAddress);
     }
   }
 }

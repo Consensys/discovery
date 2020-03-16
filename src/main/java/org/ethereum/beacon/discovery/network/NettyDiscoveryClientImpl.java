@@ -8,11 +8,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -33,10 +31,7 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
     Flux.from(outgoingStream)
         .subscribe(
             networkPacket ->
-                send(
-                    networkPacket.getPacket().getBytes(),
-                    networkPacket.getNodeRecord(),
-                    networkPacket.getReplyDestination()));
+                send(networkPacket.getPacket().getBytes(), networkPacket.getDestination()));
     logger.info("UDP discovery client started");
   }
 
@@ -44,25 +39,10 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
   public void stop() {}
 
   @Override
-  public void send(
-      Bytes data, Optional<NodeRecord> recipient, Optional<InetSocketAddress> destination) {
-    // From discv5 spec: when responding to a request, the response should be sent to the UDP
-    // envelope address of the request.
-    // If that's not available (we're initiating the request) then send to the address in the
-    // node record.
-    InetSocketAddress address = destination.orElseGet(() -> getAddressFromNodeRecord(recipient));
-    DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(data.toArray()), address);
+  public void send(Bytes data, InetSocketAddress destination) {
+    DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(data.toArray()), destination);
     logger.trace(() -> String.format("Sending packet %s", packet));
     channel.write(packet);
     channel.flush();
-  }
-
-  private InetSocketAddress getAddressFromNodeRecord(final Optional<NodeRecord> recipient) {
-    return recipient
-        .flatMap(NodeRecord::getUdpAddress)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Attempting to send new message to recipient with no known UDP address"));
   }
 }

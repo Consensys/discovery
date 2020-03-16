@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.beacon.discovery.task.TaskStatus.AWAIT;
 
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +21,8 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.network.NetworkParcelV5;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
@@ -46,7 +49,8 @@ public class NodeSession {
   private final AuthTagRepository authTagRepo;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
-  private final Consumer<Packet> outgoing;
+  private final InetSocketAddress remoteAddress;
+  private final Consumer<NetworkParcel> outgoingPipeline;
   private final Random rnd;
   private final Bytes nodeId;
   private Optional<NodeRecord> nodeRecord;
@@ -62,22 +66,24 @@ public class NodeSession {
   public NodeSession(
       Bytes nodeId,
       Optional<NodeRecord> nodeRecord,
+      InetSocketAddress remoteAddress,
       NodeRecord homeNodeRecord,
       Bytes staticNodeKey,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
       AuthTagRepository authTagRepo,
-      Consumer<Packet> outgoing,
+      Consumer<NetworkParcel> outgoingPipeline,
       Random rnd) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
-    this.outgoing = outgoing;
+    this.remoteAddress = remoteAddress;
     this.authTagRepo = authTagRepo;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.homeNodeRecord = homeNodeRecord;
     this.staticNodeKey = staticNodeKey;
     this.homeNodeId = homeNodeRecord.getNodeId();
+    this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
   }
 
@@ -87,6 +93,10 @@ public class NodeSession {
 
   public Optional<NodeRecord> getNodeRecord() {
     return nodeRecord;
+  }
+
+  public InetSocketAddress getRemoteAddress() {
+    return remoteAddress;
   }
 
   public synchronized void updateNodeRecord(NodeRecord nodeRecord) {
@@ -100,7 +110,7 @@ public class NodeSession {
 
   public void sendOutgoing(Packet packet) {
     logger.trace(() -> String.format("Sending outgoing packet %s in session %s", packet, this));
-    outgoing.accept(packet);
+    outgoingPipeline.accept(new NetworkParcelV5(packet, remoteAddress));
   }
 
   /**
