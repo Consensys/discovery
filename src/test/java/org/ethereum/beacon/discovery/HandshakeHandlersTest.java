@@ -27,6 +27,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -98,10 +99,10 @@ public class HandshakeHandlersTest {
     final Packet[] outgoing1Packets = new Packet[2];
     final Semaphore outgoing1PacketsSemaphore = new Semaphore(2);
     outgoing1PacketsSemaphore.acquire(2);
-    final Consumer<Packet> outgoingMessages1to2 =
-        packet -> {
-          System.out.println("Outgoing packet from 1 to 2: " + packet);
-          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] = packet;
+    final Consumer<NetworkParcel> outgoingMessages1to2 =
+        parcel -> {
+          System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
+          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] = parcel.getPacket();
           outgoing1PacketsSemaphore.release(1);
         };
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
@@ -109,6 +110,7 @@ public class HandshakeHandlersTest {
         new NodeSession(
             nodeRecord2.getNodeId(),
             Optional.of(nodeRecord2),
+            nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
             nodeRecord1,
             nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
@@ -116,7 +118,7 @@ public class HandshakeHandlersTest {
             authTagRepository1,
             outgoingMessages1to2,
             rnd);
-    final Consumer<Packet> outgoingMessages2to1 =
+    final Consumer<NetworkParcel> outgoingMessages2to1 =
         packet -> {
           // do nothing, we don't need to test it here
         };
@@ -124,6 +126,7 @@ public class HandshakeHandlersTest {
         new NodeSession(
             nodeRecord1.getNodeId(),
             Optional.of(nodeRecord1),
+            nodeRecord1.getUdpAddress().orElseThrow(),
             nodeRecord2,
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),

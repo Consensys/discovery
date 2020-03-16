@@ -18,6 +18,7 @@ dependencyManagement {
 
     dependency 'org.bouncycastle:bcprov-jdk15on:1.60'
 
+    dependency 'org.assertj:assertj-core:3.14.0'
     dependency 'org.web3j:core:4.2.0'
     dependency 'org.mockito:mockito-core:3.1.0'
 

@@ -12,13 +12,11 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.FluxSink;
@@ -29,23 +27,17 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private static final int RECREATION_TIMEOUT = 5000;
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
-  private final Integer udpListenPort;
-  private final String udpListenHost;
+  private final InetSocketAddress listenAddress;
   private AtomicBoolean listen = new AtomicBoolean(false);
   private Channel channel;
 
-  public NettyDiscoveryServerImpl(Bytes udpListenHost, Integer udpListenPort) { // bytes4
-    try {
-      this.udpListenHost = InetAddress.getByAddress(udpListenHost.toArray()).getHostAddress();
-    } catch (UnknownHostException e) {
-      throw new RuntimeException(e);
-    }
-    this.udpListenPort = udpListenPort;
+  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress) {
+    this.listenAddress = listenAddress;
   }
 
   @Override
   public CompletableFuture<NioDatagramChannel> start() {
-    logger.info(String.format("Starting discovery server on UDP port %s", udpListenPort));
+    logger.info("Starting discovery server on UDP port {}", listenAddress.getPort());
     if (!listen.compareAndSet(false, true)) {
       return CompletableFuture.failedFuture(
           new IllegalStateException("Attempted to start an already started server"));
@@ -70,7 +62,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               }
             });
 
-    final ChannelFuture bindFuture = b.bind(udpListenHost, udpListenPort);
+    final ChannelFuture bindFuture = b.bind(listenAddress);
     bindFuture.addListener(
         result -> {
           if (!result.isSuccess()) {

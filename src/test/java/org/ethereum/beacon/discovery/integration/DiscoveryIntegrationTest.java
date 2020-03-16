@@ -84,13 +84,39 @@ public class DiscoveryIntegrationTest {
     assertThrows(TimeoutException.class, () -> waitFor(pingResult));
   }
 
+  @Test
+  public void shouldHandleNodeChangingSourceAddress() throws Exception {
+    final DiscoverySystem node1 = createDiscoveryClient();
+    final ECKeyPair keyPair = Functions.generateECKeyPair();
+    final DiscoverySystem node2 = createDiscoveryClient(keyPair, node1.getLocalNodeRecord());
+
+    // Communicate on the first port
+    waitFor(node2.ping(node1.getLocalNodeRecord()));
+    node2.stop();
+
+    // Then with the same node ID but a different port
+    final DiscoverySystem node2OnDifferentPort =
+        createDiscoveryClient(keyPair, node1.getLocalNodeRecord());
+    waitFor(node2OnDifferentPort.ping(node1.getLocalNodeRecord()));
+  }
+
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
+      final ECKeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
+    return createDiscoveryClient(true, keyPair, bootnodes);
+  }
+
+  private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
+    return createDiscoveryClient(signNodeRecord, Functions.generateECKeyPair(), bootnodes);
+  }
+
+  private DiscoverySystem createDiscoveryClient(
+      final boolean signNodeRecord, final ECKeyPair keyPair, final NodeRecord... bootnodes)
+      throws Exception {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
