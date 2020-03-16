@@ -13,19 +13,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
-import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
@@ -232,33 +229,5 @@ class RecursiveLookupTaskTest {
         lastRetry, // Long way in the future
         status,
         0);
-  }
-
-  private static class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterpreter {
-
-    @Override
-    public IdentitySchema getScheme() {
-      return IdentitySchema.V4;
-    }
-
-    @Override
-    public void sign(final NodeRecord nodeRecord, final Bytes privateKey) {
-      nodeRecord.setSignature(MutableBytes.create(96));
-    }
-
-    @Override
-    public Bytes getNodeId(final NodeRecord nodeRecord) {
-      return (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
-    }
-
-    @Override
-    public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
-      return Optional.empty();
-    }
-
-    @Override
-    public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
-      return Optional.empty();
-    }
   }
 }

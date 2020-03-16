@@ -30,7 +30,6 @@ import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
-/** Same as {@link DiscoveryNoNetworkTest} but using real network */
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNetworkTest {
   @Test
