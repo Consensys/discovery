@@ -30,6 +30,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private final InetSocketAddress listenAddress;
   private AtomicBoolean listen = new AtomicBoolean(false);
   private Channel channel;
+  private NioEventLoopGroup nioGroup;
 
   public NettyDiscoveryServerImpl(InetSocketAddress listenAddress) {
     this.listenAddress = listenAddress;
@@ -42,8 +43,8 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
       return CompletableFuture.failedFuture(
           new IllegalStateException("Attempted to start an already started server"));
     }
-    NioEventLoopGroup group = new NioEventLoopGroup(1);
-    return startServer(group);
+    nioGroup = new NioEventLoopGroup(1);
+    return startServer(nioGroup);
   }
 
   private CompletableFuture<NioDatagramChannel> startServer(final NioEventLoopGroup group) {
@@ -107,6 +108,13 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
           channel.close().sync();
         } catch (InterruptedException ex) {
           logger.error("Failed to stop discovery server", ex);
+        }
+        if (nioGroup != null) {
+          try {
+            nioGroup.shutdownGracefully().sync();
+          } catch (InterruptedException ex) {
+            logger.error("Failed to stop NIO group", ex);
+          }
         }
       }
     } else {

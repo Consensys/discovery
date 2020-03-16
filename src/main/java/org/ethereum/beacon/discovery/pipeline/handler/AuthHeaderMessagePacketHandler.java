@@ -19,6 +19,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -101,6 +102,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       envelope.put(Field.MESSAGE, packet.getMessage());
       if (packet.getNodeRecord() != null) {
         session.updateNodeRecord(packet.getNodeRecord());
+        session.getNodeTable().save(NodeRecordInfo.createDefault(nodeRecord));
       }
     } catch (Exception ex) {
       logger.error(
