@@ -48,17 +48,6 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
     }
     UnknownPacket unknownPacket = (UnknownPacket) envelope.get(Field.PACKET_UNKNOWN);
     Bytes fromNodeId = unknownPacket.getSourceNodeId(homeNodeId);
-    envelope.put(
-        Field.SESSION_LOOKUP,
-        new SessionLookup(
-            fromNodeId,
-            () -> {
-              envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
-              envelope.put(
-                  Field.BAD_EXCEPTION,
-                  new RuntimeException(
-                      String.format("Session couldn't be created for nodeId %s", fromNodeId)));
-              envelope.remove(Field.PACKET_UNKNOWN);
-            }));
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId));
   }
 }

@@ -5,6 +5,10 @@
 package org.ethereum.beacon.discovery.schema;
 
 import com.google.common.base.Preconditions;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -56,5 +60,38 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     Bytes signature =
         Functions.sign(privateKey, Functions.hashKeccak(nodeRecord.serializeNoSignature()));
     nodeRecord.setSignature(signature);
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.UDP)
+        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.UDP_V6))
+        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.UDP));
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.TCP)
+        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP_V6))
+        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP));
+  }
+
+  private static Optional<InetSocketAddress> addressFromFields(
+      final NodeRecord nodeRecord, final String ipField, final String portField) {
+    if (!nodeRecord.containsKey(ipField) || !nodeRecord.containsKey(portField)) {
+      return Optional.empty();
+    }
+    final Bytes ipBytes = (Bytes) nodeRecord.get(ipField);
+    final int port = (int) nodeRecord.get(portField);
+    try {
+      return Optional.of(new InetSocketAddress(getInetAddress(ipBytes), port));
+    } catch (final UnknownHostException e) {
+      logger.trace("Unable to resolve host: {}", ipBytes);
+      return Optional.empty();
+    }
+  }
+
+  private static InetAddress getInetAddress(final Bytes address) throws UnknownHostException {
+    return InetAddress.getByAddress(address.toArrayUnsafe());
   }
 }

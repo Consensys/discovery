@@ -4,16 +4,18 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.network.NetworkParcelV5;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -38,11 +40,10 @@ public class NodeIdToSession implements EnvelopeHandler {
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
   private final AuthTagRepository authTagRepo;
-  private final Map<Bytes, NodeSession> recentSessions =
-      new ConcurrentHashMap<>(); // nodeId -> session
+  private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
-  private ExpirationScheduler<Bytes> sessionExpirationScheduler =
+  private ExpirationScheduler<SessionKey> sessionExpirationScheduler =
       new ExpirationScheduler<>(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
 
   public NodeIdToSession(
@@ -63,77 +64,84 @@ public class NodeIdToSession implements EnvelopeHandler {
   @Override
   public void handle(Envelope envelope) {
     logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NodeIdToSession, checking requirements satisfaction",
-                envelope.getId()));
+        "Envelope {} in NodeIdToSession, checking requirements satisfaction", envelope.getId());
     if (!HandlerUtil.requireField(Field.SESSION_LOOKUP, envelope)) {
       return;
     }
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NodeIdToSession, requirements are satisfied!", envelope.getId()));
+    logger.trace("Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getId());
 
     SessionLookup sessionRequest = (SessionLookup) envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
-        () ->
-            String.format(
-                "Envelope %s: Session lookup requested for nodeId %s",
-                envelope.getId(), sessionRequest.getNodeId()));
-    Optional<NodeSession> nodeSessionOptional = getSession(sessionRequest.getNodeId(), envelope);
-    if (nodeSessionOptional.isPresent()) {
-      envelope.put(Field.SESSION, nodeSessionOptional.get());
-      logger.trace(
-          () ->
-              String.format(
-                  "Session resolved: %s in envelope #%s",
-                  nodeSessionOptional.get(), envelope.getId()));
-    } else {
-      logger.debug(
-          () ->
-              String.format(
-                  "Envelope %s: Session not resolved for nodeId %s",
-                  envelope.getId(), sessionRequest.getNodeId()));
-      sessionRequest.onMissingSession();
-    }
+        "Envelope {}: Session lookup requested for nodeId {}",
+        envelope.getId(),
+        sessionRequest.getNodeId());
+    NodeSession nodeSession = getOrCreateSession(sessionRequest.getNodeId(), envelope);
+    envelope.put(Field.SESSION, nodeSession);
+    logger.trace("Session resolved: {} in envelope #{}", nodeSession, envelope.getId());
   }
 
-  private Optional<NodeSession> getSession(Bytes nodeId, Envelope envelope) {
-    NodeSession context = recentSessions.get(nodeId);
-    if (context == null) {
-      final InetSocketAddress remoteSocketAddress = getRemoteSocketAddress(envelope);
-      Optional<NodeRecord> nodeRecord = nodeTable.getNode(nodeId).map(NodeRecordInfo::getNode);
-      SecureRandom random = new SecureRandom();
-      context =
-          new NodeSession(
-              nodeId,
-              nodeRecord,
-              homeNodeRecord,
-              staticNodeKey,
-              nodeTable,
-              nodeBucketStorage,
-              authTagRepo,
-              packet ->
-                  outgoingPipeline.push(
-                      new NetworkParcelV5(
-                          packet, nodeRecord, Optional.ofNullable(remoteSocketAddress))),
-              random);
-      recentSessions.put(nodeId, context);
-    }
+  private NodeSession getOrCreateSession(Bytes nodeId, Envelope envelope) {
+    SessionKey sessionKey = new SessionKey(nodeId, getRemoteSocketAddress(envelope));
+    NodeSession context = recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
 
-    final NodeSession contextBackup = context;
     sessionExpirationScheduler.put(
-        nodeId,
+        sessionKey,
         () -> {
-          recentSessions.remove(nodeId);
-          contextBackup.cleanup();
+          recentSessions.remove(sessionKey);
+          context.cleanup();
         });
-    return Optional.of(context);
+    return context;
+  }
+
+  private NodeSession createNodeSession(final SessionKey key) {
+    Optional<NodeRecord> nodeRecord = nodeTable.getNode(key.nodeId).map(NodeRecordInfo::getNode);
+    SecureRandom random = new SecureRandom();
+    return new NodeSession(
+        key.nodeId,
+        nodeRecord,
+        key.remoteSocketAddress,
+        homeNodeRecord,
+        staticNodeKey,
+        nodeTable,
+        nodeBucketStorage,
+        authTagRepo,
+        outgoingPipeline::push,
+        random);
   }
 
   private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {
-    return (InetSocketAddress) envelope.get(Field.REMOTE_SENDER);
+    return Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
+        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress())
+        .orElseThrow();
+  }
+
+  private static class SessionKey {
+    private final Bytes nodeId;
+    private final InetSocketAddress remoteSocketAddress;
+
+    private SessionKey(final Bytes nodeId, final InetSocketAddress remoteSocketAddress) {
+      checkNotNull(remoteSocketAddress);
+      this.nodeId = nodeId;
+      this.remoteSocketAddress = remoteSocketAddress;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      final SessionKey that = (SessionKey) o;
+      return Objects.equals(nodeId, that.nodeId)
+          && Objects.equals(remoteSocketAddress, that.remoteSocketAddress);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(nodeId, remoteSocketAddress);
+    }
   }
 }

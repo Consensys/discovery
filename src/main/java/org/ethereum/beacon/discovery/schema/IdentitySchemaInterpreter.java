@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import java.net.InetSocketAddress;
+import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 
 /**
@@ -29,4 +31,8 @@ public interface IdentitySchemaInterpreter {
 
   /** Delivers nodeId according to identity scheme scheme */
   Bytes getNodeId(NodeRecord nodeRecord);
+
+  Optional<InetSocketAddress> getUdpAddress(NodeRecord nodeRecord);
+
+  Optional<InetSocketAddress> getTcpAddress(NodeRecord nodeRecord);
 }

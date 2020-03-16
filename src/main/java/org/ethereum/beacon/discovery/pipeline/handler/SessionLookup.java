@@ -7,18 +7,12 @@ import org.apache.tuweni.bytes.Bytes;
 
 public class SessionLookup {
   private final Bytes nodeId;
-  private final Runnable onMissingSession;
 
-  public SessionLookup(final Bytes nodeId, final Runnable onMissingSession) {
+  public SessionLookup(final Bytes nodeId) {
     this.nodeId = nodeId;
-    this.onMissingSession = onMissingSession;
   }
 
   public Bytes getNodeId() {
     return nodeId;
-  }
-
-  public void onMissingSession() {
-    onMissingSession.run();
   }
 }

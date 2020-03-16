@@ -63,7 +63,6 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
               if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
                 session.getNodeTable().save(nodeRecordInfo);
               }
-              session.putRecordInBucket(nodeRecordInfo);
             });
   }
 
