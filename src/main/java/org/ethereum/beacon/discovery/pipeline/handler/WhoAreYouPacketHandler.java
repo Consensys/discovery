@@ -126,7 +126,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               packet, nodeRecord, session.getStatus());
-      logger.error(error, ex);
+      logger.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");
       return;

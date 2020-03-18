@@ -105,7 +105,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         session.getNodeTable().save(NodeRecordInfo.createDefault(nodeRecord));
       }
     } catch (Exception ex) {
-      logger.error(
+      logger.debug(
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getStatus()),

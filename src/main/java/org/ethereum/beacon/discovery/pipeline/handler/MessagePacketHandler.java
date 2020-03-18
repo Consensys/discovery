@@ -47,7 +47,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getStatus());
-      logger.error(error, ex);
+      logger.debug(error, ex);
       envelope.remove(Field.PACKET_MESSAGE);
       envelope.put(Field.BAD_PACKET, packet);
       return;

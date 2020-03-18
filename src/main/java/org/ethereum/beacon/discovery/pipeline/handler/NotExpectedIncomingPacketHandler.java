@@ -76,7 +76,7 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               unknownPacket, session.getNodeRecord(), session.getStatus());
-      logger.error(error, ex);
+      logger.debug(error, ex);
       envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
       envelope.put(Field.BAD_EXCEPTION, ex);
       envelope.remove(Field.PACKET_UNKNOWN);
