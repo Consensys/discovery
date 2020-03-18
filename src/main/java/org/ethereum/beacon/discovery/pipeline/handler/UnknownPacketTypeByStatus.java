@@ -73,7 +73,7 @@ public class UnknownPacketTypeByStatus implements EnvelopeHandler {
         {
           String error =
               String.format(
-                  "Not expected status:%s from node: %s",
+                  "Not expected status: %s from node: %s",
                   session.getStatus(), session.getNodeRecord());
           logger.error(error);
           throw new RuntimeException(error);

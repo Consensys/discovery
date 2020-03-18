@@ -38,7 +38,7 @@ public class MessageProcessor {
           String.format(
               "Message %s with identity %s received in session %s is not supported",
               message, protocol, session);
-      logger.error(error);
+      logger.debug(error);
       throw new RuntimeException(error);
     }
     messageHandler.handleMessage(message, session);
