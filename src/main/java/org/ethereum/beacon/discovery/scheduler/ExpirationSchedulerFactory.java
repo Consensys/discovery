@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.ethereum.beacon.discovery.scheduler;
 
 import java.util.concurrent.ScheduledExecutorService;
