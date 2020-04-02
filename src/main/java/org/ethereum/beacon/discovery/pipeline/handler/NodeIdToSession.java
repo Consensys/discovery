@@ -36,7 +36,8 @@ import org.ethereum.beacon.discovery.storage.NodeTable;
  * should be in request field and stores it in {@link Field#SESSION} field.
  */
 public class NodeIdToSession implements EnvelopeHandler {
-  private static final int CLEANUP_DELAY_SECONDS = 180;
+  private static final int SESSION_CLEANUP_DELAY_SECONDS = 180;
+  private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
   private static final Logger logger = LogManager.getLogger(NodeIdToSession.class);
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
@@ -46,7 +47,7 @@ public class NodeIdToSession implements EnvelopeHandler {
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
   private final ExpirationScheduler<SessionKey> sessionExpirationScheduler;
-  private final ExpirationSchedulerFactory expirationSchedulerFactory;
+  private final ExpirationScheduler<Bytes> requestExpirationScheduler;
 
   public NodeIdToSession(
       LocalNodeRecordStore localNodeRecordStore,
@@ -63,8 +64,9 @@ public class NodeIdToSession implements EnvelopeHandler {
     this.nodeTable = nodeTable;
     this.outgoingPipeline = outgoingPipeline;
     this.sessionExpirationScheduler =
-        expirationSchedulerFactory.create(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
-    this.expirationSchedulerFactory = expirationSchedulerFactory;
+        expirationSchedulerFactory.create(SESSION_CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
+    this.requestExpirationScheduler =
+        expirationSchedulerFactory.create(REQUEST_CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
   }
 
   @Override
@@ -114,7 +116,7 @@ public class NodeIdToSession implements EnvelopeHandler {
         authTagRepo,
         outgoingPipeline::push,
         random,
-        expirationSchedulerFactory);
+        requestExpirationScheduler);
   }
 
   private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {

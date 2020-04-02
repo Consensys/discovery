@@ -16,7 +16,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +26,6 @@ import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
-import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
@@ -45,7 +43,6 @@ public class NodeSession {
   public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
-  private static final int CLEANUP_DELAY_SECONDS = 60;
   private final Bytes homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AuthTagRepository authTagRepo;
@@ -75,7 +72,7 @@ public class NodeSession {
       AuthTagRepository authTagRepo,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
-      ExpirationSchedulerFactory expirationSchedulerFactory) {
+      ExpirationScheduler<Bytes> requestExpirationScheduler) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
@@ -87,8 +84,7 @@ public class NodeSession {
     this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
-    this.requestExpirationScheduler =
-        expirationSchedulerFactory.create(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
+    this.requestExpirationScheduler = requestExpirationScheduler;
   }
 
   public Bytes getNodeId() {

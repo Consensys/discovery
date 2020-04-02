@@ -40,6 +40,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.AuthHeaderMessagePacketHan
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
@@ -113,6 +114,8 @@ public class HandshakeHandlersTest {
         new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey());
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
+    final ExpirationScheduler<Bytes> reqeustExpirationScheduler =
+        expirationSchedulerFactory.create(60, TimeUnit.SECONDS);
     NodeSession nodeSessionAt1For2 =
         new NodeSession(
             nodeRecord2.getNodeId(),
@@ -125,7 +128,7 @@ public class HandshakeHandlersTest {
             authTagRepository1,
             outgoingMessages1to2,
             rnd,
-            expirationSchedulerFactory);
+            reqeustExpirationScheduler);
     final Consumer<NetworkParcel> outgoingMessages2to1 =
         packet -> {
           // do nothing, we don't need to test it here
@@ -142,7 +145,7 @@ public class HandshakeHandlersTest {
             new AuthTagRepository(),
             outgoingMessages2to1,
             rnd,
-            expirationSchedulerFactory);
+            reqeustExpirationScheduler);
 
     Scheduler taskScheduler = Schedulers.createDefault().events();
     Pipeline outgoingPipeline = new PipelineImpl().build();
