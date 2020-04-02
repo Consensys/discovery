@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes32;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -18,16 +19,19 @@ public class DiscoverySystem {
   private static final Logger LOG = LogManager.getLogger();
   private final DiscoveryManager discoveryManager;
   private final DiscoveryTaskManager taskManager;
+  private final ExpirationSchedulerFactory expirationSchedulerFactory;
   private final NodeTable nodeTable;
   private final List<NodeRecord> bootnodes;
 
   DiscoverySystem(
       final DiscoveryManager discoveryManager,
       final DiscoveryTaskManager taskManager,
+      final ExpirationSchedulerFactory expirationSchedulerFactory,
       final NodeTable nodeTable,
       final List<NodeRecord> bootnodes) {
     this.discoveryManager = discoveryManager;
     this.taskManager = taskManager;
+    this.expirationSchedulerFactory = expirationSchedulerFactory;
     this.nodeTable = nodeTable;
     this.bootnodes = bootnodes;
   }
@@ -51,6 +55,7 @@ public class DiscoverySystem {
   public void stop() {
     taskManager.stop();
     discoveryManager.stop();
+    expirationSchedulerFactory.stop();
   }
 
   public NodeRecord getLocalNodeRecord() {

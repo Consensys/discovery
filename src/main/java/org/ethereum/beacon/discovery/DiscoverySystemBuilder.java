@@ -6,13 +6,16 @@ package org.ethereum.beacon.discovery;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -90,6 +93,10 @@ public class DiscoverySystemBuilder {
     final int clientNumber = COUNTER.incrementAndGet();
     final LocalNodeRecordStore localNodeRecordStore =
         new LocalNodeRecordStore(localNodeRecord, privateKey);
+    final ExpirationSchedulerFactory expirationSchedulerFactory =
+        new ExpirationSchedulerFactory(
+            Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat("discovery-expiration-%d").build()));
     final DiscoveryManager discoveryManager =
         new DiscoveryManagerImpl(
             nodeTable,
@@ -97,7 +104,8 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             privateKey,
             nodeRecordFactory,
-            schedulers.newSingleThreadDaemon("client-" + clientNumber));
+            schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
+            expirationSchedulerFactory);
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
@@ -105,9 +113,11 @@ public class DiscoverySystemBuilder {
             nodeTable,
             nodeBucketStorage,
             localNodeRecord,
-            schedulers.newSingleThreadDaemon("tasks-" + clientNumber),
+            schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             true,
-            true);
-    return new DiscoverySystem(discoveryManager, discoveryTaskManager, nodeTable, bootnodes);
+            true,
+            expirationSchedulerFactory);
+    return new DiscoverySystem(
+        discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
   }
 }

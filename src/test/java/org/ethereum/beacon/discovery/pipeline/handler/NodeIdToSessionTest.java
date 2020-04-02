@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.TestUtil;
@@ -15,12 +16,14 @@ import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class NodeIdToSessionTest {
@@ -31,6 +34,8 @@ class NodeIdToSessionTest {
   private final NodeRecord homeNodeRecord = homeNodeInfo.getNodeRecord();
   private final NodeBucketStorage nodeBucketStorage = mock(NodeBucketStorage.class);
   private final AuthTagRepository authTagRepository = mock(AuthTagRepository.class);
+  private final ExpirationSchedulerFactory expirationSchedulerFactory =
+      new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
   private final NodeTable nodeTable = mock(NodeTable.class);
   private final Pipeline outgoingPipeline = mock(Pipeline.class);
 
@@ -41,7 +46,13 @@ class NodeIdToSessionTest {
           nodeBucketStorage,
           authTagRepository,
           nodeTable,
-          outgoingPipeline);
+          outgoingPipeline,
+          expirationSchedulerFactory);
+
+  @AfterEach
+  public void tearDown() {
+    expirationSchedulerFactory.stop();
+  }
 
   @Test
   public void shouldGetSameSessionForIncomingMessagesWithSameIdAndSender() {

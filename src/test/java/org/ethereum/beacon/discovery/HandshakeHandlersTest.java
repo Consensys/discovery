@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -39,6 +40,8 @@ import org.ethereum.beacon.discovery.pipeline.handler.AuthHeaderMessagePacketHan
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -109,6 +112,10 @@ public class HandshakeHandlersTest {
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey());
+    final ExpirationSchedulerFactory expirationSchedulerFactory =
+        new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
+    final ExpirationScheduler<Bytes> reqeustExpirationScheduler =
+        expirationSchedulerFactory.create(60, TimeUnit.SECONDS);
     NodeSession nodeSessionAt1For2 =
         new NodeSession(
             nodeRecord2.getNodeId(),
@@ -120,7 +127,8 @@ public class HandshakeHandlersTest {
             nodeBucketStorage1,
             authTagRepository1,
             outgoingMessages1to2,
-            rnd);
+            rnd,
+            reqeustExpirationScheduler);
     final Consumer<NetworkParcel> outgoingMessages2to1 =
         packet -> {
           // do nothing, we don't need to test it here
@@ -136,7 +144,8 @@ public class HandshakeHandlersTest {
             nodeBucketStorage2,
             new AuthTagRepository(),
             outgoingMessages2to1,
-            rnd);
+            rnd,
+            reqeustExpirationScheduler);
 
     Scheduler taskScheduler = Schedulers.createDefault().events();
     Pipeline outgoingPipeline = new PipelineImpl().build();

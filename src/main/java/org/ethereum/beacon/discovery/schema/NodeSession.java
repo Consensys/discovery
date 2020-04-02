@@ -16,7 +16,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +43,6 @@ public class NodeSession {
   public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
-  private static final int CLEANUP_DELAY_SECONDS = 60;
   private final Bytes homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AuthTagRepository authTagRepo;
@@ -59,10 +57,9 @@ public class NodeSession {
   private Bytes idNonce;
   private Bytes initiatorKey;
   private Bytes recipientKey;
-  private Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
-  private ExpirationScheduler<Bytes> requestExpirationScheduler =
-      new ExpirationScheduler<>(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
-  private Bytes staticNodeKey;
+  private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
+  private final ExpirationScheduler<Bytes> requestExpirationScheduler;
+  private final Bytes staticNodeKey;
 
   public NodeSession(
       Bytes nodeId,
@@ -74,7 +71,8 @@ public class NodeSession {
       NodeBucketStorage nodeBucketStorage,
       AuthTagRepository authTagRepo,
       Consumer<NetworkParcel> outgoingPipeline,
-      Random rnd) {
+      Random rnd,
+      ExpirationScheduler<Bytes> requestExpirationScheduler) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
@@ -86,6 +84,7 @@ public class NodeSession {
     this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
+    this.requestExpirationScheduler = requestExpirationScheduler;
   }
 
   public Bytes getNodeId() {

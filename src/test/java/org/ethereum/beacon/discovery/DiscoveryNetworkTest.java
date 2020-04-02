@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
@@ -20,6 +21,7 @@ import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.RandomPacket;
 import org.ethereum.beacon.discovery.packet.UnknownPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
@@ -69,6 +71,8 @@ public class DiscoveryNetworkTest {
                 });
     NodeBucketStorage nodeBucketStorage2 =
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
+    ExpirationSchedulerFactory expirationSchedulerFactory =
+        new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
             nodeTableStorage1.get(),
@@ -76,7 +80,8 @@ public class DiscoveryNetworkTest {
             new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey()),
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("tasks-1"));
+            Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
+            expirationSchedulerFactory);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
             nodeTableStorage2.get(),
@@ -84,7 +89,8 @@ public class DiscoveryNetworkTest {
             new LocalNodeRecordStore(nodeRecord2, nodePair2.getPrivateKey()),
             nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            Schedulers.createDefault().newSingleThreadDaemon("tasks-2"));
+            Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
+            expirationSchedulerFactory);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);

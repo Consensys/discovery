@@ -33,6 +33,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTypeByStatus;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouAttempt;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouSessionResolver;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -61,7 +62,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       LocalNodeRecordStore localNodeRecordStore,
       Bytes homeNodePrivateKey,
       NodeRecordFactory nodeRecordFactory,
-      Scheduler taskScheduler) {
+      Scheduler taskScheduler,
+      ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     AuthTagRepository authTagRepo = new AuthTagRepository();
@@ -80,7 +82,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             nodeBucketStorage,
             authTagRepo,
             nodeTable,
-            outgoingPipeline);
+            outgoingPipeline,
+            expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker())
         .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
