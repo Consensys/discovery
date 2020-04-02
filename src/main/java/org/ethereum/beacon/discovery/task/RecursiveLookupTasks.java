@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
@@ -28,11 +29,14 @@ public class RecursiveLookupTasks {
   private final ExpirationScheduler<Bytes> taskTimeouts;
 
   public RecursiveLookupTasks(
-      DiscoveryManager discoveryManager, Scheduler scheduler, Duration timeout) {
+      DiscoveryManager discoveryManager,
+      Scheduler scheduler,
+      ExpirationSchedulerFactory expirationSchedulerFactory,
+      Duration timeout) {
     this.discoveryManager = discoveryManager;
     this.scheduler = scheduler;
     this.taskTimeouts =
-        new ExpirationScheduler<>(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
+        expirationSchedulerFactory.create(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
   public CompletableFuture<Void> add(NodeRecord nodeRecord, int distance) {

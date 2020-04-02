@@ -6,7 +6,6 @@ package org.ethereum.beacon.discovery.scheduler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -16,16 +15,17 @@ import java.util.concurrent.TimeUnit;
  * in map again, old task is cancelled and removed. Task are equalled by the <Key>
  */
 public class ExpirationScheduler<Key> {
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService scheduler;
   private final long delay;
   private final TimeUnit timeUnit;
 
   @SuppressWarnings({"rawtypes"})
   private Map<Key, ScheduledFuture> expirationTasks = new ConcurrentHashMap<>();
 
-  public ExpirationScheduler(long delay, TimeUnit timeUnit) {
+  ExpirationScheduler(long delay, TimeUnit timeUnit, final ScheduledExecutorService scheduler) {
     this.delay = delay;
     this.timeUnit = timeUnit;
+    this.scheduler = scheduler;
   }
 
   /**

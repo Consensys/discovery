@@ -22,6 +22,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -44,8 +45,8 @@ public class NodeIdToSession implements EnvelopeHandler {
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
-  private ExpirationScheduler<SessionKey> sessionExpirationScheduler =
-      new ExpirationScheduler<>(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
+  private final ExpirationScheduler<SessionKey> sessionExpirationScheduler;
+  private final ExpirationSchedulerFactory expirationSchedulerFactory;
 
   public NodeIdToSession(
       LocalNodeRecordStore localNodeRecordStore,
@@ -53,13 +54,17 @@ public class NodeIdToSession implements EnvelopeHandler {
       NodeBucketStorage nodeBucketStorage,
       AuthTagRepository authTagRepo,
       NodeTable nodeTable,
-      Pipeline outgoingPipeline) {
+      Pipeline outgoingPipeline,
+      ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
     this.authTagRepo = authTagRepo;
     this.nodeTable = nodeTable;
     this.outgoingPipeline = outgoingPipeline;
+    this.sessionExpirationScheduler =
+        expirationSchedulerFactory.create(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
+    this.expirationSchedulerFactory = expirationSchedulerFactory;
   }
 
   @Override
@@ -108,7 +113,8 @@ public class NodeIdToSession implements EnvelopeHandler {
         nodeBucketStorage,
         authTagRepo,
         outgoingPipeline::push,
-        random);
+        random,
+        expirationSchedulerFactory);
   }
 
   private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {

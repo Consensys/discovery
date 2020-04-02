@@ -27,6 +27,7 @@ import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
@@ -59,10 +60,9 @@ public class NodeSession {
   private Bytes idNonce;
   private Bytes initiatorKey;
   private Bytes recipientKey;
-  private Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
-  private ExpirationScheduler<Bytes> requestExpirationScheduler =
-      new ExpirationScheduler<>(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
-  private Bytes staticNodeKey;
+  private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
+  private final ExpirationScheduler<Bytes> requestExpirationScheduler;
+  private final Bytes staticNodeKey;
 
   public NodeSession(
       Bytes nodeId,
@@ -74,7 +74,8 @@ public class NodeSession {
       NodeBucketStorage nodeBucketStorage,
       AuthTagRepository authTagRepo,
       Consumer<NetworkParcel> outgoingPipeline,
-      Random rnd) {
+      Random rnd,
+      ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
@@ -86,6 +87,8 @@ public class NodeSession {
     this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
+    this.requestExpirationScheduler =
+        expirationSchedulerFactory.create(CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
   }
 
   public Bytes getNodeId() {

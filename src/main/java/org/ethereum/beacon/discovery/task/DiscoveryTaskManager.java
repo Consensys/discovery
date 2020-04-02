@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.DiscoveryManager;
+import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
@@ -123,16 +124,24 @@ public class DiscoveryTaskManager {
       Scheduler scheduler,
       boolean resetDead,
       boolean removeDead,
+      ExpirationSchedulerFactory expirationSchedulerFactory,
       Consumer<NodeRecord>... nodeRecordUpdatesConsumers) {
     this.scheduler = scheduler;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.homeNodeId = homeNode.getNodeId();
     this.liveCheckTasks =
-        new LiveCheckTasks(discoveryManager, scheduler, Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
+        new LiveCheckTasks(
+            discoveryManager,
+            scheduler,
+            expirationSchedulerFactory,
+            Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
     this.recursiveLookupTasks =
         new RecursiveLookupTasks(
-            discoveryManager, scheduler, Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
+            discoveryManager,
+            scheduler,
+            expirationSchedulerFactory,
+            Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
     this.resetDead = resetDead;
     this.removeDead = removeDead;
     this.nodeRecordUpdatesConsumers = nodeRecordUpdatesConsumers;
