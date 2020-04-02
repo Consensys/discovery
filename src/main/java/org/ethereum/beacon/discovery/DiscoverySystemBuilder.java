@@ -104,7 +104,7 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             privateKey,
             nodeRecordFactory,
-            schedulers.newSingleThreadDaemon("client-" + clientNumber),
+            schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
             expirationSchedulerFactory);
 
     final DiscoveryTaskManager discoveryTaskManager =
@@ -113,7 +113,7 @@ public class DiscoverySystemBuilder {
             nodeTable,
             nodeBucketStorage,
             localNodeRecord,
-            schedulers.newSingleThreadDaemon("tasks-" + clientNumber),
+            schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             true,
             true,
             expirationSchedulerFactory);
