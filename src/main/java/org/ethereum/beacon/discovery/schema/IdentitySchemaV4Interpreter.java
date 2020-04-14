@@ -129,7 +129,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     return InetAddress.getByAddress(address.toArrayUnsafe());
   }
 
-  private static Stream<EnrField> getAllFields(final NodeRecord nodeRecord) {
+  private static Stream<EnrField> streamAllFields(final NodeRecord nodeRecord) {
     final List<EnrField> fields = new ArrayList<>();
     nodeRecord.forEachField((name, value) -> fields.add(new EnrField(name, value)));
     return fields.stream();
@@ -137,6 +137,6 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   private static List<EnrField> getAllFieldsThatMatch(
       final NodeRecord nodeRecord, final Predicate<? super EnrField> predicate) {
-    return getAllFields(nodeRecord).filter(predicate).collect(Collectors.toList());
+    return streamAllFields(nodeRecord).filter(predicate).collect(Collectors.toList());
   }
 }
