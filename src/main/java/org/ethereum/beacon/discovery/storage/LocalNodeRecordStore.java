@@ -25,4 +25,10 @@ public class LocalNodeRecordStore {
     final NodeRecord newRecord = this.latestRecord.withNewAddress(newAddress, privateKey);
     this.latestRecord = newRecord;
   }
+
+  public void onCustomFieldValueChanged(final String fieldName, Bytes value) {
+    final NodeRecord newRecord =
+        this.latestRecord.withUpdatedCustomField(fieldName, value, privateKey);
+    this.latestRecord = newRecord;
+  }
 }

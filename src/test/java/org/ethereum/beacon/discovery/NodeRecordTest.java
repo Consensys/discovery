@@ -99,6 +99,24 @@ public class NodeRecordTest {
   }
 
   @Test
+  public void testCustomField() {
+    Random rnd = new Random(SEED);
+    byte[] privKey = new byte[32];
+    rnd.nextBytes(privKey);
+    final String CUSTOM_FIELD_NAME = "custom_field_name";
+    final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");
+    NodeRecord nodeRecord =
+        new NodeRecordBuilder()
+            .seq(0)
+            .address("127.0.0.1", 30303)
+            .privateKey(Bytes.wrap(privKey))
+            .customField(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE)
+            .build();
+    assertTrue(nodeRecord.isValid());
+    assertEquals(nodeRecord.get(CUSTOM_FIELD_NAME), CUSTOM_FIELD_VALUE);
+  }
+
+  @Test
   public void shouldNotIncludePaddingInBase64() {
     final int port = 30303;
     final Bytes ip = Bytes.fromHexString("0x7F000001");

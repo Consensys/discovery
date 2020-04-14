@@ -38,4 +38,7 @@ public interface IdentitySchemaInterpreter {
 
   NodeRecord createWithNewAddress(
       NodeRecord nodeRecord, InetSocketAddress newAddress, Bytes privateKey);
+
+  NodeRecord createWithUpdatedCustomField(
+      NodeRecord nodeRecord, String newAddress, Bytes value, Bytes privateKey);
 }
