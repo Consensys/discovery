@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -60,6 +61,10 @@ public class DiscoverySystem {
 
   public NodeRecord getLocalNodeRecord() {
     return discoveryManager.getLocalNodeRecord();
+  }
+
+  public void updateCustomFieldValue(final String fieldName, final Bytes value) {
+    discoveryManager.updateCustomFieldValue(fieldName, value);
   }
 
   /**

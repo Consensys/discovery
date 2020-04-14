@@ -64,6 +64,19 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
+  public void shouldSuccessfullyUpdateCustomFieldValue() throws Exception {
+    final String CUSTOM_FIELD_NAME = "custom_field_name";
+    final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    assertTrue(bootnode.getLocalNodeRecord().isValid());
+
+    bootnode.updateCustomFieldValue(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE);
+
+    assertTrue(bootnode.getLocalNodeRecord().isValid());
+    assertEquals(bootnode.getLocalNodeRecord().get(CUSTOM_FIELD_NAME), CUSTOM_FIELD_VALUE);
+  }
+
+  @Test
   public void shouldCompleteFindnodesFutureWhenNoNodesAreFound() throws Exception {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());

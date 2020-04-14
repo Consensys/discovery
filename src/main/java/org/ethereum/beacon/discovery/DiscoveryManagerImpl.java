@@ -132,6 +132,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return localNodeRecordStore.getLocalNodeRecord();
   }
 
+  @Override
+  public void updateCustomFieldValue(final String fieldName, final Bytes value) {
+    localNodeRecordStore.onCustomFieldValueChanged(fieldName, value);
+  }
+
   private CompletableFuture<Void> executeTaskImpl(
       NodeRecord nodeRecord, TaskType taskType, TaskOptions taskOptions) {
     Envelope envelope = new Envelope();

@@ -62,12 +62,22 @@ public class NodeRecordBuilder {
     return this;
   }
 
+  public NodeRecordBuilder customField(final String fieldName, final Bytes value) {
+    fields.add(new EnrField(fieldName, value));
+    return this;
+  }
+
   static void addFieldsForUdpAddress(
       final List<EnrField> fields, final InetAddress inetAddress, final int udpPort) {
     final Bytes address = Bytes.wrap(inetAddress.getAddress());
     final boolean isIpV6 = inetAddress instanceof Inet6Address;
     fields.add(new EnrField(isIpV6 ? EnrField.IP_V6 : EnrField.IP_V4, address));
     fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP, udpPort));
+  }
+
+  static void addCustomField(
+      final List<EnrField> fields, final String fieldName, final Bytes value) {
+    fields.add(new EnrField(fieldName, value));
   }
 
   public NodeRecord build() {

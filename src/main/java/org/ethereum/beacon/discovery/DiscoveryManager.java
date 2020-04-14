@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import java.util.concurrent.CompletableFuture;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
@@ -18,6 +19,8 @@ public interface DiscoveryManager {
   void stop();
 
   NodeRecord getLocalNodeRecord();
+
+  void updateCustomFieldValue(final String fieldName, final Bytes value);
 
   /**
    * Initiates FINDNODE with node `nodeRecord`

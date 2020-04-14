@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import static org.ethereum.beacon.discovery.schema.NodeRecordBuilder.addCustomField;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.net.InetAddress;
@@ -12,6 +14,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -85,14 +90,21 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   @Override
   public NodeRecord createWithNewAddress(
       final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
-    final List<EnrField> fields = new ArrayList<>();
-    nodeRecord.forEachField(
-        (name, value) -> {
-          if (!ADDRESS_FIELD_NAMES.contains(name)) {
-            fields.add(new EnrField(name, value));
-          }
-        });
+    final List<EnrField> fields =
+        getAllFieldsThatMatch(nodeRecord, field -> !ADDRESS_FIELD_NAMES.contains(field.getName()));
+
     NodeRecordBuilder.addFieldsForUdpAddress(fields, newAddress.getAddress(), newAddress.getPort());
+    final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
+    sign(newRecord, privateKey);
+    return newRecord;
+  }
+
+  @Override
+  public NodeRecord createWithUpdatedCustomField(
+      NodeRecord nodeRecord, String fieldName, Bytes value, Bytes privateKey) {
+    final List<EnrField> fields =
+        getAllFieldsThatMatch(nodeRecord, field -> !field.getName().equals(fieldName));
+    addCustomField(fields, fieldName, value);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, privateKey);
     return newRecord;
@@ -115,5 +127,16 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   private static InetAddress getInetAddress(final Bytes address) throws UnknownHostException {
     return InetAddress.getByAddress(address.toArrayUnsafe());
+  }
+
+  private static Stream<EnrField> getAllFields(final NodeRecord nodeRecord) {
+    final List<EnrField> fields = new ArrayList<>();
+    nodeRecord.forEachField((name, value) -> fields.add(new EnrField(name, value)));
+    return fields.stream();
+  }
+
+  private static List<EnrField> getAllFieldsThatMatch(
+      final NodeRecord nodeRecord, final Predicate<? super EnrField> predicate) {
+    return getAllFields(nodeRecord).filter(predicate).collect(Collectors.toList());
   }
 }

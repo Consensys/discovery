@@ -61,4 +61,14 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
     sign(newRecord, privateKey);
     return newRecord;
   }
+
+  @Override
+  public NodeRecord createWithUpdatedCustomField(
+      final NodeRecord nodeRecord,
+      final String fieldName,
+      final Bytes value,
+      final Bytes privateKey) {
+    throw new UnsupportedOperationException(
+        "SimpleIdentitySchemaInterpreter does not support updating custom fields.");
+  }
 }

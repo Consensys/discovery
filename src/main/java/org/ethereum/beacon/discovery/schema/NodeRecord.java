@@ -212,6 +212,12 @@ public class NodeRecord {
     return identitySchemaInterpreter.createWithNewAddress(this, newAddress, privateKey);
   }
 
+  public NodeRecord withUpdatedCustomField(
+      final String fieldName, final Bytes value, final Bytes privateKey) {
+    return identitySchemaInterpreter.createWithUpdatedCustomField(
+        this, fieldName, value, privateKey);
+  }
+
   @Override
   public String toString() {
     return "NodeRecordV4{"
