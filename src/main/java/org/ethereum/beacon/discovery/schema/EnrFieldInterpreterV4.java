@@ -13,6 +13,9 @@ import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 
 public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
+
+  public static final Function<RlpString, Object> DEFAULT_DECODER =
+      rlp -> Bytes.wrap(rlp.getBytes());
   public static EnrFieldInterpreterV4 DEFAULT = new EnrFieldInterpreterV4();
 
   private Map<String, Function<RlpString, Object>> fieldDecoders = new HashMap<>();
@@ -32,10 +35,7 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
 
   @Override
   public Object decode(String key, RlpString rlpString) {
-    Function<RlpString, Object> fieldDecoder = fieldDecoders.get(key);
-    if (fieldDecoder == null) {
-      throw new RuntimeException(String.format("No decoder found for field `%s`", key));
-    }
+    Function<RlpString, Object> fieldDecoder = fieldDecoders.getOrDefault(key, DEFAULT_DECODER);
     return fieldDecoder.apply(rlpString);
   }
 

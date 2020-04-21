@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.SEED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,6 +72,29 @@ public class NodeRecordTest {
     assertEquals(expectedSeqNumber, nodeRecordRestored.getSeq());
     assertEquals(expectedPublicKey, nodeRecordRestored.get(EnrField.PKEY_SECP256K1));
     assertEquals(expectedSignature, nodeRecordRestored.getSignature());
+  }
+
+  @Test
+  public void testEnrWithCustomFieldsDecodes() {
+    final int port = 30303;
+    final Bytes ip = Bytes.fromHexString("0x7F000001");
+    final Bytes nodeId =
+        Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
+    final Bytes privateKey =
+        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final NodeRecord record =
+        NODE_RECORD_FACTORY.createFromValues(
+            UInt64.ONE,
+            new EnrField(EnrField.ID, IdentitySchema.V4),
+            new EnrField(EnrField.PKEY_SECP256K1, nodeId),
+            new EnrField(EnrField.IP_V4, ip),
+            new EnrField(EnrField.TCP, port),
+            new EnrField("foo", Bytes.fromHexString("0x1234")));
+    record.sign(privateKey);
+
+    final String serialized = record.asBase64();
+    final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
+    assertThat(result).isEqualTo(record);
   }
 
   @Test
