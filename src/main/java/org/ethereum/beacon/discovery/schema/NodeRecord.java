@@ -82,9 +82,7 @@ public class NodeRecord {
   }
 
   public String asBase64() {
-    String result = Base64.getUrlEncoder().encodeToString(serialize().toArray());
-    final int firstPaddingChar = result.indexOf('=');
-    return firstPaddingChar > 0 ? result.substring(0, firstPaddingChar) : result;
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(serialize().toArray());
   }
 
   public String asEnr() {
