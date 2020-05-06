@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
@@ -57,6 +58,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
+      Optional<InetSocketAddress> listenAddress,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
       LocalNodeRecordStore localNodeRecordStore,
@@ -67,14 +69,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     AuthTagRepository authTagRepo = new AuthTagRepository();
-    final InetSocketAddress listenAddress =
-        homeNodeRecord
-            .getUdpAddress()
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Local node record must contain an IP and UDP port"));
-    this.discoveryServer = new NettyDiscoveryServerImpl(listenAddress);
+
+    this.discoveryServer =
+        new NettyDiscoveryServerImpl(
+            listenAddress
+                .or(homeNodeRecord::getUdpAddress)
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Local node record must contain an IP and UDP port")));
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             localNodeRecordStore,
