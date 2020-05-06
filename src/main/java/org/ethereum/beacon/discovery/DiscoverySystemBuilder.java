@@ -7,8 +7,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -32,6 +34,7 @@ import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 public class DiscoverySystemBuilder {
   private static final AtomicInteger COUNTER = new AtomicInteger();
   private List<NodeRecord> bootnodes = Collections.emptyList();
+  private Optional<InetSocketAddress> listenAddress = Optional.empty();
   private NodeRecord localNodeRecord;
   private Bytes privateKey;
   private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
@@ -40,6 +43,11 @@ public class DiscoverySystemBuilder {
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
+    return this;
+  }
+
+  public DiscoverySystemBuilder listen(final String listenAddress, final int listenPort) {
+    this.listenAddress = Optional.of(new InetSocketAddress(listenAddress, listenPort));
     return this;
   }
 
@@ -99,6 +107,7 @@ public class DiscoverySystemBuilder {
                 new ThreadFactoryBuilder().setNameFormat("discovery-expiration-%d").build()));
     final DiscoveryManager discoveryManager =
         new DiscoveryManagerImpl(
+            listenAddress,
             nodeTable,
             nodeBucketStorage,
             localNodeRecordStore,

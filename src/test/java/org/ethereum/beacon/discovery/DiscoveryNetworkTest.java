@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -75,6 +76,7 @@ public class DiscoveryNetworkTest {
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
+            Optional.empty(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey()),
@@ -84,6 +86,7 @@ public class DiscoveryNetworkTest {
             expirationSchedulerFactory);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
+            Optional.empty(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             new LocalNodeRecordStore(nodeRecord2, nodePair2.getPrivateKey()),
