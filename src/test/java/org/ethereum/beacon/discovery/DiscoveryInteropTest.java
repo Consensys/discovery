@@ -9,6 +9,7 @@ import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +73,7 @@ public class DiscoveryInteropTest {
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
+            Optional.empty(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey()),
