@@ -156,7 +156,7 @@ public class DiscoveryTaskManager {
         scheduler.executeAtFixedRate(
             Duration.ZERO,
             Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
-            this::searchForNewPeers);
+            this::performSearchForNewPeers);
   }
 
   public synchronized void stop() {
@@ -230,11 +230,14 @@ public class DiscoveryTaskManager {
   }
 
   public CompletableFuture<Void> searchForNewPeers() {
-    final RecursiveLookupTask task =
-        new RecursiveLookupTask(
-            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random());
     // We wind up with a CompletableFuture<CompletableFuture> so unwrap one level.
-    return scheduler.execute(task::execute).thenCompose(Function.identity());
+    return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
+  }
+
+  public CompletableFuture<Void> performSearchForNewPeers() {
+    return new RecursiveLookupTask(
+            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
+        .execute();
   }
 
   private CompletableFuture<Void> findNodes(
