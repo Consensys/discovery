@@ -234,7 +234,7 @@ public class DiscoveryTaskManager {
     return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
   }
 
-  public CompletableFuture<Void> performSearchForNewPeers() {
+  private CompletableFuture<Void> performSearchForNewPeers() {
     return new RecursiveLookupTask(
             nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
         .execute();
