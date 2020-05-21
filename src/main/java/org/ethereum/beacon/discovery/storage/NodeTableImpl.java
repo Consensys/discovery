@@ -163,35 +163,31 @@ public class NodeTableImpl implements NodeTable {
           // Bounds are reached from both top and bottom
           break;
         }
-        if (upNodesOptional.isPresent()) {
-          NodeIndex upNodes = upNodesOptional.get();
-          for (Bytes currentNodeId : upNodes.getEntries()) {
-            if (logLimit == 0) {
-              res.add(getNode(currentNodeId).orElseThrow());
-            } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
-              limitReached = true;
-              break;
-            } else {
-              res.add(getNode(currentNodeId).orElseThrow());
-            }
-          }
-        }
-        if (downNodesOptional.isPresent()) {
-          NodeIndex downNodes = downNodesOptional.get();
-          List<Bytes> entries = downNodes.getEntries();
-          // XXX: iterate in reverse order to reach logDistance limit from the right side
-          for (int i = entries.size() - 1; i >= 0; i--) {
-            Bytes currentNodeId = entries.get(i);
-            if (logLimit == 0) {
-              res.add(getNode(currentNodeId).orElseThrow());
-            } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
-              limitReached = true;
-              break;
-            } else {
-              res.add(getNode(currentNodeId).orElseThrow());
-            }
-          }
-        }
+        upNodesOptional.ifPresent(
+            upNodes -> {
+              for (Bytes currentNodeId : upNodes.getEntries()) {
+                if (logLimit != 0 && Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+                  limitReached = true;
+                  break;
+                } else {
+                  getNode(currentNodeId).ifPresent(res::add);
+                }
+              }
+            });
+        downNodesOptional.ifPresent(
+            downNodes -> {
+              List<Bytes> entries = downNodes.getEntries();
+              // XXX: iterate in reverse order to reach logDistance limit from the right side
+              for (int i = entries.size() - 1; i >= 0; i--) {
+                Bytes currentNodeId = entries.get(i);
+                if (logLimit != 0 && Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+                  limitReached = true;
+                  break;
+                } else {
+                  getNode(currentNodeId).ifPresent(res::add);
+                }
+              }
+            });
         currentIndexUp++;
         currentIndexDown--;
       }
