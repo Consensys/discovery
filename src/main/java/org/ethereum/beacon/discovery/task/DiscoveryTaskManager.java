@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
@@ -229,9 +230,10 @@ public class DiscoveryTaskManager {
   }
 
   public CompletableFuture<Void> searchForNewPeers() {
-    return new RecursiveLookupTask(
-            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
-        .execute();
+    final RecursiveLookupTask task =
+        new RecursiveLookupTask(
+            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random());
+    return scheduler.execute(task::execute).thenCompose(Function.identity());
   }
 
   private CompletableFuture<Void> findNodes(
