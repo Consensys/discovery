@@ -166,9 +166,7 @@ public class NodeTableImpl implements NodeTable {
         upNodesOptional.ifPresent(
             upNodes -> {
               for (Bytes currentNodeId : upNodes.getEntries()) {
-                if (logLimit == 0) {
-                  getNode(currentNodeId).ifPresent(res::add);
-                } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+                if (logLimit != 0 && Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
                   limitReached = true;
                   break;
                 } else {
@@ -182,9 +180,7 @@ public class NodeTableImpl implements NodeTable {
               // XXX: iterate in reverse order to reach logDistance limit from the right side
               for (int i = entries.size() - 1; i >= 0; i--) {
                 Bytes currentNodeId = entries.get(i);
-                if (logLimit == 0) {
-                  getNode(currentNodeId).ifPresent(res::add);
-                } else if (Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
+                if (logLimit != 0 && Functions.logDistance(currentNodeId, nodeId) >= logLimit) {
                   limitReached = true;
                   break;
                 } else {
