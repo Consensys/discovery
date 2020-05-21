@@ -233,6 +233,7 @@ public class DiscoveryTaskManager {
     final RecursiveLookupTask task =
         new RecursiveLookupTask(
             nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random());
+    // We wind up with a CompletableFuture<CompletableFuture> so unwrap one level.
     return scheduler.execute(task::execute).thenCompose(Function.identity());
   }
 
