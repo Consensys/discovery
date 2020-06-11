@@ -19,8 +19,7 @@ public class ExpirationScheduler<Key> {
   private final long delay;
   private final TimeUnit timeUnit;
 
-  @SuppressWarnings({"rawtypes"})
-  private Map<Key, ScheduledFuture> expirationTasks = new ConcurrentHashMap<>();
+  private final Map<Key, ScheduledFuture<?>> expirationTasks = new ConcurrentHashMap<>();
 
   ExpirationScheduler(long delay, TimeUnit timeUnit, final ScheduledExecutorService scheduler) {
     this.delay = delay;
@@ -34,10 +33,9 @@ public class ExpirationScheduler<Key> {
    * @param key Task key
    * @param runnable Task
    */
-  @SuppressWarnings({"rawtypes"})
   public void put(Key key, Runnable runnable) {
     cancel(key);
-    ScheduledFuture future =
+    ScheduledFuture<?> future =
         scheduler.schedule(
             () -> {
               runnable.run();
@@ -50,10 +48,9 @@ public class ExpirationScheduler<Key> {
 
   /** Cancels task for key and removes it from storage */
   public void cancel(Key key) {
-    synchronized (this) {
-      if (expirationTasks.containsKey(key)) {
-        expirationTasks.remove(key).cancel(true);
-      }
+    final ScheduledFuture<?> task = expirationTasks.remove(key);
+    if (task != null) {
+      task.cancel(true);
     }
   }
 }
