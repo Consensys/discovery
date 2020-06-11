@@ -5,7 +5,6 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Predicate;
@@ -76,12 +75,8 @@ public class NodeBucket {
     return false;
   }
 
-  public boolean contains(NodeRecordInfo nodeRecordInfo) {
+  public synchronized boolean contains(NodeRecordInfo nodeRecordInfo) {
     return bucket.contains(nodeRecordInfo);
-  }
-
-  public void putAll(Collection<NodeRecordInfo> nodeRecords) {
-    nodeRecords.forEach(this::put);
   }
 
   public synchronized Bytes toRlpBytes() {
@@ -100,7 +95,7 @@ public class NodeBucket {
     return bucket.size();
   }
 
-  public List<NodeRecordInfo> getNodeRecords() {
+  public synchronized List<NodeRecordInfo> getNodeRecords() {
     return new ArrayList<>(bucket);
   }
 }

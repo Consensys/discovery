@@ -11,6 +11,7 @@ import org.ethereum.beacon.discovery.type.Hashes;
 /** Default packet form until its goal is known */
 public class UnknownPacket extends AbstractPacket {
   private static final int MAX_SIZE = 1280;
+  private static final int START_MAGIC_LENGTH = 32;
 
   public UnknownPacket(Bytes bytes) {
     super(bytes);
@@ -33,7 +34,9 @@ public class UnknownPacket extends AbstractPacket {
   }
 
   public boolean isWhoAreYouPacket(Bytes destNodeId) {
-    return WhoAreYouPacket.getStartMagic(destNodeId).equals(getBytes().slice(0, 32));
+    final Bytes bytes = getBytes();
+    return bytes.size() >= START_MAGIC_LENGTH
+        && WhoAreYouPacket.getStartMagic(destNodeId).equals(bytes.slice(0, START_MAGIC_LENGTH));
   }
 
   // tag              = xor(sha256(dest-node-id), src-node-id)
@@ -45,7 +48,7 @@ public class UnknownPacket extends AbstractPacket {
   // src-node-id      = xor(sha256(dest-node-id), tag)
   public Bytes getSourceNodeId(Bytes destNodeId) {
     Preconditions.checkArgument(!isWhoAreYouPacket(destNodeId));
-    Bytes xorTag = getBytes().slice(0, 32);
+    Bytes xorTag = getBytes().slice(0, START_MAGIC_LENGTH);
     return Hashes.sha256(destNodeId).xor(xorTag);
   }
 
