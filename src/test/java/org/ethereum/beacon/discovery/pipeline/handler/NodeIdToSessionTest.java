@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
@@ -17,7 +18,10 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
+import org.ethereum.beacon.discovery.schema.EnrField;
+import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
@@ -106,6 +110,22 @@ class NodeIdToSessionTest {
     final NodeSession session2 =
         lookupSessionForIncomingMessage(Bytes.fromHexString("0x9999"), remoteSender);
     assertThat(session1).isNotSameAs(session2);
+  }
+
+  @Test
+  void shouldNotGetASessionWhenNoAddressIsAvailable() {
+    final NodeRecord nodeRecord =
+        new NodeRecordFactory(new SimpleIdentitySchemaInterpreter())
+            .createFromValues(
+                UInt64.ONE,
+                new EnrField(EnrField.ID, IdentitySchema.V4),
+                new EnrField(EnrField.PKEY_SECP256K1, NODE_ID));
+    final Envelope envelope = new Envelope();
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(NODE_ID));
+    envelope.put(Field.NODE, nodeRecord);
+    handler.handle(envelope);
+
+    assertThat(envelope.contains(Field.SESSION)).isFalse();
   }
 
   private NodeSession lookupSessionForIncomingMessage(
