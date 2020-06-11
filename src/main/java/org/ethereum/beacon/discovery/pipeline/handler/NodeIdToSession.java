@@ -84,22 +84,33 @@ public class NodeIdToSession implements EnvelopeHandler {
         "Envelope {}: Session lookup requested for nodeId {}",
         envelope.getId(),
         sessionRequest.getNodeId());
-    NodeSession nodeSession = getOrCreateSession(sessionRequest.getNodeId(), envelope);
-    envelope.put(Field.SESSION, nodeSession);
-    logger.trace("Session resolved: {} in envelope #{}", nodeSession, envelope.getId());
+    getOrCreateSession(sessionRequest.getNodeId(), envelope)
+        .ifPresentOrElse(
+            nodeSession -> {
+              envelope.put(Field.SESSION, nodeSession);
+              logger.trace("Session resolved: {} in envelope #{}", nodeSession, envelope.getId());
+            },
+            () ->
+                logger.trace(
+                    "Session could not be resolved or created for {}", sessionRequest.getNodeId()));
   }
 
-  private NodeSession getOrCreateSession(Bytes nodeId, Envelope envelope) {
-    SessionKey sessionKey = new SessionKey(nodeId, getRemoteSocketAddress(envelope));
-    NodeSession context = recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
+  private Optional<NodeSession> getOrCreateSession(Bytes nodeId, Envelope envelope) {
+    return getRemoteSocketAddress(envelope)
+        .map(
+            remoteSocketAddress -> {
+              SessionKey sessionKey = new SessionKey(nodeId, remoteSocketAddress);
+              NodeSession context =
+                  recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
 
-    sessionExpirationScheduler.put(
-        sessionKey,
-        () -> {
-          recentSessions.remove(sessionKey);
-          context.cleanup();
-        });
-    return context;
+              sessionExpirationScheduler.put(
+                  sessionKey,
+                  () -> {
+                    recentSessions.remove(sessionKey);
+                    context.cleanup();
+                  });
+              return context;
+            });
   }
 
   private NodeSession createNodeSession(final SessionKey key) {
@@ -119,10 +130,9 @@ public class NodeIdToSession implements EnvelopeHandler {
         requestExpirationScheduler);
   }
 
-  private InetSocketAddress getRemoteSocketAddress(final Envelope envelope) {
+  private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
     return Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
-        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress())
-        .orElseThrow();
+        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress());
   }
 
   private static class SessionKey {
