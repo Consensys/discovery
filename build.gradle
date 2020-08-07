@@ -201,7 +201,7 @@ bintray {
     vcsUrl = 'https://github.com/PegaSysEng/discovery.git'
 
     version {
-      name = project.version
+      name = calculateVersion() // Embed git hash into version
       released = new Date()
     }
   }
