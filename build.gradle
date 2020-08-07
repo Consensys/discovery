@@ -190,7 +190,6 @@ bintray {
   override = version.endsWith('SNAPSHOT')
 
   publish = true
-  dryRun = true
 
   pkg {
     repo = 'pegasys-repo'
