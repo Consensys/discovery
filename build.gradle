@@ -112,6 +112,7 @@ tasks.withType(JavaCompile) {
 
   jar {
     baseName project.name
+
     manifest {
       attributes(
           'Specification-Title': project.name,
@@ -145,7 +146,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
   from sourceSets.main.allSource
 }
 
-
+def resolvedVersion = calculateVersion()
 def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
 
@@ -154,7 +155,7 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
       groupId "tech.pegasys.discovery"
-      version "${project.version}"
+      version resolvedVersion
       from components.java
       artifact sourcesJar
 
@@ -189,6 +190,7 @@ bintray {
   override = version.endsWith('SNAPSHOT')
 
   publish = true
+  dryRun = true
 
   pkg {
     repo = 'pegasys-repo'
@@ -201,7 +203,7 @@ bintray {
     vcsUrl = 'https://github.com/PegaSysEng/discovery.git'
 
     version {
-      name = calculateVersion() // Embed git hash into version
+      name = resolvedVersion
       released = new Date()
     }
   }
