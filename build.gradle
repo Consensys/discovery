@@ -188,7 +188,7 @@ bintray {
   publications = ['mavenJava']
   override = version.endsWith('SNAPSHOT')
 
-  publish = false
+  publish = true
 
   pkg {
     repo = 'pegasys-repo'
