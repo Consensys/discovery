@@ -60,6 +60,7 @@ public class NodeSession {
   private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
   private final Bytes staticNodeKey;
+  private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
 
   public NodeSession(
       Bytes nodeId,
@@ -247,6 +248,14 @@ public class NodeSession {
 
   public void setRecipientKey(Bytes recipientKey) {
     this.recipientKey = recipientKey;
+  }
+
+  public Optional<InetSocketAddress> getReportedExternalAddress() {
+    return reportedExternalAddress;
+  }
+
+  public void setReportedExternalAddress(final InetSocketAddress reportedExternalAddress) {
+    this.reportedExternalAddress = Optional.of(reportedExternalAddress);
   }
 
   public synchronized void clearRequestId(Bytes requestId, TaskType taskType) {

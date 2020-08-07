@@ -152,12 +152,21 @@ public class DiscoveryIntegrationTest {
 
   @Test
   public void shouldUpdateLocalNodeRecord() throws Exception {
-    final DiscoverySystem node1 = createDiscoveryClient();
-    final DiscoverySystem node2 = createDiscoveryClient("0.0.0.0", node1.getLocalNodeRecord());
+    final NodeRecord[] remoteNodeRecords = {
+      createDiscoveryClient().getLocalNodeRecord(),
+      createDiscoveryClient().getLocalNodeRecord(),
+      createDiscoveryClient().getLocalNodeRecord(),
+      createDiscoveryClient().getLocalNodeRecord(),
+      createDiscoveryClient().getLocalNodeRecord()
+    };
+
+    final DiscoverySystem node2 = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
 
     assertThat(node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress())
         .isEqualTo(InetAddress.getByName("0.0.0.0"));
-    waitFor(node2.ping(node1.getLocalNodeRecord()));
+    for (NodeRecord remoteNodeRecord : remoteNodeRecords) {
+      waitFor(node2.ping(remoteNodeRecord));
+    }
 
     // Address should have been updated. Most likely to 127.0.0.1 but it might be something else
     // if the system is configured unusually or uses IPv6 in preference to v4.
