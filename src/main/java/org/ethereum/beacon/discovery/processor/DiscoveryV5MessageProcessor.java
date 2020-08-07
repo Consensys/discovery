@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.MessageCode;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.message.handler.FindNodeHandler;
 import org.ethereum.beacon.discovery.message.handler.MessageHandler;
 import org.ethereum.beacon.discovery.message.handler.NodesHandler;
@@ -35,7 +36,8 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<Di
   public DiscoveryV5MessageProcessor(
       NodeRecordFactory nodeRecordFactory, final LocalNodeRecordStore localNodeRecordStore) {
     messageHandlers.put(MessageCode.PING, new PingHandler());
-    messageHandlers.put(MessageCode.PONG, new PongHandler(localNodeRecordStore));
+    messageHandlers.put(
+        MessageCode.PONG, new PongHandler(new ExternalAddressSelector(localNodeRecordStore)));
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
     this.nodeRecordFactory = nodeRecordFactory;
