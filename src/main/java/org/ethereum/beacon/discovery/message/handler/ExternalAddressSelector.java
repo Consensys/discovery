@@ -36,7 +36,7 @@ public class ExternalAddressSelector {
    * <p>Also tracks the last time an address is reported so that stale addresses can be removed even
    * if they have accumlated a lot of reports.
    */
-  private final Map<InetSocketAddress, ReportData> reportedAddressCounts = new HashMap<>();
+  private final Map<InetSocketAddress, ReportData> reportedAddresses = new HashMap<>();
 
   private final LocalNodeRecordStore localNodeRecordStore;
 
@@ -69,38 +69,38 @@ public class ExternalAddressSelector {
   private void removeStaleAddresses(final Instant now) {
     final Instant cutOffTime = now.minus(TTL);
     final List<InetSocketAddress> staleAddresses =
-        reportedAddressCounts.entrySet().stream()
+        reportedAddresses.entrySet().stream()
             .filter(entry -> entry.getValue().lastReportedBefore(cutOffTime))
             .map(Entry::getKey)
             .collect(Collectors.toList());
-    staleAddresses.forEach(reportedAddressCounts::remove);
+    staleAddresses.forEach(reportedAddresses::remove);
   }
 
   private void limitTrackedAddresses() {
-    while (reportedAddressCounts.size() > MAX_EXTERNAL_ADDRESS_COUNT) {
+    while (reportedAddresses.size() > MAX_EXTERNAL_ADDRESS_COUNT) {
       // Too many addresses being tracked, remove the one with the fewest votes
-      reportedAddressCounts.entrySet().stream()
+      reportedAddresses.entrySet().stream()
           .min(Entry.comparingByValue(Comparator.comparing(ReportData::getLastReportedTime)))
           .map(Entry::getKey)
-          .ifPresent(reportedAddressCounts::remove);
+          .ifPresent(reportedAddresses::remove);
     }
   }
 
   private void addVote(final InetSocketAddress reportedAddress, final Instant reportTime) {
-    reportedAddressCounts.compute(
+    reportedAddresses.compute(
         reportedAddress,
         (key, currentValue) ->
             currentValue != null ? currentValue.addReport(reportTime) : new ReportData(reportTime));
   }
 
   private void removeVote(final InetSocketAddress previousAddress) {
-    reportedAddressCounts.compute(
+    reportedAddresses.compute(
         previousAddress,
         (key, currentValue) -> currentValue != null ? currentValue.removeReport() : null);
   }
 
   private Optional<InetSocketAddress> selectExternalAddress() {
-    return reportedAddressCounts.entrySet().stream()
+    return reportedAddresses.entrySet().stream()
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
         .max(Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
         .map(Entry::getKey);
@@ -109,13 +109,13 @@ public class ExternalAddressSelector {
   @VisibleForTesting
   void assertInvariants() {
     checkState(
-        reportedAddressCounts.size() <= MAX_EXTERNAL_ADDRESS_COUNT,
+        reportedAddresses.size() <= MAX_EXTERNAL_ADDRESS_COUNT,
         "Should limit number of tracked addresses. Size %s",
-        reportedAddressCounts.size());
+        reportedAddresses.size());
     checkState(
-        reportedAddressCounts.values().stream().noneMatch(data -> data.getReportCount() <= 0),
+        reportedAddresses.values().stream().noneMatch(data -> data.getReportCount() <= 0),
         "Should not have counts less than 1 (%s)",
-        reportedAddressCounts);
+        reportedAddresses);
   }
 
   private static class ReportData {
