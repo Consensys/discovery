@@ -45,8 +45,13 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
     if (!envelope.contains(Field.PACKET_UNKNOWN)) {
       return;
     }
-    UnknownPacket unknownPacket = (UnknownPacket) envelope.get(Field.PACKET_UNKNOWN);
-    Bytes fromNodeId = unknownPacket.getSourceNodeId(homeNodeId);
-    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId));
+    ((UnknownPacket) envelope.get(Field.PACKET_UNKNOWN))
+        .getSourceNodeId(homeNodeId)
+        .ifPresentOrElse(
+            fromNodeId -> envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId)),
+            () -> {
+              envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
+              envelope.remove(Field.PACKET_UNKNOWN);
+            });
   }
 }
