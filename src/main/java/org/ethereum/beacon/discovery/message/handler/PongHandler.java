@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +34,8 @@ public class PongHandler implements MessageHandler<PongMessage> {
                 InetAddress.getByAddress(message.getRecipientIp().toArrayUnsafe()),
                 message.getRecipientPort());
         session.setReportedExternalAddress(reportedAddress);
-        externalAddressSelector.onExternalAddressReport(currentAddress, reportedAddress);
+        externalAddressSelector.onExternalAddressReport(
+            currentAddress, reportedAddress, Instant.now());
       } catch (UnknownHostException e) {
         logger.trace("Failed to update local node record because recipient IP was invalid", e);
       }
