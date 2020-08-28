@@ -16,7 +16,8 @@ class UnknownPacketTest {
   void getSourceNodeId_shouldReturnEmptyWhenPacketIsTooShort() {
     final UnknownPacket unknownPacket = new UnknownPacket(Bytes.of(1, 2, 3));
     final Bytes32 destNodeId = Bytes32.ZERO;
-    assertThat(unknownPacket.getSourceNodeId(destNodeId)).isEmpty();
+    final Bytes32 destNodeIdHash = Bytes32.ZERO;
+    assertThat(unknownPacket.getSourceNodeId(destNodeId, destNodeIdHash)).isEmpty();
   }
 
   @Test
@@ -26,7 +27,9 @@ class UnknownPacketTest {
     final Bytes32 destNodeId = Bytes32.ZERO;
 
     // Should only use first 32 bytes of message data
-    final Bytes expectedSourceId = Hashes.sha256(destNodeId).xor(messageData.slice(0, 32));
-    assertThat(unknownPacket.getSourceNodeId(destNodeId)).contains(expectedSourceId);
+    final Bytes destNodeIdHash = Hashes.sha256(destNodeId);
+    final Bytes expectedSourceId = destNodeIdHash.xor(messageData.slice(0, 32));
+    assertThat(unknownPacket.getSourceNodeId(destNodeId, destNodeIdHash))
+        .contains(expectedSourceId);
   }
 }

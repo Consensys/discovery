@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.packet;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.type.Hashes;
 
 /** Default packet form until its goal is known */
 public class UnknownPacket extends AbstractPacket {
@@ -47,7 +46,7 @@ public class UnknownPacket extends AbstractPacket {
   // The recipient can recover the sender's ID by performing the same calculation in reverse.
   //
   // src-node-id      = xor(sha256(dest-node-id), tag)
-  public Optional<Bytes> getSourceNodeId(Bytes destNodeId) {
+  public Optional<Bytes> getSourceNodeId(Bytes destNodeId, Bytes destNodeIdHash) {
     Preconditions.checkArgument(!isWhoAreYouPacket(destNodeId));
 
     final Bytes bytes = getBytes();
@@ -55,7 +54,7 @@ public class UnknownPacket extends AbstractPacket {
       return Optional.empty();
     }
     Bytes xorTag = bytes.slice(0, START_MAGIC_LENGTH);
-    return Optional.of(Hashes.sha256(destNodeId).xor(xorTag));
+    return Optional.of(destNodeIdHash.xor(xorTag));
   }
 
   public void verify() {

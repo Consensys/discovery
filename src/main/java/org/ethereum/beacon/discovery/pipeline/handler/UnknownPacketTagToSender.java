@@ -12,6 +12,7 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
+import org.ethereum.beacon.discovery.type.Hashes;
 
 /**
  * Assuming we have some unknown packet in {@link Field#PACKET_UNKNOWN}, resolves sender node id
@@ -21,9 +22,11 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 public class UnknownPacketTagToSender implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(UnknownPacketTagToSender.class);
   private final Bytes homeNodeId;
+  private final Bytes homeNodeIdHash;
 
   public UnknownPacketTagToSender(final Bytes nodeId) {
     this.homeNodeId = nodeId;
+    this.homeNodeIdHash = Hashes.sha256(nodeId);
   }
 
   @Override
@@ -46,7 +49,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
       return;
     }
     ((UnknownPacket) envelope.get(Field.PACKET_UNKNOWN))
-        .getSourceNodeId(homeNodeId)
+        .getSourceNodeId(homeNodeId, homeNodeIdHash)
         .ifPresentOrElse(
             fromNodeId -> envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId)),
             () -> {
