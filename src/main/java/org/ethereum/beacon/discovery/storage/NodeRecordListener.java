@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.ethereum.beacon.discovery.storage;
 
 import org.ethereum.beacon.discovery.schema.NodeRecord;
