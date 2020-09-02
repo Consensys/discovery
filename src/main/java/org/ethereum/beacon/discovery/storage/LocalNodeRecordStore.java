@@ -9,12 +9,20 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class LocalNodeRecordStore {
+
   private volatile NodeRecord latestRecord;
   private final Bytes privateKey;
+  private final NodeRecordListener recordListener;
 
   public LocalNodeRecordStore(final NodeRecord record, final Bytes privateKey) {
-    latestRecord = record;
+    this(record, privateKey, (a, b) -> {});
+  }
+
+  public LocalNodeRecordStore(
+      NodeRecord record, Bytes privateKey, NodeRecordListener recordListener) {
+    this.latestRecord = record;
     this.privateKey = privateKey;
+    this.recordListener = recordListener;
   }
 
   public NodeRecord getLocalNodeRecord() {
@@ -22,13 +30,16 @@ public class LocalNodeRecordStore {
   }
 
   public void onSocketAddressChanged(final InetSocketAddress newAddress) {
-    final NodeRecord newRecord = this.latestRecord.withNewAddress(newAddress, privateKey);
+    NodeRecord oldRecord = this.latestRecord;
+    NodeRecord newRecord = oldRecord.withNewAddress(newAddress, privateKey);
     this.latestRecord = newRecord;
+    recordListener.recordUpdated(oldRecord, newRecord);
   }
 
   public void onCustomFieldValueChanged(final String fieldName, Bytes value) {
-    final NodeRecord newRecord =
-        this.latestRecord.withUpdatedCustomField(fieldName, value, privateKey);
+    NodeRecord oldRecord = this.latestRecord;
+    NodeRecord newRecord = oldRecord.withUpdatedCustomField(fieldName, value, privateKey);
     this.latestRecord = newRecord;
+    recordListener.recordUpdated(oldRecord, newRecord);
   }
 }

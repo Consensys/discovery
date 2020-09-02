@@ -24,6 +24,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorageImpl;
+import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeSerializerFactory;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
@@ -40,6 +41,7 @@ public class DiscoverySystemBuilder {
   private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Database database;
   private Schedulers schedulers;
+  private NodeRecordListener localNodeRecordListener = (a, b) -> {};
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -80,6 +82,11 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
+  public DiscoverySystemBuilder localNodeRecordListener(final NodeRecordListener listener) {
+    this.localNodeRecordListener = listener;
+    return this;
+  }
+
   public DiscoverySystem build() {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(privateKey, "Missing private key");
@@ -100,7 +107,7 @@ public class DiscoverySystemBuilder {
         new NodeBucketStorageImpl(database, serializerFactory, localNodeRecord);
     final int clientNumber = COUNTER.incrementAndGet();
     final LocalNodeRecordStore localNodeRecordStore =
-        new LocalNodeRecordStore(localNodeRecord, privateKey);
+        new LocalNodeRecordStore(localNodeRecord, privateKey, localNodeRecordListener);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(
             Executors.newSingleThreadScheduledExecutor(
