@@ -14,10 +14,6 @@ public class LocalNodeRecordStore {
   private final Bytes privateKey;
   private final NodeRecordListener recordListener;
 
-  public LocalNodeRecordStore(final NodeRecord record, final Bytes privateKey) {
-    this(record, privateKey, (a, b) -> {});
-  }
-
   public LocalNodeRecordStore(
       NodeRecord record, Bytes privateKey, NodeRecordListener recordListener) {
     this.latestRecord = record;
