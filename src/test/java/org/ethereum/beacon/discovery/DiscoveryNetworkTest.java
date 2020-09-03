@@ -28,6 +28,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
+import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -79,7 +80,8 @@ public class DiscoveryNetworkTest {
             Optional.empty(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
-            new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey()),
+            new LocalNodeRecordStore(
+                nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP),
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
@@ -89,7 +91,8 @@ public class DiscoveryNetworkTest {
             Optional.empty(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
-            new LocalNodeRecordStore(nodeRecord2, nodePair2.getPrivateKey()),
+            new LocalNodeRecordStore(
+                nodeRecord2, nodePair2.getPrivateKey(), NodeRecordListener.NOOP),
             nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
