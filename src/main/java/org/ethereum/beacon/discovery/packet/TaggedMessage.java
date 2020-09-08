@@ -20,7 +20,9 @@ import org.web3j.rlp.RlpType;
  */
 class TaggedMessage {
   public static final int TAG_SIZE = 32;
-  public static final int RLP_AUTH_TAG_SIZE = 12 + 1;
+  public static final int RLP_AUTH_TAG_PREFIX_SIZE = 1;
+  public static final int AUTH_TAG_SIZE = 12;
+  public static final int RLP_AUTH_TAG_SIZE = AUTH_TAG_SIZE + RLP_AUTH_TAG_PREFIX_SIZE;
   public static final int HEADER_SIZE = TAG_SIZE + RLP_AUTH_TAG_SIZE;
 
   private final Bytes tag;
@@ -31,7 +33,7 @@ class TaggedMessage {
     Bytes tag = Bytes.wrap(bytes.slice(0, TAG_SIZE));
     Bytes authTagRlpBytes = bytes.slice(TAG_SIZE, RLP_AUTH_TAG_SIZE);
     Bytes authTag = decodeSingleRlpString(authTagRlpBytes);
-    if (authTag.size() != 12) {
+    if (authTag.size() != AUTH_TAG_SIZE) {
       throw new RuntimeException("Invalid auth-tag size from RLP bytes: " + authTagRlpBytes);
     }
     Bytes payload = bytes.slice(TAG_SIZE + RLP_AUTH_TAG_SIZE);
