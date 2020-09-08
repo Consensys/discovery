@@ -38,6 +38,7 @@ dependencyManagement {
     dependencySet(group: 'org.junit.jupiter', version: '5.5.2') {
       entry 'junit-jupiter-api'
       entry 'junit-jupiter-engine'
+      entry 'junit-jupiter-params'
     }
 
     dependency 'org.mockito:mockito-core:3.1.0'
