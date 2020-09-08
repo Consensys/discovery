@@ -9,9 +9,6 @@ import org.apache.tuweni.bytes.MutableBytes;
 import org.ethereum.beacon.discovery.message.DiscoveryMessage;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.web3j.rlp.RlpDecoder;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpString;
 
 /**
  * Used when handshake is completed as a {@link DiscoveryMessage} authenticated container
@@ -22,16 +19,9 @@ import org.web3j.rlp.RlpString;
  * message-pt = message-type || message-data</code>
  */
 public class MessagePacket extends AbstractPacket {
-  private MessagePacketDecoded decoded = null;
-
-  public MessagePacket(Bytes bytes) {
-    super(bytes);
-  }
 
   public static MessagePacket create(Bytes tag, Bytes authTag, Bytes messageCipherText) {
-    byte[] authTagBytesRlp = RlpEncoder.encode(RlpString.create(authTag.toArray()));
-    Bytes authTagEncoded = Bytes.wrap(authTagBytesRlp);
-    return new MessagePacket(Bytes.concatenate(tag, authTagEncoded, messageCipherText));
+    return new MessagePacket(new TaggedMessage(tag, authTag, messageCipherText));
   }
 
   public static MessagePacket create(
@@ -45,66 +35,73 @@ public class MessagePacket extends AbstractPacket {
     return create(tag, authTag, encryptedData);
   }
 
-  public Bytes getHomeNodeId(Bytes destNodeId) {
-    verifyDecode();
-    return Functions.hash(destNodeId).xor(decoded.tag, MutableBytes.create(decoded.tag.size()));
+  private TaggedMessage decodedTaggedMessage = null;
+  private DiscoveryMessage decodedDiscoveryMessage = null;
+
+  public MessagePacket(Bytes bytes) {
+    super(bytes);
+  }
+
+  private MessagePacket(TaggedMessage taggedMessage) {
+    super(taggedMessage.getBytes());
+    this.decodedTaggedMessage = taggedMessage;
   }
 
   public Bytes getAuthTag() {
-    if (decoded == null) {
-      return Bytes.wrap(
-          ((RlpString) RlpDecoder.decode(getBytes().slice(32, 13).toArray()).getValues().get(0))
-              .getBytes());
-    }
-    return decoded.authTag;
+    return getTaggedMessage().getAuthTag();
+  }
+
+  public Bytes getHomeNodeId(Bytes destNodeId) {
+    return Functions.hash(destNodeId)
+        .xor(
+            decodedTaggedMessage.getTag(),
+            MutableBytes.create(decodedTaggedMessage.getTag().size()));
   }
 
   public DiscoveryMessage getMessage() {
     verifyDecode();
-    return decoded.message;
+    return decodedDiscoveryMessage;
   }
 
   private void verifyDecode() {
-    if (decoded == null) {
+    if (decodedDiscoveryMessage == null) {
       throw new RuntimeException("You should decode packet at first!");
     }
   }
 
+  private TaggedMessage getTaggedMessage() {
+    if (decodedTaggedMessage == null) {
+      decodedTaggedMessage = TaggedMessage.decode(getBytes());
+    }
+    return decodedTaggedMessage;
+  }
+
   public void decode(Bytes readKey) {
-    if (decoded != null) {
+    if (decodedDiscoveryMessage != null) {
       return;
     }
-    MessagePacketDecoded blank = new MessagePacketDecoded();
-    blank.tag = Bytes.wrap(getBytes().slice(0, 32));
-    blank.authTag =
-        Bytes.wrap(
-            ((RlpString) RlpDecoder.decode(getBytes().slice(32, 13).toArray()).getValues().get(0))
-                .getBytes());
-    blank.message =
+    decodedDiscoveryMessage =
         new DiscoveryV5Message(
-            Functions.aesgcm_decrypt(readKey, blank.authTag, getBytes().slice(45), blank.tag));
-    this.decoded = blank;
+            Functions.aesgcm_decrypt(
+                readKey,
+                getTaggedMessage().getAuthTag(),
+                getTaggedMessage().getPayload(),
+                getTaggedMessage().getTag()));
   }
 
   @Override
   public String toString() {
-    if (decoded != null) {
+    if (decodedDiscoveryMessage != null) {
       return "MessagePacket{"
           + "tag="
-          + decoded.tag
+          + getTaggedMessage().getTag()
           + ", authTag="
-          + decoded.authTag
+          + getTaggedMessage().getAuthTag()
           + ", message="
-          + decoded.message
+          + getMessage()
           + '}';
     } else {
       return "MessagePacket{" + getBytes() + '}';
     }
-  }
-
-  private static class MessagePacketDecoded {
-    private Bytes tag;
-    private Bytes authTag;
-    private DiscoveryMessage message;
   }
 }
