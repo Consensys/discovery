@@ -26,6 +26,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
+import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,8 @@ class NodeIdToSessionTest {
 
   private final NodeIdToSession handler =
       new NodeIdToSession(
-          new LocalNodeRecordStore(homeNodeRecord, homeNodeInfo.getPrivateKey()),
+          new LocalNodeRecordStore(
+              homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP),
           STATIC_NODE_KEY,
           nodeBucketStorage,
           authTagRepository,
