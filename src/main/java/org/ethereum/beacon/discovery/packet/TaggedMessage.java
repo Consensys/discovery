@@ -3,6 +3,8 @@
  */
 package org.ethereum.beacon.discovery.packet;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.web3j.rlp.RlpDecoder;
@@ -30,6 +32,7 @@ class TaggedMessage {
   private final Bytes payload;
 
   public static TaggedMessage decode(Bytes bytes) {
+    checkArgument(bytes.size() >= HEADER_SIZE, "Too small message");
     Bytes tag = Bytes.wrap(bytes.slice(0, TAG_SIZE));
     Bytes authTagRlpBytes = bytes.slice(TAG_SIZE, RLP_AUTH_TAG_SIZE);
     Bytes authTag = decodeSingleRlpString(authTagRlpBytes);
