@@ -53,9 +53,7 @@ public class MessagePacket extends AbstractPacket {
 
   public Bytes getHomeNodeId(Bytes destNodeId) {
     return Functions.hash(destNodeId)
-        .xor(
-            getTaggedMessage().getTag(),
-            MutableBytes.create(getTaggedMessage().getTag().size()));
+        .xor(getTaggedMessage().getTag(), MutableBytes.create(getTaggedMessage().getTag().size()));
   }
 
   public DiscoveryMessage getMessage() {
