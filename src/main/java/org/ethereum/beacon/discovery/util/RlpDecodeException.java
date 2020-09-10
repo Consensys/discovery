@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.util;
 
 public class RlpDecodeException extends RuntimeException {

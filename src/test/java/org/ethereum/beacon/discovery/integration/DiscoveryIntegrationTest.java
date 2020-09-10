@@ -201,15 +201,14 @@ public class DiscoveryIntegrationTest {
     Bytes whoareyouPrefix = WhoAreYouPacket.getStartMagic(remotePeerId);
     Bytes msg = Bytes.wrap(whoareyouPrefix, Bytes.fromHexString("0xc1c0"));
 
-    DatagramPacket packet = new DatagramPacket(msg.toArrayUnsafe(), msg.size(), address,
-        remotePort);
+    DatagramPacket packet =
+        new DatagramPacket(msg.toArrayUnsafe(), msg.size(), address, remotePort);
     dsocket.send(packet);
 
     dsocket.close();
   }
 
-
-    private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
+  private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
 

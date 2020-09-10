@@ -4,8 +4,6 @@
 
 package org.ethereum.beacon.discovery.packet;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
@@ -90,9 +88,9 @@ public class WhoAreYouPacket extends AbstractPacket {
     }
     WhoAreYouDecoded blank = new WhoAreYouDecoded();
     blank.magic = Bytes.wrap(getBytes().slice(0, MAGIC_FIELD_SIZE));
-    List<Bytes> bytesList = RlpUtil
-        .decodeListOfStrings(getBytes().slice(MAGIC_FIELD_SIZE), AUTH_TAG_SIZE, ID_NONCE_SIZE,
-            RlpUtil.ANY_LEN);
+    List<Bytes> bytesList =
+        RlpUtil.decodeListOfStrings(
+            getBytes().slice(MAGIC_FIELD_SIZE), AUTH_TAG_SIZE, ID_NONCE_SIZE, RlpUtil.ANY_LEN);
     blank.authTag = bytesList.get(0);
     blank.idNonce = bytesList.get(1);
     blank.enrSeq = Utils.toUInt64(bytesList.get(2));

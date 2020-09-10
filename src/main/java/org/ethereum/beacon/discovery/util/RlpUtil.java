@@ -81,10 +81,12 @@ public class RlpUtil {
   }
 
   /**
-   * Decodes strictly the list of byte strings of specified lengths
-   * The list should contain strictly {@code lengths.length} strings
+   * Decodes strictly the list of byte strings of specified lengths The list should contain strictly
+   * {@code lengths.length} strings
+   *
    * @param lengths the expected length of each string in the list. ANY_LEN if any size is accepted
-   * @throws RlpDecodeException if this rlp doesn't represent a single list of strings of specified lengths
+   * @throws RlpDecodeException if this rlp doesn't represent a single list of strings of specified
+   *     lengths
    */
   public static List<Bytes> decodeListOfStrings(Bytes rlp, int... lengths)
       throws RlpDecodeException {
@@ -105,10 +107,10 @@ public class RlpUtil {
 
   /**
    * Decodes strictly the list of byte strings
+   *
    * @throws RlpDecodeException if this rlp doesn't represent a single list of strings
    */
-  public static List<Bytes> decodeListOfStrings(Bytes rlp)
-      throws RlpDecodeException {
+  public static List<Bytes> decodeListOfStrings(Bytes rlp) throws RlpDecodeException {
     RlpList items = decodeSingleList(rlp);
     List<RlpType> values = items.getValues();
 
@@ -125,6 +127,7 @@ public class RlpUtil {
 
   /**
    * Decodes strictly one list from rlp bytes
+   *
    * @throws RlpDecodeException if this rlp doesn't represent a single list
    */
   public static RlpList decodeSingleList(Bytes rlp) throws RlpDecodeException {
@@ -137,6 +140,7 @@ public class RlpUtil {
 
   /**
    * Decodes strictly one bytes string item from rlp bytes
+   *
    * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
    */
   public static Bytes decodeSingleString(Bytes rlp, int expectedSize) throws RlpDecodeException {
@@ -149,6 +153,7 @@ public class RlpUtil {
 
   /**
    * Decodes strictly one bytes string item from rlp bytes
+   *
    * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
    */
   public static Bytes decodeSingleString(Bytes rlp) throws RlpDecodeException {
@@ -161,6 +166,7 @@ public class RlpUtil {
 
   /**
    * Decodes strictly one item from rlp bytes
+   *
    * @throws RlpDecodeException if more that item encoded in this rlp
    */
   public static RlpType decodeSingleItem(Bytes rlp) throws RlpDecodeException {
@@ -174,7 +180,6 @@ public class RlpUtil {
       throw new RlpDecodeException("Error decoding RLP: " + rlp, e);
     }
   }
-
 
   /**
    * Encodes object to {@link RlpString}. Supports numbers, {@link Bytes} etc.

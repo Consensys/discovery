@@ -34,8 +34,7 @@ public class NodeBucket {
 
   public static NodeBucket fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
     NodeBucket nodeBucket = new NodeBucket();
-    RlpUtil.decodeListOfStrings(bytes)
-        .stream()
+    RlpUtil.decodeListOfStrings(bytes).stream()
         .map(bytes1 -> NodeRecordInfo.fromRlpBytes(bytes1, nodeRecordFactory))
         .forEach(nodeBucket::put);
     return nodeBucket;

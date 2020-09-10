@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;

@@ -17,7 +17,6 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.RlpUtil.DecodedList;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;

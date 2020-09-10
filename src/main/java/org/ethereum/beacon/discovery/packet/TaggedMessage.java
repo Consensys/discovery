@@ -5,13 +5,10 @@ package org.ethereum.beacon.discovery.packet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * Any message prepended with 'tag' and 'authTag' RLP

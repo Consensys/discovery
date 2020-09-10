@@ -8,7 +8,6 @@ import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
 
 import com.google.common.base.Objects;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.RlpUtil;
