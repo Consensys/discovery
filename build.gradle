@@ -1,4 +1,4 @@
-import net.ltgt.gradle.errorprone.CheckSeverity
+import net.ltgt.gradle.errorprone.*
 
 //discovery v5
 
@@ -41,6 +41,7 @@ dependencies {
 
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
   testImplementation 'org.mockito:mockito-core'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
