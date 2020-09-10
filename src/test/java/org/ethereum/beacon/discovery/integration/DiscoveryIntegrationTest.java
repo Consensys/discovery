@@ -192,7 +192,6 @@ public class DiscoveryIntegrationTest {
     waitFor(node2.ping(node1.getLocalNodeRecord()));
   }
 
-  @Test
   void sendMalformedPacked(int remotePort, Bytes remotePeerId) throws Exception {
     InetAddress address = InetAddress.getByName("localhost");
 
