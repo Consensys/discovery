@@ -8,6 +8,8 @@ import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
@@ -50,6 +52,8 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class DiscoveryManagerImpl implements DiscoveryManager {
+  private static final Logger LOG = LogManager.getLogger();
+
   private final ReplayProcessor<NetworkParcel> outgoingMessages = ReplayProcessor.cacheLast();
   private final NettyDiscoveryServer discoveryServer;
   private final Pipeline incomingPipeline = new PipelineImpl();
@@ -114,7 +118,9 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
-    Flux.from(discoveryServer.getIncomingPackets()).subscribe(incomingPipeline::push);
+    Flux.from(discoveryServer.getIncomingPackets())
+        .onErrorContinue((err, msg) -> LOG.debug("Error while processing message: " + err))
+        .subscribe(incomingPipeline::push);
     return discoveryServer
         .start()
         .thenAccept(

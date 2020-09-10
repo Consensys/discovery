@@ -9,12 +9,16 @@ import static org.ethereum.beacon.discovery.pipeline.Field.INCOMING;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class PipelineImpl implements Pipeline {
+  private static final Logger LOG = LogManager.getLogger();
+
   private final List<EnvelopeHandler> envelopeHandlers = new ArrayList<>();
   private final AtomicBoolean started = new AtomicBoolean(false);
   private Flux<Envelope> pipeline = ReplayProcessor.cacheLast();
@@ -26,7 +30,9 @@ public class PipelineImpl implements Pipeline {
     for (EnvelopeHandler handler : envelopeHandlers) {
       pipeline = pipeline.doOnNext(handler::handle);
     }
-    Flux.from(pipeline).subscribe();
+    Flux.from(pipeline)
+        .onErrorContinue((err, msg) -> LOG.debug("Error while processing message: " + err))
+        .subscribe();
     return this;
   }
 
