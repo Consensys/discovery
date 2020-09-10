@@ -8,9 +8,6 @@ import com.google.common.base.Preconditions;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.web3j.rlp.RlpDecoder;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpString;
 
 /**
  * Sent if no session keys are available to initiate handshake
@@ -22,11 +19,6 @@ import org.web3j.rlp.RlpString;
  */
 public class RandomPacket extends AbstractPacket {
   public static final int MIN_RANDOM_BYTES = 44;
-  private RandomPacketDecoded decoded = null;
-
-  public RandomPacket(Bytes bytes) {
-    super(bytes);
-  }
 
   public static RandomPacket create(
       Bytes homeNodeId, Bytes destNodeId, Bytes authTag, Bytes randomBytes) {
@@ -39,9 +31,7 @@ public class RandomPacket extends AbstractPacket {
     Preconditions.checkArgument(
         randomBytes.size() >= MIN_RANDOM_BYTES,
         "Random bytes must be at least " + MIN_RANDOM_BYTES + " bytes");
-    byte[] authTagRlp = RlpEncoder.encode(RlpString.create(authTag.toArray()));
-    Bytes authTagEncoded = Bytes.wrap(authTagRlp);
-    return new RandomPacket(Bytes.concatenate(tag, authTagEncoded, randomBytes));
+    return new RandomPacket(new TaggedMessage(tag, authTag, randomBytes));
   }
 
   public static RandomPacket create(Bytes homeNodeId, Bytes destNodeId, Bytes authTag, Random rnd) {
@@ -50,43 +40,52 @@ public class RandomPacket extends AbstractPacket {
     return create(homeNodeId, destNodeId, authTag, Bytes.wrap(randomBytes));
   }
 
-  public Bytes getHomeNodeId(Bytes destNodeId) {
-    decode();
-    return Functions.hash(destNodeId).xor(decoded.tag);
+  private TaggedMessage decoded = null;
+
+  public RandomPacket(Bytes bytes) {
+    super(bytes);
+  }
+
+  private RandomPacket(TaggedMessage decoded) {
+    super(decoded.getBytes());
+    this.decoded = decoded;
   }
 
   public Bytes getAuthTag() {
     decode();
-    return decoded.authTag;
+    return decoded.getAuthTag();
+  }
+
+  public Bytes getTag() {
+    decode();
+    return decoded.getTag();
+  }
+
+  public Bytes getHomeNodeId(Bytes destNodeId) {
+    return Functions.hash(destNodeId).xor(getTag());
   }
 
   private synchronized void decode() {
     if (decoded != null) {
       return;
     }
-    RandomPacketDecoded blank = new RandomPacketDecoded();
-    blank.tag = Bytes.wrap(getBytes().slice(0, 32));
-    blank.authTag =
-        Bytes.wrap(
-            ((RlpString)
-                    RlpDecoder.decode(getBytes().slice(32, getBytes().size() - 32 - 44).toArray())
-                        .getValues()
-                        .get(0))
-                .getBytes());
-    this.decoded = blank;
+    if (getBytes().size() < TaggedMessage.HEADER_SIZE + MIN_RANDOM_BYTES) {
+      throw new RuntimeException("RandomPacket is too small: " + getBytes().size());
+    }
+    this.decoded = TaggedMessage.decode(getBytes());
   }
 
   @Override
   public String toString() {
     if (decoded != null) {
-      return "RandomPacket{" + "tag=" + decoded.tag + ", authTag=" + decoded.authTag + '}';
+      return "RandomPacket{"
+          + "tag="
+          + decoded.getTag()
+          + ", authTag="
+          + decoded.getAuthTag()
+          + '}';
     } else {
       return "RandomPacket{" + getBytes() + '}';
     }
-  }
-
-  private static class RandomPacketDecoded {
-    private Bytes tag;
-    private Bytes authTag;
   }
 }

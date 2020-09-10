@@ -13,7 +13,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
-import org.web3j.rlp.RlpDecoder;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -34,13 +34,10 @@ public class NodeBucket {
 
   public static NodeBucket fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
     NodeBucket nodeBucket = new NodeBucket();
-    ((RlpList) RlpDecoder.decode(bytes.toArray()).getValues().get(0))
-        .getValues().stream()
-            .map(rt -> (RlpString) rt)
-            .map(RlpString::getBytes)
-            .map(Bytes::wrap)
-            .map((Bytes bytes1) -> NodeRecordInfo.fromRlpBytes(bytes1, nodeRecordFactory))
-            .forEach(nodeBucket::put);
+    RlpUtil.decodeListOfStrings(bytes)
+        .stream()
+        .map(bytes1 -> NodeRecordInfo.fromRlpBytes(bytes1, nodeRecordFactory))
+        .forEach(nodeBucket::put);
     return nodeBucket;
   }
 

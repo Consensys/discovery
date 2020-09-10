@@ -29,6 +29,10 @@ public class UnknownPacket extends AbstractPacket {
     return new RandomPacket(getBytes());
   }
 
+  public TaggedMessage getTaggedMessage() {
+    return TaggedMessage.decode(getBytes());
+  }
+
   public WhoAreYouPacket getWhoAreYouPacket() {
     return new WhoAreYouPacket(getBytes());
   }
