@@ -25,7 +25,6 @@ import org.web3j.rlp.RlpType;
  */
 public class RlpUtil {
   public static final int ANY_LEN = -1;
-  public static final int UINT64_LEN = -2;
 
   /**
    * Calculates length of list beginning from the start of the data. So, there could everything else
@@ -67,17 +66,6 @@ public class RlpUtil {
   public static DecodedList decodeFirstList(Bytes data) {
     int len = RlpUtil.calcListLen(data);
     return new DecodedList(RlpDecoder.decode(data.slice(0, len).toArray()), data.slice(len));
-  }
-
-  public static UInt64 itemToUInt(RlpType item) throws RlpDecodeException {
-    if (!(item instanceof RlpString)) {
-      throw new RlpDecodeException("RlpString expected");
-    }
-    RlpString string = (RlpString) item;
-    if (string.getBytes().length > 8) {
-      throw new RlpDecodeException("Too long RlpString: " + string);
-    }
-    return UInt64.fromBytes(Utils.leftPad(Bytes.wrap(string.getBytes()), 8));
   }
 
   /**
