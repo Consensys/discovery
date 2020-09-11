@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.storage;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
-import org.web3j.rlp.RlpDecoder;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -22,11 +22,7 @@ public class NodeIndex {
   }
 
   public static NodeIndex fromRlpBytes(Bytes bytes) {
-    RlpList internalList = (RlpList) RlpDecoder.decode(bytes.toArray()).getValues().get(0);
-    List<Bytes> entries = new ArrayList<>();
-    for (RlpType entry : internalList.getValues()) {
-      entries.add(Bytes.wrap(((RlpString) entry).getBytes()));
-    }
+    List<Bytes> entries = RlpUtil.decodeListOfStrings(bytes);
     NodeIndex res = new NodeIndex();
     res.setEntries(entries);
     return res;

@@ -18,6 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
+import org.apache.tuweni.units.bigints.UInt64;
 
 public class Utils {
 
@@ -90,5 +91,10 @@ public class Utils {
     MutableBytes result = MutableBytes.create(length);
     value.copyTo(result, length - value.size());
     return result;
+  }
+
+  public static UInt64 toUInt64(Bytes bytes) throws IllegalArgumentException {
+    checkArgument(bytes.size() <= 8);
+    return UInt64.fromBytes(Utils.leftPad(bytes, 8));
   }
 }

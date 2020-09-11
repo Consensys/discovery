@@ -17,7 +17,6 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.RlpUtil.DecodedList;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -220,12 +219,12 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     Bytes authResponsePt =
         Functions.aesgcm_decrypt(
             authResponseKey, ZERO_NONCE, decodedEphemeralPubKeyPt.authResponse, Bytes.EMPTY);
-    RlpList authResponsePtParts =
-        (RlpList) RlpDecoder.decode(authResponsePt.toArray()).getValues().get(0);
+    RlpList authResponsePtParts = RlpUtil.decodeSingleList(authResponsePt);
     Preconditions.checkArgument(
         AUTH_HEADER_VERSION.equals(
             ((RlpString) authResponsePtParts.getValues().get(0)).asPositiveBigInteger()),
         "Invalid auth header version");
+
     blank.idNonceSig = Bytes.wrap(((RlpString) authResponsePtParts.getValues().get(1)).getBytes());
     RlpList nodeRecordDataList = ((RlpList) authResponsePtParts.getValues().get(2));
     blank.nodeRecord =

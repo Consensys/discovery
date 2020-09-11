@@ -8,8 +8,7 @@ import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.Protocol;
-import org.web3j.rlp.RlpDecoder;
-import org.web3j.rlp.RlpList;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 
@@ -43,8 +42,7 @@ public class DiscoveryV5Message implements DiscoveryMessage {
     if (payload != null) {
       return;
     }
-    this.payload =
-        ((RlpList) RlpDecoder.decode(getBytes().slice(1).toArray()).getValues().get(0)).getValues();
+    this.payload = RlpUtil.decodeSingleList(getBytes().slice(1)).getValues();
   }
 
   public Bytes getRequestId() {

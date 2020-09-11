@@ -4,11 +4,12 @@
 
 package org.ethereum.beacon.discovery.packet;
 
+import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.Utils;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -27,6 +28,10 @@ import org.web3j.rlp.RlpString;
 @SuppressWarnings({"DefaultCharset"})
 public class WhoAreYouPacket extends AbstractPacket {
   private static final Bytes MAGIC_BYTES = Bytes.wrap("WHOAREYOU".getBytes());
+  private static final int MAGIC_FIELD_SIZE = 32;
+  private static final int AUTH_TAG_SIZE = 12;
+  private static final int ID_NONCE_SIZE = 32;
+
   private WhoAreYouDecoded decoded = null;
 
   public WhoAreYouPacket(Bytes bytes) {
@@ -82,14 +87,13 @@ public class WhoAreYouPacket extends AbstractPacket {
       return;
     }
     WhoAreYouDecoded blank = new WhoAreYouDecoded();
-    blank.magic = Bytes.wrap(getBytes().slice(0, 32));
-    RlpList payload =
-        (RlpList) RlpDecoder.decode(getBytes().slice(32).toArray()).getValues().get(0);
-    blank.authTag = Bytes.wrap(((RlpString) payload.getValues().get(0)).getBytes());
-    blank.idNonce = Bytes.wrap(((RlpString) payload.getValues().get(1)).getBytes());
-    blank.enrSeq =
-        UInt64.fromBytes(
-            Utils.leftPad(Bytes.wrap(((RlpString) payload.getValues().get(2)).getBytes()), 8));
+    blank.magic = Bytes.wrap(getBytes().slice(0, MAGIC_FIELD_SIZE));
+    List<Bytes> bytesList =
+        RlpUtil.decodeListOfStrings(
+            getBytes().slice(MAGIC_FIELD_SIZE), AUTH_TAG_SIZE, ID_NONCE_SIZE, RlpUtil.ANY_LEN);
+    blank.authTag = bytesList.get(0);
+    blank.idNonce = bytesList.get(1);
+    blank.enrSeq = Utils.toUInt64(bytesList.get(2));
     this.decoded = blank;
   }
 

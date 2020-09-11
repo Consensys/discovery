@@ -5,12 +5,10 @@ package org.ethereum.beacon.discovery.packet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
-import org.web3j.rlp.RlpDecoder;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * Any message prepended with 'tag' and 'authTag' RLP
@@ -35,28 +33,9 @@ class TaggedMessage {
     checkArgument(bytes.size() >= HEADER_SIZE, "Too small message");
     Bytes tag = Bytes.wrap(bytes.slice(0, TAG_SIZE));
     Bytes authTagRlpBytes = bytes.slice(TAG_SIZE, RLP_AUTH_TAG_SIZE);
-    Bytes authTag = decodeSingleRlpString(authTagRlpBytes);
-    if (authTag.size() != AUTH_TAG_SIZE) {
-      throw new RuntimeException("Invalid auth-tag size from RLP bytes: " + authTagRlpBytes);
-    }
+    Bytes authTag = RlpUtil.decodeSingleString(authTagRlpBytes, AUTH_TAG_SIZE);
     Bytes payload = bytes.slice(TAG_SIZE + RLP_AUTH_TAG_SIZE);
     return new TaggedMessage(tag, authTag, payload);
-  }
-
-  private static Bytes decodeSingleRlpString(Bytes rlp) {
-    RlpType item = decodeSingleRlpItem(rlp);
-    if (!(item instanceof RlpString)) {
-      throw new RuntimeException("Expected RLP bytes string, but got a list from bytes: " + rlp);
-    }
-    return Bytes.wrap(((RlpString) item).getBytes());
-  }
-
-  private static RlpType decodeSingleRlpItem(Bytes rlp) {
-    List<RlpType> rlpList = RlpDecoder.decode(rlp.toArray()).getValues();
-    if (rlpList.size() != 1) {
-      throw new RuntimeException("Only a single RLP item expected from bytes: " + rlp);
-    }
-    return rlpList.get(0);
   }
 
   public TaggedMessage(Bytes tag, Bytes authTag, Bytes payload) {

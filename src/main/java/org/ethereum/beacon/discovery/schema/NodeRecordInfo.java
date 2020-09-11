@@ -4,12 +4,14 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
+
 import com.google.common.base.Objects;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
-import org.web3j.rlp.RlpDecoder;
+import org.ethereum.beacon.discovery.util.RlpUtil;
+import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -37,13 +39,12 @@ public class NodeRecordInfo {
   }
 
   public static NodeRecordInfo fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
-    final Iterator<RlpType> values =
-        ((RlpList) RlpDecoder.decode(bytes.toArray()).getValues().get(0)).getValues().iterator();
+    List<Bytes> bytesList = RlpUtil.decodeListOfStrings(bytes, ANY_LEN, ANY_LEN, ANY_LEN, ANY_LEN);
     return new NodeRecordInfo(
-        nodeRecordFactory.fromBytes(((RlpString) values.next()).getBytes()),
-        ((RlpString) values.next()).asPositiveBigInteger().longValue(),
-        NodeStatus.fromNumber(((RlpString) values.next()).getBytes()[0]),
-        ((RlpString) values.next()).asPositiveBigInteger().intValue());
+        nodeRecordFactory.fromBytes(bytesList.get(0)),
+        Utils.toUInt64(bytesList.get(1)).toLong(),
+        NodeStatus.fromNumber(bytesList.get(2).get(0)),
+        Utils.toUInt64(bytesList.get(3)).intValue());
   }
 
   public Bytes toRlpBytes() {

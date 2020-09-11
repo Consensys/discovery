@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.Utils;
-import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
@@ -111,7 +111,6 @@ public class NodeRecordFactory {
 
   public NodeRecord fromBytes(byte[] bytes) {
     // record    = [signature, seq, k, v, ...]
-    RlpList rlpList = (RlpList) RlpDecoder.decode(bytes).getValues().get(0);
-    return fromRlpList(rlpList);
+    return fromRlpList(RlpUtil.decodeSingleList(Bytes.wrap(bytes)));
   }
 }

@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.BindException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -173,6 +176,35 @@ public class DiscoveryIntegrationTest {
     final InetAddress updatedAddress =
         node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
     assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+  }
+
+  @Test
+  public void malformedWhoAreYouPacketDos() throws Exception {
+    final DiscoverySystem node1 = createDiscoveryClient();
+    final ECKeyPair keyPair = Functions.generateECKeyPair();
+    final DiscoverySystem node2 = createDiscoveryClient(keyPair, node1.getLocalNodeRecord());
+    int port = node1.getLocalNodeRecord().getUdpAddress().get().getPort();
+
+    waitFor(node2.ping(node1.getLocalNodeRecord()));
+
+    sendMalformedPacked(port, node1.getLocalNodeRecord().getNodeId());
+
+    waitFor(node2.ping(node1.getLocalNodeRecord()));
+  }
+
+  void sendMalformedPacked(int remotePort, Bytes remotePeerId) throws Exception {
+    InetAddress address = InetAddress.getByName("localhost");
+
+    DatagramSocket dsocket = new DatagramSocket();
+
+    Bytes whoareyouPrefix = WhoAreYouPacket.getStartMagic(remotePeerId);
+    Bytes msg = Bytes.wrap(whoareyouPrefix, Bytes.fromHexString("0xc1c0"));
+
+    DatagramPacket packet =
+        new DatagramPacket(msg.toArrayUnsafe(), msg.size(), address, remotePort);
+    dsocket.send(packet);
+
+    dsocket.close();
   }
 
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
