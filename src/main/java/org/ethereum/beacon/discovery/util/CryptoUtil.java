@@ -4,8 +4,12 @@
 
 package org.ethereum.beacon.discovery.util;
 
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -25,5 +29,33 @@ public class CryptoUtil {
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static Bytes aesctrEncrypt(Bytes key, Bytes iv, Bytes plain) {
+    try {
+      Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+      cipher.init(
+          Cipher.ENCRYPT_MODE,
+          new SecretKeySpec(key.toArrayUnsafe(), "AES"),
+          new IvParameterSpec(iv.toArrayUnsafe()));
+      return Bytes.wrap(cipher.doFinal(plain.toArrayUnsafe()));
+    } catch (Exception e) {
+      throw new RuntimeException("No AES/CTR cipher provider", e);
+    }
+  }
+
+  public static Cipher createAesctrDecryptor(Bytes key, Bytes iv)
+      throws GeneralSecurityException {
+    Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+    cipher.init(
+        Cipher.DECRYPT_MODE,
+        new SecretKeySpec(key.toArrayUnsafe(), "AES"),
+        new IvParameterSpec(iv.toArrayUnsafe()));
+    return cipher;
+  }
+
+  public static Bytes aesctrDecrypt(Bytes key, Bytes iv, Bytes ciphered)
+      throws GeneralSecurityException {
+    return Bytes.wrap(createAesctrDecryptor(key, iv).doFinal(ciphered.toArrayUnsafe()));
   }
 }
