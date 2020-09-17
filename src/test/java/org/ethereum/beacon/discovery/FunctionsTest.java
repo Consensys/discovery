@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -125,9 +126,9 @@ public class FunctionsTest {
             "0xf8aa05b8404f5fa8309cab170dbeb049de504b519288777aae0c4b25686f82310206a4a1e264dc6e8bfaca9187e8b3dbb56f49c7aa3d22bff3a279bf38fb00cb158b7b8ca7b865f86380018269648276348375647082765f826970847f00000189736563703235366b31b84013d14211e0287b2361a1615890a9b5212080546d0a257ae4cff96cf534992cb97e6adeb003652e807c7f2fe843e0c48d02d4feb0272e2e01f6e27915a431e773");
     Bytes zeroNonce = Bytes.wrap(new byte[12]);
     Bytes authResponse =
-        Functions.aesgcm_encrypt(authResponseKey, zeroNonce, authResponsePt, Bytes.EMPTY);
+        CryptoUtil.aesgcmEncrypt(authResponseKey, zeroNonce, authResponsePt, Bytes.EMPTY);
     Bytes authResponsePtDecrypted =
-        Functions.aesgcm_decrypt(authResponseKey, zeroNonce, authResponse, Bytes.EMPTY);
+        CryptoUtil.aesgcmDecrypt(authResponseKey, zeroNonce, authResponse, Bytes.EMPTY);
     assertEquals(authResponsePt, authResponsePtDecrypted);
   }
 

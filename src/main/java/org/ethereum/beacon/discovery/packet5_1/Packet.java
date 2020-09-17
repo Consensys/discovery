@@ -1,26 +1,18 @@
 package org.ethereum.beacon.discovery.packet5_1;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.packet5_1.impl.PacketImpl;
+import org.ethereum.beacon.discovery.type.Bytes16;
 
-public interface Packet {
+public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
-  Bytes getBytes();
-
-  String getProtocolId();
-
-  Bytes32 getSourcePeerId();
-
-  Flag getFlag();
-
-  Bytes getAuthData();
-
-  Bytes12 getAesGcmNonce();
-
-  enum Flag {
-    MESSAGE,
-    WHOAREYOU,
-    HANDSHAKE
+  static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 peerId) throws DecodeException {
+    return PacketImpl.decrypt(data, iv, peerId);
   }
+
+  Bytes encrypt(Bytes16 iv, Bytes16 peerId);
+
+  Bytes getMessageBytes();
+
+  Header<TAuthData> getHeader();
 }

@@ -6,7 +6,7 @@ package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
-import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -99,7 +99,7 @@ public class AuthHeaderMessagePacketTest {
     Bytes expectedAuthMessageRlp =
         Bytes.fromHexString(
             "0x93a7400fa0d6a694ebc24d5cf570f65d04215b6ac00757875e3f3a5f42107903f8cc8c27b5af763c446acd2749fe8ea0e551b1c44264ab92bc0b3c9b26293e1ba4fed9128f3c3645301e8e119f179c658367636db840b35608c01ee67edff2cffa424b219940a81cf2fb9b66068b1cf96862a17d353e22524fbdcdebc609f85cbd58ebe7a872b01e24a3829b97dd5875e8ffbc4eea81b856570fbf23885c674867ab00320294a41732891457969a0f14d11c995668858b2ad731aa7836888020e2ccc6e0e5776d0d4bc4439161798565a4159aa8620992fb51dcb275c4f755c8b8030c82918898f1ac387f606852a5d12a2d94b8ccb3ba55558229867dc13bfa3648");
-    Bytes encryptedData = Functions.aesgcm_encrypt(encryptionKey, authTag, messagePlaintext, tag);
+    Bytes encryptedData = CryptoUtil.aesgcmEncrypt(encryptionKey, authTag, messagePlaintext, tag);
     Bytes authHeaderMessagePacket = Bytes.concatenate(tag, authHeaderRlp, encryptedData);
     Assertions.assertEquals(expectedAuthMessageRlp, authHeaderMessagePacket);
   }

@@ -8,6 +8,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.ethereum.beacon.discovery.message.DiscoveryMessage;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /**
@@ -31,7 +32,7 @@ public class MessagePacket extends AbstractPacket {
       Bytes initiatorKey,
       DiscoveryMessage message) {
     Bytes tag = Packet.createTag(homeNodeId, destNodeId);
-    Bytes encryptedData = Functions.aesgcm_encrypt(initiatorKey, authTag, message.getBytes(), tag);
+    Bytes encryptedData = CryptoUtil.aesgcmEncrypt(initiatorKey, authTag, message.getBytes(), tag);
     return create(tag, authTag, encryptedData);
   }
 
@@ -80,7 +81,7 @@ public class MessagePacket extends AbstractPacket {
     }
     decodedDiscoveryMessage =
         new DiscoveryV5Message(
-            Functions.aesgcm_decrypt(
+            CryptoUtil.aesgcmDecrypt(
                 readKey,
                 getTaggedMessage().getAuthTag(),
                 getTaggedMessage().getPayload(),

@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -102,6 +103,6 @@ public class CryptoTest {
     Bytes expectedMessageCiphertext =
         Bytes.fromHexString("a5d12a2d94b8ccb3ba55558229867dc13bfa3648");
     Assertions.assertEquals(
-        expectedMessageCiphertext, Functions.aesgcm_encrypt(encryptionKey, nonce, pt, ad));
+        expectedMessageCiphertext, CryptoUtil.aesgcmEncrypt(encryptionKey, nonce, pt, ad));
   }
 }

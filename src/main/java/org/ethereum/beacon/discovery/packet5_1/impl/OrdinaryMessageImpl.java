@@ -2,35 +2,40 @@ package org.ethereum.beacon.discovery.packet5_1.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.packet5_1.AuthData;
+import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.PacketDecodeException;
+import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
-public class OrdinaryMessageImpl extends PacketImpl implements OrdinaryMessagePacket {
-  private static final int NONCE_OFF = 0;
-  private static final int NONCE_SIZE = 12;
-  private static final int AUTH_DATA_SIZE = NONCE_OFF + NONCE_SIZE;
+public class OrdinaryMessageImpl extends MessagePacketImpl<AuthData>
+    implements OrdinaryMessagePacket {
 
-  public OrdinaryMessageImpl(Header header, Bytes messageBytes) {
-    super(header, messageBytes);
-    if (header.getAuthDataBytes().size() != AUTH_DATA_SIZE) {
-      throw new PacketDecodeException(
-          "Invalid auth-data size for message packet: " + header.getAuthDataBytes().size());
+  public OrdinaryMessageImpl(Header<AuthData> header, V5Message message, Bytes gcmKey) {
+    this(header, encrypt(header, message, gcmKey));
+  }
+
+  public OrdinaryMessageImpl(Header<AuthData> header, Bytes cipheredMessage) {
+    super(header, cipheredMessage);
+  }
+
+  public static class AuthDataImpl extends AbstractBytes implements AuthData {
+    private static final int NONCE_OFF = 0;
+    private static final int NONCE_SIZE = 12;
+    private static final int AUTH_DATA_SIZE = NONCE_OFF + NONCE_SIZE;
+
+    public AuthDataImpl(Bytes bytes) {
+      super(checkStrictSize(bytes, AUTH_DATA_SIZE));
     }
-  }
 
-  @Override
-  public V5Message decryptMessage(Bytes key) {
-    return null;
-  }
+    @Override
+    public Bytes12 getAesGcmNonce() {
+      return Bytes12.wrap(getBytes(), NONCE_OFF);
+    }
 
-  @Override
-  public Bytes12 getAesGcmNonce() {
-    return Bytes12.wrap(getAuthData(), NONCE_OFF);
-  }
-
-  @Override
-  public Bytes12 getAuthData() {
-    return Bytes12.wrap(super.getAuthData());
+    @Override
+    public String toString() {
+      return "[nonce=" + getAesGcmNonce() + "]";
+    }
   }
 }

@@ -1,76 +1,117 @@
 package org.ethereum.beacon.discovery.packet5_1.impl;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
-public class HandshakeMessagePacketImpl extends PacketImpl implements HandshakeMessagePacket {
-  private static final int VERSION_OFF = 0;
-  private static final int VERSION_SIZE = 1;
-  private static final int NONCE_OFF = VERSION_SIZE;
-  private static final int NONCE_SIZE = 12;
-  private static final int SIG_SIZE_OFF = NONCE_OFF + NONCE_SIZE;
-  private static final int SIG_SIZE_SIZE = 1;
-  private static final int EPH_KEY_SIZE_OFF = SIG_SIZE_OFF + SIG_SIZE_SIZE;
-  private static final int EPH_KEY_SIZE_SIZE = 1;
-  private static final int ID_SIG_OFF = EPH_KEY_SIZE_OFF + EPH_KEY_SIZE_SIZE;
+public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthData>
+    implements HandshakeMessagePacket {
 
-  public HandshakeMessagePacketImpl(Header header, Bytes messageBytes) {
-    super(header, messageBytes);
-  }
+  public static class HandshakeAuthDataImpl extends AbstractBytes implements HanshakeAuthData {
 
-  @Override
-  public byte getVersion() {
-    return getAuthData().get(VERSION_OFF);
-  }
+    public static HandshakeAuthDataImpl create(byte version, Bytes12 nonce, Bytes idSignature,
+      Bytes ephemeralPubKey, Optional<NodeRecord> nodeRecord) {
+        checkArgument(idSignature.size() < 256, "ID signature too large");
+        checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
+        return new HandshakeAuthDataImpl(Bytes.concatenate(
+            Bytes.of(version),
+            nonce,
+            Bytes.of(idSignature.size()),
+            Bytes.of(ephemeralPubKey.size()),
+            idSignature,
+            ephemeralPubKey,
+            nodeRecord.map(r -> r.serialize()).orElse(Bytes.EMPTY)
+        ));
+    }
 
-  @Override
-  public Bytes12 getAesGcmNonce() {
-    return Bytes12.wrap(getAuthData(), NONCE_OFF);
-  }
+    public HandshakeAuthDataImpl(Bytes bytes) {
+      super(checkMinSize(bytes, ID_SIG_OFF));
+    }
 
-  private byte getSignatureSize() {
-    return getAuthData().get(SIG_SIZE_OFF);
-  }
+    private static final int VERSION_OFF = 0;
+    private static final int VERSION_SIZE = 1;
+    private static final int NONCE_OFF = VERSION_SIZE;
+    private static final int NONCE_SIZE = 12;
+    private static final int SIG_SIZE_OFF = NONCE_OFF + NONCE_SIZE;
+    private static final int SIG_SIZE_SIZE = 1;
+    private static final int EPH_KEY_SIZE_OFF = SIG_SIZE_OFF + SIG_SIZE_SIZE;
+    private static final int EPH_KEY_SIZE_SIZE = 1;
+    private static final int ID_SIG_OFF = EPH_KEY_SIZE_OFF + EPH_KEY_SIZE_SIZE;
 
-  private byte getEphemeralPubKeySize() {
-    return getAuthData().get(EPH_KEY_SIZE_OFF);
-  }
+    @Override
+    public byte getVersion() {
+      return getBytes().get(VERSION_OFF);
+    }
 
-  @Override
-  public Bytes getIdSignature() {
-    return getAuthData().slice(ID_SIG_OFF, getSignatureSize());
-  }
+    @Override
+    public Bytes12 getAesGcmNonce() {
+      return Bytes12.wrap(getBytes(), NONCE_OFF);
+    }
 
-  private int getEphemeralPubKeyOff() {
-    return ID_SIG_OFF + getSignatureSize();
-  }
+    private byte getSignatureSize() {
+      return getBytes().get(SIG_SIZE_OFF);
+    }
 
-  @Override
-  public Bytes getEphemeralPubKey() {
-    return getAuthData().slice(getEphemeralPubKeyOff(), getEphemeralPubKeySize());
-  }
+    private byte getEphemeralPubKeySize() {
+      return getBytes().get(EPH_KEY_SIZE_OFF);
+    }
 
-  private int getNodeRecordOff() {
-    return getEphemeralPubKeyOff() + getEphemeralPubKeySize();
-  }
+    @Override
+    public Bytes getIdSignature() {
+      try {
+        return getBytes().slice(ID_SIG_OFF, getSignatureSize());
+      } catch (IndexOutOfBoundsException e) {
+        throw new DecodeException("Handshake auth-data truncated", e);
+      }
+    }
 
-  @Override
-  public Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory) {
-    Bytes nodeRecBytes = getAuthData().slice(getNodeRecordOff());
-    if (nodeRecBytes.isEmpty()) {
-      return Optional.empty();
-    } else {
-      return Optional.of(nodeRecordFactory.fromBytes(nodeRecBytes));
+    private int getEphemeralPubKeyOff() {
+      return ID_SIG_OFF + getSignatureSize();
+    }
+
+    @Override
+    public Bytes getEphemeralPubKey() {
+      try {
+        return getBytes().slice(getEphemeralPubKeyOff(), getEphemeralPubKeySize());
+      } catch (IndexOutOfBoundsException e) {
+        throw new DecodeException("Handshake auth-data truncated", e);
+      }
+    }
+
+    private int getNodeRecordOff() {
+      return getEphemeralPubKeyOff() + getEphemeralPubKeySize();
+    }
+
+    @Override
+    public Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory) {
+      try {
+        Bytes nodeRecBytes = getBytes().slice(getNodeRecordOff());
+        if (nodeRecBytes.isEmpty()) {
+          return Optional.empty();
+        } else {
+          return Optional.of(nodeRecordFactory.fromBytes(nodeRecBytes));
+        }
+      } catch (IndexOutOfBoundsException e) {
+        throw new DecodeException("Handshake auth-data truncated", e);
+      } catch (Exception e) {
+        throw new DecodeException("Error decoding Handshake auth-data", e);
+      }
     }
   }
+  public HandshakeMessagePacketImpl(Header<HanshakeAuthData> header, Bytes cipheredMessage) {
+    super(header, cipheredMessage);
+  }
 
-  @Override
-  public V5Message decryptMessage(Bytes key) {
-    return null;
+  public HandshakeMessagePacketImpl(Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
+    this(header, encrypt(header, message, gcmKey));
   }
 }

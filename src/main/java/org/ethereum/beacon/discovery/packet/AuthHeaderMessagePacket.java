@@ -14,6 +14,7 @@ import org.ethereum.beacon.discovery.message.DiscoveryMessage;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.RlpUtil.DecodedList;
@@ -85,7 +86,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
   }
 
   public static Bytes encodeAuthResponse(byte[] authResponsePt, Bytes authResponseKey) {
-    return Functions.aesgcm_encrypt(
+    return CryptoUtil.aesgcmEncrypt(
         authResponseKey, ZERO_NONCE, Bytes.wrap(authResponsePt), Bytes.EMPTY);
   }
 
@@ -117,7 +118,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     byte[] authResponsePt = createAuthMessagePt(idNonceSig, nodeRecord);
     Bytes authResponse = encodeAuthResponse(authResponsePt, authResponseKey);
     Bytes authHeader = encodeAuthHeaderRlp(authTag, idNonce, ephemeralPubkey, authResponse);
-    Bytes encryptedData = Functions.aesgcm_encrypt(initiatorKey, authTag, message.getBytes(), tag);
+    Bytes encryptedData = CryptoUtil.aesgcmEncrypt(initiatorKey, authTag, message.getBytes(), tag);
     return create(tag, authHeader, encryptedData);
   }
 
@@ -217,7 +218,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
     }
     MessagePtDecoded blank = new MessagePtDecoded();
     Bytes authResponsePt =
-        Functions.aesgcm_decrypt(
+        CryptoUtil.aesgcmDecrypt(
             authResponseKey, ZERO_NONCE, decodedEphemeralPubKeyPt.authResponse, Bytes.EMPTY);
     RlpList authResponsePtParts = RlpUtil.decodeSingleList(authResponsePt);
     Preconditions.checkArgument(
@@ -233,7 +234,7 @@ public class AuthHeaderMessagePacket extends AbstractPacket {
             : nodeRecordFactory.fromRlpList(nodeRecordDataList);
     blank.message =
         new DiscoveryV5Message(
-            Functions.aesgcm_decrypt(
+            CryptoUtil.aesgcmDecrypt(
                 readKey,
                 decodedEphemeralPubKeyPt.authTag,
                 decodedEphemeralPubKeyPt.messageEncrypted,

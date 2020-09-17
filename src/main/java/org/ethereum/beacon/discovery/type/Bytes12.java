@@ -4,6 +4,10 @@ import org.apache.tuweni.bytes.Bytes;
 
 public class Bytes12 extends DelegateBytes {
 
+  public static Bytes12 fromHexString(String hex) {
+    return new Bytes12(Bytes.fromHexString(hex));
+  }
+
   public static Bytes12 wrap(Bytes bytes) {
     return new Bytes12(bytes);
   }

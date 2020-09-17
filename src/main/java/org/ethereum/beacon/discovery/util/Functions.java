@@ -111,48 +111,6 @@ public class Functions {
     return false;
   }
 
-  /**
-   * AES-GCM encryption/authentication with the given `key`, `nonce` and additional authenticated
-   * data `ad`. Size of `key` is 16 bytes (AES-128), size of `nonce` 12 bytes.
-   */
-  public static Bytes aesgcm_encrypt(Bytes privateKey, Bytes nonce, Bytes message, Bytes aad) {
-    try {
-      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-      cipher.init(
-          Cipher.ENCRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(message.toArray()));
-    } catch (Exception e) {
-      throw new RuntimeException("No AES/GCM cipher provider", e);
-    }
-  }
-
-  /**
-   * AES-GCM decryption of `encoded` data with the given `key`, `nonce` and additional authenticated
-   * data `ad`. Size of `key` is 16 bytes (AES-128), size of `nonce` 12 bytes.
-   */
-  public static Bytes aesgcm_decrypt(Bytes privateKey, Bytes nonce, Bytes encoded, Bytes aad) {
-    try {
-      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-      cipher.init(
-          Cipher.DECRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(encoded.toArray()));
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("No AES/GCM cipher provider", e);
-    } catch (InvalidKeyException
-        | InvalidAlgorithmParameterException
-        | NoSuchPaddingException
-        | BadPaddingException
-        | IllegalBlockSizeException e) {
-      throw new RuntimeException("Failed to decrypt message", e);
-    }
-  }
-
   public static ECKeyPair generateECKeyPair() {
     byte[] keyBytes = new byte[PRIVKEY_SIZE];
     Functions.getRandom().nextBytes(keyBytes);
