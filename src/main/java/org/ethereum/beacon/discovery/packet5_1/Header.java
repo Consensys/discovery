@@ -12,15 +12,15 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
     return HeaderImpl.decrypt(headerBytes, iv, peerId);
   }
 
-  static <TAuthData extends AuthData> Header<TAuthData> create(StaticHeader staticHeader,
-      TAuthData authData) {
+  static <TAuthData extends AuthData> Header<TAuthData> create(
+      StaticHeader staticHeader, TAuthData authData) {
     return new HeaderImpl<>(staticHeader, authData);
   }
 
   static <TAuthData extends AuthData> Header<TAuthData> create(
       Bytes32 sourcePeerId, Flag flag, TAuthData authData) {
-    return new HeaderImpl<>(StaticHeader.create(sourcePeerId, flag, authData.getBytes().size()),
-        authData);
+    return new HeaderImpl<>(
+        StaticHeader.create(sourcePeerId, flag, authData.getBytes().size()), authData);
   }
 
   StaticHeader getStaticHeader();

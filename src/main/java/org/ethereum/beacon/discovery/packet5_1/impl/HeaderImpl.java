@@ -5,8 +5,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import javax.crypto.Cipher;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.packet5_1.DecodeException;
+import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.packet5_1.StaticHeader;
 import org.ethereum.beacon.discovery.packet5_1.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
 import org.ethereum.beacon.discovery.packet5_1.impl.OrdinaryMessageImpl.AuthDataImpl;
@@ -22,16 +22,14 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       checkMinSize(data, StaticHeaderImpl.STATIC_HEADER_SIZE);
       Cipher cipher = CryptoUtil.createAesctrDecryptor(peerId, iv);
       Bytes staticHeaderCiphered = data.slice(0, StaticHeaderImpl.STATIC_HEADER_SIZE);
-      Bytes staticHeaderBytes = Bytes.wrap(
-          cipher.update(staticHeaderCiphered.toArrayUnsafe()));
+      Bytes staticHeaderBytes = Bytes.wrap(cipher.update(staticHeaderCiphered.toArrayUnsafe()));
       StaticHeader header = StaticHeader.decode(staticHeaderBytes);
 
       int authDataSize = header.getAuthDataSize();
       int headerSize = StaticHeaderImpl.STATIC_HEADER_SIZE + authDataSize;
       checkMinSize(data, headerSize);
       Bytes authDataCiphered = data.slice(StaticHeaderImpl.STATIC_HEADER_SIZE, authDataSize);
-      Bytes authDataBytes = Bytes.wrap(
-          cipher.doFinal(authDataCiphered.toArrayUnsafe()));
+      Bytes authDataBytes = Bytes.wrap(cipher.doFinal(authDataCiphered.toArrayUnsafe()));
       AuthData authData = decodeAuthData(header, authDataBytes);
       return new HeaderImpl<>(header, authData);
     } catch (Exception e) {
@@ -58,7 +56,8 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
 
   public HeaderImpl(StaticHeader staticHeader, TAUthData authData) {
     super(Bytes.wrap(staticHeader.getBytes(), authData.getBytes()));
-    checkArgument(authData.getBytes().size() == staticHeader.getAuthDataSize(),
+    checkArgument(
+        authData.getBytes().size() == staticHeader.getAuthDataSize(),
         "Actual authData size doesn't match header auth-data-size field");
     this.staticHeader = staticHeader;
     this.authData = authData;
@@ -88,6 +87,6 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
 
   @Override
   public String toString() {
-    return "Header[header=" + staticHeader + ", authData=" + authData + "]";
+    return "Header{header=" + staticHeader + ", authData=" + authData + "}";
   }
 }

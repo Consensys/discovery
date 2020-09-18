@@ -30,6 +30,11 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 
     @Override
     Bytes52 getBytes();
-  }
 
+    default boolean isEqual(WhoAreYouAuthData other) {
+      return getRequestNonce().equals(other.getRequestNonce())
+          && getIdNonce().equals(other.getIdNonce())
+          && getEnrSeq().equals(other.getEnrSeq());
+    }
+  }
 }

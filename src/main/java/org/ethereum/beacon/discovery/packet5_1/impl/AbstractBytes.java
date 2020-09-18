@@ -15,11 +15,11 @@ public abstract class AbstractBytes implements BytesSerializable {
     }
     return bytes;
   }
+
   public static Bytes checkMinSize(Bytes bytes, int minimalSize) throws DecodeException {
     if (bytes.size() < minimalSize) {
       throw new DecodeException(
-          "Data is too small: " + bytes.size() + ", (expected at least " + minimalSize
-              + " bytes)");
+          "Data is too small: " + bytes.size() + ", (expected at least " + minimalSize + " bytes)");
     }
     return bytes;
   }

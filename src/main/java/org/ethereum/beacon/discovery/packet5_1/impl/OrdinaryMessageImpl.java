@@ -5,7 +5,6 @@ import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet5_1.AuthData;
 import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 public class OrdinaryMessageImpl extends MessagePacketImpl<AuthData>
@@ -35,7 +34,7 @@ public class OrdinaryMessageImpl extends MessagePacketImpl<AuthData>
 
     @Override
     public String toString() {
-      return "[nonce=" + getAesGcmNonce() + "]";
+      return "AuthData{nonce=" + getAesGcmNonce() + "}";
     }
   }
 }

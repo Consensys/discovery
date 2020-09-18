@@ -3,7 +3,6 @@ package org.ethereum.beacon.discovery.packet5_1.impl;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Preconditions;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.apache.tuweni.bytes.Bytes;
@@ -24,21 +23,20 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
   private static final int AUTH_DATA_SIZE_SIZE = 2;
   static final int STATIC_HEADER_SIZE = AUTH_DATA_SIZE_OFFSET + AUTH_DATA_SIZE_SIZE;
 
-  public static StaticHeaderImpl create(String protocolId, Bytes32 sourcePeerId, Flag flag,
-      int authDataSize) {
+  public static StaticHeaderImpl create(
+      String protocolId, Bytes32 sourcePeerId, Flag flag, int authDataSize) {
 
     checkNotNull(protocolId, "protocolId");
     checkNotNull(sourcePeerId, "sourcePeerId");
     checkNotNull(flag, "flag");
     checkArgument(protocolId.length() == 8, "ProtocolId should be of length 8");
     checkArgument(authDataSize < 1 << 16, "Auth data size should be < 65536");
-    Bytes headerBytes = Bytes.concatenate(
-        Bytes.wrap(protocolId.getBytes(
-            StaticHeaderImpl.PROTOCOL_ID_ENCODING)),
-        sourcePeerId,
-        Bytes.of(flag.ordinal()),
-        Bytes.of(authDataSize >> 8, authDataSize & 0xFF)
-    );
+    Bytes headerBytes =
+        Bytes.concatenate(
+            Bytes.wrap(protocolId.getBytes(StaticHeaderImpl.PROTOCOL_ID_ENCODING)),
+            sourcePeerId,
+            Bytes.of(flag.ordinal()),
+            Bytes.of(authDataSize >> 8, authDataSize & 0xFF));
     return new StaticHeaderImpl(headerBytes);
   }
 
@@ -49,7 +47,8 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 
   @Override
   public String getProtocolId() {
-    return new String(getBytes().slice(PROTOCOL_ID_OFFSET, PROTOCOL_ID_SIZE).toArrayUnsafe(),
+    return new String(
+        getBytes().slice(PROTOCOL_ID_OFFSET, PROTOCOL_ID_SIZE).toArrayUnsafe(),
         PROTOCOL_ID_ENCODING);
   }
 
@@ -69,13 +68,20 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 
   @Override
   public int getAuthDataSize() {
-    return 0xFF & getBytes().get(AUTH_DATA_SIZE_OFFSET) << 8 |
-        getBytes().get(AUTH_DATA_SIZE_OFFSET + 1);
+    return ((0xFF & getBytes().get(AUTH_DATA_SIZE_OFFSET)) << 8)
+        | (0xFF & getBytes().get(AUTH_DATA_SIZE_OFFSET + 1));
   }
 
   @Override
   public String toString() {
-    return "[" + getProtocolId() + ", " + getSourcePeerId() + ", " + getFlag() + ", "
-        + getAuthDataSize() + "]";
+    return "{protocolId="
+        + getProtocolId()
+        + ", sourcePeerId="
+        + getSourcePeerId()
+        + ", flag="
+        + getFlag()
+        + ", authDataSize="
+        + getAuthDataSize()
+        + "}";
   }
 }

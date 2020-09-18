@@ -2,10 +2,10 @@ package org.ethereum.beacon.discovery.packet5_1.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet5_1.AuthData;
+import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
 import org.ethereum.beacon.discovery.packet5_1.Header;
 import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.type.Bytes16;
 

@@ -1,7 +1,5 @@
 package org.ethereum.beacon.discovery.packet5_1.impl;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet5_1.Packet;
 import org.ethereum.beacon.discovery.packet5_1.RawPacket;

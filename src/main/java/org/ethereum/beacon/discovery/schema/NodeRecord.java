@@ -218,11 +218,15 @@ public class NodeRecord {
 
   @Override
   public String toString() {
-    return "NodeRecordV4{"
-        + "publicKey="
+    return "NodeRecord{"
+        + "seq="
+        + seq
+        + ", publicKey="
         + fields.get(EnrField.PKEY_SECP256K1)
         + ", udpAddress="
         + getUdpAddress()
+        + ", tcpAddress="
+        + getTcpAddress()
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="

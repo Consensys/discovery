@@ -18,19 +18,23 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthDa
 
   public static class HandshakeAuthDataImpl extends AbstractBytes implements HanshakeAuthData {
 
-    public static HandshakeAuthDataImpl create(byte version, Bytes12 nonce, Bytes idSignature,
-      Bytes ephemeralPubKey, Optional<NodeRecord> nodeRecord) {
-        checkArgument(idSignature.size() < 256, "ID signature too large");
-        checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
-        return new HandshakeAuthDataImpl(Bytes.concatenate(
-            Bytes.of(version),
-            nonce,
-            Bytes.of(idSignature.size()),
-            Bytes.of(ephemeralPubKey.size()),
-            idSignature,
-            ephemeralPubKey,
-            nodeRecord.map(r -> r.serialize()).orElse(Bytes.EMPTY)
-        ));
+    public static HandshakeAuthDataImpl create(
+        byte version,
+        Bytes12 nonce,
+        Bytes idSignature,
+        Bytes ephemeralPubKey,
+        Optional<NodeRecord> nodeRecord) {
+      checkArgument(idSignature.size() < 256, "ID signature too large");
+      checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
+      return new HandshakeAuthDataImpl(
+          Bytes.concatenate(
+              Bytes.of(version),
+              nonce,
+              Bytes.of(idSignature.size()),
+              Bytes.of(ephemeralPubKey.size()),
+              idSignature,
+              ephemeralPubKey,
+              nodeRecord.map(r -> r.serialize()).orElse(Bytes.EMPTY)));
     }
 
     public HandshakeAuthDataImpl(Bytes bytes) {
@@ -106,12 +110,29 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthDa
         throw new DecodeException("Error decoding Handshake auth-data", e);
       }
     }
+
+    @Override
+    public String toString() {
+      return "HandshakeAuthData{version="
+          + getVersion()
+          + ", aesGcmNonce="
+          + getAesGcmNonce()
+          + ", idSignature="
+          + getIdSignature()
+          + ", ephemeralPubKey="
+          + getEphemeralPubKey()
+          + ", enrBytes="
+          + getBytes().slice(getNodeRecordOff())
+          + "}";
+    }
   }
+
   public HandshakeMessagePacketImpl(Header<HanshakeAuthData> header, Bytes cipheredMessage) {
     super(header, cipheredMessage);
   }
 
-  public HandshakeMessagePacketImpl(Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
+  public HandshakeMessagePacketImpl(
+      Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
     this(header, encrypt(header, message, gcmKey));
   }
 }

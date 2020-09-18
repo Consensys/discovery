@@ -50,8 +50,7 @@ public class CryptoUtil {
     }
   }
 
-  public static Cipher createAesctrDecryptor(Bytes key, Bytes iv)
-      throws GeneralSecurityException {
+  public static Cipher createAesctrDecryptor(Bytes key, Bytes iv) throws GeneralSecurityException {
     Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
     cipher.init(
         Cipher.DECRYPT_MODE,

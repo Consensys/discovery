@@ -4,7 +4,6 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
 import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.type.Bytes12;
@@ -26,11 +25,7 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
     private static final int AUTH_DATA_SIZE = ENR_SEQ_OFF + ENR_SEQ_SIZE;
 
     public WhoAreYouAuthDataImpl(Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
-      this(Bytes.concatenate(
-          requestNonce,
-          idNonce,
-          enrSeq.toBytes()
-      ));
+      this(Bytes.concatenate(requestNonce, idNonce, enrSeq.toBytes()));
     }
 
     public WhoAreYouAuthDataImpl(Bytes bytes) {
@@ -55,6 +50,17 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
     @Override
     public Bytes52 getBytes() {
       return Bytes52.wrap(super.getBytes());
+    }
+
+    @Override
+    public String toString() {
+      return "WhoAreYouAuthData{aesGcmNonce="
+          + getAesGcmNonce()
+          + ", idNonce="
+          + getIdNonce()
+          + ", enrSeq="
+          + getEnrSeq()
+          + "}";
     }
   }
 }
