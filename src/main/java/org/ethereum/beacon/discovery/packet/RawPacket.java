@@ -1,7 +1,7 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet5_1.impl.RawPacketImpl;
+import org.ethereum.beacon.discovery.packet.impl.RawPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public interface RawPacket extends BytesSerializable {

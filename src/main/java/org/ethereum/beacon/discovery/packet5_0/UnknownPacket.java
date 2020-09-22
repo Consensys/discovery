@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.ethereum.beacon.discovery.packet;
+package org.ethereum.beacon.discovery.packet5_0;
 
 import com.google.common.base.Preconditions;
 import java.util.Optional;

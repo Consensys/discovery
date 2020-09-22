@@ -1,8 +1,8 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.packet5_1.impl.StaticHeaderImpl;
+import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
 
 public interface StaticHeader extends BytesSerializable {
 

@@ -1,7 +1,7 @@
 package org.ethereum.beacon.discovery.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
+import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
@@ -9,17 +9,17 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.RawPacket;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader.Flag;
-import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket;
-import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket.WhoAreYouAuthData;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.RawPacket;
+import org.ethereum.beacon.discovery.packet.StaticHeader;
+import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;

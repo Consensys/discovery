@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.ethereum.beacon.discovery.packet;
+package org.ethereum.beacon.discovery.packet5_0;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

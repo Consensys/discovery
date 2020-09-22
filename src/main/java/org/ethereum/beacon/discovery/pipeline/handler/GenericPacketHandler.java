@@ -6,19 +6,17 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.MessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.MessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus;
 
 public class GenericPacketHandler implements EnvelopeHandler {
 

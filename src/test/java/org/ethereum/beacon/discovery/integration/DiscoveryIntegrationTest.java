@@ -28,7 +28,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
-import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;

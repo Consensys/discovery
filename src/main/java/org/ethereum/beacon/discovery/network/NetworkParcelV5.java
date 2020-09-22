@@ -5,8 +5,7 @@
 package org.ethereum.beacon.discovery.network;
 
 import java.net.InetSocketAddress;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.RawPacket;
+import org.ethereum.beacon.discovery.packet.RawPacket;
 
 public class NetworkParcelV5 implements NetworkParcel {
   private final RawPacket packet;

@@ -1,4 +1,4 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
 

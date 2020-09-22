@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
@@ -68,7 +68,7 @@ public class CryptoTest {
    * Nonce signatures should prefix the string `discovery-id-nonce` and post-fix the ephemeral key
    * before taking the `sha256` hash of the `id-nonce`.
    *
-   * <p>See {@link org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket}, idNonceSig is a
+   * <p>See {@link org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket}, idNonceSig is a
    * part of this packet
    */
   @Test

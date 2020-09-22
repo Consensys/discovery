@@ -1,8 +1,8 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet5_1.BytesSerializable;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
+import org.ethereum.beacon.discovery.packet.BytesSerializable;
+import org.ethereum.beacon.discovery.packet.DecodeException;
 
 public abstract class AbstractBytes implements BytesSerializable {
 

@@ -1,10 +1,10 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 public class OrdinaryMessageImpl extends MessagePacketImpl<AuthData>

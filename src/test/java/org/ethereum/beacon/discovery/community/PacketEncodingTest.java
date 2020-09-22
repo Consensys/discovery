@@ -6,10 +6,10 @@ package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
-import org.ethereum.beacon.discovery.packet.RandomPacket;
-import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.packet5_0.MessagePacket;
+import org.ethereum.beacon.discovery.packet5_0.RandomPacket;
+import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

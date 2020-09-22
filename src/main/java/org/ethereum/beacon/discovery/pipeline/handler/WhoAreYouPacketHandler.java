@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
+import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 
 import java.util.Optional;
@@ -14,11 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader.Flag;
-import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -30,7 +30,6 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
-import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;

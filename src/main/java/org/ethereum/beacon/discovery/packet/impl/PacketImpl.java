@@ -1,12 +1,12 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.WhoAreYouPacket.WhoAreYouAuthData;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractBytes

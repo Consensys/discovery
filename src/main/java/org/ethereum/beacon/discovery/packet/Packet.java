@@ -1,22 +1,18 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.packet.impl.PacketImpl;
+import org.ethereum.beacon.discovery.type.Bytes16;
 
-/**
- * Network packet as defined by discovery v5 specification. See <a
- * href="https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#packet-encoding">https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#packet-encoding</a>
- */
-public interface Packet {
+public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Bytes createTag(Bytes homeNodeId, Bytes destNodeId) {
-    return homeNodeId.xor(Functions.hash(destNodeId), MutableBytes.create(destNodeId.size()));
+  static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 nodeId) throws DecodeException {
+    return PacketImpl.decrypt(data, iv, nodeId);
   }
 
-  Bytes getBytes();
+  Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
+
+  Bytes getMessageBytes();
+
+  Header<TAuthData> getHeader();
 }

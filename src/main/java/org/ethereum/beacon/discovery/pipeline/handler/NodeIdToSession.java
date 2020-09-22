@@ -16,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;

@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;

@@ -1,4 +1,4 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
 public class DecodeException extends RuntimeException {
 

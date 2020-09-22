@@ -1,14 +1,14 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.HanshakeAuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
+import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;

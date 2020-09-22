@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
-import static org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket.createIdNonceMessage;
+import static org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket.createIdNonceMessage;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;

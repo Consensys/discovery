@@ -1,9 +1,9 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader.Flag;
-import org.ethereum.beacon.discovery.packet5_1.impl.HeaderImpl;
+import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
+import org.ethereum.beacon.discovery.packet.impl.HeaderImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {

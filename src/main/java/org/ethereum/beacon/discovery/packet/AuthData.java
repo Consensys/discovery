@@ -1,6 +1,6 @@
-package org.ethereum.beacon.discovery.packet5_1;
+package org.ethereum.beacon.discovery.packet;
 
-import org.ethereum.beacon.discovery.packet5_1.impl.OrdinaryMessageImpl.AuthDataImpl;
+import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 public interface AuthData extends BytesSerializable {

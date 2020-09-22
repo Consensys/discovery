@@ -1,4 +1,4 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -7,8 +7,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.packet5_1.DecodeException;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader;
+import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.packet.StaticHeader;
 
 public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 

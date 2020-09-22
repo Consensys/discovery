@@ -5,15 +5,13 @@
 package org.ethereum.beacon.discovery.task;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.MessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_1.StaticHeader.Flag;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;

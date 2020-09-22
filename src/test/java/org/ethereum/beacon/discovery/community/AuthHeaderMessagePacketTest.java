@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

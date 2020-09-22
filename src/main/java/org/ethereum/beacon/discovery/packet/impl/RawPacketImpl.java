@@ -1,8 +1,8 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet5_1.Packet;
-import org.ethereum.beacon.discovery.packet5_1.RawPacket;
+import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public class RawPacketImpl extends AbstractBytes implements RawPacket {

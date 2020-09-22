@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
+import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 import static org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus.AUTHENTICATED;
 
 import java.util.Optional;
@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;

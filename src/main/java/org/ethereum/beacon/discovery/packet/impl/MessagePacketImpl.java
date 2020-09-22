@@ -1,11 +1,11 @@
-package org.ethereum.beacon.discovery.packet5_1.impl;
+package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet5_1.AuthData;
-import org.ethereum.beacon.discovery.packet5_1.Header;
-import org.ethereum.beacon.discovery.packet5_1.MessagePacket;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 
