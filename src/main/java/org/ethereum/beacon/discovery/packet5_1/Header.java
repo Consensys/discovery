@@ -8,8 +8,8 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Header<?> decrypt(Bytes headerBytes, Bytes16 iv, Bytes16 peerId) {
-    return HeaderImpl.decrypt(headerBytes, iv, peerId);
+  static Header<?> decrypt(Bytes headerBytes, Bytes16 iv, Bytes16 nodeId) {
+    return HeaderImpl.decrypt(headerBytes, iv, nodeId);
   }
 
   static <TAuthData extends AuthData> Header<TAuthData> create(
@@ -18,9 +18,9 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
   }
 
   static <TAuthData extends AuthData> Header<TAuthData> create(
-      Bytes32 sourcePeerId, Flag flag, TAuthData authData) {
+      Bytes32 sourceNodeId, Flag flag, TAuthData authData) {
     return new HeaderImpl<>(
-        StaticHeader.create(sourcePeerId, flag, authData.getBytes().size()), authData);
+        StaticHeader.create(sourceNodeId, flag, authData.getBytes().size()), authData);
   }
 
   StaticHeader getStaticHeader();
@@ -29,5 +29,12 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
   int getSize();
 
-  Bytes encrypt(Bytes16 iv, Bytes16 peerId);
+  Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
+
+  default void validate() throws DecodeException {
+    if (!StaticHeader.PROTOCOL_ID.equals(getStaticHeader().getProtocolId())) {
+      throw new DecodeException(
+          "ProtocolId validation failed. Probably the header was incorrectly AES/CTR encrypted");
+    }
+  }
 }

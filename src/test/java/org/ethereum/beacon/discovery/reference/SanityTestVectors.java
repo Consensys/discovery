@@ -1,6 +1,7 @@
 package org.ethereum.beacon.discovery.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
@@ -25,6 +26,8 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -203,15 +206,41 @@ public class SanityTestVectors {
     // f0396c93f215fa4ef52417d9c40a31564e8d5f31a7f08c38045ff5e30d966183
     // 8b1eabee9f1e561120bc7fccc3d4569a69fdf04f31230ae4be20404467d9ea9a
     // b3cd
+    WhoAreYouAuthData whoAreYouAuthData =
+        WhoAreYouAuthData.create(
+            Bytes12.fromHexString("0x0102030405060708090a0b0c"),
+            Bytes32.fromHexString(
+                "0x0102030405060708090a0b0c0d0e0f1000000000000000000000000000000000"),
+            UInt64.valueOf(1));
+    Header<WhoAreYouAuthData> whoAreYouHeader =
+        Header.create(
+            Bytes32.fromHexString(
+                "0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb"),
+            Flag.WHOAREYOU,
+            whoAreYouAuthData);
+    Bytes ephemeralPrivKey = Bytes
+        .fromHexString("0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6");
+//    Bytes ephemeralPubKey = Functions.derivePublicKeyFromPrivate(ephemeralPrivKey);
+
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
+    Bytes ephemeralPubKey = Bytes.fromHexString(
+        "0x9A003BA6517B473FA0CD74AEFE99DADFDB34627F90FEC6362DF85803908F53A50F497889E4A9C74F48321875F8601EC65650FA0922FDA04D69089B79AF7F5533");
+    Bytes idSignatureInput = CryptoUtil.sha256(Bytes
+        .wrap(ID_SIGNATURE_PREFIX, whoAreYouHeader.getAuthData().getRequestNonce(), ephemeralPubKey));
+    Bytes idSignature = Functions.sign(
+        Bytes.fromHexString("0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"),
+//        Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"),
+        idSignatureInput);
+
     HanshakeAuthData authData =
         HanshakeAuthData.create(
             (byte) 1,
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
-            Bytes.fromHexString(
-                "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
-            Bytes.fromHexString(
-                "0x9A003BA6517B473FA0CD74AEFE99DADFDB34627F90FEC6362DF85803908F53A50F497889E4A9C74F48321875F8601EC65650FA0922FDA04D69089B79AF7F5533"),
+            idSignature,
+//            Bytes.fromHexString(
+//                "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
+//            ),
+            ephemeralPubKey,
             Optional.empty());
     Header<HanshakeAuthData> header =
         Header.create(

@@ -65,17 +65,11 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
     int finalTotal = total;
     nodeRecordsList.forEach(
         recordsList ->
-            session.sendOutgoing(
-                MessagePacket.create(
-                    session.getHomeNodeId(),
-                    session.getNodeId(),
-                    session.getAuthTag().orElseThrow(),
-                    session.getInitiatorKey(),
-                    DiscoveryV5Message.from(
-                        new NodesMessage(
-                            message.getRequestId(),
-                            finalTotal,
-                            () -> recordsList,
-                            recordsList.size())))));
+            session.sendOutgoingOrdinary(
+                new NodesMessage(
+                    message.getRequestId(),
+                    finalTotal,
+                    () -> recordsList,
+                    recordsList.size())));
   }
 }

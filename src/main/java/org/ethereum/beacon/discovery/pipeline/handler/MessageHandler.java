@@ -7,6 +7,8 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.DiscoveryMessage;
+import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
+import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -47,9 +49,9 @@ public class MessageHandler implements EnvelopeHandler {
                 "Envelope %s in MessageHandler, requirements are satisfied!", envelope.getId()));
 
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    DiscoveryMessage message = (DiscoveryMessage) envelope.get(Field.MESSAGE);
+    V5Message message = (V5Message) envelope.get(Field.MESSAGE);
     try {
-      messageProcessor.handleIncoming(message, session);
+      messageProcessor.handleIncoming(DiscoveryV5Message.from(message), session);
     } catch (Exception ex) {
       logger.trace(
           () ->

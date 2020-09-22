@@ -11,6 +11,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> {
+  Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes());
 
   static HandshakeMessagePacket create(
       Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {

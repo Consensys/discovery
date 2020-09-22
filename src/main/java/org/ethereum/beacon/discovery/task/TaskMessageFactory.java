@@ -9,14 +9,19 @@ import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
+import org.ethereum.beacon.discovery.packet5_1.AuthData;
+import org.ethereum.beacon.discovery.packet5_1.Header;
+import org.ethereum.beacon.discovery.packet5_1.MessagePacket;
+import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet5_1.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.type.Bytes12;
 
 public class TaskMessageFactory {
-  public static MessagePacket createPacketFromRequest(
-      RequestInfo requestInfo, Bytes authTag, NodeSession session) {
+  public static OrdinaryMessagePacket createPacketFromRequest(
+      RequestInfo requestInfo, Bytes12 authTag, NodeSession session) {
     switch (requestInfo.getTaskType()) {
       case PING:
         {
@@ -55,30 +60,28 @@ public class TaskMessageFactory {
     }
   }
 
-  public static MessagePacket createPingPacket(
-      Bytes authTag, NodeSession session, Bytes requestId) {
+  public static OrdinaryMessagePacket createPingPacket(
+      Bytes12 authTag, NodeSession session, Bytes requestId) {
 
-    return MessagePacket.create(
-        session.getHomeNodeId(),
-        session.getNodeId(),
-        authTag,
-        session.getInitiatorKey(),
-        DiscoveryV5Message.from(createPing(session, requestId)));
+    PingMessage pingMessage = createPing(session, requestId);
+    Header<AuthData> header = Header
+        .create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    return OrdinaryMessagePacket
+        .create(header, pingMessage, session.getInitiatorKey());
+
   }
 
   public static PingMessage createPing(NodeSession session, Bytes requestId) {
     return new PingMessage(requestId, session.getNodeRecord().orElseThrow().getSeq());
   }
 
-  public static MessagePacket createFindNodePacket(
-      Bytes authTag, NodeSession session, Bytes requestId, int distance) {
+  public static OrdinaryMessagePacket createFindNodePacket(
+      Bytes12 authTag, NodeSession session, Bytes requestId, int distance) {
     FindNodeMessage findNodeMessage = createFindNode(requestId, distance);
-    return MessagePacket.create(
-        session.getHomeNodeId(),
-        session.getNodeId(),
-        authTag,
-        session.getInitiatorKey(),
-        DiscoveryV5Message.from(findNodeMessage));
+    Header<AuthData> header = Header
+        .create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    return OrdinaryMessagePacket
+        .create(header, findNodeMessage, session.getInitiatorKey());
   }
 
   public static FindNodeMessage createFindNode(Bytes requestId, int distance) {

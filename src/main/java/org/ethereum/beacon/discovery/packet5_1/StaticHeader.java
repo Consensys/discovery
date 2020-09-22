@@ -8,8 +8,8 @@ public interface StaticHeader extends BytesSerializable {
 
   String PROTOCOL_ID = "discv5  ";
 
-  static StaticHeader create(Bytes32 sourcePeerId, Flag flag, int authDataSize) {
-    return StaticHeaderImpl.create(PROTOCOL_ID, sourcePeerId, flag, authDataSize);
+  static StaticHeader create(Bytes32 sourceNodeId, Flag flag, int authDataSize) {
+    return StaticHeaderImpl.create(PROTOCOL_ID, sourceNodeId, flag, authDataSize);
   }
 
   static StaticHeader decode(Bytes staticHeaderBytes) {
@@ -18,7 +18,7 @@ public interface StaticHeader extends BytesSerializable {
 
   String getProtocolId();
 
-  Bytes32 getSourcePeerId();
+  Bytes32 getSourceNodeId();
 
   Flag getFlag();
 
@@ -32,7 +32,7 @@ public interface StaticHeader extends BytesSerializable {
 
   default boolean isEqual(StaticHeader other) {
     return getProtocolId().equals(other.getProtocolId())
-        && getSourcePeerId().equals(other.getSourcePeerId())
+        && getSourceNodeId().equals(other.getSourceNodeId())
         && getFlag().equals(other.getFlag())
         && getAuthDataSize() == other.getAuthDataSize();
   }

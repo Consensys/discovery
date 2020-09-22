@@ -5,19 +5,20 @@
 package org.ethereum.beacon.discovery.network;
 
 import java.net.InetSocketAddress;
-import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet5_1.Packet;
+import org.ethereum.beacon.discovery.packet5_1.RawPacket;
 
 public class NetworkParcelV5 implements NetworkParcel {
-  private final Packet packet;
+  private final RawPacket packet;
   private final InetSocketAddress destination;
 
-  public NetworkParcelV5(Packet packet, final InetSocketAddress destination) {
+  public NetworkParcelV5(RawPacket packet, final InetSocketAddress destination) {
     this.packet = packet;
     this.destination = destination;
   }
 
   @Override
-  public Packet getPacket() {
+  public RawPacket getPacket() {
     return packet;
   }
 

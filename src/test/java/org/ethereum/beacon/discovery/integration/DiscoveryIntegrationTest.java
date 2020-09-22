@@ -42,7 +42,7 @@ import org.web3j.crypto.ECKeyPair;
 public class DiscoveryIntegrationTest {
   private static final Logger logger = LogManager.getLogger();
   public static final String LOCALHOST = "127.0.0.1";
-  private int nextPort = 9000;
+  private int nextPort = 9001;
   private List<DiscoverySystem> managers = new ArrayList<>();
 
   @AfterEach

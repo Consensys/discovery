@@ -32,6 +32,7 @@ import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet5_1.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -45,6 +46,7 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
@@ -55,6 +57,7 @@ import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.task.TaskOptions;
 import org.ethereum.beacon.discovery.task.TaskType;
+import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
@@ -107,7 +110,8 @@ public class HandshakeHandlersTest {
     final Consumer<NetworkParcel> outgoingMessages1to2 =
         parcel -> {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
-          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] = parcel.getPacket();
+          // TODO
+//          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] = parcel.getPacket();
           outgoing1PacketsSemaphore.release(1);
         };
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
@@ -158,7 +162,7 @@ public class HandshakeHandlersTest {
     Functions.getRandom().nextBytes(idNonceBytes);
     Bytes idNonce = Bytes.wrap(idNonceBytes);
     nodeSessionAt2For1.setIdNonce(idNonce);
-    Bytes authTag = nodeSessionAt2For1.generateNonce();
+    Bytes12 authTag = nodeSessionAt2For1.generateNonce();
     authTagRepository1.put(authTag, nodeSessionAt1For2);
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
@@ -183,10 +187,10 @@ public class HandshakeHandlersTest {
     assertTrue(nodeSessionAt2For1.isAuthenticated());
 
     // Node 1 handles message from Node 2
-    MessagePacketHandler messagePacketHandler1 = new MessagePacketHandler();
+    MessagePacketHandler messagePacketHandler1 = new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt1From2WithMessage = new Envelope();
-    Bytes pingAuthTag = nodeSessionAt1For2.generateNonce();
-    MessagePacket pingPacketFrom2To1 =
+    Bytes12 pingAuthTag = nodeSessionAt1For2.generateNonce();
+    OrdinaryMessagePacket pingPacketFrom2To1 =
         TaskMessageFactory.createPingPacket(
             pingAuthTag,
             nodeSessionAt2For1,
@@ -205,7 +209,7 @@ public class HandshakeHandlersTest {
     assertTrue(outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS));
 
     // Node 2 handles message from Node 1
-    MessagePacketHandler messagePacketHandler2 = new MessagePacketHandler();
+    MessagePacketHandler messagePacketHandler2 = new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
     Packet pongPacketFrom1To2 = outgoing1Packets[1];
     MessagePacket pongMessagePacketFrom1To2 = (MessagePacket) pongPacketFrom1To2;

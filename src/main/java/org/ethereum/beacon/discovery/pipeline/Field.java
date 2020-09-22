@@ -21,4 +21,6 @@ public enum Field {
   TASK, // Task to perform
   TASK_OPTIONS, // Task options
   FUTURE, // Completable future
+
+  PACKET, // Completable future
 }

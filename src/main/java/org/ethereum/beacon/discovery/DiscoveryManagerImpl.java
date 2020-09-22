@@ -22,6 +22,7 @@ import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
 import org.ethereum.beacon.discovery.pipeline.handler.AuthHeaderMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.BadPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.GenericPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.IncomingDataPacker;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
@@ -92,17 +93,19 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
-        .addHandler(new IncomingDataPacker())
-        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
-        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
+        .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
+//        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
+//        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
         .addHandler(new UnknownPacketTagToSender(homeNodeRecord.getNodeId()))
         .addHandler(nodeIdToSession)
-        .addHandler(new UnknownPacketTypeByStatus())
+        .addHandler(new GenericPacketHandler())
+//        .addHandler(new UnknownPacketTypeByStatus())
         .addHandler(new NotExpectedIncomingPacketHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
             new AuthHeaderMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
-        .addHandler(new MessagePacketHandler())
+        .addHandler(new MessagePacketHandler(nodeRecordFactory))
+
         .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();

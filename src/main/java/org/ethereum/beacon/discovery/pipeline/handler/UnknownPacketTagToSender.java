@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.UnknownPacket;
+import org.ethereum.beacon.discovery.packet5_1.Packet;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -36,7 +37,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
             String.format(
                 "Envelope %s in UnknownPacketTagToSender, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.PACKET_UNKNOWN, envelope)) {
+    if (!HandlerUtil.requireField(Field.PACKET, envelope)) {
       return;
     }
     logger.trace(
@@ -45,16 +46,17 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
                 "Envelope %s in UnknownPacketTagToSender, requirements are satisfied!",
                 envelope.getId()));
 
-    if (!envelope.contains(Field.PACKET_UNKNOWN)) {
-      return;
-    }
-    ((UnknownPacket) envelope.get(Field.PACKET_UNKNOWN))
-        .getSourceNodeId(homeNodeId, homeNodeIdHash)
-        .ifPresentOrElse(
-            fromNodeId -> envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId)),
-            () -> {
-              envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
-              envelope.remove(Field.PACKET_UNKNOWN);
-            });
+    Packet<?> packet = (Packet<?>) envelope.get(Field.PACKET);
+    envelope.put(Field.SESSION_LOOKUP,
+        new SessionLookup(packet.getHeader().getStaticHeader().getSourceNodeId()));
+
+//    ((UnknownPacket) envelope.get(Field.PACKET_UNKNOWN))
+//        .getSourceNodeId(homeNodeId, homeNodeIdHash)
+//        .ifPresentOrElse(
+//            fromNodeId -> envelope.put(Field.SESSION_LOOKUP, new SessionLookup(fromNodeId)),
+//            () -> {
+//              envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_UNKNOWN));
+//              envelope.remove(Field.PACKET_UNKNOWN);
+//            });
   }
 }

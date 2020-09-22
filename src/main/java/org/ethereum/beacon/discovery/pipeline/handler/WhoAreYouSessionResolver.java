@@ -14,6 +14,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.type.Bytes12;
 
 /**
  * Resolves session using `authTagRepo` for `WHOAREYOU` packets which should be placed in {@link
@@ -44,7 +45,8 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
                 envelope.getId()));
 
     WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) envelope.get(Field.PACKET_WHOAREYOU);
-    Optional<NodeSession> nodeSessionOptional = authTagRepo.get(whoAreYouPacket.getAuthTag());
+    Optional<NodeSession> nodeSessionOptional = authTagRepo
+        .get(Bytes12.wrap(whoAreYouPacket.getAuthTag()));
     if (nodeSessionOptional.isPresent()
         && (nodeSessionOptional
                 .get()

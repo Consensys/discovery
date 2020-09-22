@@ -4,12 +4,15 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
+import static org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 import static org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus.AUTHENTICATED;
 
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.packet5_1.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -21,9 +24,10 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 
-/** Handles {@link AuthHeaderMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
+/** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
 public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(AuthHeaderMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
@@ -56,12 +60,11 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
                 "Envelope %s in AuthHeaderMessagePacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    AuthHeaderMessagePacket packet =
-        (AuthHeaderMessagePacket) envelope.get(Field.PACKET_AUTH_HEADER_MESSAGE);
+    HandshakeMessagePacket packet =
+        (HandshakeMessagePacket) envelope.get(Field.PACKET_AUTH_HEADER_MESSAGE);
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
     try {
-      packet.decodeEphemeralPubKey();
-      Bytes ephemeralPubKey = packet.getEphemeralPubkey();
+      Bytes ephemeralPubKey = packet.getHeader().getAuthData().getEphemeralPubKey();
       Functions.HKDFKeys keys =
           Functions.hkdf_expand(
               session.getNodeId(),
@@ -72,8 +75,10 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       // Swap keys because we are not initiator, other side is
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
-      packet.decodeMessage(session.getRecipientKey(), keys.getAuthResponseKey(), nodeRecordFactory);
-      if (packet.getNodeRecord() != null && !packet.getNodeRecord().isValid()) {
+
+      Optional<NodeRecord> enr = packet.getHeader().getAuthData()
+          .getNodeRecord(nodeRecordFactory);
+      if (!enr.map(NodeRecord::isValid).orElse(true)) {
         logger.info(
             String.format(
                 "Node record not valid for message [%s] from node %s in status %s",
@@ -81,9 +86,9 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      final NodeRecord nodeRecord = session.getNodeRecord().orElseGet(packet::getNodeRecord);
+      final Optional<NodeRecord> nodeRecordMaybe = session.getNodeRecord().or(() -> enr);
       // Check the node record matches the ID we expect
-      if (nodeRecord == null || !nodeRecord.getNodeId().equals(session.getNodeId())) {
+      if (!nodeRecordMaybe.map(r -> r.getNodeId().equals(session.getNodeId())).orElse(false)) {
         logger.info(
             String.format(
                 "Incorrect node ID for message [%s] from node %s in status %s",
@@ -91,19 +96,30 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      if (!packet.isValid(session.getIdNonce(), (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
+      NodeRecord nodeRecord = nodeRecordMaybe.get();
+
+      Bytes idSignatureInput = CryptoUtil.sha256(Bytes
+          .wrap(ID_SIGNATURE_PREFIX, session.getIdNonce(), ephemeralPubKey));
+
+      if (!Functions
+          .verifyECDSASignature(packet.getHeader().getAuthData().getIdSignature(), idSignatureInput,
+              (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
         logger.info(
             String.format(
-                "Packet verification not passed for message [%s] from node %s in status %s",
+                "ID signature not valid for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getStatus()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      envelope.put(Field.MESSAGE, packet.getMessage());
-      if (packet.getNodeRecord() != null) {
-        session.updateNodeRecord(packet.getNodeRecord());
-        session.getNodeTable().save(NodeRecordInfo.createDefault(nodeRecord));
-      }
+
+      V5Message message = packet.decryptMessage(session.getRecipientKey(), nodeRecordFactory);
+      envelope.put(Field.MESSAGE, message);
+
+      enr.ifPresent(r -> {
+        session.updateNodeRecord(r);
+        session.getNodeTable().save(NodeRecordInfo.createDefault(r));
+      });
+
     } catch (Exception ex) {
       logger.debug(
           String.format(

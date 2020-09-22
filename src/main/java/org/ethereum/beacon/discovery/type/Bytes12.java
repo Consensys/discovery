@@ -12,6 +12,10 @@ public class Bytes12 extends DelegateBytes {
     return new Bytes12(bytes);
   }
 
+  public static Bytes12 wrap(byte[] bytes) {
+    return new Bytes12(Bytes.wrap(bytes));
+  }
+
   public static Bytes12 wrap(Bytes bytes, int off) {
     return new Bytes12(bytes.slice(off, 12));
   }

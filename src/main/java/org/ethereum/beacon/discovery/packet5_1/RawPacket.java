@@ -6,8 +6,8 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 
 public interface RawPacket extends BytesSerializable {
 
-  static RawPacket create(Bytes16 iv, Packet<?> packet, Bytes16 homePeerId) {
-    return RawPacketImpl.create(iv, packet, homePeerId);
+  static RawPacket create(Bytes16 iv, Packet<?> packet, Bytes16 homeNodeId) {
+    return RawPacketImpl.create(iv, packet, homeNodeId);
   }
 
   static RawPacket decode(Bytes data) throws DecodeException {
@@ -16,5 +16,5 @@ public interface RawPacket extends BytesSerializable {
 
   Bytes16 getIV();
 
-  Packet<?> decodePacket(Bytes16 homePeerId) throws DecodeException;
+  Packet<?> decodePacket(Bytes16 homeNodeId) throws DecodeException;
 }

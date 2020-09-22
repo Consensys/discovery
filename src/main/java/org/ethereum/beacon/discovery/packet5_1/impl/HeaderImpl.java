@@ -17,10 +17,10 @@ import org.ethereum.beacon.discovery.util.CryptoUtil;
 public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     implements Header<TAUthData> {
 
-  public static Header<?> decrypt(Bytes data, Bytes16 iv, Bytes16 peerId) throws DecodeException {
+  public static Header<?> decrypt(Bytes data, Bytes16 iv, Bytes16 nodeId) throws DecodeException {
     try {
       checkMinSize(data, StaticHeaderImpl.STATIC_HEADER_SIZE);
-      Cipher cipher = CryptoUtil.createAesctrDecryptor(peerId, iv);
+      Cipher cipher = CryptoUtil.createAesctrDecryptor(nodeId, iv);
       Bytes staticHeaderCiphered = data.slice(0, StaticHeaderImpl.STATIC_HEADER_SIZE);
       Bytes staticHeaderBytes = Bytes.wrap(cipher.update(staticHeaderCiphered.toArrayUnsafe()));
       StaticHeader header = StaticHeader.decode(staticHeaderBytes);
@@ -34,7 +34,7 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       return new HeaderImpl<>(header, authData);
     } catch (Exception e) {
       throw new DecodeException(
-          "Couldn't decode header (iv=" + iv + ", peerId=" + peerId + "): " + data, e);
+          "Couldn't decode header (iv=" + iv + ", nodeId=" + nodeId + "): " + data, e);
     }
   }
 
@@ -76,9 +76,9 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     return authData;
   }
 
-  public Bytes encrypt(Bytes16 iv, Bytes16 peerId) {
+  public Bytes encrypt(Bytes16 iv, Bytes16 nodeId) {
     Bytes headerPlainBytes = Bytes.concatenate(staticHeader.getBytes(), getAuthDataBytes());
-    return CryptoUtil.aesctrEncrypt(peerId, iv, headerPlainBytes);
+    return CryptoUtil.aesctrEncrypt(nodeId, iv, headerPlainBytes);
   }
 
   private Bytes getAuthDataBytes() {

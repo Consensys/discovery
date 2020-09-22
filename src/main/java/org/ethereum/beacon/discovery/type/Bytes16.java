@@ -16,6 +16,10 @@ public class Bytes16 extends DelegateBytes {
     return new Bytes16(bytes.slice(off, 16));
   }
 
+  public static Bytes16 wrap(byte[] bytes) {
+    return new Bytes16(Bytes.wrap(bytes));
+  }
+
   private Bytes16(Bytes delegate) {
     super(delegate, 16);
   }

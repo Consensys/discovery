@@ -5,7 +5,8 @@
 package org.ethereum.beacon.discovery.network;
 
 import java.net.InetSocketAddress;
-import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet5_1.Packet;
+import org.ethereum.beacon.discovery.packet5_1.RawPacket;
 
 /**
  * Abstraction on the top of the {@link Packet}.
@@ -14,7 +15,7 @@ import org.ethereum.beacon.discovery.packet.Packet;
  * session.
  */
 public interface NetworkParcel {
-  Packet getPacket();
+  RawPacket getPacket();
 
   InetSocketAddress getDestination();
 }

@@ -7,15 +7,24 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.UnknownPacket;
+import org.ethereum.beacon.discovery.packet5_1.DecodeException;
+import org.ethereum.beacon.discovery.packet5_1.Packet;
+import org.ethereum.beacon.discovery.packet5_1.RawPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
+import org.ethereum.beacon.discovery.type.Bytes16;
 
 /** Handles raw BytesValue incoming data in {@link Field#INCOMING} */
 public class IncomingDataPacker implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(IncomingDataPacker.class);
+  private static final int MAX_PACKET_SIZE = 1280;
+  private final Bytes16 homeNodeId;
+
+  public IncomingDataPacker(Bytes homeNodeId) {
+    this.homeNodeId = Bytes16.wrap(homeNodeId, 0);
+  }
 
   @Override
   public void handle(Envelope envelope) {
@@ -33,21 +42,28 @@ public class IncomingDataPacker implements EnvelopeHandler {
                 "Envelope %s in IncomingDataPacker, requirements are satisfied!",
                 envelope.getId()));
 
-    UnknownPacket unknownPacket = new UnknownPacket((Bytes) envelope.get(Field.INCOMING));
+    Bytes rawPacketBytes = (Bytes) envelope.get(Field.INCOMING);
     try {
-      unknownPacket.verify();
-      envelope.put(Field.PACKET_UNKNOWN, unknownPacket);
+      if (rawPacketBytes.size() > MAX_PACKET_SIZE) {
+        throw new DecodeException("Packet is too large: " + rawPacketBytes.size());
+      }
+      RawPacket rawPacket = RawPacket.decode(rawPacketBytes);
+      Packet<?> packet = rawPacket.decodePacket(homeNodeId);
+      // check that AES/CTR decoded correctly 
+      packet.getHeader().validate();
+
+      envelope.put(Field.PACKET, packet);
       logger.trace(
           () ->
-              String.format("Incoming packet %s in envelope #%s", unknownPacket, envelope.getId()));
+              String.format("Incoming packet %s in envelope #%s", rawPacket, envelope.getId()));
     } catch (Exception ex) {
-      envelope.put(Field.BAD_PACKET, unknownPacket);
+      envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
       envelope.put(Field.BAD_MESSAGE, "Incoming packet verification not passed");
       logger.trace(
           () ->
               String.format(
-                  "Bad incoming packet %s in envelope #%s", unknownPacket, envelope.getId()));
+                  "Bad incoming packet %s in envelope #%s", rawPacketBytes, envelope.getId()));
     }
     envelope.remove(Field.INCOMING);
   }
