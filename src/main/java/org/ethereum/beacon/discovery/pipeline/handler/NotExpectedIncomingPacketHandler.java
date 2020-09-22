@@ -50,7 +50,8 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       return;
     }
 
-    OrdinaryMessagePacket unknownPacket = (OrdinaryMessagePacket) envelope.get(Field.PACKET_MESSAGE);
+    OrdinaryMessagePacket unknownPacket =
+        (OrdinaryMessagePacket) envelope.get(Field.PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
       Bytes12 msgNonce = unknownPacket.getHeader().getAuthData().getAesGcmNonce();
@@ -58,10 +59,14 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       Bytes32 idNonce = Bytes32.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
-      WhoAreYouAuthData whoAreYouAuthData = WhoAreYouAuthData.create(msgNonce, idNonce,
-          session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
-      WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket
-          .create(Header.create(session.getHomeNodeId(), Flag.WHOAREYOU, whoAreYouAuthData));
+      WhoAreYouAuthData whoAreYouAuthData =
+          WhoAreYouAuthData.create(
+              msgNonce,
+              idNonce,
+              session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
+      WhoAreYouPacket whoAreYouPacket =
+          WhoAreYouPacket.create(
+              Header.create(session.getHomeNodeId(), Flag.WHOAREYOU, whoAreYouAuthData));
       session.sendOutgoing(whoAreYouPacket);
 
       session.setStatus(NodeSession.SessionStatus.WHOAREYOU_SENT);

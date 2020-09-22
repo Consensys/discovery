@@ -50,8 +50,8 @@ public class GenericPacketHandler implements EnvelopeHandler {
       case INITIAL:
         if (packet instanceof OrdinaryMessagePacket) {
           envelope.put(Field.PACKET_MESSAGE, packet);
-//          sendWhoAreYou((OrdinaryMessagePacket) packet);
-//          session.setStatus(SessionStatus.WHOAREYOU_SENT);
+          //          sendWhoAreYou((OrdinaryMessagePacket) packet);
+          //          session.setStatus(SessionStatus.WHOAREYOU_SENT);
         } else {
           // TODO error
         }
@@ -60,69 +60,64 @@ public class GenericPacketHandler implements EnvelopeHandler {
         // Should receive WHOAREYOU in answer, not our case
         if (packet instanceof WhoAreYouPacket) {
           envelope.put(Field.PACKET_WHOAREYOU, packet);
-//          sendHandshake((WhoAreYouPacket) packet);
-//          session.setStatus(SessionStatus.AUTHENTICATED);
+          //          sendHandshake((WhoAreYouPacket) packet);
+          //          session.setStatus(SessionStatus.AUTHENTICATED);
         } else {
           // TODO error
         }
         break;
-      case WHOAREYOU_SENT: {
-        if (packet instanceof HandshakeMessagePacket) {
-//          HandshakeMessagePacket authPacket = (HandshakeMessagePacket) packet;
-//          processHandshake(authPacket);
+      case WHOAREYOU_SENT:
+        {
+          if (packet instanceof HandshakeMessagePacket) {
+            //          HandshakeMessagePacket authPacket = (HandshakeMessagePacket) packet;
+            //          processHandshake(authPacket);
 
-          envelope.put(Field.PACKET_AUTH_HEADER_MESSAGE, packet);
-          envelope.put(Field.PACKET_MESSAGE, packet);
+            envelope.put(Field.PACKET_AUTH_HEADER_MESSAGE, packet);
+            envelope.put(Field.PACKET_MESSAGE, packet);
 
-//          session.setStatus(SessionStatus.AUTHENTICATED);
-//          processMessagePacket(authPacket);
-        } else {
-          // TODO error
+            //          session.setStatus(SessionStatus.AUTHENTICATED);
+            //          processMessagePacket(authPacket);
+          } else {
+            // TODO error
+          }
+          break;
         }
-        break;
-      }
-      case AUTHENTICATED: {
-        if (packet instanceof OrdinaryMessagePacket) {
-          envelope.put(Field.PACKET_MESSAGE, packet);
-//          processMessagePacket((MessagePacket<?>) packet);
-        } else if (packet instanceof WhoAreYouPacket) {
-//          session.setStatus(SessionStatus.RANDOM_PACKET_SENT);
-//          sendHandshake((WhoAreYouPacket) packet);
-//          session.setStatus(SessionStatus.AUTHENTICATED);
-          envelope.put(Field.PACKET_WHOAREYOU, packet);
-        } else {
-          // TODO error
-        }
+      case AUTHENTICATED:
+        {
+          if (packet instanceof OrdinaryMessagePacket) {
+            envelope.put(Field.PACKET_MESSAGE, packet);
+            //          processMessagePacket((MessagePacket<?>) packet);
+          } else if (packet instanceof WhoAreYouPacket) {
+            //          session.setStatus(SessionStatus.RANDOM_PACKET_SENT);
+            //          sendHandshake((WhoAreYouPacket) packet);
+            //          session.setStatus(SessionStatus.AUTHENTICATED);
+            envelope.put(Field.PACKET_WHOAREYOU, packet);
+          } else {
+            // TODO error
+          }
 
-//        MessagePacket messagePacket = unknownPacket.getMessagePacket();
-//        envelope.put(Field.PACKET_MESSAGE, messagePacket);
-//        envelope.remove(Field.PACKET_UNKNOWN);
-        break;
-      }
-      default: {
-        String error =
-            String.format(
-                "Not expected status: %s from node: %s",
-                session.getStatus(), session.getNodeRecord());
-        logger.error(error);
-        throw new RuntimeException(error);
-      }
+          //        MessagePacket messagePacket = unknownPacket.getMessagePacket();
+          //        envelope.put(Field.PACKET_MESSAGE, messagePacket);
+          //        envelope.remove(Field.PACKET_UNKNOWN);
+          break;
+        }
+      default:
+        {
+          String error =
+              String.format(
+                  "Not expected status: %s from node: %s",
+                  session.getStatus(), session.getNodeRecord());
+          logger.error(error);
+          throw new RuntimeException(error);
+        }
     }
   }
 
-  private void sendWhoAreYou(OrdinaryMessagePacket srcPacket) {
+  private void sendWhoAreYou(OrdinaryMessagePacket srcPacket) {}
 
-  }
+  private void sendHandshake(WhoAreYouPacket srcPacket) {}
 
-  private void sendHandshake(WhoAreYouPacket srcPacket) {
+  private void processHandshake(HandshakeMessagePacket handshakeMessagePacket) {}
 
-  }
-
-  private void processHandshake(HandshakeMessagePacket handshakeMessagePacket) {
-
-  }
-
-  private void processMessagePacket(MessagePacket<?> messagePacket) {
-
-  }
+  private void processMessagePacket(MessagePacket<?> messagePacket) {}
 }

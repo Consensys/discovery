@@ -49,13 +49,12 @@ public class IncomingDataPacker implements EnvelopeHandler {
       }
       RawPacket rawPacket = RawPacket.decode(rawPacketBytes);
       Packet<?> packet = rawPacket.decodePacket(homeNodeId);
-      // check that AES/CTR decoded correctly 
+      // check that AES/CTR decoded correctly
       packet.getHeader().validate();
 
       envelope.put(Field.PACKET, packet);
       logger.trace(
-          () ->
-              String.format("Incoming packet %s in envelope #%s", rawPacket, envelope.getId()));
+          () -> String.format("Incoming packet %s in envelope #%s", rawPacket, envelope.getId()));
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);

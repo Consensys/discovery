@@ -55,7 +55,12 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "{" +
-        "header=" + header + ", cipherMsgSize=" + getMessageBytes().size() + '}';
+    return getClass().getSimpleName()
+        + "{"
+        + "header="
+        + header
+        + ", cipherMsgSize="
+        + getMessageBytes().size()
+        + '}';
   }
 }

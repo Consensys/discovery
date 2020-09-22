@@ -71,7 +71,10 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     try {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
-      if (!packet.getHeader().getAuthData().getRequestNonce()
+      if (!packet
+          .getHeader()
+          .getAuthData()
+          .getRequestNonce()
           .equals(session.getAuthTag().orElseThrow())) {
         logger.error(
             "Verification not passed for message [{}] from node {} in status {}",
@@ -113,13 +116,17 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Bytes.wrap(
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
-      Bytes idSignatureInput = CryptoUtil.sha256(Bytes
-          .wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey));
+      Bytes idSignatureInput =
+          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey));
       Bytes idSignature = Functions.sign(session.getStaticNodeKey(), idSignatureInput);
 
       NodeRecord respRecord = null;
-      if (packet.getHeader().getAuthData().getEnrSeq()
-          .compareTo(session.getHomeNodeRecord().getSeq()) < 0) {
+      if (packet
+              .getHeader()
+              .getAuthData()
+              .getEnrSeq()
+              .compareTo(session.getHomeNodeRecord().getSeq())
+          < 0) {
         respRecord = session.getHomeNodeRecord();
       }
       HanshakeAuthData authData =
@@ -129,10 +136,10 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      Header<HanshakeAuthData> header = Header
-          .create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
-      HandshakeMessagePacket handshakeMessagePacket = HandshakeMessagePacket
-          .create(header, message, session.getInitiatorKey());
+      Header<HanshakeAuthData> header =
+          Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
+      HandshakeMessagePacket handshakeMessagePacket =
+          HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
       session.sendOutgoing(handshakeMessagePacket);
     } catch (Throwable ex) {
       String error =

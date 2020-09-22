@@ -218,28 +218,37 @@ public class SanityTestVectors {
                 "0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb"),
             Flag.WHOAREYOU,
             whoAreYouAuthData);
-    Bytes ephemeralPrivKey = Bytes
-        .fromHexString("0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6");
-//    Bytes ephemeralPubKey = Functions.derivePublicKeyFromPrivate(ephemeralPrivKey);
+    Bytes ephemeralPrivKey =
+        Bytes.fromHexString("0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6");
+    //    Bytes ephemeralPubKey = Functions.derivePublicKeyFromPrivate(ephemeralPrivKey);
 
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
-    Bytes ephemeralPubKey = Bytes.fromHexString(
-        "0x9A003BA6517B473FA0CD74AEFE99DADFDB34627F90FEC6362DF85803908F53A50F497889E4A9C74F48321875F8601EC65650FA0922FDA04D69089B79AF7F5533");
-    Bytes idSignatureInput = CryptoUtil.sha256(Bytes
-        .wrap(ID_SIGNATURE_PREFIX, whoAreYouHeader.getAuthData().getRequestNonce(), ephemeralPubKey));
-    Bytes idSignature = Functions.sign(
-        Bytes.fromHexString("0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"),
-//        Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"),
-        idSignatureInput);
+    Bytes ephemeralPubKey =
+        Bytes.fromHexString(
+            "0x9A003BA6517B473FA0CD74AEFE99DADFDB34627F90FEC6362DF85803908F53A50F497889E4A9C74F48321875F8601EC65650FA0922FDA04D69089B79AF7F5533");
+    Bytes idSignatureInput =
+        CryptoUtil.sha256(
+            Bytes.wrap(
+                ID_SIGNATURE_PREFIX,
+                whoAreYouHeader.getAuthData().getRequestNonce(),
+                ephemeralPubKey));
+    Bytes idSignature =
+        Functions.sign(
+            Bytes.fromHexString(
+                "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"),
+            //
+            // Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"),
+            idSignatureInput);
 
     HanshakeAuthData authData =
         HanshakeAuthData.create(
             (byte) 1,
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             idSignature,
-//            Bytes.fromHexString(
-//                "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
-//            ),
+            //            Bytes.fromHexString(
+            //
+            // "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
+            //            ),
             ephemeralPubKey,
             Optional.empty());
     Header<HanshakeAuthData> header =

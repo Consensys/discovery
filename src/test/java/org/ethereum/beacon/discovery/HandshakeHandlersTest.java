@@ -29,10 +29,10 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet5_0.MessagePacket;
 import org.ethereum.beacon.discovery.packet5_0.Packet;
 import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
-import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -111,7 +111,8 @@ public class HandshakeHandlersTest {
         parcel -> {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
           // TODO
-//          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] = parcel.getPacket();
+          //          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] =
+          // parcel.getPacket();
           outgoing1PacketsSemaphore.release(1);
         };
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
@@ -187,7 +188,8 @@ public class HandshakeHandlersTest {
     assertTrue(nodeSessionAt2For1.isAuthenticated());
 
     // Node 1 handles message from Node 2
-    MessagePacketHandler messagePacketHandler1 = new MessagePacketHandler(NodeRecordFactory.DEFAULT);
+    MessagePacketHandler messagePacketHandler1 =
+        new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt1From2WithMessage = new Envelope();
     Bytes12 pingAuthTag = nodeSessionAt1For2.generateNonce();
     OrdinaryMessagePacket pingPacketFrom2To1 =
@@ -209,7 +211,8 @@ public class HandshakeHandlersTest {
     assertTrue(outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS));
 
     // Node 2 handles message from Node 1
-    MessagePacketHandler messagePacketHandler2 = new MessagePacketHandler(NodeRecordFactory.DEFAULT);
+    MessagePacketHandler messagePacketHandler2 =
+        new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
     Packet pongPacketFrom1To2 = outgoing1Packets[1];
     MessagePacket pongMessagePacketFrom1To2 = (MessagePacket) pongPacketFrom1To2;

@@ -76,8 +76,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
 
-      Optional<NodeRecord> enr = packet.getHeader().getAuthData()
-          .getNodeRecord(nodeRecordFactory);
+      Optional<NodeRecord> enr = packet.getHeader().getAuthData().getNodeRecord(nodeRecordFactory);
       if (!enr.map(NodeRecord::isValid).orElse(true)) {
         logger.info(
             String.format(
@@ -98,12 +97,13 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
 
-      Bytes idSignatureInput = CryptoUtil.sha256(Bytes
-          .wrap(ID_SIGNATURE_PREFIX, session.getIdNonce(), ephemeralPubKey));
+      Bytes idSignatureInput =
+          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, session.getIdNonce(), ephemeralPubKey));
 
-      if (!Functions
-          .verifyECDSASignature(packet.getHeader().getAuthData().getIdSignature(), idSignatureInput,
-              (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
+      if (!Functions.verifyECDSASignature(
+          packet.getHeader().getAuthData().getIdSignature(),
+          idSignatureInput,
+          (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
         logger.info(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
@@ -115,10 +115,11 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
       V5Message message = packet.decryptMessage(session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
-      enr.ifPresent(r -> {
-        session.updateNodeRecord(r);
-        session.getNodeTable().save(NodeRecordInfo.createDefault(r));
-      });
+      enr.ifPresent(
+          r -> {
+            session.updateNodeRecord(r);
+            session.getNodeTable().save(NodeRecordInfo.createDefault(r));
+          });
 
     } catch (Exception ex) {
       logger.debug(

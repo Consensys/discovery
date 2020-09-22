@@ -62,11 +62,9 @@ public class TaskMessageFactory {
       Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
-    Header<AuthData> header = Header
-        .create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
-    return OrdinaryMessagePacket
-        .create(header, pingMessage, session.getInitiatorKey());
-
+    Header<AuthData> header =
+        Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    return OrdinaryMessagePacket.create(header, pingMessage, session.getInitiatorKey());
   }
 
   public static PingMessage createPing(NodeSession session, Bytes requestId) {
@@ -76,10 +74,9 @@ public class TaskMessageFactory {
   public static OrdinaryMessagePacket createFindNodePacket(
       Bytes12 authTag, NodeSession session, Bytes requestId, int distance) {
     FindNodeMessage findNodeMessage = createFindNode(requestId, distance);
-    Header<AuthData> header = Header
-        .create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
-    return OrdinaryMessagePacket
-        .create(header, findNodeMessage, session.getInitiatorKey());
+    Header<AuthData> header =
+        Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    return OrdinaryMessagePacket.create(header, findNodeMessage, session.getInitiatorKey());
   }
 
   public static FindNodeMessage createFindNode(Bytes requestId, int distance) {

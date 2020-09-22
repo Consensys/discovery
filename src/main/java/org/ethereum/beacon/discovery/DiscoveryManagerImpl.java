@@ -33,10 +33,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionRequestHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.NotExpectedIncomingPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.OutgoingParcelHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
-import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTypeByStatus;
-import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouAttempt;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
-import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouSessionResolver;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -94,18 +91,17 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
-//        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
-//        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
+        //        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
+        //        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
         .addHandler(new UnknownPacketTagToSender(homeNodeRecord.getNodeId()))
         .addHandler(nodeIdToSession)
         .addHandler(new GenericPacketHandler())
-//        .addHandler(new UnknownPacketTypeByStatus())
+        //        .addHandler(new UnknownPacketTypeByStatus())
         .addHandler(new NotExpectedIncomingPacketHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
             new AuthHeaderMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
-
         .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();

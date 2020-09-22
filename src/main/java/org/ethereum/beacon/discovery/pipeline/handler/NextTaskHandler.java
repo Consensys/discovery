@@ -80,10 +80,10 @@ public class NextTaskHandler implements EnvelopeHandler {
     Bytes requestId = requestInfo.getRequestId();
 
     if (session.getStatus().equals(NodeSession.SessionStatus.INITIAL)) {
-      Header<AuthData> header = Header
-          .create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
-      OrdinaryMessagePacket randomPacket = OrdinaryMessagePacket
-          .createRandom(header, RANDOM_MESSAGE_SIZE);
+      Header<AuthData> header =
+          Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+      OrdinaryMessagePacket randomPacket =
+          OrdinaryMessagePacket.createRandom(header, RANDOM_MESSAGE_SIZE);
       session.setAuthTag(authTag);
       session.sendOutgoing(randomPacket);
       session.setStatus(NodeSession.SessionStatus.RANDOM_PACKET_SENT);

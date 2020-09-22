@@ -20,8 +20,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(MessagePacketHandler.class);
   private final NodeRecordFactory nodeRecordFactory;
 
-  public MessagePacketHandler(
-      NodeRecordFactory nodeRecordFactory) {
+  public MessagePacketHandler(NodeRecordFactory nodeRecordFactory) {
     this.nodeRecordFactory = nodeRecordFactory;
   }
 

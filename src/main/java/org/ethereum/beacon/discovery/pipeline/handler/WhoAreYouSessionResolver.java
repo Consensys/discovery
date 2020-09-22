@@ -45,8 +45,8 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
                 envelope.getId()));
 
     WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) envelope.get(Field.PACKET_WHOAREYOU);
-    Optional<NodeSession> nodeSessionOptional = authTagRepo
-        .get(Bytes12.wrap(whoAreYouPacket.getAuthTag()));
+    Optional<NodeSession> nodeSessionOptional =
+        authTagRepo.get(Bytes12.wrap(whoAreYouPacket.getAuthTag()));
     if (nodeSessionOptional.isPresent()
         && (nodeSessionOptional
                 .get()

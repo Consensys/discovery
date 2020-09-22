@@ -121,16 +121,14 @@ public class NodeSession {
   public void sendOutgoingOrdinary(V5Message message) {
     AuthData authData = AuthData.create(Bytes12.wrap(getAuthTag().get()));
     Header<AuthData> header = Header.create(getHomeNodeId(), Flag.MESSAGE, authData);
-    OrdinaryMessagePacket packet = OrdinaryMessagePacket
-        .create(header, message, getInitiatorKey());
+    OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
     sendOutgoing(packet);
   }
 
   public void sendOutgoing(Packet<?> packet) {
     logger.trace(() -> String.format("Sending outgoing packet %s in session %s", packet, this));
-    Bytes16 destNodeId = Bytes16.wrap(getNodeId(),0);
-    RawPacket rawPacket =
-        RawPacket.create(generateAesCtrIV(), packet, destNodeId);
+    Bytes16 destNodeId = Bytes16.wrap(getNodeId(), 0);
+    RawPacket rawPacket = RawPacket.create(generateAesCtrIV(), packet, destNodeId);
     outgoingPipeline.accept(new NetworkParcelV5(rawPacket, remoteAddress));
   }
 
