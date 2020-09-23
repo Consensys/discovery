@@ -140,7 +140,12 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
       HandshakeMessagePacket handshakeMessagePacket =
           HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
+      session.setStatus(NodeSession.SessionStatus.AUTHENTICATED);
+
       session.sendOutgoing(handshakeMessagePacket);
+
+      envelope.remove(Field.PACKET_WHOAREYOU);
+      NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Throwable ex) {
       String error =
           String.format(
@@ -149,10 +154,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");
-      return;
     }
-    session.setStatus(NodeSession.SessionStatus.AUTHENTICATED);
-    envelope.remove(Field.PACKET_WHOAREYOU);
-    NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
   }
 }

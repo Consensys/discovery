@@ -54,7 +54,7 @@ public class IncomingDataPacker implements EnvelopeHandler {
 
       envelope.put(Field.PACKET, packet);
       logger.trace(
-          () -> String.format("Incoming packet %s in envelope #%s", rawPacket, envelope.getId()));
+          () -> String.format("Incoming packet %s in envelope #%s", packet, envelope.getId()));
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
