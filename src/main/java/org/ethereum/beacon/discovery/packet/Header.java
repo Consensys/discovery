@@ -5,6 +5,7 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.impl.HeaderImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 

@@ -116,9 +116,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Bytes.wrap(
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
-      Bytes idSignatureInput =
-          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey));
-      Bytes idSignature = Functions.sign(session.getStaticNodeKey(), idSignatureInput);
+      Bytes idSignature = HanshakeAuthData
+          .signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
       if (packet

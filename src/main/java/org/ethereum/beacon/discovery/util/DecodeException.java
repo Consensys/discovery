@@ -1,4 +1,4 @@
-package org.ethereum.beacon.discovery.packet;
+package org.ethereum.beacon.discovery.util;
 
 public class DecodeException extends RuntimeException {
 

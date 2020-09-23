@@ -50,13 +50,20 @@ public class CryptoUtil {
     }
   }
 
-  public static Cipher createAesctrDecryptor(Bytes key, Bytes iv) throws GeneralSecurityException {
-    Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
-    cipher.init(
-        Cipher.DECRYPT_MODE,
-        new SecretKeySpec(key.toArrayUnsafe(), "AES"),
-        new IvParameterSpec(iv.toArrayUnsafe()));
-    return cipher;
+  public static Cipher createAesctrDecryptor(Bytes key, Bytes iv) {
+    try {
+      Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+      cipher.init(
+          Cipher.DECRYPT_MODE,
+          new SecretKeySpec(key.toArrayUnsafe(), "AES"),
+          new IvParameterSpec(iv.toArrayUnsafe()));
+      return cipher;
+    } catch (NoSuchAlgorithmException
+        | NoSuchPaddingException
+        | InvalidKeyException
+        | InvalidAlgorithmParameterException e) {
+      throw new RuntimeException("Unexpected crypto setup problem", e);
+    }
   }
 
   public static Bytes aesctrDecrypt(Bytes key, Bytes iv, Bytes ciphered)
@@ -95,14 +102,13 @@ public class CryptoUtil {
           new GCMParameterSpec(128, nonce.toArray()));
       cipher.updateAAD(aad.toArray());
       return Bytes.wrap(cipher.doFinal(encoded.toArray()));
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("No AES/GCM cipher provider", e);
-    } catch (InvalidKeyException
+    } catch (NoSuchAlgorithmException
+        | InvalidKeyException
         | InvalidAlgorithmParameterException
-        | NoSuchPaddingException
-        | BadPaddingException
-        | IllegalBlockSizeException e) {
-      throw new RuntimeException("Failed to decrypt message", e);
+        | NoSuchPaddingException e) {
+      throw new RuntimeException("Unexpected crypto setup problem", e);
+    } catch (BadPaddingException | IllegalBlockSizeException e) {
+      throw new DecryptException("Failed to decrypt the message", e);
     }
   }
 }

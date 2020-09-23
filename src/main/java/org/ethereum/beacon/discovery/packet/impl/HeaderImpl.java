@@ -2,10 +2,12 @@ package org.ethereum.beacon.discovery.packet.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthData;
-import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
@@ -13,6 +15,7 @@ import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImp
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl.WhoAreYouAuthDataImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
+import org.ethereum.beacon.discovery.util.DecryptException;
 
 public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     implements Header<TAUthData> {
@@ -25,6 +28,10 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       Bytes staticHeaderBytes = Bytes.wrap(cipher.update(staticHeaderCiphered.toArrayUnsafe()));
       StaticHeader header = StaticHeader.decode(staticHeaderBytes);
 
+      if (!header.validate()) {
+        throw new DecryptException("Couldn't decrypt packet static header.");
+      }
+
       int authDataSize = header.getAuthDataSize();
       int headerSize = StaticHeaderImpl.STATIC_HEADER_SIZE + authDataSize;
       checkMinSize(data, headerSize);
@@ -32,6 +39,8 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       Bytes authDataBytes = Bytes.wrap(cipher.doFinal(authDataCiphered.toArrayUnsafe()));
       AuthData authData = decodeAuthData(header, authDataBytes);
       return new HeaderImpl<>(header, authData);
+    } catch (BadPaddingException | IllegalBlockSizeException e) {
+      throw new DecryptException("Error decrypting packet header auth data", e);
     } catch (Exception e) {
       throw new DecodeException(
           "Couldn't decode header (iv=" + iv + ", nodeId=" + nodeId + "): " + data, e);

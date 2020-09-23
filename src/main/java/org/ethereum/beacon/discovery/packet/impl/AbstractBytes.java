@@ -2,7 +2,7 @@ package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.BytesSerializable;
-import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 public abstract class AbstractBytes implements BytesSerializable {
 

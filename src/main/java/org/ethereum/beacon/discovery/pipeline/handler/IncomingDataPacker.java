@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.DecodeException;
+import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
