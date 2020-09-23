@@ -15,9 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
-import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
-import org.ethereum.beacon.discovery.packet5_0.RandomPacket;
-import org.ethereum.beacon.discovery.packet5_0.UnknownPacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -89,19 +88,18 @@ public class DiscoveryInteropTest {
     CountDownLatch authPacketSent1to2 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> new UnknownPacket(p.getPacket().getBytes()))
+        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random
               if (randomSent1to2.getCount() != 0) {
-                RandomPacket randomPacket = networkPacket.getRandomPacket();
-                System.out.println("1 => 2: " + randomPacket);
+                assertTrue(networkPacket instanceof OrdinaryMessagePacket);
+                System.out.println("1 => 2: " + networkPacket);
                 randomSent1to2.countDown();
               } else if (authPacketSent1to2.getCount() != 0) {
                 // 1 -> 2 auth packet with FINDNODES
-                AuthHeaderMessagePacket authHeaderMessagePacket =
-                    networkPacket.getAuthHeaderMessagePacket();
-                System.out.println("1 => 2: " + authHeaderMessagePacket);
+                assertTrue(networkPacket instanceof HandshakeMessagePacket);
+                System.out.println("1 => 2: " + networkPacket);
                 authPacketSent1to2.countDown();
               }
             });

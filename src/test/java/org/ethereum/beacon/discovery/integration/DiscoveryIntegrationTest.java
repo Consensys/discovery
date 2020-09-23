@@ -12,11 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.BindException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +27,6 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
-import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -48,6 +46,36 @@ public class DiscoveryIntegrationTest {
   @AfterEach
   public void tearDown() {
     managers.forEach(DiscoverySystem::stop);
+  }
+
+  @Test
+  void runTestServer() throws Exception {
+    byte[] keyBytes = new byte[PRIVKEY_SIZE];
+    new Random(1).nextBytes(keyBytes);
+    final ECKeyPair keyPair = ECKeyPair.create(keyBytes);
+
+    final DiscoverySystem node = createDiscoveryClient(true, "188.134.70.1", keyPair);
+    System.out.println("Running node: " + node.getLocalNodeRecord());
+    System.out.println("Running node: " + node.getLocalNodeRecord().asEnr());
+
+    Thread.sleep(100000000000L);
+  }
+
+  @Test
+  public void runTestClient() throws Exception {
+    byte[] keyBytes = new byte[PRIVKEY_SIZE];
+    new Random(1).nextBytes(keyBytes);
+    final ECKeyPair keyPair = ECKeyPair.create(keyBytes);
+
+
+    NodeRecord remote = NodeRecordFactory.DEFAULT.fromBase64(
+        "-IS4QIrMgVOYuw2mq68f9hFGTlPzJT5pRWIqKTYL93C5xasmfUGUydi2XrjsbxO1MLYGEl1rR5H1iov6gxOyhegW9hYBgmlkgnY0gmlwhLyGRgGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyo");
+    System.out.println("Connecting to: " + remote);
+    final DiscoverySystem client = createDiscoveryClient(true, "188.134.70.1", keyPair, remote);
+    final CompletableFuture<Void> pingResult = client.ping(remote);
+    waitFor(pingResult);
+    assertTrue(pingResult.isDone());
+    assertFalse(pingResult.isCompletedExceptionally());
   }
 
   @Test
@@ -178,35 +206,6 @@ public class DiscoveryIntegrationTest {
     assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
   }
 
-  @Test
-  public void malformedWhoAreYouPacketDos() throws Exception {
-    final DiscoverySystem node1 = createDiscoveryClient();
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
-    final DiscoverySystem node2 = createDiscoveryClient(keyPair, node1.getLocalNodeRecord());
-    int port = node1.getLocalNodeRecord().getUdpAddress().get().getPort();
-
-    waitFor(node2.ping(node1.getLocalNodeRecord()));
-
-    sendMalformedPacked(port, node1.getLocalNodeRecord().getNodeId());
-
-    waitFor(node2.ping(node1.getLocalNodeRecord()));
-  }
-
-  void sendMalformedPacked(int remotePort, Bytes remotePeerId) throws Exception {
-    InetAddress address = InetAddress.getByName("localhost");
-
-    DatagramSocket dsocket = new DatagramSocket();
-
-    Bytes whoareyouPrefix = WhoAreYouPacket.getStartMagic(remotePeerId);
-    Bytes msg = Bytes.wrap(whoareyouPrefix, Bytes.fromHexString("0xc1c0"));
-
-    DatagramPacket packet =
-        new DatagramPacket(msg.toArrayUnsafe(), msg.size(), address, remotePort);
-    dsocket.send(packet);
-
-    dsocket.close();
-  }
-
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
@@ -254,6 +253,7 @@ public class DiscoveryIntegrationTest {
               .build();
       final DiscoverySystem discoverySystem =
           new DiscoverySystemBuilder()
+              .listen("0.0.0.0", port)
               .localNodeRecord(nodeRecord)
               .privateKey(privateKey)
               .bootnodes(bootnodes)

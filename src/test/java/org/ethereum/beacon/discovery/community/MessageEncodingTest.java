@@ -45,11 +45,11 @@ public class MessageEncodingTest {
   public void encodeFindNode() {
     FindNodeMessage findNodeMessage =
         new FindNodeMessage(Bytes.wrap(UInt64.valueOf(1).toBigInteger().toByteArray()),
-            Collections.singletonList(256));
+            List.of(256, 255));
     FindNodeMessage findNodeMessage1 = FindNodeMessage
         .fromRlp(RlpUtil.decodeSingleList(findNodeMessage.getBytes().slice(1)).getValues());
     Assertions.assertEquals(findNodeMessage1, findNodeMessage);
-    Assertions.assertEquals(Bytes.fromHexString("0x03c401820100"), findNodeMessage.getBytes());
+    Assertions.assertEquals(Bytes.fromHexString("0x03C701C582010081FF"), findNodeMessage.getBytes());
   }
 
   @Test
