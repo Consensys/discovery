@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.community;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
@@ -15,6 +16,7 @@ import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +44,11 @@ public class MessageEncodingTest {
   @Test
   public void encodeFindNode() {
     FindNodeMessage findNodeMessage =
-        new FindNodeMessage(Bytes.wrap(UInt64.valueOf(1).toBigInteger().toByteArray()), 256);
+        new FindNodeMessage(Bytes.wrap(UInt64.valueOf(1).toBigInteger().toByteArray()),
+            Collections.singletonList(256));
+    FindNodeMessage findNodeMessage1 = FindNodeMessage
+        .fromRlp(RlpUtil.decodeSingleList(findNodeMessage.getBytes().slice(1)).getValues());
+    Assertions.assertEquals(findNodeMessage1, findNodeMessage);
     Assertions.assertEquals(Bytes.fromHexString("0x03c401820100"), findNodeMessage.getBytes());
   }
 

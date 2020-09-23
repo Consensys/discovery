@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.task;
 
+import java.util.Collections;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
@@ -80,6 +81,6 @@ public class TaskMessageFactory {
   }
 
   public static FindNodeMessage createFindNode(Bytes requestId, int distance) {
-    return new FindNodeMessage(requestId, distance);
+    return new FindNodeMessage(requestId, Collections.singletonList(distance));
   }
 }
