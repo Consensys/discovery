@@ -9,8 +9,10 @@ import static org.web3j.rlp.RlpDecoder.OFFSET_SHORT_LIST;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
@@ -24,12 +26,33 @@ import org.web3j.rlp.RlpType;
  * org.web3j.rlp.RlpEncoder} and {@link RlpDecoder}
  */
 public class RlpUtil {
+  public interface BytesConstraint extends Predicate<Bytes> {}
+
   public static final int ANY_LEN = -1;
 
-  /**
-   * Calculates length of list beginning from the start of the data. So, there could everything else
-   * after first list in data, method helps to cut data in this case.
-   */
+  public static final BytesConstraint CONS_ANY = b -> true;
+  public static final BytesConstraint CONS_UINT64 = maxSize(8);
+
+  public static BytesConstraint strictSize(int size) {
+    return b -> b.size() == size;
+  }
+
+  public static BytesConstraint maxSize(int maxSize) {
+    return b -> b.size() <= maxSize;
+  }
+
+  public static BytesConstraint minMaxSize(int minSize, int maxSize) {
+    return b -> b.size() <= maxSize && b.size() >= minSize;
+  }
+
+  public static BytesConstraint enumSizes(int... sizes) {
+    return b -> Arrays.stream(sizes).anyMatch(s -> s == b.size());
+  }
+
+    /**
+     * Calculates length of list beginning from the start of the data. So, there could everything else
+     * after first list in data, method helps to cut data in this case.
+     */
   private static int calcListLen(Bytes data) {
     int prefix = data.get(0) & 0xFF;
     int prefixAddon = 1;
@@ -72,22 +95,23 @@ public class RlpUtil {
    * Decodes strictly the list of byte strings of specified lengths The list should contain strictly
    * {@code lengths.length} strings
    *
-   * @param lengths the expected length of each string in the list. ANY_LEN if any size is accepted
+   * @param constraints constrains for every string in the list
    * @throws RlpDecodeException if this rlp doesn't represent a single list of strings of specified
    *     lengths
    */
-  public static List<Bytes> decodeListOfStrings(Bytes rlp, int... lengths)
+  public static List<Bytes> decodeListOfStrings(Bytes rlp, BytesConstraint... constraints)
       throws RlpDecodeException {
 
     List<Bytes> bytesList = decodeListOfStrings(rlp);
-    if (bytesList.size() != lengths.length) {
-      throw new RlpDecodeException("Expected RLP list of " + lengths.length + " items: " + rlp);
+    if (bytesList.size() != constraints.length) {
+      throw new RlpDecodeException("Expected RLP list of " + constraints.length + " items: " + rlp);
     }
 
-    for (int i = 0; i < lengths.length; i++) {
-      if (lengths[i] >= 0 && bytesList.get(i).size() != lengths[i]) {
+    for (int i = 0; i < constraints.length; i++) {
+//      if (lengths[i] >= 0 && bytesList.get(i).size() != lengths[i]) {
+      if (constraints[i].test(bytesList.get(i))) {
         throw new RlpDecodeException(
-            "Expected RLP string of size " + lengths[i] + " for item #" + i + ": " + rlp);
+            "Failed constraints check (" + constraints[i] + ") for item #" + i + ": " + rlp);
       }
     }
     return bytesList;

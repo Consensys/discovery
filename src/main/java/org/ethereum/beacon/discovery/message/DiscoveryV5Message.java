@@ -15,7 +15,6 @@ import org.web3j.rlp.RlpType;
 
 public class DiscoveryV5Message implements DiscoveryMessage {
   private final Bytes bytes;
-  private List<RlpType> payload = null;
 
   public DiscoveryV5Message(Bytes bytes) {
     this.bytes = bytes;
@@ -39,40 +38,36 @@ public class DiscoveryV5Message implements DiscoveryMessage {
     return MessageCode.fromNumber(getBytes().get(0));
   }
 
-  private synchronized void decode() {
-    if (payload != null) {
-      return;
-    }
-    this.payload = RlpUtil.decodeSingleList(getBytes().slice(1)).getValues();
-  }
-
-  public Bytes getRequestId() {
-    decode();
-    return Bytes.wrap(((RlpString) payload.get(0)).getBytes());
-  }
-
   public V5Message create(NodeRecordFactory nodeRecordFactory) {
-    decode();
     MessageCode code = MessageCode.fromNumber(getBytes().get(0));
+    Bytes messageBytes = getBytes().slice(1);
     if (code == null) {
       throw new DecodeException("Invalid message code: " + getBytes().get(0));
     }
     switch (code) {
       case PING:
         {
-          return PingMessage.fromRlp(payload);
+          return PingMessage.fromBytes(messageBytes);
         }
       case PONG:
         {
-          return PongMessage.fromRlp(payload);
+          return PongMessage.fromBytes(messageBytes);
         }
       case FINDNODE:
         {
-          return FindNodeMessage.fromRlp(payload);
+          return FindNodeMessage.fromBytes(messageBytes);
         }
       case NODES:
         {
-          return NodesMessage.fromRlp(payload, nodeRecordFactory);
+          return NodesMessage.fromBytes(messageBytes, nodeRecordFactory);
+        }
+      case TALKREQ:
+        {
+          return TalkReqMessage.fromBytes(messageBytes);
+        }
+      case TALKRESP:
+        {
+          return TalkRespMessage.fromBytes(messageBytes);
         }
       default:
         {

@@ -5,6 +5,8 @@
 package org.ethereum.beacon.discovery.schema;
 
 import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
+import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
+import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
 
 import com.google.common.base.Objects;
 import java.util.ArrayList;
@@ -39,7 +41,8 @@ public class NodeRecordInfo {
   }
 
   public static NodeRecordInfo fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
-    List<Bytes> bytesList = RlpUtil.decodeListOfStrings(bytes, ANY_LEN, ANY_LEN, ANY_LEN, ANY_LEN);
+    List<Bytes> bytesList = RlpUtil
+        .decodeListOfStrings(bytes, CONS_ANY, CONS_UINT64, CONS_ANY, CONS_UINT64);
     return new NodeRecordInfo(
         nodeRecordFactory.fromBytes(bytesList.get(0)),
         Utils.toUInt64(bytesList.get(1)).toLong(),

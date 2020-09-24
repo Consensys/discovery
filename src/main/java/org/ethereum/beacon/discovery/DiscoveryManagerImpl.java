@@ -6,8 +6,10 @@ package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -58,6 +60,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
   private volatile DiscoveryClient discoveryClient;
+  private volatile Map<String, TalkHandler> talkHandlers = new ConcurrentHashMap<>();
 
   public DiscoveryManagerImpl(
       Optional<InetSocketAddress> listenAddress,
@@ -170,5 +173,20 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @VisibleForTesting
   public Publisher<NetworkParcel> getOutgoingMessages() {
     return outgoingMessages;
+  }
+
+  @Override
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
+    return null;
+  }
+
+  @Override
+  public void addTalkHandler(String protocol, TalkHandler talkHandler) {
+    talkHandlers.put(protocol, talkHandler);
+  }
+
+  @Override
+  public void removeTalkHandler(String protocol) {
+    talkHandlers.remove(protocol);
   }
 }

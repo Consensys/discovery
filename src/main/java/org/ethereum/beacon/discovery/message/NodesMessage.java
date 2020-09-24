@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -46,7 +47,7 @@ public class NodesMessage implements V5Message {
     this.nodeRecordsSize = nodeRecordsSize;
   }
 
-  public static NodesMessage fromRlp(List<RlpType> rlpList, NodeRecordFactory nodeRecordFactory) {
+  private static NodesMessage fromRlp(List<RlpType> rlpList, NodeRecordFactory nodeRecordFactory) {
     RlpList nodeRecords = (RlpList) rlpList.get(2);
     return new NodesMessage(
         Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
@@ -56,6 +57,10 @@ public class NodesMessage implements V5Message {
                 .map(rl -> nodeRecordFactory.fromRlpList((RlpList) rl))
                 .collect(Collectors.toList()),
         nodeRecords.getValues().size());
+  }
+
+  public static NodesMessage fromBytes(Bytes messageBytes, NodeRecordFactory nodeRecordFactory) {
+    return fromRlp(RlpUtil.decodeSingleList(messageBytes).getValues(), nodeRecordFactory);
   }
 
   @Override

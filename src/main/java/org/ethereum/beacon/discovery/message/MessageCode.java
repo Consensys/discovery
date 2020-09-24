@@ -31,14 +31,16 @@ public enum MessageCode {
    */
   NODES(0x04),
 
-  /** Request for {@link #TICKET} by topic. */
-  REQTICKET(0x05),
+  /**
+   * TALKREQ sends an application-level request. The purpose of this message is pre-negotiating
+   * connections made through another application-specific protocol identified by protocol.
+   */
+  TALKREQ(0x05),
 
   /**
-   * TICKET is the response to REQTICKET. It contains a ticket which can be used to register for the
-   * requested topic.
+   * TALKRESP is the response to TALKREQ.
    */
-  TICKET(0x06),
+  TALKRESP(0x06),
 
   /**
    * REGTOPIC registers the sender for the given topic with a ticket. The ticket must be valid and
@@ -46,14 +48,20 @@ public enum MessageCode {
    */
   REGTOPIC(0x07),
 
+  /**
+   * TICKET is the response to REQTICKET. It contains a ticket which can be used to register for the
+   * requested topic.
+   */
+  TICKET(0x08),
+
   /** REGCONFIRMATION is the response to REGTOPIC. */
-  REGCONFIRMATION(0x08),
+  REGCONFIRMATION(0x09),
 
   /**
    * TOPICQUERY requests nodes in the topic queue of the given topic. The response is a NODES
    * message containing node records registered for the topic.
    */
-  TOPICQUERY(0x09);
+  TOPICQUERY(0x0A);
 
   private static final Map<Integer, MessageCode> codeMap = new HashMap<>();
 

@@ -4,10 +4,16 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
+import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
+import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
+import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
+
 import com.google.common.base.Objects;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -28,10 +34,9 @@ public class PingMessage implements V5Message {
     this.enrSeq = enrSeq;
   }
 
-  public static PingMessage fromRlp(List<RlpType> rlpList) {
-    return new PingMessage(
-        Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
-        UInt64.fromBytes(Utils.leftPad(Bytes.wrap(((RlpString) rlpList.get(1)).getBytes()), 8)));
+  public static PingMessage fromBytes(Bytes bytes) {
+    List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_UINT64);
+    return new PingMessage(list.get(0), UInt64.fromBytes(list.get(1)));
   }
 
   @Override

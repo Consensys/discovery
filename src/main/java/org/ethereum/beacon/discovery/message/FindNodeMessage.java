@@ -8,6 +8,7 @@ import com.google.common.base.Objects;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -30,7 +31,7 @@ public class FindNodeMessage implements V5Message {
     this.distances = distances;
   }
 
-  public static FindNodeMessage fromRlp(List<RlpType> rlpList) {
+  private static FindNodeMessage fromRlp(List<RlpType> rlpList) {
     Bytes requestId = Bytes.wrap(((RlpString) rlpList.get(0)).getBytes());
     RlpList distanceList = (RlpList) rlpList.get(1);
     List<Integer> distances =
@@ -40,6 +41,10 @@ public class FindNodeMessage implements V5Message {
             .collect(Collectors.toList());
 
     return new FindNodeMessage(requestId, distances);
+  }
+
+  public static FindNodeMessage fromBytes(Bytes bytes) {
+    return fromRlp(RlpUtil.decodeSingleList(bytes).getValues());
   }
 
   @Override
