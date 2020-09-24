@@ -201,14 +201,6 @@ public class SanityTestVectors {
     // # ephemeral-key = 0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6
     // # ephemeral-pubkey = 0x039a003ba6517b473fa0cd74aefe99dadfdb34627f90fec6362df85803908f53a5
     //
-    // 00000000000000000000000000000000088b3d4342776668980a4adf72a8fcaa
-    // 963f24b27a2f6bb44c7ed5ca10e87de130f94d2390b9853c3dcb21d51e9472d4
-    // 3c9ae48d04689ef4d3d2602a5e89ac340f9e81e722b1d7dac2578d520dd5bc6d
-    // c1e38ad3ab33012be1a5d259267a0947bf242219834c5702d1c694c0ceb4a6a2
-    // 7b5d68bd2c2e32e6cb9696706adff216ab862a9186875f9494150c4ae06fa4d1
-    // f0396c93f215fa4ef52417d9c40a31564e8d5f31a7f08c38045ff5e30d966183
-    // 8b1eabee9f1e561120bc7fccc3d4569a69fdf04f31230ae4be20404467d9ea9a
-    // b3cd
     WhoAreYouAuthData whoAreYouAuthData =
         WhoAreYouAuthData.create(
             Bytes12.fromHexString("0x0102030405060708090a0b0c"),
@@ -223,7 +215,6 @@ public class SanityTestVectors {
             whoAreYouAuthData);
     Bytes ephemeralPrivKey =
         Bytes.fromHexString("0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6");
-    //    Bytes ephemeralPubKey = Functions.derivePublicKeyFromPrivate(ephemeralPrivKey);
     ephemeralPrivKey.size();
 
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
@@ -238,18 +229,12 @@ public class SanityTestVectors {
         Functions.sign(
             Bytes.fromHexString(
                 "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"),
-            //
-            // Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"),
             idSignatureInput);
 
     HanshakeAuthData authData =
         HanshakeAuthData.create(
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             idSignature,
-            //            Bytes.fromHexString(
-            //
-            // "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
-            //            ),
             ephemeralPubKey,
             Optional.empty());
     Header<HanshakeAuthData> header =
@@ -272,18 +257,18 @@ public class SanityTestVectors {
     Bytes rawPacketBytes = rawPacket.getBytes();
     Bytes expectedBytes =
         Bytes.fromHexString(
-            "00000000000000000000000000000000088b3d4342776668980a4adf72a8fcaa"
-                + "963f24b27a2f6bb44c7ed5ca10e87de130f94d2390b9853c3dcb21d51e9472d4"
-                + "3c9ae48d04689ef4d3d2602a5e89ac340f9e81e722b1d7dac2578d520dd5bc6d"
-                + "c1e38ad3ab33012be1a5d259267a0947bf242219834c5702d1c694c0ceb4a6a2"
-                + "7b5d68bd2c2e32e6cb9696706adff216ab862a9186875f9494150c4ae06fa4d1"
-                + "f0396c93f215fa4ef52417d9c40a31564e8d5f31a7f08c38045ff5e30d966183"
-                + "8b1eabee9f1e561120bc7fccc3d4569a69fdf04f31230ae4be20404467d9ea9a"
-                + "b3cd");
+            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FC"
+                + "AA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3DCB21D51E94"
+                + "72D43C9AE48D04689EF4D3D218E13FCAE653613811F9CDD42842B9FB5FBC9D"
+                + "88FCA80C1AA96AE9B85195ADD8EB521A88102E240B54CD4843F39E31F1F41F"
+                + "EF73EC7AED6FECD805B35091475496706ADFF216AB862A9186875F9494150C"
+                + "4AE06FA4D1F0396C93F215FA4EF52417D9C40A31564E8D5F31A7F08C38045F"
+                + "F5E30D9661838B1EABEE9F1E561120BC7FCCC3D4569A69FDC8FAC6C5CE688C"
+                + "BDC9DEC58BD222664C");
 
     assertThat(rawPacketBytes).isEqualTo(expectedBytes);
 
-    RawPacket rawPacket1 = RawPacket.decode(expectedBytes);
+    RawPacket rawPacket1 = RawPacket.decode(rawPacketBytes);
     HandshakeMessagePacket packet1 = (HandshakeMessagePacket) rawPacket1.decodePacket(destNodeId);
     assertThat(packet1.getMessageBytes()).isEqualTo(packet.getMessageBytes());
     PingMessage pingMessage1 = (PingMessage) packet1.decryptMessage(key, NodeRecordFactory.DEFAULT);
