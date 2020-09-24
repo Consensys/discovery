@@ -91,12 +91,9 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
-        //        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
-        //        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
         .addHandler(new GenericPacketHandler())
-        //        .addHandler(new UnknownPacketTypeByStatus())
         .addHandler(new NotExpectedIncomingPacketHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(

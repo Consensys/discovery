@@ -10,6 +10,11 @@ import org.ethereum.beacon.discovery.packet.impl.HeaderImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
+/**
+ * Header of any {@link Packet}
+ *
+ * <p>header = static-header || authdata
+ */
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
   static Header<?> decrypt(Bytes headerBytes, Bytes16 iv, Bytes16 nodeId) {

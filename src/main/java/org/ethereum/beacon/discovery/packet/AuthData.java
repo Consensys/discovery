@@ -9,6 +9,7 @@ import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImp
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
+/** AuthData part of any {@link Packet}'s {@link Header} */
 public interface AuthData extends BytesSerializable {
 
   static AuthData create(Bytes12 gcmNonce) {

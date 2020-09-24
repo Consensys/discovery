@@ -8,6 +8,13 @@ import org.ethereum.beacon.discovery.packet.impl.RawPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
+/**
+ * Raw packet with encrypted (AES/CTR) header
+ *
+ * <p>{@code packet = iv || masked-header || message }
+ *
+ * <p>The ciphered raw packet can extract just {@code iv } field until decrypted
+ */
 public interface RawPacket extends BytesSerializable {
 
   static RawPacket create(Bytes16 iv, Packet<?> packet, Bytes16 headerMaskingKey) {

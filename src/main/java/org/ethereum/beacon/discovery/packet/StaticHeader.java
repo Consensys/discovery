@@ -8,6 +8,10 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
+/**
+ * Static part of {@link Packet}'s {@link Header} static-header = protocol-id || src-id || flag ||
+ * authdata-size
+ */
 public interface StaticHeader extends BytesSerializable {
 
   String PROTOCOL_ID = "discv5  ";
