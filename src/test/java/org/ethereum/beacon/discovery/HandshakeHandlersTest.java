@@ -16,12 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
@@ -79,42 +79,22 @@ public class HandshakeHandlersTest {
     Database database2 = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage1 =
         nodeTableStorageFactory.createTable(
-            database1,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord1,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord2);
-                  }
-                });
+            database1, TEST_SERIALIZER, (oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
     NodeBucketStorage nodeBucketStorage1 =
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     NodeTableStorage nodeTableStorage2 =
         nodeTableStorageFactory.createTable(
-            database2,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord2,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord1);
-                  }
-                });
+            database2, TEST_SERIALIZER, (oldSeq) -> nodeRecord2, () -> List.of(nodeRecord1));
     NodeBucketStorage nodeBucketStorage2 =
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
 
     // Node1 create AuthHeaderPacket
-    final Packet<?>[] outgoing1Packets = new Packet[2];
-    final Semaphore outgoing1PacketsSemaphore = new Semaphore(2);
-    outgoing1PacketsSemaphore.acquire(2);
+    LinkedBlockingQueue<Packet<?>> outgoing1Packets = new LinkedBlockingQueue<>();
     final Consumer<NetworkParcel> outgoingMessages1to2 =
         parcel -> {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
-          // TODO
-          //          outgoing1Packets[outgoing1PacketsSemaphore.availablePermits()] =
-          // parcel.getPacket();
-          outgoing1PacketsSemaphore.release(1);
+          outgoing1Packets.add(
+              parcel.getPacket().decodePacket(nodePair2.getNodeRecord().getNodeId()));
         };
     AuthTagRepository authTagRepository1 = new AuthTagRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
@@ -174,15 +154,13 @@ public class HandshakeHandlersTest {
     CompletableFuture<Void> future = new CompletableFuture<>();
     nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
-    assertTrue(outgoing1PacketsSemaphore.tryAcquire(1, 1, TimeUnit.SECONDS));
-    outgoing1PacketsSemaphore.release();
 
     // Node2 handle AuthHeaderPacket and finish handshake
     AuthHeaderMessagePacketHandler authHeaderMessagePacketHandlerNode2 =
         new AuthHeaderMessagePacketHandler(
             outgoingPipeline, taskScheduler, NODE_RECORD_FACTORY_NO_VERIFICATION);
     Envelope envelopeAt2From1 = new Envelope();
-    envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, outgoing1Packets[0]);
+    envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, outgoing1Packets.poll(1, TimeUnit.SECONDS));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
     authHeaderMessagePacketHandlerNode2.handle(envelopeAt2From1);
@@ -209,13 +187,12 @@ public class HandshakeHandlersTest {
     MessageHandler messageHandler =
         new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1);
     messageHandler.handle(envelopeAt1From2WithMessage);
-    assertTrue(outgoing1PacketsSemaphore.tryAcquire(2, 1, TimeUnit.SECONDS));
 
     // Node 2 handles message from Node 1
     MessagePacketHandler messagePacketHandler2 =
         new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
-    Packet<?> pongPacketFrom1To2 = outgoing1Packets[1];
+    Packet<?> pongPacketFrom1To2 = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongPacketFrom1To2);
     envelopeAt2From1WithMessage.put(SESSION, nodeSessionAt2For1);
     messagePacketHandler2.handle(envelopeAt2From1WithMessage);
