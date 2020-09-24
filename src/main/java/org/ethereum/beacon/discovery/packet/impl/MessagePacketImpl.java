@@ -15,11 +15,12 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
     implements MessagePacket<TAuthData> {
 
   public static Bytes encrypt(Header<?> header, V5Message message, Bytes key) {
-    return encrypt(header.getBytes(), message.getBytes(),
-        header.getAuthData().getAesGcmNonce(), key);
+    return encrypt(
+        header.getBytes(), message.getBytes(), header.getAuthData().getAesGcmNonce(), key);
   }
 
-  public static Bytes encrypt(Bytes headerBytes, Bytes messageBytes, Bytes12 aesGcmNonce, Bytes key) {
+  public static Bytes encrypt(
+      Bytes headerBytes, Bytes messageBytes, Bytes12 aesGcmNonce, Bytes key) {
     return CryptoUtil.aesgcmEncrypt(key, aesGcmNonce, messageBytes, headerBytes);
   }
 

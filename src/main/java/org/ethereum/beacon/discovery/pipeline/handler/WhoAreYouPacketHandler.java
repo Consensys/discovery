@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 
 import java.util.Optional;
@@ -30,7 +29,6 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
-import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.crypto.ECKeyPair;
@@ -116,8 +114,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Bytes.wrap(
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
-      Bytes idSignature = HanshakeAuthData
-          .signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
+      Bytes idSignature =
+          HanshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
       if (packet

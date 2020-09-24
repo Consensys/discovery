@@ -29,11 +29,13 @@ public interface StaticHeader extends BytesSerializable {
     if (!getProtocolId().equals(PROTOCOL_ID)) {
       throw new DecodeException("Invalid protocolId field: '" + getProtocolId() + "'");
     }
-    DecodeException.wrap(() -> "Couldn't decode static header: " + getBytes(), () -> {
-      getSourceNodeId();
-      getFlag();
-      getAuthDataSize();
-    });
+    DecodeException.wrap(
+        () -> "Couldn't decode static header: " + getBytes(),
+        () -> {
+          getSourceNodeId();
+          getFlag();
+          getAuthDataSize();
+        });
   }
 
   default boolean isEqual(StaticHeader other) {

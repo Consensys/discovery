@@ -31,13 +31,9 @@ public class NodesMessage implements V5Message {
   private final Integer nodeRecordsSize;
   private List<NodeRecord> nodeRecords = null;
 
-  public NodesMessage(
-      Bytes requestId,
-      Integer total,
-      List<NodeRecord> nodeRecords) {
+  public NodesMessage(Bytes requestId, Integer total, List<NodeRecord> nodeRecords) {
     this(requestId, total, () -> nodeRecords, nodeRecords.size());
   }
-
 
   public NodesMessage(
       Bytes requestId,

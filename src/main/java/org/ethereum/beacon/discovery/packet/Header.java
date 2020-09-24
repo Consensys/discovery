@@ -38,7 +38,9 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
     if (getStaticHeader().getAuthDataSize() != getAuthData().getBytes().size()) {
       throw new DecodeException(
           "Static header authdata-size field doesn't match the AuthData bytes size: "
-              + getStaticHeader().getAuthDataSize() + " != " + getAuthData().getBytes().size());
+              + getStaticHeader().getAuthDataSize()
+              + " != "
+              + getAuthData().getBytes().size());
     }
   }
 }

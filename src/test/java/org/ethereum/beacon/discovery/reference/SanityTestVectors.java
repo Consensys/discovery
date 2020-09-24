@@ -229,9 +229,7 @@ public class SanityTestVectors {
     Bytes idSignatureInput =
         CryptoUtil.sha256(
             Bytes.wrap(
-                ID_SIGNATURE_PREFIX,
-                whoAreYouHeader.getAuthData().getIdNonce(),
-                ephemeralPubKey));
+                ID_SIGNATURE_PREFIX, whoAreYouHeader.getAuthData().getIdNonce(), ephemeralPubKey));
     Bytes idSignature =
         Functions.sign(
             Bytes.fromHexString(

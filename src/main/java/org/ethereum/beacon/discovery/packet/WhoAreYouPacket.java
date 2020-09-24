@@ -16,7 +16,8 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
     return new WhoAreYouPacketImpl(header);
   }
 
-  static WhoAreYouPacket create(Bytes32 srcNodeId, Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
+  static WhoAreYouPacket create(
+      Bytes32 srcNodeId, Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
     return create(WhoAreYouAuthData.createHeader(srcNodeId, requestNonce, idNonce, enrSeq));
   }
 
@@ -26,7 +27,8 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
       return new WhoAreYouAuthDataImpl(requestNonce, idNonce, enrSeq);
     }
 
-    static Header<WhoAreYouAuthData> createHeader(Bytes32 srcNodeId, Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
+    static Header<WhoAreYouAuthData> createHeader(
+        Bytes32 srcNodeId, Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
       WhoAreYouAuthData authData = create(requestNonce, idNonce, enrSeq);
       return Header.create(srcNodeId, Flag.WHOAREYOU, authData);
     }
@@ -45,11 +47,13 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
     @Override
     default void validate() throws DecodeException {
       AuthData.super.validate();
-      DecodeException.wrap(() -> "Couldn't decode WhoAreYou auth data: " + getBytes(), () -> {
-        getRequestNonce();
-        getIdNonce();
-        getEnrSeq();
-      });
+      DecodeException.wrap(
+          () -> "Couldn't decode WhoAreYou auth data: " + getBytes(),
+          () -> {
+            getRequestNonce();
+            getIdNonce();
+            getEnrSeq();
+          });
     }
 
     default boolean isEqual(WhoAreYouAuthData other) {

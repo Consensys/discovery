@@ -49,9 +49,7 @@ public class DiscoveryIntegrationTest {
     managers.forEach(DiscoverySystem::stop);
   }
 
-  /**
-   * Runs a discovery server for interactive interop testing
-   */
+  /** Runs a discovery server for interactive interop testing */
   @Disabled
   @Test
   void runTestServer() throws Exception {
@@ -66,9 +64,7 @@ public class DiscoveryIntegrationTest {
     Thread.sleep(100000000000L);
   }
 
-  /**
-   * Runs a discovery client, sends a ping and waits for pong for interactive interop testing
-   */
+  /** Runs a discovery client, sends a ping and waits for pong for interactive interop testing */
   @Disabled
   @Test
   public void runTestClient() throws Exception {
@@ -76,9 +72,9 @@ public class DiscoveryIntegrationTest {
     new Random(1).nextBytes(keyBytes);
     final ECKeyPair keyPair = ECKeyPair.create(keyBytes);
 
-
-    NodeRecord remote = NodeRecordFactory.DEFAULT.fromBase64(
-        "-IS4QIrMgVOYuw2mq68f9hFGTlPzJT5pRWIqKTYL93C5xasmfUGUydi2XrjsbxO1MLYGEl1rR5H1iov6gxOyhegW9hYBgmlkgnY0gmlwhLyGRgGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyo");
+    NodeRecord remote =
+        NodeRecordFactory.DEFAULT.fromBase64(
+            "-IS4QIrMgVOYuw2mq68f9hFGTlPzJT5pRWIqKTYL93C5xasmfUGUydi2XrjsbxO1MLYGEl1rR5H1iov6gxOyhegW9hYBgmlkgnY0gmlwhLyGRgGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyo");
     System.out.println("Connecting to: " + remote);
     final DiscoverySystem client = createDiscoveryClient(true, "188.134.70.1", keyPair, remote);
     final CompletableFuture<Void> pingResult = client.ping(remote);

@@ -33,13 +33,13 @@ public class FindNodeMessage implements V5Message {
   public static FindNodeMessage fromRlp(List<RlpType> rlpList) {
     Bytes requestId = Bytes.wrap(((RlpString) rlpList.get(0)).getBytes());
     RlpList distanceList = (RlpList) rlpList.get(1);
-    List<Integer> distances = distanceList.getValues().stream()
-        .map(rlpType -> (RlpString) rlpType)
-        .map(s -> s.asPositiveBigInteger().intValueExact())
-        .collect(Collectors.toList());
+    List<Integer> distances =
+        distanceList.getValues().stream()
+            .map(rlpType -> (RlpString) rlpType)
+            .map(s -> s.asPositiveBigInteger().intValueExact())
+            .collect(Collectors.toList());
 
-    return new FindNodeMessage(
-        requestId, distances);
+    return new FindNodeMessage(requestId, distances);
   }
 
   @Override
@@ -57,10 +57,12 @@ public class FindNodeMessage implements V5Message {
         Bytes.of(MessageCode.FINDNODE.byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
-                new RlpList(RlpString.create(requestId.toArray()),
-                    new RlpList(getDistances().stream().map(RlpString::create)
-                        .collect(Collectors.toList()))
-                ))));
+                new RlpList(
+                    RlpString.create(requestId.toArray()),
+                    new RlpList(
+                        getDistances().stream()
+                            .map(RlpString::create)
+                            .collect(Collectors.toList()))))));
   }
 
   @Override
@@ -68,7 +70,8 @@ public class FindNodeMessage implements V5Message {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     FindNodeMessage that = (FindNodeMessage) o;
-    return Objects.equal(requestId, that.requestId) && Objects.equal(getDistances(), that.getDistances());
+    return Objects.equal(requestId, that.requestId)
+        && Objects.equal(getDistances(), that.getDistances());
   }
 
   @Override

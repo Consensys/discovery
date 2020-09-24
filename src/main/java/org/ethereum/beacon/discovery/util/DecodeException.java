@@ -10,6 +10,7 @@ public class DecodeException extends RuntimeException {
   public static void wrap(RunnableEx r) throws DecodeException {
     wrap(() -> "Error decoding", r);
   }
+
   public static void wrap(Supplier<String> err, RunnableEx r) throws DecodeException {
     try {
       r.run();

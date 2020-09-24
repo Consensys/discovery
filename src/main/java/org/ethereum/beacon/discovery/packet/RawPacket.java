@@ -27,8 +27,10 @@ public interface RawPacket extends BytesSerializable {
 
   @Override
   default void validate() throws DecodeException {
-    DecodeException.wrap(() -> "Couldn't decode IV: " + getBytes(), () -> {
-      getIV();
-    });
+    DecodeException.wrap(
+        () -> "Couldn't decode IV: " + getBytes(),
+        () -> {
+          getIV();
+        });
   }
 }

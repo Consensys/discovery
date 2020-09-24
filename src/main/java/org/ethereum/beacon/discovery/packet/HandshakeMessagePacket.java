@@ -27,11 +27,9 @@ public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> 
   interface HanshakeAuthData extends AuthData {
 
     static HanshakeAuthData create(
-        Bytes12 nonce,
-        Bytes idSignature,
-        Bytes ephemeralPubKey,
-        Optional<NodeRecord> nodeRecord) {
-      return HandshakeAuthDataImpl.create(HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
+        Bytes12 nonce, Bytes idSignature, Bytes ephemeralPubKey, Optional<NodeRecord> nodeRecord) {
+      return HandshakeAuthDataImpl.create(
+          HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
     }
 
     static Header<HanshakeAuthData> createHeader(
@@ -45,8 +43,8 @@ public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> 
     }
 
     /**
-     * id-nonce-input   = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey)
-     * id-signature     = id_sign(id-nonce-input)
+     * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
+     * id_sign(id-nonce-input)
      */
     static Bytes signId(Bytes32 idNonce, Bytes ephemeralPubKey, Bytes homeNodePrivateKey) {
       Bytes idSignatureInput =
@@ -68,10 +66,12 @@ public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> 
       if (getVersion() != HANDSHAKE_VERSION) {
         throw new DecodeException("Invalid Handshake version: " + getVersion());
       }
-      DecodeException.wrap(() -> "Couldn't decode Handshake auth data: " + getBytes(), () -> {
-        getIdSignature();
-        getEphemeralPubKey();
-      });
+      DecodeException.wrap(
+          () -> "Couldn't decode Handshake auth data: " + getBytes(),
+          () -> {
+            getIdSignature();
+            getEphemeralPubKey();
+          });
     }
 
     default boolean isEqualTo(HanshakeAuthData other, NodeRecordFactory nodeRecordFactory) {

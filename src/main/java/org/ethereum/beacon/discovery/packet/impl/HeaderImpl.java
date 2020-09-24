@@ -7,7 +7,6 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthData;
-import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
@@ -15,6 +14,7 @@ import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImp
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl.WhoAreYouAuthDataImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
+import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.DecryptException;
 
 public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes

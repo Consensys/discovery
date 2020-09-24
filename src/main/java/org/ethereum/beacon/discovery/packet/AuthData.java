@@ -25,8 +25,10 @@ public interface AuthData extends BytesSerializable {
 
   @Override
   default void validate() throws DecodeException {
-    DecodeException.wrap(() -> "Couldn't decode AuthData nonce: " + getBytes(), () -> {
-      getAesGcmNonce();
-    });
+    DecodeException.wrap(
+        () -> "Couldn't decode AuthData nonce: " + getBytes(),
+        () -> {
+          getAesGcmNonce();
+        });
   }
 }

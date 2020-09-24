@@ -34,13 +34,15 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
 
   @Override
   public void handle(FindNodeMessage message, NodeSession session) {
-    List<NodeRecord> nodeRecordInfos = message.getDistances().stream()
-        .flatMap(d -> session.getBucket(d).stream())
-        .flatMap(b -> b.getNodeRecords().stream())
-        .map(NodeRecordInfo::getNode)
-        .collect(Collectors.toList());
+    List<NodeRecord> nodeRecordInfos =
+        message.getDistances().stream()
+            .flatMap(d -> session.getBucket(d).stream())
+            .flatMap(b -> b.getNodeRecords().stream())
+            .map(NodeRecordInfo::getNode)
+            .collect(Collectors.toList());
 
-    List<List<NodeRecord>> nodeRecordsList = Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
+    List<List<NodeRecord>> nodeRecordsList =
+        Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
 
     logger.trace(
         () ->
@@ -55,7 +57,9 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
         recordsList ->
             session.sendOutgoingOrdinary(
                 new NodesMessage(
-                    message.getRequestId(), nodeRecordInfos.size(), () -> recordsList,
+                    message.getRequestId(),
+                    nodeRecordInfos.size(),
+                    () -> recordsList,
                     recordsList.size())));
   }
 }

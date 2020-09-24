@@ -5,13 +5,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthData>
     implements HandshakeMessagePacket {
