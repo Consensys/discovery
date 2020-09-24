@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery;
 
-import static org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket.createIdNonceMessage;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.packet5_0.AuthHeaderMessagePacket;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
@@ -154,28 +152,6 @@ public class FunctionsTest {
     Bytes message =
         Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
     assertTrue(Functions.verifyECDSASignature(idNonceSig, Functions.hash(message), pubKey));
-  }
-
-  @Test
-  public void testSignAndRecoverFromSignature() {
-    Bytes idNonce =
-        Bytes.fromHexString("0xd550ca9d62930c947efff75b58a4ea1b44716d841cc0d690879d4f3cab5a4e84");
-    Bytes ephemeralPubkey =
-        Bytes.fromHexString(
-            "0xd9bc9158f0a0c40e75490de66ef44f865588d1c7110b29d0c479db19f7644ddad2d8e948cb933bd767437b173888409d73644a36ae1d068997217357a22d674f");
-    Bytes privKey =
-        Bytes.fromHexString("0xb5a8efa45da6906663cf7a158cd506da71ae7d732a68220e6644468526bb098e");
-    Bytes pubKey =
-        Bytes.wrap(
-            Functions.publicKeyToPoint(
-                    Bytes.wrap(
-                        Utils.extractBytesFromUnsignedBigInt(
-                            ECKeyPair.create(privKey.toArray()).getPublicKey(), 64)))
-                .getEncoded(true));
-    Bytes idNonceSig = AuthHeaderMessagePacket.signIdNonce(idNonce, privKey, ephemeralPubkey);
-    assertTrue(
-        Functions.verifyECDSASignature(
-            idNonceSig, Functions.hash(createIdNonceMessage(idNonce, ephemeralPubkey)), pubKey));
   }
 
   @Test

@@ -25,14 +25,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet5_0.MessagePacket;
-import org.ethereum.beacon.discovery.packet5_0.Packet;
-import org.ethereum.beacon.discovery.packet5_0.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -161,14 +161,14 @@ public class HandshakeHandlersTest {
     Envelope envelopeAt1From2 = new Envelope();
     byte[] idNonceBytes = new byte[32];
     Functions.getRandom().nextBytes(idNonceBytes);
-    Bytes idNonce = Bytes.wrap(idNonceBytes);
+    Bytes32 idNonce = Bytes32.wrap(idNonceBytes);
     nodeSessionAt2For1.setIdNonce(idNonce);
     Bytes12 authTag = nodeSessionAt2For1.generateNonce();
     authTagRepository1.put(authTag, nodeSessionAt1For2);
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
-        WhoAreYouPacket.createFromNodeId(
-            nodePair1.getNodeRecord().getNodeId(), authTag, idNonce, UInt64.ZERO));
+        WhoAreYouPacket.create(
+            Bytes32.wrap(nodePair1.getNodeRecord().getNodeId()), authTag, idNonce, UInt64.ZERO));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     CompletableFuture<Void> future = new CompletableFuture<>();
     nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);
@@ -214,9 +214,8 @@ public class HandshakeHandlersTest {
     MessagePacketHandler messagePacketHandler2 =
         new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
-    Packet pongPacketFrom1To2 = outgoing1Packets[1];
-    MessagePacket pongMessagePacketFrom1To2 = (MessagePacket) pongPacketFrom1To2;
-    envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongMessagePacketFrom1To2);
+    Packet<?> pongPacketFrom1To2 = outgoing1Packets[1];
+    envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongPacketFrom1To2);
     envelopeAt2From1WithMessage.put(SESSION, nodeSessionAt2For1);
     messagePacketHandler2.handle(envelopeAt2From1WithMessage);
     assertNull(envelopeAt2From1WithMessage.get(BAD_PACKET));

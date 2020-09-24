@@ -34,6 +34,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 
@@ -48,6 +49,10 @@ public class DiscoveryIntegrationTest {
     managers.forEach(DiscoverySystem::stop);
   }
 
+  /**
+   * Runs a discovery server for interactive interop testing
+   */
+  @Disabled
   @Test
   void runTestServer() throws Exception {
     byte[] keyBytes = new byte[PRIVKEY_SIZE];
@@ -61,6 +66,10 @@ public class DiscoveryIntegrationTest {
     Thread.sleep(100000000000L);
   }
 
+  /**
+   * Runs a discovery client, sends a ping and waits for pong for interactive interop testing
+   */
+  @Disabled
   @Test
   public void runTestClient() throws Exception {
     byte[] keyBytes = new byte[PRIVKEY_SIZE];
