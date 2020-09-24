@@ -65,6 +65,7 @@ import org.junit.jupiter.api.Test;
 public class HandshakeHandlersTest {
 
   @Test
+  @SuppressWarnings("rawtypes")
   public void authHandlerWithMessageRoundTripTest() throws Exception {
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
@@ -104,7 +105,7 @@ public class HandshakeHandlersTest {
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
 
     // Node1 create AuthHeaderPacket
-    final Packet[] outgoing1Packets = new Packet[2];
+    final Packet<?>[] outgoing1Packets = new Packet[2];
     final Semaphore outgoing1PacketsSemaphore = new Semaphore(2);
     outgoing1PacketsSemaphore.acquire(2);
     final Consumer<NetworkParcel> outgoingMessages1to2 =

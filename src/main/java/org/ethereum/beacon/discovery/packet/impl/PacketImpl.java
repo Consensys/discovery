@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -45,10 +48,12 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
     return Bytes.wrap(header.encrypt(iv, nodeId), getMessageBytes());
   }
 
+  @Override
   public Header<TAuthData> getHeader() {
     return header;
   }
 
+  @Override
   public Bytes getMessageBytes() {
     return messageBytes;
   }

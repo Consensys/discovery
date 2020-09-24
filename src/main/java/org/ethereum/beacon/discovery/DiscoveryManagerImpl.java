@@ -93,7 +93,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
         //        .addHandler(new WhoAreYouAttempt(homeNodeRecord.getNodeId()))
         //        .addHandler(new WhoAreYouSessionResolver(authTagRepo))
-        .addHandler(new UnknownPacketTagToSender(homeNodeRecord.getNodeId()))
+        .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
         .addHandler(new GenericPacketHandler())
         //        .addHandler(new UnknownPacketTypeByStatus())

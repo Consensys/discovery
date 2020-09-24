@@ -1,5 +1,9 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -16,7 +20,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> {
-  Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes());
+  Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes(StandardCharsets.US_ASCII));
   byte HANDSHAKE_VERSION = 1;
 
   static HandshakeMessagePacket create(

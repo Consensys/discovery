@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -25,6 +28,7 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
     return Bytes16.wrap(getBytes().slice(0, IV_SIZE));
   }
 
+  @Override
   public Packet<?> decodePacket(Bytes16 homeNodeId) {
     Packet<?> packet = PacketImpl.decrypt(getBytes().slice(IV_SIZE), getIV(), homeNodeId);
     packet.validate();

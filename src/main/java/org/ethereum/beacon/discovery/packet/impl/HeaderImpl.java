@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -69,10 +72,12 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     this.authData = authData;
   }
 
+  @Override
   public int getSize() {
     return StaticHeaderImpl.STATIC_HEADER_SIZE + getAuthDataBytes().size();
   }
 
+  @Override
   public StaticHeader getStaticHeader() {
     return staticHeader;
   }
@@ -82,6 +87,7 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     return authData;
   }
 
+  @Override
   public Bytes encrypt(Bytes16 iv, Bytes16 nodeId) {
     Bytes headerPlainBytes = Bytes.concatenate(staticHeader.getBytes(), getAuthDataBytes());
     return CryptoUtil.aesctrEncrypt(nodeId, iv, headerPlainBytes);

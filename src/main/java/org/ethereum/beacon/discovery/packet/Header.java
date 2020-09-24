@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -32,6 +35,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
   Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
 
+  @Override
   default void validate() throws DecodeException {
     getStaticHeader().validate();
     getAuthData().validate();

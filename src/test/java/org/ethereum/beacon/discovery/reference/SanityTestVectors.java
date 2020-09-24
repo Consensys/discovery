@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -221,6 +224,7 @@ public class SanityTestVectors {
     Bytes ephemeralPrivKey =
         Bytes.fromHexString("0x0288ef00023598499cb6c940146d050d2b1fb914198c327f76aad590bead68b6");
     //    Bytes ephemeralPubKey = Functions.derivePublicKeyFromPrivate(ephemeralPrivKey);
+    ephemeralPrivKey.size();
 
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
     Bytes ephemeralPubKey =

@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -25,6 +28,7 @@ public interface StaticHeader extends BytesSerializable {
 
   int getAuthDataSize();
 
+  @Override
   default void validate() {
     if (!getProtocolId().equals(PROTOCOL_ID)) {
       throw new DecodeException("Invalid protocolId field: '" + getProtocolId() + "'");

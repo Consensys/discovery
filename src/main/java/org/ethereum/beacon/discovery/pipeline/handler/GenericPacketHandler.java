@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -15,14 +14,11 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
-import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class GenericPacketHandler implements EnvelopeHandler {
 
   private static final Logger logger = LogManager.getLogger(GenericPacketHandler.class);
-
-  private final NodeRecordFactory nodeRecordFactory = null;
 
   @Override
   public void handle(Envelope envelope) {
@@ -50,8 +46,6 @@ public class GenericPacketHandler implements EnvelopeHandler {
       case INITIAL:
         if (packet instanceof OrdinaryMessagePacket) {
           envelope.put(Field.PACKET_MESSAGE, packet);
-          //          sendWhoAreYou((OrdinaryMessagePacket) packet);
-          //          session.setStatus(SessionStatus.WHOAREYOU_SENT);
         } else {
           // TODO error
         }
@@ -60,8 +54,6 @@ public class GenericPacketHandler implements EnvelopeHandler {
         // Should receive WHOAREYOU in answer, not our case
         if (packet instanceof WhoAreYouPacket) {
           envelope.put(Field.PACKET_WHOAREYOU, packet);
-          //          sendHandshake((WhoAreYouPacket) packet);
-          //          session.setStatus(SessionStatus.AUTHENTICATED);
         } else {
           // TODO error
         }
@@ -69,14 +61,8 @@ public class GenericPacketHandler implements EnvelopeHandler {
       case WHOAREYOU_SENT:
         {
           if (packet instanceof HandshakeMessagePacket) {
-            //          HandshakeMessagePacket authPacket = (HandshakeMessagePacket) packet;
-            //          processHandshake(authPacket);
-
             envelope.put(Field.PACKET_AUTH_HEADER_MESSAGE, packet);
             envelope.put(Field.PACKET_MESSAGE, packet);
-
-            //          session.setStatus(SessionStatus.AUTHENTICATED);
-            //          processMessagePacket(authPacket);
           } else {
             // TODO error
           }
@@ -86,19 +72,11 @@ public class GenericPacketHandler implements EnvelopeHandler {
         {
           if (packet instanceof OrdinaryMessagePacket) {
             envelope.put(Field.PACKET_MESSAGE, packet);
-            //          processMessagePacket((MessagePacket<?>) packet);
           } else if (packet instanceof WhoAreYouPacket) {
-            //          session.setStatus(SessionStatus.RANDOM_PACKET_SENT);
-            //          sendHandshake((WhoAreYouPacket) packet);
-            //          session.setStatus(SessionStatus.AUTHENTICATED);
             envelope.put(Field.PACKET_WHOAREYOU, packet);
           } else {
             // TODO error
           }
-
-          //        MessagePacket messagePacket = unknownPacket.getMessagePacket();
-          //        envelope.put(Field.PACKET_MESSAGE, messagePacket);
-          //        envelope.remove(Field.PACKET_UNKNOWN);
           break;
         }
       default:
@@ -112,12 +90,4 @@ public class GenericPacketHandler implements EnvelopeHandler {
         }
     }
   }
-
-  private void sendWhoAreYou(OrdinaryMessagePacket srcPacket) {}
-
-  private void sendHandshake(WhoAreYouPacket srcPacket) {}
-
-  private void processHandshake(HandshakeMessagePacket handshakeMessagePacket) {}
-
-  private void processMessagePacket(MessagePacket<?> messagePacket) {}
 }
