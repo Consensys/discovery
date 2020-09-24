@@ -160,6 +160,21 @@ public class OrdinaryMessagePacketTest {
     }).isInstanceOf(DecodeException.class);
   }
 
+  @Test
+  void testDecryptingRandomMessageFails() {
+    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+
+    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.createRandom(header, 111);
+    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    Bytes packetBytes = rawPacket.getBytes();
+
+    MessagePacket<?> msgPacket = (MessagePacket<?>) RawPacket.decode(packetBytes)
+        .decodePacket(headerMaskingKey);
+    assertThatThrownBy(() -> {
+      msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+    }).isInstanceOf(DecodeException.class);
+  }
+
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithInvalidMessageRlpFails(V5Message message, String __, String name) {

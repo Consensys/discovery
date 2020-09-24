@@ -1,5 +1,6 @@
 package org.ethereum.beacon.discovery.packet.impl;
 
+import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.BytesSerializable;
 import org.ethereum.beacon.discovery.util.DecodeException;
@@ -30,5 +31,22 @@ public abstract class AbstractBytes implements BytesSerializable {
 
   public Bytes getBytes() {
     return bytes;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    AbstractBytes that = (AbstractBytes) o;
+    return Objects.equals(bytes, that.bytes);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(bytes);
   }
 }
