@@ -26,6 +26,8 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
   }
 
   public Packet<?> decodePacket(Bytes16 homeNodeId) {
-    return PacketImpl.decrypt(getBytes().slice(IV_SIZE), getIV(), homeNodeId);
+    Packet<?> packet = PacketImpl.decrypt(getBytes().slice(IV_SIZE), getIV(), homeNodeId);
+    packet.validate();
+    return packet;
   }
 }

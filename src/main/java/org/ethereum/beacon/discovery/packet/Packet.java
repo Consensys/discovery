@@ -8,7 +8,9 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
   static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 nodeId) throws DecodeException {
-    return PacketImpl.decrypt(data, iv, nodeId);
+    Packet<?> packet = PacketImpl.decrypt(data, iv, nodeId);
+    packet.validate();
+    return packet;
   }
 
   Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
@@ -16,4 +18,9 @@ public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
   Bytes getMessageBytes();
 
   Header<TAuthData> getHeader();
+
+  @Override
+  default void validate() throws DecodeException {
+    getHeader().validate();
+  }
 }

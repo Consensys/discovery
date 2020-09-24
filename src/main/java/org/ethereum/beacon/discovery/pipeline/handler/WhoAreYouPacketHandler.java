@@ -130,7 +130,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       }
       HanshakeAuthData authData =
           HanshakeAuthData.create(
-              (byte) 1,
               session.generateNonce(),
               idSignature,
               ephemeralPubKey,

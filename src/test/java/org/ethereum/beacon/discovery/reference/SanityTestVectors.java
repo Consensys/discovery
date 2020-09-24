@@ -230,7 +230,7 @@ public class SanityTestVectors {
         CryptoUtil.sha256(
             Bytes.wrap(
                 ID_SIGNATURE_PREFIX,
-                whoAreYouHeader.getAuthData().getRequestNonce(),
+                whoAreYouHeader.getAuthData().getIdNonce(),
                 ephemeralPubKey));
     Bytes idSignature =
         Functions.sign(
@@ -242,7 +242,6 @@ public class SanityTestVectors {
 
     HanshakeAuthData authData =
         HanshakeAuthData.create(
-            (byte) 1,
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             idSignature,
             //            Bytes.fromHexString(
@@ -341,7 +340,6 @@ public class SanityTestVectors {
 
     HanshakeAuthData authData =
         HanshakeAuthData.create(
-            (byte) 1,
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             Bytes.fromHexString(
                 "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),

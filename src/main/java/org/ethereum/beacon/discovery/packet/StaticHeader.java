@@ -3,6 +3,7 @@ package org.ethereum.beacon.discovery.packet;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 public interface StaticHeader extends BytesSerializable {
 
@@ -24,8 +25,15 @@ public interface StaticHeader extends BytesSerializable {
 
   int getAuthDataSize();
 
-  default boolean validate() {
-    return getProtocolId().equals(PROTOCOL_ID);
+  default void validate() {
+    if (!getProtocolId().equals(PROTOCOL_ID)) {
+      throw new DecodeException("Invalid protocolId field: '" + getProtocolId() + "'");
+    }
+    DecodeException.wrap(() -> "Couldn't decode static header: " + getBytes(), () -> {
+      getSourceNodeId();
+      getFlag();
+      getAuthDataSize();
+    });
   }
 
   default boolean isEqual(StaticHeader other) {

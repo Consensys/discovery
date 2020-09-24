@@ -5,16 +5,19 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
+import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> {
   Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes());
+  byte HANDSHAKE_VERSION = 1;
 
   static HandshakeMessagePacket create(
       Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
@@ -24,12 +27,21 @@ public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> 
   interface HanshakeAuthData extends AuthData {
 
     static HanshakeAuthData create(
-        byte version,
         Bytes12 nonce,
         Bytes idSignature,
         Bytes ephemeralPubKey,
         Optional<NodeRecord> nodeRecord) {
-      return HandshakeAuthDataImpl.create(version, nonce, idSignature, ephemeralPubKey, nodeRecord);
+      return HandshakeAuthDataImpl.create(HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
+    }
+
+    static Header<HanshakeAuthData> createHeader(
+        Bytes32 srcNodeId,
+        Bytes12 nonce,
+        Bytes idSignature,
+        Bytes ephemeralPubKey,
+        Optional<NodeRecord> nodeRecord) {
+      HanshakeAuthData authData = create(nonce, idSignature, ephemeralPubKey, nodeRecord);
+      return Header.create(srcNodeId, Flag.HANDSHAKE, authData);
     }
 
     /**
@@ -49,6 +61,18 @@ public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> 
     Bytes getEphemeralPubKey();
 
     Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory);
+
+    @Override
+    default void validate() throws DecodeException {
+      AuthData.super.validate();
+      if (getVersion() != HANDSHAKE_VERSION) {
+        throw new DecodeException("Invalid Handshake version: " + getVersion());
+      }
+      DecodeException.wrap(() -> "Couldn't decode Handshake auth data: " + getBytes(), () -> {
+        getIdSignature();
+        getEphemeralPubKey();
+      });
+    }
 
     default boolean isEqualTo(HanshakeAuthData other, NodeRecordFactory nodeRecordFactory) {
       return getVersion() == other.getVersion()

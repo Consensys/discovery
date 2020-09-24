@@ -8,6 +8,7 @@ import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl.WhoAreYouAuthDataImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes52;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 
@@ -40,6 +41,16 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 
     @Override
     Bytes52 getBytes();
+
+    @Override
+    default void validate() throws DecodeException {
+      AuthData.super.validate();
+      DecodeException.wrap(() -> "Couldn't decode WhoAreYou auth data: " + getBytes(), () -> {
+        getRequestNonce();
+        getIdNonce();
+        getEnrSeq();
+      });
+    }
 
     default boolean isEqual(WhoAreYouAuthData other) {
       return getRequestNonce().equals(other.getRequestNonce())

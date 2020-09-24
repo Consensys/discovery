@@ -33,9 +33,12 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
   Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
 
   default void validate() throws DecodeException {
-    if (!StaticHeader.PROTOCOL_ID.equals(getStaticHeader().getProtocolId())) {
+    getStaticHeader().validate();
+    getAuthData().validate();
+    if (getStaticHeader().getAuthDataSize() != getAuthData().getBytes().size()) {
       throw new DecodeException(
-          "ProtocolId validation failed. Probably the header was incorrectly AES/CTR encrypted");
+          "Static header authdata-size field doesn't match the AuthData bytes size: "
+              + getStaticHeader().getAuthDataSize() + " != " + getAuthData().getBytes().size());
     }
   }
 }

@@ -61,12 +61,12 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthDa
       return Bytes12.wrap(getBytes(), NONCE_OFF);
     }
 
-    private byte getSignatureSize() {
-      return getBytes().get(SIG_SIZE_OFF);
+    private int getSignatureSize() {
+      return getBytes().get(SIG_SIZE_OFF) & 0xFF;
     }
 
-    private byte getEphemeralPubKeySize() {
-      return getBytes().get(EPH_KEY_SIZE_OFF);
+    private int getEphemeralPubKeySize() {
+      return getBytes().get(EPH_KEY_SIZE_OFF) & 0xFF;
     }
 
     @Override

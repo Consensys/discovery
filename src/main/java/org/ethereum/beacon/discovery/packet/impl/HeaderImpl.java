@@ -27,10 +27,7 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       Bytes staticHeaderCiphered = data.slice(0, StaticHeaderImpl.STATIC_HEADER_SIZE);
       Bytes staticHeaderBytes = Bytes.wrap(cipher.update(staticHeaderCiphered.toArrayUnsafe()));
       StaticHeader header = StaticHeader.decode(staticHeaderBytes);
-
-      if (!header.validate()) {
-        throw new DecryptException("Couldn't decrypt packet static header.");
-      }
+      header.validate();
 
       int authDataSize = header.getAuthDataSize();
       int headerSize = StaticHeaderImpl.STATIC_HEADER_SIZE + authDataSize;

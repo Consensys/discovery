@@ -12,7 +12,9 @@ public interface RawPacket extends BytesSerializable {
   }
 
   static RawPacket decode(Bytes data) throws DecodeException {
-    return RawPacketImpl.create(data);
+    RawPacket rawPacket = RawPacketImpl.create(data);
+    rawPacket.validate();
+    return rawPacket;
   }
 
   Bytes16 getIV();
@@ -21,5 +23,12 @@ public interface RawPacket extends BytesSerializable {
 
   default Packet<?> decodePacket(Bytes homeNodeId) throws DecodeException {
     return decodePacket(Bytes16.wrap(homeNodeId, 0));
+  }
+
+  @Override
+  default void validate() throws DecodeException {
+    DecodeException.wrap(() -> "Couldn't decode IV: " + getBytes(), () -> {
+      getIV();
+    });
   }
 }
