@@ -34,10 +34,10 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
   private final Header<TAuthData> header;
   private final Bytes messageBytes;
 
-  public PacketImpl(Header<TAuthData> header, Bytes messageBytes) {
-    super(Bytes.wrap(header.getBytes(), messageBytes));
+  public PacketImpl(Header<TAuthData> header, Bytes cipheredMessageBytes) {
+    super(Bytes.wrap(header.getBytes(), cipheredMessageBytes));
     this.header = header;
-    this.messageBytes = messageBytes;
+    this.messageBytes = cipheredMessageBytes;
   }
 
   @Override
