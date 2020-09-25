@@ -22,23 +22,21 @@ import org.ethereum.beacon.discovery.util.Functions;
 /**
  * Handshake packet
  *
- * For handshake message packets, the authdata section has variable size since public key and
+ * <p>For handshake message packets, the authdata section has variable size since public key and
  * signature sizes depend on the ENR identity scheme. For the "v4" identity scheme, we assume
  * 64-byte signature size and 33 bytes of (compressed) public key size.
  *
- * authdata starts with a fixed-size authdata-head component, followed by the ID signature,
+ * <p>authdata starts with a fixed-size authdata-head component, followed by the ID signature,
  * ephemeral public key and optional node record.
  *
- * The record field may be omitted if the enr-seq of WHOAREYOU is recent enough, i.e.
- * when it matches the current sequence number of the sending node. If enr-seq is zero, the record
- * must be sent. Node records are encoded and verified as specified in EIP-778.
+ * <p>The record field may be omitted if the enr-seq of WHOAREYOU is recent enough, i.e. when it
+ * matches the current sequence number of the sending node. If enr-seq is zero, the record must be
+ * sent. Node records are encoded and verified as specified in EIP-778.
  *
- * authdata      = authdata-head || id-signature || eph-pubkey || record
- * authdata-size = 15 + sig-size + eph-key-size + len(record)
- * authdata-head = version || nonce || sig-size || eph-key-size
- * version       = uint8     -- value: 1
- * sig-size      = uint8     -- value: 64 for ID scheme "v4"
- * eph-key-size  = uint8     -- value: 33 for ID scheme "v4"
+ * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-size = 15 + sig-size
+ * + eph-key-size + len(record) authdata-head = version || nonce || sig-size || eph-key-size version
+ * = uint8 -- value: 1 sig-size = uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 --
+ * value: 33 for ID scheme "v4"
  */
 public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> {
   Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes(StandardCharsets.US_ASCII));

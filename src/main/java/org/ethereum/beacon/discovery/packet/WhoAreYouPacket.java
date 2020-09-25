@@ -17,11 +17,9 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  * In WHOAREYOU packets, the authdata section contains information for the verification procedure.
  * The message field of WHOAREYOU packets is always empty.
  *
- * authdata      = request-nonce || id-nonce || enr-seq
- * authdata-size = 52
- * request-nonce = uint96    -- nonce of request packet that couldn't be decrypted
- * id-nonce      = uint256   -- random bytes
- * enr-seq       = uint64    -- ENR sequence number of the requesting node
+ * <p>authdata = request-nonce || id-nonce || enr-seq authdata-size = 52 request-nonce = uint96 --
+ * nonce of request packet that couldn't be decrypted id-nonce = uint256 -- random bytes enr-seq =
+ * uint64 -- ENR sequence number of the requesting node
  */
 public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 

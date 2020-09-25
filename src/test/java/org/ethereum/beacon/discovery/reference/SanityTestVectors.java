@@ -11,7 +11,6 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;

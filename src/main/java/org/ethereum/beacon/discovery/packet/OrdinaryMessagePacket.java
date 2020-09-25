@@ -10,8 +10,7 @@ import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl;
 /**
  * For message packets, the authdata section is just the 96-bit AES/GCM nonce:
  *
- * authdata      = nonce
- * authdata-size = 12
+ * <p>authdata = nonce authdata-size = 12
  */
 public interface OrdinaryMessagePacket extends MessagePacket<AuthData> {
 

@@ -126,5 +126,4 @@ public class TestUtil {
         && that.getIdNonce().equals(other.getIdNonce())
         && that.getEnrSeq().equals(other.getEnrSeq());
   }
-
 }
