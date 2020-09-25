@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.pipeline.handler;
 
 import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
-import static org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus.AUTHENTICATED;
+import static org.ethereum.beacon.discovery.schema.NodeSession.SessionState.AUTHENTICATED;
 
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -81,7 +81,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "Node record not valid for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -91,7 +91,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "Incorrect node ID for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -107,7 +107,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -121,14 +121,14 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
             session.getNodeTable().save(NodeRecordInfo.createDefault(r));
           });
 
-      session.setStatus(AUTHENTICATED);
+      session.setState(AUTHENTICATED);
       envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus()),
+              packet, session.getNodeRecord(), session.getState()),
           ex);
       markHandshakeAsFailed(envelope, session);
     }

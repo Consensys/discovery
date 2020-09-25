@@ -62,7 +62,7 @@ public class NodeSession {
   private final Random rnd;
   private final Bytes nodeId;
   private Optional<NodeRecord> nodeRecord;
-  private SessionStatus status = SessionStatus.INITIAL;
+  private SessionState state = SessionState.INITIAL;
   private Bytes idNonce;
   private Bytes initiatorKey;
   private Bytes recipientKey;
@@ -230,7 +230,7 @@ public class NodeSession {
 
   /** If true indicates that handshake is complete */
   public synchronized boolean isAuthenticated() {
-    return SessionStatus.AUTHENTICATED.equals(status);
+    return SessionState.AUTHENTICATED.equals(state);
   }
 
   /** Resets stored authTags for this session making them obsolete */
@@ -349,25 +349,24 @@ public class NodeSession {
 
   @Override
   public String toString() {
-    return "NodeSession{" + nodeId + " (" + status + ")}";
+    return "NodeSession{" + nodeId + " (" + state + ")}";
   }
 
-  public synchronized SessionStatus getStatus() {
-    return status;
+  public synchronized SessionState getState() {
+    return state;
   }
 
-  public synchronized void setStatus(SessionStatus newStatus) {
+  public synchronized void setState(SessionState newStatus) {
     logger.debug(
-        () ->
-            String.format("Switching status of node %s from %s to %s", nodeId, status, newStatus));
-    this.status = newStatus;
+        () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
+    this.state = newStatus;
   }
 
   public Bytes getStaticNodeKey() {
     return staticNodeKey;
   }
 
-  public enum SessionStatus {
+  public enum SessionState {
     INITIAL, // other side is trying to connect, or we are initiating (before random packet is sent
     WHOAREYOU_SENT, // other side is initiator, we've sent whoareyou in response
     RANDOM_PACKET_SENT, // our node is initiator, we've sent random packet

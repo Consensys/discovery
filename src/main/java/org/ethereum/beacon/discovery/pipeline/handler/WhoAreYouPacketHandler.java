@@ -28,6 +28,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -78,7 +79,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
             "Verification not passed for message [{}] from node {} in status {}",
             packet,
             nodeRecord,
-            session.getStatus());
+            session.getState());
         envelope.remove(Field.PACKET_WHOAREYOU);
         session.cancelAllRequests("Bad WHOAREYOU received from node");
         return;
@@ -136,7 +137,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
       HandshakeMessagePacket handshakeMessagePacket =
           HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
-      session.setStatus(NodeSession.SessionStatus.AUTHENTICATED);
+      session.setState(SessionState.AUTHENTICATED);
 
       session.sendOutgoing(handshakeMessagePacket);
 
@@ -146,7 +147,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus());
+              packet, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");

@@ -19,6 +19,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -64,12 +65,12 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
               Header.create(session.getHomeNodeId(), Flag.WHOAREYOU, whoAreYouAuthData));
       session.sendOutgoing(whoAreYouPacket);
 
-      session.setStatus(NodeSession.SessionStatus.WHOAREYOU_SENT);
+      session.setState(SessionState.WHOAREYOU_SENT);
     } catch (Exception ex) {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              unknownPacket, session.getNodeRecord(), session.getStatus());
+              unknownPacket, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
       envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_MESSAGE));
       envelope.put(Field.BAD_EXCEPTION, ex);
