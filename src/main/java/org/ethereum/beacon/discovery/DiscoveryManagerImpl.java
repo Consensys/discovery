@@ -21,7 +21,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
 import org.ethereum.beacon.discovery.pipeline.handler.BadPacketHandler;
-import org.ethereum.beacon.discovery.pipeline.handler.GenericPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.IncomingDataPacker;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
@@ -93,7 +93,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
-        .addHandler(new GenericPacketHandler())
+        .addHandler(new PacketDispatcherHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
             new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))

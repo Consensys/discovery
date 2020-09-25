@@ -18,10 +18,10 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Utils;
 
-/** State machine matching the current session state and inbound packet */
-public class GenericPacketHandler implements EnvelopeHandler {
+/** Matches the current session state and inbound packet */
+public class PacketDispatcherHandler implements EnvelopeHandler {
 
-  private static final Logger logger = LogManager.getLogger(GenericPacketHandler.class);
+  private static final Logger logger = LogManager.getLogger(PacketDispatcherHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
