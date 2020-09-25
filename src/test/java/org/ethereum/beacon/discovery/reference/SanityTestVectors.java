@@ -4,12 +4,14 @@
 package org.ethereum.beacon.discovery.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.TestUtil.isFieldsEqual;
 import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
@@ -121,8 +123,8 @@ public class SanityTestVectors {
     Header<WhoAreYouAuthData> header1 = packet1.getHeader();
     WhoAreYouAuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
-    assertThat(authData1.isEqual(authData)).isTrue();
-    assertThat(header1.getStaticHeader().isEqual(header.getStaticHeader())).isTrue();
+    assertThat(isFieldsEqual(authData1, authData)).isTrue();
+    assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();
   }
 
   @Test
@@ -180,8 +182,8 @@ public class SanityTestVectors {
     Header<AuthData> header1 = packet1.getHeader();
     AuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
-    assertThat(authData1.isEqual(authData)).isTrue();
-    assertThat(header1.getStaticHeader().isEqual(header.getStaticHeader())).isTrue();
+    assertThat(isFieldsEqual(authData1, authData)).isTrue();
+    assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();
   }
 
   @Test
@@ -277,8 +279,8 @@ public class SanityTestVectors {
     Header<HanshakeAuthData> header1 = packet1.getHeader();
     HanshakeAuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
-    assertThat(authData1.isEqual(authData)).isTrue();
-    assertThat(header1.getStaticHeader().isEqual(header.getStaticHeader())).isTrue();
+    assertThat(isFieldsEqual(authData1, authData)).isTrue();
+    assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();
   }
 
   @Test
@@ -377,8 +379,8 @@ public class SanityTestVectors {
     Header<HanshakeAuthData> header1 = packet1.getHeader();
     HanshakeAuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
-    assertThat(authData1.isEqual(authData)).isTrue();
-    assertThat(header1.getStaticHeader().isEqual(header.getStaticHeader())).isTrue();
+    assertThat(isFieldsEqual(authData1, authData)).isTrue();
+    assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();
 
     Optional<NodeRecord> nodeRecord1 =
         packet1.getHeader().getAuthData().getNodeRecord(NodeRecordFactory.DEFAULT);

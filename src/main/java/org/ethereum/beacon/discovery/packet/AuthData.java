@@ -23,10 +23,6 @@ public interface AuthData extends BytesSerializable {
 
   Bytes12 getAesGcmNonce();
 
-  default boolean isEqual(AuthData other) {
-    return getAesGcmNonce().equals(other.getAesGcmNonce());
-  }
-
   @Override
   default void validate() throws DecodeException {
     DecodeException.wrap(

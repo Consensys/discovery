@@ -46,13 +46,6 @@ public interface StaticHeader extends BytesSerializable {
         });
   }
 
-  default boolean isEqual(StaticHeader other) {
-    return getProtocolId().equals(other.getProtocolId())
-        && getSourceNodeId().equals(other.getSourceNodeId())
-        && getFlag().equals(other.getFlag())
-        && getAuthDataSize() == other.getAuthDataSize();
-  }
-
   enum Flag {
     MESSAGE,
     WHOAREYOU,
