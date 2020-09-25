@@ -20,9 +20,9 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
-import org.ethereum.beacon.discovery.pipeline.handler.AuthHeaderMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.BadPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.GenericPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.IncomingDataPacker;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
@@ -30,8 +30,8 @@ import org.ethereum.beacon.discovery.pipeline.handler.NewTaskHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.NextTaskHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeIdToSession;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionRequestHandler;
-import org.ethereum.beacon.discovery.pipeline.handler.NotExpectedIncomingPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.OutgoingParcelHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -94,11 +94,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
         .addHandler(new GenericPacketHandler())
-        .addHandler(new NotExpectedIncomingPacketHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
-            new AuthHeaderMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
+            new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
+        .addHandler(new UnauthorizedMessagePacketHandler())
         .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();

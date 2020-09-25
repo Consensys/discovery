@@ -19,12 +19,11 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 
-public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(NotExpectedIncomingPacketHandler.class);
+public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
+  private static final Logger logger = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
@@ -33,7 +32,7 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NotExpectedIncomingPacketHandler, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.PACKET_MESSAGE, envelope)) {
+    if (!HandlerUtil.requireField(Field.UNAUTHORIZED_PACKET_MESSAGE, envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
@@ -46,12 +45,8 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
                 envelope.getId()));
 
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    if (session.getStatus() != SessionStatus.INITIAL) {
-      return;
-    }
-
     OrdinaryMessagePacket unknownPacket =
-        (OrdinaryMessagePacket) envelope.get(Field.PACKET_MESSAGE);
+        (OrdinaryMessagePacket) envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
       Bytes12 msgNonce = unknownPacket.getHeader().getAuthData().getAesGcmNonce();
@@ -70,7 +65,6 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       session.sendOutgoing(whoAreYouPacket);
 
       session.setStatus(NodeSession.SessionStatus.WHOAREYOU_SENT);
-      envelope.remove(Field.PACKET_MESSAGE);
     } catch (Exception ex) {
       String error =
           String.format(
@@ -79,7 +73,7 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       logger.debug(error, ex);
       envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_MESSAGE));
       envelope.put(Field.BAD_EXCEPTION, ex);
-      envelope.remove(Field.PACKET_MESSAGE);
     }
+    envelope.remove(Field.PACKET_MESSAGE);
   }
 }

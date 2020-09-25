@@ -14,6 +14,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.util.DecryptException;
 
 /** Handles {@link MessagePacket} in {@link Field#PACKET_MESSAGE} field */
 public class MessagePacketHandler implements EnvelopeHandler {
@@ -49,8 +50,16 @@ public class MessagePacketHandler implements EnvelopeHandler {
     try {
       V5Message message = packet.decryptMessage(session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
+      envelope.remove(Field.PACKET_MESSAGE);
+    } catch (DecryptException e) {
+      logger.trace(
+          () ->
+              String.format(
+                  "Failed to decrypt message [%s] from node %s in status %s. Will be sending WHOAREYOU...",
+                  packet, session.getNodeRecord(), session.getStatus()));
 
-      // TODO we should re-run handshake when failed to decrypt the message
+      envelope.remove(Field.PACKET_MESSAGE);
+      envelope.put(Field.UNAUTHORIZED_PACKET_MESSAGE, packet);
     } catch (Exception ex) {
       String error =
           String.format(
@@ -59,8 +68,6 @@ public class MessagePacketHandler implements EnvelopeHandler {
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_MESSAGE);
       envelope.put(Field.BAD_PACKET, packet);
-      return;
     }
-    envelope.remove(Field.PACKET_MESSAGE);
   }
 }

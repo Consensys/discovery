@@ -97,4 +97,15 @@ public class Utils {
     checkArgument(bytes.size() <= 8);
     return UInt64.fromBytes(Utils.leftPad(bytes, 8));
   }
+
+  public static int compareBytes(Bytes b1, Bytes b2) {
+    checkArgument(b1.size() == b2.size(), "Comparing bytes of different sizes not supported");
+    for (int i = 0; i < b1.size(); i++) {
+      int res = (b1.get(i) & 0xFF) - (b2.get(i) & 0xFF);
+      if (res != 0) {
+        return res;
+      }
+    }
+    return 0;
+  }
 }

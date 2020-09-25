@@ -28,13 +28,13 @@ import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
-public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(AuthHeaderMessagePacketHandler.class);
+public class HandshakeMessagePacketHandler implements EnvelopeHandler {
+  private static final Logger logger = LogManager.getLogger(HandshakeMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
   private final NodeRecordFactory nodeRecordFactory;
 
-  public AuthHeaderMessagePacketHandler(
+  public HandshakeMessagePacketHandler(
       Pipeline outgoingPipeline, Scheduler scheduler, NodeRecordFactory nodeRecordFactory) {
     this.outgoingPipeline = outgoingPipeline;
     this.scheduler = scheduler;
@@ -121,6 +121,9 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
             session.getNodeTable().save(NodeRecordInfo.createDefault(r));
           });
 
+      session.setStatus(AUTHENTICATED);
+      envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+      NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(
           String.format(
@@ -128,11 +131,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
               packet, session.getNodeRecord(), session.getStatus()),
           ex);
       markHandshakeAsFailed(envelope, session);
-      return;
     }
-    session.setStatus(AUTHENTICATED);
-    envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
-    NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
   }
 
   private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {
