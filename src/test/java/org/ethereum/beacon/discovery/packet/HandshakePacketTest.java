@@ -49,7 +49,7 @@ public class HandshakePacketTest {
     Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, srcStaticPrivateKey);
 
     Header<HandshakeAuthData> header =
-        HandshakeAuthData.createHeader(
+        Header.createHandshakeHeader(
             srcNodeId,
             aesGcmNonce,
             idSignature,

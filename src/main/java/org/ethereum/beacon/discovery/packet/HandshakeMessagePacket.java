@@ -49,22 +49,6 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
 
   interface HandshakeAuthData extends AuthData {
 
-    static HandshakeAuthData create(
-        Bytes12 nonce, Bytes idSignature, Bytes ephemeralPubKey, Optional<NodeRecord> nodeRecord) {
-      return HandshakeAuthDataImpl.create(
-          HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
-    }
-
-    static Header<HandshakeAuthData> createHeader(
-        Bytes32 srcNodeId,
-        Bytes12 nonce,
-        Bytes idSignature,
-        Bytes ephemeralPubKey,
-        Optional<NodeRecord> nodeRecord) {
-      HandshakeAuthData authData = create(nonce, idSignature, ephemeralPubKey, nodeRecord);
-      return Header.create(srcNodeId, Flag.HANDSHAKE, authData);
-    }
-
     /**
      * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
      * id_sign(id-nonce-input)

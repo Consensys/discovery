@@ -10,7 +10,6 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -24,6 +23,7 @@ import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
+
   private static final Logger logger = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
 
   @Override
@@ -55,14 +55,12 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
       Bytes32 idNonce = Bytes32.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
-      WhoAreYouAuthData whoAreYouAuthData =
-          WhoAreYouAuthData.create(
-              msgNonce,
-              idNonce,
-              session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
-      WhoAreYouPacket whoAreYouPacket =
-          WhoAreYouPacket.create(
-              Header.create(session.getHomeNodeId(), Flag.WHOAREYOU, whoAreYouAuthData));
+      Header<WhoAreYouAuthData> header = Header.createWhoAreYouHeader(
+          session.getHomeNodeId(),
+          msgNonce,
+          idNonce,
+          session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
+      WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(header);
       session.sendOutgoing(whoAreYouPacket);
 
       session.setState(SessionState.WHOAREYOU_SENT);

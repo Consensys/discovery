@@ -132,7 +132,7 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithWrongGcmNonceFails(V5Message message, String __, String name) {
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes12 wrongAesGcmNonce = Bytes12.fromHexString("0xafffffffffffffffffffffff");
     Bytes encryptedMessage =
         MessagePacketImpl.encrypt(
@@ -154,7 +154,7 @@ public class OrdinaryMessagePacketTest {
   @Test
   void testDecryptingWithInvalidMessageCodeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2));
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes invalidMessageBytes = Bytes.wrap(Bytes.of(111), pingMessage.getBytes().slice(1));
     Bytes encryptedInvalidMessage =
         MessagePacketImpl.encrypt(header.getBytes(), invalidMessageBytes, aesGcmNonce, secretKey);
@@ -174,7 +174,7 @@ public class OrdinaryMessagePacketTest {
 
   @Test
   void testDecryptingRandomMessageFails() {
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
 
     OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.createRandom(header, 111);
     RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
@@ -192,7 +192,7 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithInvalidMessageRlpFails(V5Message message, String __, String name) {
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes messageBytes = message.getBytes();
     Bytes invalidMessageBytes = messageBytes.slice(0, messageBytes.size() - 1);
     Bytes encryptedInvalidMessage =
@@ -213,7 +213,7 @@ public class OrdinaryMessagePacketTest {
 
   @Test
   void testDecryptingWithInvalidMessageRequestIdRlpFails() {
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     RlpList rlpList =
         new RlpList(
             new RlpList(), // should be RlpString with requestId
@@ -239,7 +239,7 @@ public class OrdinaryMessagePacketTest {
   }
 
   private RawPacket createPacket(V5Message msg) {
-    Header<AuthData> header = AuthData.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.create(header, msg, secretKey);
     return RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
   }

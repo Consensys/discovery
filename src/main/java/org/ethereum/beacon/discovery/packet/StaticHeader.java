@@ -17,10 +17,6 @@ public interface StaticHeader extends BytesSerializable {
 
   String PROTOCOL_ID = "discv5  ";
 
-  static StaticHeader create(Bytes32 sourceNodeId, Flag flag, int authDataSize) {
-    return StaticHeaderImpl.create(PROTOCOL_ID, sourceNodeId, flag, authDataSize);
-  }
-
   static StaticHeader decode(Bytes staticHeaderBytes) {
     return new StaticHeaderImpl(staticHeaderBytes);
   }

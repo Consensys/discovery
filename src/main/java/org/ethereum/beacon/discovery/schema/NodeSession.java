@@ -29,7 +29,6 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
@@ -119,8 +118,8 @@ public class NodeSession {
   }
 
   public void sendOutgoingOrdinary(V5Message message) {
-    AuthData authData = AuthData.create(Bytes12.wrap(getAuthTag().get()));
-    Header<AuthData> header = Header.create(getHomeNodeId(), Flag.MESSAGE, authData);
+    Header<AuthData> header = Header
+        .createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
     sendOutgoing(packet);
   }

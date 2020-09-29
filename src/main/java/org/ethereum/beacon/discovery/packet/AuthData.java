@@ -12,15 +12,6 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 /** AuthData part of any {@link Packet}'s {@link Header} */
 public interface AuthData extends BytesSerializable {
 
-  static AuthData create(Bytes12 gcmNonce) {
-    return new AuthDataImpl(gcmNonce);
-  }
-
-  static Header<AuthData> createOrdinaryHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
-    AuthData authData = create(gcmNonce);
-    return Header.create(srcNodeId, Flag.MESSAGE, authData);
-  }
-
   Bytes12 getAesGcmNonce();
 
   @Override

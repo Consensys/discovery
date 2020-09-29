@@ -13,7 +13,6 @@ import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -81,8 +80,7 @@ public class NextTaskHandler implements EnvelopeHandler {
     Bytes requestId = requestInfo.getRequestId();
 
     if (session.getState().equals(SessionState.INITIAL)) {
-      Header<AuthData> header =
-          Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+      Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
       OrdinaryMessagePacket randomPacket =
           OrdinaryMessagePacket.createRandom(header, RANDOM_MESSAGE_SIZE);
       session.setAuthTag(authTag);

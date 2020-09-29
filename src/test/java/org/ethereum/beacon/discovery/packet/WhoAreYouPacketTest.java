@@ -31,7 +31,7 @@ public class WhoAreYouPacketTest {
   @Test
   void checkWhoAreYouWithMessageDataFails() {
     Header<WhoAreYouAuthData> header =
-        WhoAreYouAuthData.createHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
+        Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
     Bytes extraMessageData = Bytes32.ZERO;
     RawPacketImpl rawPacket =
         new RawPacketImpl(
@@ -50,7 +50,7 @@ public class WhoAreYouPacketTest {
   @Test
   void checkTruncatedHeaderFails() {
     Header<WhoAreYouAuthData> header =
-        WhoAreYouAuthData.createHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
+        Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
     Bytes maskedHeaderBytes =
         CryptoUtil.aesctrEncrypt(headerMaskingKey, aesCtrIV, header.getBytes());
 
@@ -69,7 +69,8 @@ public class WhoAreYouPacketTest {
 
   @Test
   void testPacketRoundtrip() {
-    WhoAreYouPacket packet = WhoAreYouPacket.create(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
+    WhoAreYouPacket packet = WhoAreYouPacket
+        .create(Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE));
     RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
     Bytes expectedPacketBytes =

@@ -127,14 +127,12 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      HandshakeAuthData authData =
-          HandshakeAuthData.create(
+      Header<HandshakeAuthData> header = Header
+          .createHandshakeHeader(session.getHomeNodeId(),
               session.generateNonce(),
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      Header<HandshakeAuthData> header =
-          Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
       HandshakeMessagePacket handshakeMessagePacket =
           HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
       session.setState(SessionState.AUTHENTICATED);
