@@ -23,7 +23,8 @@ import org.ethereum.beacon.discovery.util.DecryptException;
 public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
     implements Header<TAUthData> {
 
-  public static Header<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId) throws DecodeException {
+  public static Header<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId)
+      throws DecodeException {
     try {
       checkMinSize(data, StaticHeaderImpl.STATIC_HEADER_SIZE);
       Cipher cipher = CryptoUtil.createAesctrDecryptor(destNodeId, iv);

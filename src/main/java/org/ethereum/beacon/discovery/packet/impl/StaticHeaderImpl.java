@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
-import org.ethereum.beacon.discovery.util.DecodeException;
 
 public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 
