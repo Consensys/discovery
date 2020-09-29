@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
@@ -38,30 +38,30 @@ import org.ethereum.beacon.discovery.util.Functions;
  * = uint8 -- value: 1 sig-size = uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 --
  * value: 33 for ID scheme "v4"
  */
-public interface HandshakeMessagePacket extends MessagePacket<HanshakeAuthData> {
+public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData> {
   Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes(StandardCharsets.US_ASCII));
   byte HANDSHAKE_VERSION = 1;
 
   static HandshakeMessagePacket create(
-      Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
+      Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
     return new HandshakeMessagePacketImpl(header, message, gcmKey);
   }
 
-  interface HanshakeAuthData extends AuthData {
+  interface HandshakeAuthData extends AuthData {
 
-    static HanshakeAuthData create(
+    static HandshakeAuthData create(
         Bytes12 nonce, Bytes idSignature, Bytes ephemeralPubKey, Optional<NodeRecord> nodeRecord) {
       return HandshakeAuthDataImpl.create(
           HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
     }
 
-    static Header<HanshakeAuthData> createHeader(
+    static Header<HandshakeAuthData> createHeader(
         Bytes32 srcNodeId,
         Bytes12 nonce,
         Bytes idSignature,
         Bytes ephemeralPubKey,
         Optional<NodeRecord> nodeRecord) {
-      HanshakeAuthData authData = create(nonce, idSignature, ephemeralPubKey, nodeRecord);
+      HandshakeAuthData authData = create(nonce, idSignature, ephemeralPubKey, nodeRecord);
       return Header.create(srcNodeId, Flag.HANDSHAKE, authData);
     }
 

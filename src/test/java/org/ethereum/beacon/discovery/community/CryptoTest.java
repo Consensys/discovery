@@ -6,7 +6,7 @@ package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
@@ -83,7 +83,7 @@ public class CryptoTest {
         Bytes.fromHexString(
             "0xc5036e702a79902ad8aa147dabfe3958b523fd6fa36cc78e2889b912d682d8d35fdea142e141f690736d86f50b39746ba2d2fc510b46f82ee08f08fd55d133a4");
     Assertions.assertEquals(
-        expectedIdNonceSig, HanshakeAuthData.signId(idNonce, ephemeralKey, localSecretKey));
+        expectedIdNonceSig, HandshakeAuthData.signId(idNonce, ephemeralKey, localSecretKey));
   }
 
   /**

@@ -5,7 +5,7 @@ package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthData;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
@@ -28,7 +28,7 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
       case MESSAGE:
         return new OrdinaryMessageImpl((Header<AuthData>) header, messageData);
       case HANDSHAKE:
-        return new HandshakeMessagePacketImpl((Header<HanshakeAuthData>) header, messageData);
+        return new HandshakeMessagePacketImpl((Header<HandshakeAuthData>) header, messageData);
       default:
         throw new DecodeException("Unknown flag: " + header.getStaticHeader().getFlag());
     }

@@ -15,7 +15,7 @@ import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
@@ -232,13 +232,13 @@ public class SanityTestVectors {
                 "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"),
             idSignatureInput);
 
-    HanshakeAuthData authData =
-        HanshakeAuthData.create(
+    HandshakeAuthData authData =
+        HandshakeAuthData.create(
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             idSignature,
             ephemeralPubKey,
             Optional.empty());
-    Header<HanshakeAuthData> header =
+    Header<HandshakeAuthData> header =
         Header.create(
             Bytes32.fromHexString(
                 "0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb"),
@@ -275,8 +275,8 @@ public class SanityTestVectors {
     PingMessage pingMessage1 = (PingMessage) packet1.decryptMessage(key, NodeRecordFactory.DEFAULT);
     assertThat(pingMessage1).isEqualTo(pingMessage);
 
-    Header<HanshakeAuthData> header1 = packet1.getHeader();
-    HanshakeAuthData authData1 = header1.getAuthData();
+    Header<HandshakeAuthData> header1 = packet1.getHeader();
+    HandshakeAuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
     assertThat(isFieldsEqual(authData1, authData)).isTrue();
     assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();
@@ -326,15 +326,15 @@ public class SanityTestVectors {
     nodeRecord.sign(
         Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"));
 
-    HanshakeAuthData authData =
-        HanshakeAuthData.create(
+    HandshakeAuthData authData =
+        HandshakeAuthData.create(
             Bytes12.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFF"),
             Bytes.fromHexString(
                 "0xC14A44C1E56C122877E65606AD2CE92D1AD6E13E946D4CE0673B90E237BDD05C2181FC714C008686A08EB4DF52FAAB7614A469576E9AB1363377A7DE100AEDC2"),
             Bytes.fromHexString(
                 "0x9A003BA6517B473FA0CD74AEFE99DADFDB34627F90FEC6362DF85803908F53A50F497889E4A9C74F48321875F8601EC65650FA0922FDA04D69089B79AF7F5533"),
             Optional.of(nodeRecord));
-    Header<HanshakeAuthData> header =
+    Header<HandshakeAuthData> header =
         Header.create(
             Bytes32.fromHexString(
                 "0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb"),
@@ -375,8 +375,8 @@ public class SanityTestVectors {
     PingMessage pingMessage1 = (PingMessage) packet1.decryptMessage(key, NodeRecordFactory.DEFAULT);
     assertThat(pingMessage1).isEqualTo(pingMessage);
 
-    Header<HanshakeAuthData> header1 = packet1.getHeader();
-    HanshakeAuthData authData1 = header1.getAuthData();
+    Header<HandshakeAuthData> header1 = packet1.getHeader();
+    HandshakeAuthData authData1 = header1.getAuthData();
     assertThat(authData1.getBytes()).isEqualTo(authData.getBytes());
     assertThat(isFieldsEqual(authData1, authData)).isTrue();
     assertThat(isFieldsEqual(header1.getStaticHeader(), header.getStaticHeader())).isTrue();

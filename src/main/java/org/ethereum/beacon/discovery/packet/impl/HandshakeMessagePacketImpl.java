@@ -9,17 +9,17 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
-public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthData>
+public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthData>
     implements HandshakeMessagePacket {
 
-  public static class HandshakeAuthDataImpl extends AbstractBytes implements HanshakeAuthData {
+  public static class HandshakeAuthDataImpl extends AbstractBytes implements HandshakeAuthData {
 
     public static HandshakeAuthDataImpl create(
         byte version,
@@ -130,12 +130,12 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HanshakeAuthDa
     }
   }
 
-  public HandshakeMessagePacketImpl(Header<HanshakeAuthData> header, Bytes cipheredMessage) {
+  public HandshakeMessagePacketImpl(Header<HandshakeAuthData> header, Bytes cipheredMessage) {
     super(header, cipheredMessage);
   }
 
   public HandshakeMessagePacketImpl(
-      Header<HanshakeAuthData> header, V5Message message, Bytes gcmKey) {
+      Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
     this(header, encrypt(header, message, gcmKey));
   }
 }

@@ -14,7 +14,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -116,7 +116,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
       Bytes idSignature =
-          HanshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
+          HandshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
       if (packet
@@ -127,13 +127,13 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      HanshakeAuthData authData =
-          HanshakeAuthData.create(
+      HandshakeAuthData authData =
+          HandshakeAuthData.create(
               session.generateNonce(),
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      Header<HanshakeAuthData> header =
+      Header<HandshakeAuthData> header =
           Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
       HandshakeMessagePacket handshakeMessagePacket =
           HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
