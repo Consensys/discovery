@@ -32,10 +32,10 @@ import org.ethereum.beacon.discovery.util.Functions;
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
   private static final Logger LOG = LogManager.getLogger();
-  public static final int DEFAULT_RETRY_TIMEOUT_SECONDS = 10;
+  public static final Duration DEFAULT_RETRY_TIMEOUT = Duration.ofSeconds(10);
+  public static final Duration DEFAULT_LIVE_CHECK_INTERVAL = Duration.ofSeconds(1);
   static final int STATUS_EXPIRATION_SECONDS = 600;
   private static final int CONCURRENT_LIVENESS_CHECK_LIMIT = 5;
-  private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
   private static final int MAX_RETRIES = 10;
@@ -97,6 +97,7 @@ public class DiscoveryTaskManager {
       nodeRecord -> nodeRecord.getRetry() >= MAX_RETRIES;
 
   private final Consumer<NodeRecord>[] nodeRecordUpdatesConsumers;
+  private final Duration liveCheckInterval;
   private boolean resetDead;
   private boolean removeDead;
   private CompletableFuture<Void> liveCheckSchedule;
@@ -126,24 +127,19 @@ public class DiscoveryTaskManager {
       boolean resetDead,
       boolean removeDead,
       ExpirationSchedulerFactory expirationSchedulerFactory,
-      int retryTimeoutSeconds,
+      Duration retryTimeout,
+      Duration liveCheckInterval,
       Consumer<NodeRecord>... nodeRecordUpdatesConsumers) {
     this.scheduler = scheduler;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.homeNodeId = homeNode.getNodeId();
     this.liveCheckTasks =
-        new LiveCheckTasks(
-            discoveryManager,
-            scheduler,
-            expirationSchedulerFactory,
-            Duration.ofSeconds(retryTimeoutSeconds));
+        new LiveCheckTasks(discoveryManager, scheduler, expirationSchedulerFactory, retryTimeout);
     this.recursiveLookupTasks =
         new RecursiveLookupTasks(
-            discoveryManager,
-            scheduler,
-            expirationSchedulerFactory,
-            Duration.ofSeconds(retryTimeoutSeconds));
+            discoveryManager, scheduler, expirationSchedulerFactory, retryTimeout);
+    this.liveCheckInterval = liveCheckInterval;
     this.resetDead = resetDead;
     this.removeDead = removeDead;
     this.nodeRecordUpdatesConsumers = nodeRecordUpdatesConsumers;
@@ -151,8 +147,7 @@ public class DiscoveryTaskManager {
 
   public synchronized void start() {
     liveCheckSchedule =
-        scheduler.executeAtFixedRate(
-            Duration.ZERO, Duration.ofSeconds(LIVE_CHECK_INTERVAL_SECONDS), this::liveCheckTask);
+        scheduler.executeAtFixedRate(Duration.ZERO, liveCheckInterval, this::liveCheckTask);
     recursiveLookupSchedule =
         scheduler.executeAtFixedRate(
             Duration.ZERO,

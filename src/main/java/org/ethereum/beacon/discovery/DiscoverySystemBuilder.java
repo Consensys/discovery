@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,8 @@ public class DiscoverySystemBuilder {
   private Database database;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = (a, b) -> {};
-  private int retryTimeoutSeconds = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT_SECONDS;
+  private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
+  private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -88,8 +90,13 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder retryTimeoutSeconds(final int retryTimeoutSeconds) {
-    this.retryTimeoutSeconds = retryTimeoutSeconds;
+  public DiscoverySystemBuilder retryTimeout(Duration retryTimeout) {
+    this.retryTimeout = retryTimeout;
+    return this;
+  }
+
+  public DiscoverySystemBuilder lifeCheckInterval(Duration lifeCheckInterval) {
+    this.lifeCheckInterval = lifeCheckInterval;
     return this;
   }
 
@@ -139,7 +146,8 @@ public class DiscoverySystemBuilder {
             true,
             true,
             expirationSchedulerFactory,
-            retryTimeoutSeconds);
+            retryTimeout,
+            lifeCheckInterval);
     return new DiscoverySystem(
         discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
   }
