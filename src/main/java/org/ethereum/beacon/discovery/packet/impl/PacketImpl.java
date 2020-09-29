@@ -16,8 +16,8 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
     implements Packet<TAuthData> {
 
   @SuppressWarnings("unchecked")
-  public static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 nodeId) throws DecodeException {
-    Header<?> header = HeaderImpl.decrypt(data, iv, nodeId);
+  public static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId) throws DecodeException {
+    Header<?> header = HeaderImpl.decrypt(data, iv, destNodeId);
     Bytes messageData = data.slice(header.getSize());
     switch (header.getStaticHeader().getFlag()) {
       case WHOAREYOU:
@@ -44,8 +44,8 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
   }
 
   @Override
-  public Bytes encrypt(Bytes16 iv, Bytes16 nodeId) {
-    return Bytes.wrap(header.encrypt(iv, nodeId), getMessageBytes());
+  public Bytes encrypt(Bytes16 iv, Bytes16 destNodeId) {
+    return Bytes.wrap(header.encrypt(iv, destNodeId), getMessageBytes());
   }
 
   @Override

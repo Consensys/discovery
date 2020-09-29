@@ -18,13 +18,13 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 nodeId) throws DecodeException {
-    Packet<?> packet = PacketImpl.decrypt(data, iv, nodeId);
+  static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId) throws DecodeException {
+    Packet<?> packet = PacketImpl.decrypt(data, iv, destNodeId);
     packet.validate();
     return packet;
   }
 
-  Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
+  Bytes encrypt(Bytes16 iv, Bytes16 destNodeId);
 
   Bytes getMessageBytes();
 
