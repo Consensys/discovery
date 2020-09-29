@@ -36,6 +36,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
   public void handle(FindNodeMessage message, NodeSession session) {
     List<NodeRecord> nodeRecordInfos =
         message.getDistances().stream()
+            .distinct()
             .flatMap(d -> session.getBucket(d).stream())
             .flatMap(b -> b.getNodeRecords().stream())
             .map(NodeRecordInfo::getNode)
