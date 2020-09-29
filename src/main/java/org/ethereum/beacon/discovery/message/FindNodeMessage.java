@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Objects;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +28,7 @@ public class FindNodeMessage implements V5Message {
   private final List<Integer> distances;
 
   public FindNodeMessage(Bytes requestId, List<Integer> distances) {
+    checkArgument(!distances.isEmpty(), "Distances size should be > 0");
     this.requestId = requestId;
     this.distances = distances;
   }
