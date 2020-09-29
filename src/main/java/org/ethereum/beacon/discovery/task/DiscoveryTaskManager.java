@@ -32,12 +32,12 @@ import org.ethereum.beacon.discovery.util.Functions;
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
   private static final Logger LOG = LogManager.getLogger();
+  public static final int DEFAULT_RETRY_TIMEOUT_SECONDS = 10;
   static final int STATUS_EXPIRATION_SECONDS = 600;
   private static final int CONCURRENT_LIVENESS_CHECK_LIMIT = 5;
   private static final int LIVE_CHECK_INTERVAL_SECONDS = 1;
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
-  private static final int RETRY_TIMEOUT_SECONDS = 10;
   private static final int MAX_RETRIES = 10;
   private final Scheduler scheduler;
   private final Bytes homeNodeId;
@@ -126,6 +126,7 @@ public class DiscoveryTaskManager {
       boolean resetDead,
       boolean removeDead,
       ExpirationSchedulerFactory expirationSchedulerFactory,
+      int retryTimeoutSeconds,
       Consumer<NodeRecord>... nodeRecordUpdatesConsumers) {
     this.scheduler = scheduler;
     this.nodeTable = nodeTable;
@@ -136,13 +137,13 @@ public class DiscoveryTaskManager {
             discoveryManager,
             scheduler,
             expirationSchedulerFactory,
-            Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
+            Duration.ofSeconds(retryTimeoutSeconds));
     this.recursiveLookupTasks =
         new RecursiveLookupTasks(
             discoveryManager,
             scheduler,
             expirationSchedulerFactory,
-            Duration.ofSeconds(RETRY_TIMEOUT_SECONDS));
+            Duration.ofSeconds(retryTimeoutSeconds));
     this.resetDead = resetDead;
     this.removeDead = removeDead;
     this.nodeRecordUpdatesConsumers = nodeRecordUpdatesConsumers;

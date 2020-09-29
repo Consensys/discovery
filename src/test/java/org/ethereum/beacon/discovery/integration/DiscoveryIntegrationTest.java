@@ -41,6 +41,7 @@ import org.web3j.crypto.ECKeyPair;
 public class DiscoveryIntegrationTest {
   private static final Logger logger = LogManager.getLogger();
   public static final String LOCALHOST = "127.0.0.1";
+  public static final int RETRY_TIMEOUT_SECONDS = 30;
   private int nextPort = 9001;
   private List<DiscoverySystem> managers = new ArrayList<>();
 
@@ -261,6 +262,7 @@ public class DiscoveryIntegrationTest {
               .listen("0.0.0.0", port)
               .localNodeRecord(nodeRecord)
               .privateKey(privateKey)
+              .retryTimeoutSeconds(RETRY_TIMEOUT_SECONDS)
               .bootnodes(bootnodes)
               .build();
       try {

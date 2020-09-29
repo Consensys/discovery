@@ -42,6 +42,7 @@ public class DiscoverySystemBuilder {
   private Database database;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = (a, b) -> {};
+  private int retryTimeoutSeconds = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT_SECONDS;
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -84,6 +85,11 @@ public class DiscoverySystemBuilder {
 
   public DiscoverySystemBuilder localNodeRecordListener(final NodeRecordListener listener) {
     this.localNodeRecordListener = listener;
+    return this;
+  }
+
+  public DiscoverySystemBuilder retryTimeoutSeconds(final int retryTimeoutSeconds) {
+    this.retryTimeoutSeconds = retryTimeoutSeconds;
     return this;
   }
 
@@ -132,7 +138,8 @@ public class DiscoverySystemBuilder {
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             true,
             true,
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            retryTimeoutSeconds);
     return new DiscoverySystem(
         discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
   }
