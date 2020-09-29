@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery.packet;
 
+import java.util.Arrays;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
@@ -47,8 +48,25 @@ public interface StaticHeader extends BytesSerializable {
   }
 
   enum Flag {
-    MESSAGE,
-    WHOAREYOU,
-    HANDSHAKE
+    MESSAGE(0),
+    WHOAREYOU(1),
+    HANDSHAKE(2);
+
+    public static Flag fromCode(int code) throws DecodeException {
+      return Arrays.stream(Flag.values())
+          .filter(v -> v.getCode() == code)
+          .findFirst()
+          .orElseThrow(() -> new DecodeException("Invalid packet flag code: " + code));
+    }
+
+    private final int code;
+
+    Flag(int code) {
+      this.code = code;
+    }
+
+    public int getCode() {
+      return code;
+    }
   }
 }
