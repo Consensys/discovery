@@ -42,7 +42,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
             .map(NodeRecordInfo::getNode)
             .collect(Collectors.toList());
 
-    List<List<NodeRecord>> nodeRecordsList =
+    List<List<NodeRecord>> nodeRecordBatches =
         Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
 
     logger.trace(
@@ -52,14 +52,14 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
                 nodeRecordInfos.size(), message.getDistances(), session));
 
     List<List<NodeRecord>> nonEmptyNodeRecordsList =
-        nodeRecordsList.isEmpty() ? singletonList(emptyList()) : nodeRecordsList;
+        nodeRecordBatches.isEmpty() ? singletonList(emptyList()) : nodeRecordBatches;
 
     nonEmptyNodeRecordsList.forEach(
         recordsList ->
             session.sendOutgoingOrdinary(
                 new NodesMessage(
                     message.getRequestId(),
-                    nodeRecordInfos.size(),
+                    nodeRecordBatches.size(),
                     () -> recordsList,
                     recordsList.size())));
   }
