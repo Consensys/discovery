@@ -16,7 +16,6 @@ import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -127,8 +126,9 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      Header<HandshakeAuthData> header = Header
-          .createHandshakeHeader(session.getHomeNodeId(),
+      Header<HandshakeAuthData> header =
+          Header.createHandshakeHeader(
+              session.getHomeNodeId(),
               session.generateNonce(),
               idSignature,
               ephemeralPubKey,

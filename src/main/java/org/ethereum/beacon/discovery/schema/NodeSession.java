@@ -118,8 +118,8 @@ public class NodeSession {
   }
 
   public void sendOutgoingOrdinary(V5Message message) {
-    Header<AuthData> header = Header
-        .createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
+    Header<AuthData> header =
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
     sendOutgoing(packet);
   }

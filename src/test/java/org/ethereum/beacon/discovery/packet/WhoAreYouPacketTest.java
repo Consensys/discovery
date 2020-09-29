@@ -69,8 +69,9 @@ public class WhoAreYouPacketTest {
 
   @Test
   void testPacketRoundtrip() {
-    WhoAreYouPacket packet = WhoAreYouPacket
-        .create(Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE));
+    WhoAreYouPacket packet =
+        WhoAreYouPacket.create(
+            Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE));
     RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
     Bytes expectedPacketBytes =

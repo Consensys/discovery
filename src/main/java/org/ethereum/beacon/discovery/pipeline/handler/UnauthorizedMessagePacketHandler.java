@@ -55,11 +55,12 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
       Bytes32 idNonce = Bytes32.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
-      Header<WhoAreYouAuthData> header = Header.createWhoAreYouHeader(
-          session.getHomeNodeId(),
-          msgNonce,
-          idNonce,
-          session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
+      Header<WhoAreYouAuthData> header =
+          Header.createWhoAreYouHeader(
+              session.getHomeNodeId(),
+              msgNonce,
+              idNonce,
+              session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
       WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(header);
       session.sendOutgoing(whoAreYouPacket);
 
