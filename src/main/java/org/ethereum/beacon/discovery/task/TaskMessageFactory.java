@@ -63,8 +63,7 @@ public class TaskMessageFactory {
       Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
-    Header<AuthData> header =
-        Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    Header<AuthData> header = AuthData.createOrdinaryHeader(session.getHomeNodeId(), authTag);
     return OrdinaryMessagePacket.create(header, pingMessage, session.getInitiatorKey());
   }
 

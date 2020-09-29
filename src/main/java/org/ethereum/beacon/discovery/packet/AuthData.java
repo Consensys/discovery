@@ -16,7 +16,7 @@ public interface AuthData extends BytesSerializable {
     return new AuthDataImpl(gcmNonce);
   }
 
-  static Header<AuthData> createHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
+  static Header<AuthData> createOrdinaryHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
     AuthData authData = create(gcmNonce);
     return Header.create(srcNodeId, Flag.MESSAGE, authData);
   }
