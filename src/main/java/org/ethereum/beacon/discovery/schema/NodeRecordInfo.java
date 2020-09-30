@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
 

@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.util.DecodeException;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpList;
@@ -20,6 +23,9 @@ import org.web3j.rlp.RlpType;
 public class NodeRecordFactory {
   public static final NodeRecordFactory DEFAULT =
       new NodeRecordFactory(new IdentitySchemaV4Interpreter());
+  private static final int MAX_ENR_RLP_SIZE = 300;
+  private static final int MAX_FIELD_KEY_SIZE = MAX_ENR_RLP_SIZE;
+
   Map<IdentitySchema, IdentitySchemaInterpreter> interpreters = new HashMap<>();
 
   public NodeRecordFactory(IdentitySchemaInterpreter... identitySchemaInterpreters) {
@@ -64,49 +70,48 @@ public class NodeRecordFactory {
   }
 
   @SuppressWarnings({"DefaultCharset"})
-  public NodeRecord fromRlpList(RlpList rlpList) {
-    List<RlpType> values = rlpList.getValues();
-    if (values.size() < 4) {
-      throw new RuntimeException(
-          String.format("Unable to deserialize ENR with less than 4 fields, [%s]", values));
+  public NodeRecord fromRlpList(List<RlpType> rlpList) {
+    if (rlpList.size() < 4) {
+      throw new RlpDecodeException(
+          String.format("Unable to deserialize ENR with less than 4 fields, [%s]", rlpList));
     }
 
     // TODO: repair as id is not first now
     IdentitySchema nodeIdentity = null;
     boolean idFound = false;
-    for (int i = 2; i < values.size(); i += 2) {
-      RlpString id = (RlpString) values.get(i);
-      if (!"id".equals(new String(id.getBytes()))) {
+    for (int i = 2; i < rlpList.size() - 1; i += 2) {
+      Bytes id = RlpUtil.asString(rlpList.get(i), RlpUtil.maxSize(MAX_ENR_RLP_SIZE));
+      if (!"id".equals(new String(id.toArrayUnsafe(), StandardCharsets.UTF_8))) {
         continue;
       }
 
-      RlpString idVersion = (RlpString) values.get(i + 1);
-      nodeIdentity = IdentitySchema.fromString(new String(idVersion.getBytes()));
+      Bytes idVersion = RlpUtil.asString(rlpList.get(i + 1), RlpUtil.maxSize(MAX_ENR_RLP_SIZE));
+      String verString = new String(idVersion.toArrayUnsafe(), StandardCharsets.UTF_8);
+      nodeIdentity = IdentitySchema.fromString(verString);
       if (nodeIdentity == null) { // no interpreter for such id
-        throw new RuntimeException(
+        throw new DecodeException(
             String.format(
-                "Unknown node identity scheme '%s', couldn't create node record.",
-                idVersion.asString()));
+                "Unknown node identity scheme '%s', couldn't create node record.", verString));
       }
       idFound = true;
       break;
     }
     if (!idFound) { // no `id` key-values
-      throw new RuntimeException("Unknown node identity scheme, not defined in record ");
+      throw new DecodeException("Unknown node identity scheme, not defined in record ");
     }
 
     IdentitySchemaInterpreter identitySchemaInterpreter = interpreters.get(nodeIdentity);
     if (identitySchemaInterpreter == null) {
-      throw new RuntimeException(
+      throw new DecodeException(
           String.format(
               "No Ethereum record interpreter found for identity scheme %s", nodeIdentity));
     }
 
     return NodeRecord.fromRawFields(
         identitySchemaInterpreter,
-        UInt64.fromBytes(Utils.leftPad(Bytes.wrap(((RlpString) values.get(1)).getBytes()), 8)),
-        Bytes.wrap(((RlpString) values.get(0)).getBytes()),
-        values.subList(2, values.size()));
+        UInt64.fromBytes(RlpUtil.asString(rlpList.get(1), RlpUtil.CONS_UINT64)),
+        RlpUtil.asString(rlpList.get(0), RlpUtil.CONS_ANY),
+        rlpList.subList(2, rlpList.size()));
   }
 
   public NodeRecord fromBytes(byte[] bytes) {

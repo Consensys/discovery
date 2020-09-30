@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -22,6 +23,7 @@ import org.web3j.rlp.RlpType;
  * responses to a single query.
  */
 public class NodesMessage implements V5Message {
+  private final static int TOTAL_PACKETS_BYTES_SIZE = 1;
   // Unique request id
   private final Bytes requestId;
   // Total number of responses to the request
@@ -48,19 +50,22 @@ public class NodesMessage implements V5Message {
   }
 
   private static NodesMessage fromRlp(List<RlpType> rlpList, NodeRecordFactory nodeRecordFactory) {
-    RlpList nodeRecords = (RlpList) rlpList.get(2);
+    if (rlpList.size() != 3) {
+      throw new RlpDecodeException("Invalid RLP list size for Nodes message-data: " + rlpList);
+    }
+    List<RlpType> nodeRecords = RlpUtil.asList(rlpList.get(2));
     return new NodesMessage(
-        Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
-        ((RlpString) rlpList.get(1)).asPositiveBigInteger().intValueExact(),
+        RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE)),
+        RlpUtil.asInteger(rlpList.get(1)),
         () ->
-            nodeRecords.getValues().stream()
-                .map(rl -> nodeRecordFactory.fromRlpList((RlpList) rl))
+            nodeRecords.stream()
+                .map(rl -> nodeRecordFactory.fromRlpList(RlpUtil.asList(rl)))
                 .collect(Collectors.toList()),
-        nodeRecords.getValues().size());
+        nodeRecords.size());
   }
 
   public static NodesMessage fromBytes(Bytes messageBytes, NodeRecordFactory nodeRecordFactory) {
-    return fromRlp(RlpUtil.decodeSingleList(messageBytes).getValues(), nodeRecordFactory);
+    return fromRlp(RlpUtil.decodeSingleList(messageBytes), nodeRecordFactory);
   }
 
   @Override

@@ -3,7 +3,7 @@
  */
 package org.ethereum.beacon.discovery.util;
 
-public class RlpDecodeException extends RuntimeException {
+public class RlpDecodeException extends DecodeException {
 
   public RlpDecodeException(String message) {
     super(message);

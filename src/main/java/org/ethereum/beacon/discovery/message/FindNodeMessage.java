@@ -10,6 +10,8 @@ import com.google.common.base.Objects;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.util.DecodeException;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -23,6 +25,8 @@ import org.web3j.rlp.RlpType;
  * the only result.
  */
 public class FindNodeMessage implements V5Message {
+  // Logarithmic distance is 0..255 for 256-bit nodeIds
+  private final static int DISTANCE_BYTES_SIZE = 1;
   // Unique request id
   private final Bytes requestId;
   // The requested log2 distance, a positive integer
@@ -34,20 +38,21 @@ public class FindNodeMessage implements V5Message {
     this.distances = distances;
   }
 
-  private static FindNodeMessage fromRlp(List<RlpType> rlpList) {
-    Bytes requestId = Bytes.wrap(((RlpString) rlpList.get(0)).getBytes());
-    RlpList distanceList = (RlpList) rlpList.get(1);
-    List<Integer> distances =
-        distanceList.getValues().stream()
-            .map(rlpType -> (RlpString) rlpType)
-            .map(s -> s.asPositiveBigInteger().intValueExact())
-            .collect(Collectors.toList());
+  private static FindNodeMessage fromRlp(List<RlpType> rlpList) throws DecodeException {
+    if (rlpList.size() != 2) {
+      throw new RlpDecodeException("Invalid RLP list size for FindNode message-data: " + rlpList);
+    }
+    Bytes requestId = RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE));
+    List<RlpType> rlpDistances = RlpUtil.asList(rlpList.get(1));
+    List<Integer> distances = rlpDistances.stream()
+        .map(RlpUtil::asInteger)
+        .collect(Collectors.toList());
 
     return new FindNodeMessage(requestId, distances);
   }
 
-  public static FindNodeMessage fromBytes(Bytes bytes) {
-    return fromRlp(RlpUtil.decodeSingleList(bytes).getValues());
+  public static FindNodeMessage fromBytes(Bytes bytes) throws DecodeException {
+    return fromRlp(RlpUtil.decodeSingleList(bytes));
   }
 
   @Override

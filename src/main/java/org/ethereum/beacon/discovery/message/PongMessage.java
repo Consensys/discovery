@@ -4,8 +4,6 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
 import static org.ethereum.beacon.discovery.util.RlpUtil.enumSizes;
 import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;

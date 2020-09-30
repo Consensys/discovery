@@ -4,8 +4,6 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.ANY_LEN;
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
 import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
 
@@ -14,11 +12,9 @@ import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * PING checks whether the recipient is alive and informs it about the sender's ENR sequence number.

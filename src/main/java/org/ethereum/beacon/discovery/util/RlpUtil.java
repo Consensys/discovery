@@ -28,8 +28,6 @@ import org.web3j.rlp.RlpType;
 public class RlpUtil {
   public interface BytesConstraint extends Predicate<Bytes> {}
 
-  public static final int ANY_LEN = -1;
-
   public static final BytesConstraint CONS_ANY = b -> true;
   public static final BytesConstraint CONS_UINT64 = maxSize(8);
 
@@ -123,8 +121,7 @@ public class RlpUtil {
    * @throws RlpDecodeException if this rlp doesn't represent a single list of strings
    */
   public static List<Bytes> decodeListOfStrings(Bytes rlp) throws RlpDecodeException {
-    RlpList items = decodeSingleList(rlp);
-    List<RlpType> values = items.getValues();
+    List<RlpType> values = decodeSingleList(rlp);
 
     List<Bytes> ret = new ArrayList<>();
     for (RlpType val : values) {
@@ -142,23 +139,33 @@ public class RlpUtil {
    *
    * @throws RlpDecodeException if this rlp doesn't represent a single list
    */
-  public static RlpList decodeSingleList(Bytes rlp) throws RlpDecodeException {
-    RlpType item = decodeSingleItem(rlp);
-    if (!(item instanceof RlpList)) {
-      throw new RlpDecodeException("Expected RLP list, but got a string from bytes: " + rlp);
-    }
-    return (RlpList) item;
+  public static List<RlpType> decodeSingleList(Bytes rlp) throws RlpDecodeException {
+    return asList(decodeSingleItem(rlp));
   }
 
-  /**
-   * Decodes strictly one bytes string item from rlp bytes
-   *
-   * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
-   */
-  public static Bytes decodeSingleString(Bytes rlp, int expectedSize) throws RlpDecodeException {
-    Bytes ret = decodeSingleString(rlp);
-    if (ret.size() != expectedSize) {
-      throw new RlpDecodeException("Expected string size doesn't match: " + rlp);
+  public static List<RlpType> asList(RlpType item) throws RlpDecodeException {
+    if (!(item instanceof RlpList)) {
+      throw new RlpDecodeException("Expected RLP list, but got a string: " + item);
+    }
+    return ((RlpList) item).getValues();
+  }
+
+  public static int asInteger(RlpType item) throws RlpDecodeException {
+    Bytes bytes = asString(item, maxSize(4));
+    long l = bytes.toLong();
+    if (l > Integer.MAX_VALUE){
+      throw new RlpDecodeException("Too large for integer: " + item);
+    }
+    return (int) l;
+  }
+
+  public static Bytes asString(RlpType item, BytesConstraint constraint) throws RlpDecodeException {
+    if (!(item instanceof RlpString)) {
+      throw new RlpDecodeException("Expected RLP bytes string, but got a list: " + item);
+    }
+    Bytes ret = Bytes.wrap(((RlpString) item).getBytes());
+    if (!constraint.test(ret)) {
+      throw new RlpDecodeException("The RLP string violates constraint: " + ret);
     }
     return ret;
   }
@@ -169,11 +176,7 @@ public class RlpUtil {
    * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
    */
   public static Bytes decodeSingleString(Bytes rlp) throws RlpDecodeException {
-    RlpType item = decodeSingleItem(rlp);
-    if (!(item instanceof RlpString)) {
-      throw new RlpDecodeException("Expected RLP bytes string, but got a list from bytes: " + rlp);
-    }
-    return Bytes.wrap(((RlpString) item).getBytes());
+    return asString(decodeSingleItem(rlp), CONS_ANY);
   }
 
   /**
