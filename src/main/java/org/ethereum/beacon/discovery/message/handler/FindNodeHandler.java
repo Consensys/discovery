@@ -32,8 +32,8 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
   private static final int MAX_NODES_PER_MESSAGE = 4;
 
   /**
-   * Implementations should limit the number of nodes in the result set.
-   * The recommended result limit for FINDNODE queries is 16 nodes.
+   * Implementations should limit the number of nodes in the result set. The recommended result
+   * limit for FINDNODE queries is 16 nodes.
    */
   private static final int MAX_TOTAL_NODES_PER_RESPONSE = 16;
 
