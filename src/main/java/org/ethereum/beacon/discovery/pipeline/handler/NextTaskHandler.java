@@ -13,7 +13,6 @@ import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -22,6 +21,7 @@ import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.type.Bytes12;
@@ -79,15 +79,14 @@ public class NextTaskHandler implements EnvelopeHandler {
     Bytes12 authTag = session.generateNonce();
     Bytes requestId = requestInfo.getRequestId();
 
-    if (session.getStatus().equals(NodeSession.SessionStatus.INITIAL)) {
-      Header<AuthData> header =
-          Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    if (session.getState().equals(SessionState.INITIAL)) {
+      Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
       OrdinaryMessagePacket randomPacket =
           OrdinaryMessagePacket.createRandom(header, RANDOM_MESSAGE_SIZE);
       session.setAuthTag(authTag);
       session.sendOutgoing(randomPacket);
-      session.setStatus(NodeSession.SessionStatus.RANDOM_PACKET_SENT);
-    } else if (session.getStatus().equals(NodeSession.SessionStatus.AUTHENTICATED)) {
+      session.setState(SessionState.RANDOM_PACKET_SENT);
+    } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
       MessagePacket<?> messagePacket =
           TaskMessageFactory.createPacketFromRequest(requestInfo, authTag, session);
       session.sendOutgoing(messagePacket);

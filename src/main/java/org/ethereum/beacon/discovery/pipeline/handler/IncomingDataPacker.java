@@ -19,7 +19,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 /** Handles raw BytesValue incoming data in {@link Field#INCOMING} */
 public class IncomingDataPacker implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(IncomingDataPacker.class);
-  private static final int MAX_PACKET_SIZE = 1280;
+  public static final int MAX_PACKET_SIZE = 1280;
   private final Bytes16 homeNodeId;
 
   public IncomingDataPacker(Bytes homeNodeId) {

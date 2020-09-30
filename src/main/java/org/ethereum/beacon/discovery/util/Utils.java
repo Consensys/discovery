@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
 
@@ -96,5 +97,15 @@ public class Utils {
   public static UInt64 toUInt64(Bytes bytes) throws IllegalArgumentException {
     checkArgument(bytes.size() <= 8);
     return UInt64.fromBytes(Utils.leftPad(bytes, 8));
+  }
+
+  public static int compareBytes(Bytes32 b1, Bytes32 b2) {
+    for (int i = 0; i < b1.size(); i++) {
+      int res = (b1.get(i) & 0xFF) - (b2.get(i) & 0xFF);
+      if (res != 0) {
+        return res;
+      }
+    }
+    return 0;
   }
 }

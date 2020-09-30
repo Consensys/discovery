@@ -12,7 +12,6 @@ import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -63,8 +62,7 @@ public class TaskMessageFactory {
       Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
-    Header<AuthData> header =
-        Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
     return OrdinaryMessagePacket.create(header, pingMessage, session.getInitiatorKey());
   }
 
@@ -75,8 +73,7 @@ public class TaskMessageFactory {
   public static OrdinaryMessagePacket createFindNodePacket(
       Bytes12 authTag, NodeSession session, Bytes requestId, int distance) {
     FindNodeMessage findNodeMessage = createFindNode(requestId, distance);
-    Header<AuthData> header =
-        Header.create(session.getHomeNodeId(), Flag.MESSAGE, AuthData.create(authTag));
+    Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
     return OrdinaryMessagePacket.create(header, findNodeMessage, session.getInitiatorKey());
   }
 

@@ -30,6 +30,7 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -37,7 +38,7 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
-import org.ethereum.beacon.discovery.pipeline.handler.AuthHeaderMessagePacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
@@ -149,21 +150,25 @@ public class HandshakeHandlersTest {
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
         WhoAreYouPacket.create(
-            Bytes32.wrap(nodePair1.getNodeRecord().getNodeId()), authTag, idNonce, UInt64.ZERO));
+            Header.createWhoAreYouHeader(
+                Bytes32.wrap(nodePair1.getNodeRecord().getNodeId()),
+                authTag,
+                idNonce,
+                UInt64.ZERO)));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     CompletableFuture<Void> future = new CompletableFuture<>();
     nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
 
     // Node2 handle AuthHeaderPacket and finish handshake
-    AuthHeaderMessagePacketHandler authHeaderMessagePacketHandlerNode2 =
-        new AuthHeaderMessagePacketHandler(
+    HandshakeMessagePacketHandler handshakeMessagePacketHandlerNode2 =
+        new HandshakeMessagePacketHandler(
             outgoingPipeline, taskScheduler, NODE_RECORD_FACTORY_NO_VERIFICATION);
     Envelope envelopeAt2From1 = new Envelope();
     envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, outgoing1Packets.poll(1, TimeUnit.SECONDS));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
-    authHeaderMessagePacketHandlerNode2.handle(envelopeAt2From1);
+    handshakeMessagePacketHandlerNode2.handle(envelopeAt2From1);
     assertTrue(nodeSessionAt2For1.isAuthenticated());
 
     // Node 1 handles message from Node 2

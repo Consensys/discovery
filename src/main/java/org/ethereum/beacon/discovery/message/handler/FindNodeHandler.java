@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
   private static final Logger logger = LogManager.getLogger(FindNodeHandler.class);
+
   /**
    * The maximum size of any packet is 1280 bytes. Implementations should not generate or process
    * packets larger than this size. As per specification the maximum size of an ENR is 300 bytes. A
@@ -30,18 +31,26 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
    */
   private static final int MAX_NODES_PER_MESSAGE = 4;
 
+  /**
+   * Implementations should limit the number of nodes in the result set. The recommended result
+   * limit for FINDNODE queries is 16 nodes.
+   */
+  private static final int MAX_TOTAL_NODES_PER_RESPONSE = 16;
+
   public FindNodeHandler() {}
 
   @Override
   public void handle(FindNodeMessage message, NodeSession session) {
     List<NodeRecord> nodeRecordInfos =
         message.getDistances().stream()
+            .distinct()
             .flatMap(d -> session.getBucket(d).stream())
             .flatMap(b -> b.getNodeRecords().stream())
+            .limit(MAX_TOTAL_NODES_PER_RESPONSE)
             .map(NodeRecordInfo::getNode)
             .collect(Collectors.toList());
 
-    List<List<NodeRecord>> nodeRecordsList =
+    List<List<NodeRecord>> nodeRecordBatches =
         Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
 
     logger.trace(
@@ -51,14 +60,14 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
                 nodeRecordInfos.size(), message.getDistances(), session));
 
     List<List<NodeRecord>> nonEmptyNodeRecordsList =
-        nodeRecordsList.isEmpty() ? singletonList(emptyList()) : nodeRecordsList;
+        nodeRecordBatches.isEmpty() ? singletonList(emptyList()) : nodeRecordBatches;
 
     nonEmptyNodeRecordsList.forEach(
         recordsList ->
             session.sendOutgoingOrdinary(
                 new NodesMessage(
                     message.getRequestId(),
-                    nodeRecordInfos.size(),
+                    nodeRecordBatches.size(),
                     () -> recordsList,
                     recordsList.size())));
   }

@@ -10,7 +10,6 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -19,12 +18,13 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 
-public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(NotExpectedIncomingPacketHandler.class);
+public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
+
+  private static final Logger logger = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
@@ -33,7 +33,7 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NotExpectedIncomingPacketHandler, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.PACKET_MESSAGE, envelope)) {
+    if (!HandlerUtil.requireField(Field.UNAUTHORIZED_PACKET_MESSAGE, envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
@@ -46,12 +46,8 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
                 envelope.getId()));
 
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    if (session.getStatus() != SessionStatus.INITIAL) {
-      return;
-    }
-
     OrdinaryMessagePacket unknownPacket =
-        (OrdinaryMessagePacket) envelope.get(Field.PACKET_MESSAGE);
+        (OrdinaryMessagePacket) envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
       Bytes12 msgNonce = unknownPacket.getHeader().getAuthData().getAesGcmNonce();
@@ -59,27 +55,25 @@ public class NotExpectedIncomingPacketHandler implements EnvelopeHandler {
       Bytes32 idNonce = Bytes32.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
-      WhoAreYouAuthData whoAreYouAuthData =
-          WhoAreYouAuthData.create(
+      Header<WhoAreYouAuthData> header =
+          Header.createWhoAreYouHeader(
+              session.getHomeNodeId(),
               msgNonce,
               idNonce,
               session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
-      WhoAreYouPacket whoAreYouPacket =
-          WhoAreYouPacket.create(
-              Header.create(session.getHomeNodeId(), Flag.WHOAREYOU, whoAreYouAuthData));
+      WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(header);
       session.sendOutgoing(whoAreYouPacket);
 
-      session.setStatus(NodeSession.SessionStatus.WHOAREYOU_SENT);
-      envelope.remove(Field.PACKET_MESSAGE);
+      session.setState(SessionState.WHOAREYOU_SENT);
     } catch (Exception ex) {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              unknownPacket, session.getNodeRecord(), session.getStatus());
+              unknownPacket, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
       envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_MESSAGE));
       envelope.put(Field.BAD_EXCEPTION, ex);
-      envelope.remove(Field.PACKET_MESSAGE);
     }
+    envelope.remove(Field.PACKET_MESSAGE);
   }
 }

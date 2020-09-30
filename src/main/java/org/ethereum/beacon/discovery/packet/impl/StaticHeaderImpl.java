@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
-import org.ethereum.beacon.discovery.util.DecodeException;
 
 public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 
@@ -38,7 +37,7 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
         Bytes.concatenate(
             Bytes.wrap(protocolId.getBytes(StaticHeaderImpl.PROTOCOL_ID_ENCODING)),
             sourceNodeId,
-            Bytes.of(flag.ordinal()),
+            Bytes.of(flag.getCode()),
             Bytes.of(authDataSize >> 8, authDataSize & 0xFF));
     return new StaticHeaderImpl(headerBytes);
   }
@@ -62,11 +61,7 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
 
   @Override
   public Flag getFlag() {
-    byte b = getBytes().get(FLAG_OFFSET);
-    if (b >= Flag.values().length) {
-      throw new DecodeException("Invalid flag value: " + b);
-    }
-    return Flag.values()[b];
+    return Flag.fromCode(getBytes().get(FLAG_OFFSET));
   }
 
   @Override

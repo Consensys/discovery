@@ -74,8 +74,8 @@ public class OrdinaryMessagePacketTest {
             "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBB5C0F12931F67D3F47392BF576D35A62C2FB47B4BC1E3CD4EBD17FA8FE1A0EBDBF05909E4636057237F6464D4",
             "Pong-2"),
         Arguments.of(
-            new FindNodeMessage(Bytes.fromHexString("0x00000001"), emptyList()),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBA4102ED931F6613CFA6CAD75DA6BDE3CFCCF239D14EF9D1",
+            new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255)),
+            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBA4F02ED931F6611758C08A287C6312135A3ED3CF924BB6830A7",
             "FindNode-1"),
         Arguments.of(
             new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255, 254, 253)),
@@ -132,7 +132,7 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithWrongGcmNonceFails(V5Message message, String __, String name) {
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes12 wrongAesGcmNonce = Bytes12.fromHexString("0xafffffffffffffffffffffff");
     Bytes encryptedMessage =
         MessagePacketImpl.encrypt(
@@ -154,7 +154,7 @@ public class OrdinaryMessagePacketTest {
   @Test
   void testDecryptingWithInvalidMessageCodeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2));
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes invalidMessageBytes = Bytes.wrap(Bytes.of(111), pingMessage.getBytes().slice(1));
     Bytes encryptedInvalidMessage =
         MessagePacketImpl.encrypt(header.getBytes(), invalidMessageBytes, aesGcmNonce, secretKey);
@@ -174,7 +174,7 @@ public class OrdinaryMessagePacketTest {
 
   @Test
   void testDecryptingRandomMessageFails() {
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
 
     OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.createRandom(header, 111);
     RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
@@ -192,7 +192,7 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithInvalidMessageRlpFails(V5Message message, String __, String name) {
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes messageBytes = message.getBytes();
     Bytes invalidMessageBytes = messageBytes.slice(0, messageBytes.size() - 1);
     Bytes encryptedInvalidMessage =
@@ -213,7 +213,7 @@ public class OrdinaryMessagePacketTest {
 
   @Test
   void testDecryptingWithInvalidMessageRequestIdRlpFails() {
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     RlpList rlpList =
         new RlpList(
             new RlpList(), // should be RlpString with requestId
@@ -239,7 +239,7 @@ public class OrdinaryMessagePacketTest {
   }
 
   private RawPacket createPacket(V5Message msg) {
-    Header<AuthData> header = AuthData.createHeader(srcNodeId, aesGcmNonce);
+    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.create(header, msg, secretKey);
     return RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
   }

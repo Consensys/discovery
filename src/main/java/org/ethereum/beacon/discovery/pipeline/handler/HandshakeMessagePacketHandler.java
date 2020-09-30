@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.pipeline.handler;
 
 import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
-import static org.ethereum.beacon.discovery.schema.NodeSession.SessionStatus.AUTHENTICATED;
+import static org.ethereum.beacon.discovery.schema.NodeSession.SessionState.AUTHENTICATED;
 
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -28,13 +28,13 @@ import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
-public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(AuthHeaderMessagePacketHandler.class);
+public class HandshakeMessagePacketHandler implements EnvelopeHandler {
+  private static final Logger logger = LogManager.getLogger(HandshakeMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
   private final NodeRecordFactory nodeRecordFactory;
 
-  public AuthHeaderMessagePacketHandler(
+  public HandshakeMessagePacketHandler(
       Pipeline outgoingPipeline, Scheduler scheduler, NodeRecordFactory nodeRecordFactory) {
     this.outgoingPipeline = outgoingPipeline;
     this.scheduler = scheduler;
@@ -81,7 +81,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "Node record not valid for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -91,7 +91,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "Incorrect node ID for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -107,7 +107,7 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
         logger.info(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getStatus()));
+                packet, session.getNodeRecord(), session.getState()));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -121,18 +121,17 @@ public class AuthHeaderMessagePacketHandler implements EnvelopeHandler {
             session.getNodeTable().save(NodeRecordInfo.createDefault(r));
           });
 
+      session.setState(AUTHENTICATED);
+      envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+      NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus()),
+              packet, session.getNodeRecord(), session.getState()),
           ex);
       markHandshakeAsFailed(envelope, session);
-      return;
     }
-    session.setStatus(AUTHENTICATED);
-    envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
-    NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
   }
 
   private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {

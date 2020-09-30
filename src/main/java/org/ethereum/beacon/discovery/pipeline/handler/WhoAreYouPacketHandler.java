@@ -14,9 +14,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HanshakeAuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
-import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -28,6 +27,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -78,7 +78,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
             "Verification not passed for message [{}] from node {} in status {}",
             packet,
             nodeRecord,
-            session.getStatus());
+            session.getState());
         envelope.remove(Field.PACKET_WHOAREYOU);
         session.cancelAllRequests("Bad WHOAREYOU received from node");
         return;
@@ -115,7 +115,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
       Bytes idSignature =
-          HanshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
+          HandshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
       if (packet
@@ -126,17 +126,16 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           < 0) {
         respRecord = session.getHomeNodeRecord();
       }
-      HanshakeAuthData authData =
-          HanshakeAuthData.create(
+      Header<HandshakeAuthData> header =
+          Header.createHandshakeHeader(
+              session.getHomeNodeId(),
               session.generateNonce(),
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      Header<HanshakeAuthData> header =
-          Header.create(session.getHomeNodeId(), Flag.HANDSHAKE, authData);
       HandshakeMessagePacket handshakeMessagePacket =
           HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
-      session.setStatus(NodeSession.SessionStatus.AUTHENTICATED);
+      session.setState(SessionState.AUTHENTICATED);
 
       session.sendOutgoing(handshakeMessagePacket);
 
@@ -146,7 +145,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getStatus());
+              packet, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");
