@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -190,7 +191,8 @@ public class HandshakeHandlersTest {
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
 
     MessageHandler messageHandler =
-        new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1);
+        new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1,
+            TalkHandler.NOOP);
     messageHandler.handle(envelopeAt1From2WithMessage);
 
     // Node 2 handles message from Node 1

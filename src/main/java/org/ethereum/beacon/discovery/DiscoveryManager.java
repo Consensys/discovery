@@ -14,11 +14,6 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
  */
 public interface DiscoveryManager {
 
-  interface TalkHandler {
-
-    CompletableFuture<Bytes> talk(Bytes request);
-  }
-
   CompletableFuture<Void> start();
 
   void stop();
@@ -47,8 +42,4 @@ public interface DiscoveryManager {
   CompletableFuture<Void> ping(NodeRecord nodeRecord);
 
   CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request);
-
-  void addTalkHandler(String protocol, TalkHandler talkHandler);
-
-  void removeTalkHandler(String protocol);
 }

@@ -4,8 +4,10 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -23,10 +25,12 @@ public class MessageHandler implements EnvelopeHandler {
   private final MessageProcessor messageProcessor;
 
   public MessageHandler(
-      NodeRecordFactory nodeRecordFactory, final LocalNodeRecordStore localNodeRecordStore) {
+      NodeRecordFactory nodeRecordFactory,
+      LocalNodeRecordStore localNodeRecordStore,
+      TalkHandler talkHandler) {
     this.messageProcessor =
         new MessageProcessor(
-            new DiscoveryV5MessageProcessor(nodeRecordFactory, localNodeRecordStore));
+            new DiscoveryV5MessageProcessor(nodeRecordFactory, localNodeRecordStore, talkHandler));
   }
 
   @Override

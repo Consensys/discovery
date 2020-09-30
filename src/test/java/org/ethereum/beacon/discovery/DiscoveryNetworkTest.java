@@ -83,7 +83,8 @@ public class DiscoveryNetworkTest {
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            TalkHandler.NOOP);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
             Optional.empty(),
@@ -94,7 +95,8 @@ public class DiscoveryNetworkTest {
             nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            TalkHandler.NOOP);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);

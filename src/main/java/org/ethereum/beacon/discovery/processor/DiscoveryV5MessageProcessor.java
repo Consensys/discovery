@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.MessageCode;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
@@ -16,6 +17,7 @@ import org.ethereum.beacon.discovery.message.handler.MessageHandler;
 import org.ethereum.beacon.discovery.message.handler.NodesHandler;
 import org.ethereum.beacon.discovery.message.handler.PingHandler;
 import org.ethereum.beacon.discovery.message.handler.PongHandler;
+import org.ethereum.beacon.discovery.message.handler.TalkReqHandler;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.Protocol;
@@ -34,12 +36,15 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<Di
   private final NodeRecordFactory nodeRecordFactory;
 
   public DiscoveryV5MessageProcessor(
-      NodeRecordFactory nodeRecordFactory, final LocalNodeRecordStore localNodeRecordStore) {
+      NodeRecordFactory nodeRecordFactory,
+      LocalNodeRecordStore localNodeRecordStore,
+      TalkHandler talkHandler) {
     messageHandlers.put(MessageCode.PING, new PingHandler());
     messageHandlers.put(
         MessageCode.PONG, new PongHandler(new ExternalAddressSelector(localNodeRecordStore)));
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
+    messageHandlers.put(MessageCode.TALKREQ, new TalkReqHandler(talkHandler));
     this.nodeRecordFactory = nodeRecordFactory;
   }
 

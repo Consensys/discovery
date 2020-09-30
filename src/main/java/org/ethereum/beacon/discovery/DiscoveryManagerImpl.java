@@ -59,8 +59,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final TalkHandler talkHandler;
   private volatile DiscoveryClient discoveryClient;
-  private volatile Map<String, TalkHandler> talkHandlers = new ConcurrentHashMap<>();
 
   public DiscoveryManagerImpl(
       Optional<InetSocketAddress> listenAddress,
@@ -70,8 +70,10 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Bytes homeNodePrivateKey,
       NodeRecordFactory nodeRecordFactory,
       Scheduler taskScheduler,
-      ExpirationSchedulerFactory expirationSchedulerFactory) {
+      ExpirationSchedulerFactory expirationSchedulerFactory,
+      TalkHandler talkHandler) {
     this.localNodeRecordStore = localNodeRecordStore;
+    this.talkHandler = talkHandler;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     AuthTagRepository authTagRepo = new AuthTagRepository();
 
@@ -102,7 +104,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
-        .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore))
+        .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore, talkHandler))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
@@ -175,15 +177,5 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
     return null;
-  }
-
-  @Override
-  public void addTalkHandler(String protocol, TalkHandler talkHandler) {
-    talkHandlers.put(protocol, talkHandler);
-  }
-
-  @Override
-  public void removeTalkHandler(String protocol) {
-    talkHandlers.remove(protocol);
   }
 }

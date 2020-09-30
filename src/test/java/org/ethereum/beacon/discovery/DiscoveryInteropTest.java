@@ -81,7 +81,8 @@ public class DiscoveryInteropTest {
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
-            new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor()));
+            new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor()),
+            TalkHandler.NOOP);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);
