@@ -169,13 +169,13 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return executeTaskImpl(nodeRecord, TaskType.PING, new TaskOptions(true));
   }
 
-  @VisibleForTesting
-  public Publisher<NetworkParcel> getOutgoingMessages() {
-    return outgoingMessages;
-  }
-
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
     return null;
+  }
+
+  @VisibleForTesting
+  public Publisher<NetworkParcel> getOutgoingMessages() {
+    return outgoingMessages;
   }
 }

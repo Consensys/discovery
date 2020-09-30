@@ -106,8 +106,7 @@ public class RlpUtil {
     }
 
     for (int i = 0; i < constraints.length; i++) {
-//      if (lengths[i] >= 0 && bytesList.get(i).size() != lengths[i]) {
-      if (constraints[i].test(bytesList.get(i))) {
+      if (!constraints[i].test(bytesList.get(i))) {
         throw new RlpDecodeException(
             "Failed constraints check (" + constraints[i] + ") for item #" + i + ": " + rlp);
       }
