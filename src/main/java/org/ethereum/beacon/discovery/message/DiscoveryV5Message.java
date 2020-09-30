@@ -40,10 +40,10 @@ public class DiscoveryV5Message implements DiscoveryMessage {
 
   public V5Message create(NodeRecordFactory nodeRecordFactory) {
     MessageCode code = MessageCode.fromNumber(getBytes().get(0));
-    Bytes messageBytes = getBytes().slice(1);
     if (code == null) {
       throw new DecodeException("Invalid message code: " + getBytes().get(0));
     }
+    Bytes messageBytes = getBytes().slice(1);
     switch (code) {
       case PING:
         {
