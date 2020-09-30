@@ -46,8 +46,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
     if (envelope.get(Field.INCOMING) instanceof NetworkParcel) {
       NetworkParcel parcel = (NetworkParcel) envelope.get(Field.INCOMING);
       if (parcel.getPacket().getBytes().size() > IncomingDataPacker.MAX_PACKET_SIZE) {
-        logger.error(
-            () -> "Outgoing packet is too large, dropping it: " + parcel.getPacket());
+        logger.error(() -> "Outgoing packet is too large, dropping it: " + parcel.getPacket());
       } else {
         outgoingSink.next(parcel);
         envelope.remove(Field.INCOMING);

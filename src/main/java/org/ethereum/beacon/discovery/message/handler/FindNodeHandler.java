@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
   private static final Logger logger = LogManager.getLogger(FindNodeHandler.class);
+
   /**
    * The maximum size of any packet is 1280 bytes. Implementations should not generate or process
    * packets larger than this size. As per specification the maximum size of an ENR is 300 bytes. A
@@ -30,6 +31,12 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
    */
   private static final int MAX_NODES_PER_MESSAGE = 4;
 
+  /**
+   * Implementations should limit the number of nodes in the result set. The recommended result
+   * limit for FINDNODE queries is 16 nodes.
+   */
+  private static final int MAX_TOTAL_NODES_PER_RESPONSE = 16;
+
   public FindNodeHandler() {}
 
   @Override
@@ -39,6 +46,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
             .distinct()
             .flatMap(d -> session.getBucket(d).stream())
             .flatMap(b -> b.getNodeRecords().stream())
+            .limit(MAX_TOTAL_NODES_PER_RESPONSE)
             .map(NodeRecordInfo::getNode)
             .collect(Collectors.toList());
 
