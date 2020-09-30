@@ -20,9 +20,15 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
@@ -33,6 +39,8 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.TaskOptions;
 import org.ethereum.beacon.discovery.task.TaskType;
+import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /**
@@ -43,7 +51,7 @@ public class NodeSession {
   public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
-  private final Bytes homeNodeId;
+  private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AuthTagRepository authTagRepo;
   private final NodeTable nodeTable;
@@ -53,7 +61,7 @@ public class NodeSession {
   private final Random rnd;
   private final Bytes nodeId;
   private Optional<NodeRecord> nodeRecord;
-  private SessionStatus status = SessionStatus.INITIAL;
+  private SessionState state = SessionState.INITIAL;
   private Bytes idNonce;
   private Bytes initiatorKey;
   private Bytes recipientKey;
@@ -82,7 +90,7 @@ public class NodeSession {
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
-    this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
+    this.homeNodeId = Bytes32.wrap(localNodeRecordStore.getLocalNodeRecord().getNodeId());
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
     this.requestExpirationScheduler = requestExpirationScheduler;
@@ -109,9 +117,18 @@ public class NodeSession {
     this.nodeRecord = Optional.of(nodeRecord);
   }
 
-  public void sendOutgoing(Packet packet) {
+  public void sendOutgoingOrdinary(V5Message message) {
+    Header<AuthData> header =
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
+    OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
+    sendOutgoing(packet);
+  }
+
+  public void sendOutgoing(Packet<?> packet) {
     logger.trace(() -> String.format("Sending outgoing packet %s in session %s", packet, this));
-    outgoingPipeline.accept(new NetworkParcelV5(packet, remoteAddress));
+    Bytes16 destNodeId = Bytes16.wrap(getNodeId(), 0);
+    RawPacket rawPacket = RawPacket.create(generateAesCtrIV(), packet, destNodeId);
+    outgoingPipeline.accept(new NetworkParcelV5(rawPacket, remoteAddress));
   }
 
   /**
@@ -204,15 +221,15 @@ public class NodeSession {
   }
 
   /** Generates random nonce of {@link #NONCE_SIZE} size */
-  public synchronized Bytes generateNonce() {
+  public synchronized Bytes12 generateNonce() {
     byte[] nonce = new byte[NONCE_SIZE];
     rnd.nextBytes(nonce);
-    return Bytes.wrap(nonce);
+    return Bytes12.wrap(nonce);
   }
 
   /** If true indicates that handshake is complete */
   public synchronized boolean isAuthenticated() {
-    return SessionStatus.AUTHENTICATED.equals(status);
+    return SessionState.AUTHENTICATED.equals(state);
   }
 
   /** Resets stored authTags for this session making them obsolete */
@@ -220,16 +237,22 @@ public class NodeSession {
     authTagRepo.expire(this);
   }
 
-  public Optional<Bytes> getAuthTag() {
+  public Optional<Bytes12> getAuthTag() {
     return authTagRepo.getTag(this);
   }
 
-  public void setAuthTag(Bytes authTag) {
+  public void setAuthTag(Bytes12 authTag) {
     authTagRepo.put(authTag, this);
   }
 
-  public Bytes getHomeNodeId() {
+  public Bytes32 getHomeNodeId() {
     return homeNodeId;
+  }
+
+  public Bytes16 generateAesCtrIV() {
+    byte[] ivBytes = new byte[16];
+    rnd.nextBytes(ivBytes);
+    return Bytes16.wrap(ivBytes);
   }
 
   /** @return initiator key, also known as write key */
@@ -325,25 +348,24 @@ public class NodeSession {
 
   @Override
   public String toString() {
-    return "NodeSession{" + nodeId + " (" + status + ")}";
+    return "NodeSession{" + nodeId + " (" + state + ")}";
   }
 
-  public synchronized SessionStatus getStatus() {
-    return status;
+  public synchronized SessionState getState() {
+    return state;
   }
 
-  public synchronized void setStatus(SessionStatus newStatus) {
+  public synchronized void setState(SessionState newStatus) {
     logger.debug(
-        () ->
-            String.format("Switching status of node %s from %s to %s", nodeId, status, newStatus));
-    this.status = newStatus;
+        () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
+    this.state = newStatus;
   }
 
   public Bytes getStaticNodeKey() {
     return staticNodeKey;
   }
 
-  public enum SessionStatus {
+  public enum SessionState {
     INITIAL, // other side is trying to connect, or we are initiating (before random packet is sent
     WHOAREYOU_SENT, // other side is initiator, we've sent whoareyou in response
     RANDOM_PACKET_SENT, // our node is initiator, we've sent random packet

@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery;
 
-import static org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket.createIdNonceMessage;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -125,9 +124,9 @@ public class FunctionsTest {
             "0xf8aa05b8404f5fa8309cab170dbeb049de504b519288777aae0c4b25686f82310206a4a1e264dc6e8bfaca9187e8b3dbb56f49c7aa3d22bff3a279bf38fb00cb158b7b8ca7b865f86380018269648276348375647082765f826970847f00000189736563703235366b31b84013d14211e0287b2361a1615890a9b5212080546d0a257ae4cff96cf534992cb97e6adeb003652e807c7f2fe843e0c48d02d4feb0272e2e01f6e27915a431e773");
     Bytes zeroNonce = Bytes.wrap(new byte[12]);
     Bytes authResponse =
-        Functions.aesgcm_encrypt(authResponseKey, zeroNonce, authResponsePt, Bytes.EMPTY);
+        CryptoUtil.aesgcmEncrypt(authResponseKey, zeroNonce, authResponsePt, Bytes.EMPTY);
     Bytes authResponsePtDecrypted =
-        Functions.aesgcm_decrypt(authResponseKey, zeroNonce, authResponse, Bytes.EMPTY);
+        CryptoUtil.aesgcmDecrypt(authResponseKey, zeroNonce, authResponse, Bytes.EMPTY);
     assertEquals(authResponsePt, authResponsePtDecrypted);
   }
 
@@ -153,28 +152,6 @@ public class FunctionsTest {
     Bytes message =
         Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
     assertTrue(Functions.verifyECDSASignature(idNonceSig, Functions.hash(message), pubKey));
-  }
-
-  @Test
-  public void testSignAndRecoverFromSignature() {
-    Bytes idNonce =
-        Bytes.fromHexString("0xd550ca9d62930c947efff75b58a4ea1b44716d841cc0d690879d4f3cab5a4e84");
-    Bytes ephemeralPubkey =
-        Bytes.fromHexString(
-            "0xd9bc9158f0a0c40e75490de66ef44f865588d1c7110b29d0c479db19f7644ddad2d8e948cb933bd767437b173888409d73644a36ae1d068997217357a22d674f");
-    Bytes privKey =
-        Bytes.fromHexString("0xb5a8efa45da6906663cf7a158cd506da71ae7d732a68220e6644468526bb098e");
-    Bytes pubKey =
-        Bytes.wrap(
-            Functions.publicKeyToPoint(
-                    Bytes.wrap(
-                        Utils.extractBytesFromUnsignedBigInt(
-                            ECKeyPair.create(privKey.toArray()).getPublicKey(), 64)))
-                .getEncoded(true));
-    Bytes idNonceSig = AuthHeaderMessagePacket.signIdNonce(idNonce, privKey, ephemeralPubkey);
-    assertTrue(
-        Functions.verifyECDSASignature(
-            idNonceSig, Functions.hash(createIdNonceMessage(idNonce, ephemeralPubkey)), pubKey));
   }
 
   @Test

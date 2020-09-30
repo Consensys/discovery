@@ -1,124 +1,53 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.ethereum.beacon.discovery.packet;
 
-import java.util.List;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.ethereum.beacon.discovery.util.Utils;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
+import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl;
+import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes52;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
- * The WHOAREYOU packet, used during the handshake as a response to any message received from
- * unknown host
+ * In WHOAREYOU packets, the authdata section contains information for the verification procedure.
+ * The message field of WHOAREYOU packets is always empty.
  *
- * <p>Format:<code>
- * whoareyou-packet = magic || [token, id-nonce, enr-seq]
- * magic = sha256(dest-node-id || "WHOAREYOU")
- * token = auth-tag of request
- * id-nonce = 32 random bytes
- * enr-seq = highest ENR sequence number of node A known on node B's side</code>
+ * <p>authdata = request-nonce || id-nonce || enr-seq authdata-size = 52 request-nonce = uint96 --
+ * nonce of request packet that couldn't be decrypted id-nonce = uint256 -- random bytes enr-seq =
+ * uint64 -- ENR sequence number of the requesting node
  */
-@SuppressWarnings({"DefaultCharset"})
-public class WhoAreYouPacket extends AbstractPacket {
-  private static final Bytes MAGIC_BYTES = Bytes.wrap("WHOAREYOU".getBytes());
-  private static final int MAGIC_FIELD_SIZE = 32;
-  private static final int AUTH_TAG_SIZE = 12;
-  private static final int ID_NONCE_SIZE = 32;
+public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 
-  private WhoAreYouDecoded decoded = null;
-
-  public WhoAreYouPacket(Bytes bytes) {
-    super(bytes);
+  static WhoAreYouPacket create(Header<WhoAreYouAuthData> header) {
+    return new WhoAreYouPacketImpl(header);
   }
 
-  /** Create a packet by converting {@code destNodeId} to a magic value */
-  public static WhoAreYouPacket createFromNodeId(
-      Bytes destNodeId, Bytes authTag, Bytes idNonce, UInt64 enrSeq) {
-    Bytes magic = getStartMagic(destNodeId);
-    return createFromMagic(magic, authTag, idNonce, enrSeq);
-  }
+  interface WhoAreYouAuthData extends AuthData {
 
-  public static WhoAreYouPacket createFromMagic(
-      Bytes magic, Bytes authTag, Bytes idNonce, UInt64 enrSeq) {
-    byte[] rlpListEncoded =
-        RlpEncoder.encode(
-            new RlpList(
-                RlpString.create(authTag.toArray()),
-                RlpString.create(idNonce.toArray()),
-                RlpString.create(enrSeq.toBigInteger())));
-    return new WhoAreYouPacket(Bytes.concatenate(magic, Bytes.wrap(rlpListEncoded)));
-  }
-
-  /** Calculates first 32 bytes of WHOAREYOU packet */
-  public static Bytes getStartMagic(Bytes destNodeId) {
-    return Functions.hash(Bytes.concatenate(destNodeId, MAGIC_BYTES));
-  }
-
-  public Bytes getAuthTag() {
-    decode();
-    return decoded.authTag;
-  }
-
-  public Bytes getIdNonce() {
-    decode();
-    return decoded.idNonce;
-  }
-
-  public UInt64 getEnrSeq() {
-    decode();
-    return decoded.enrSeq;
-  }
-
-  public boolean isValid(Bytes destNodeId, Bytes expectedAuthTag) {
-    decode();
-    return Functions.hash(Bytes.concatenate(destNodeId, MAGIC_BYTES)).equals(decoded.magic)
-        && expectedAuthTag.equals(getAuthTag());
-  }
-
-  private synchronized void decode() {
-    if (decoded != null) {
-      return;
+    default Bytes12 getRequestNonce() {
+      return getAesGcmNonce();
     }
-    WhoAreYouDecoded blank = new WhoAreYouDecoded();
-    blank.magic = Bytes.wrap(getBytes().slice(0, MAGIC_FIELD_SIZE));
-    List<Bytes> bytesList =
-        RlpUtil.decodeListOfStrings(
-            getBytes().slice(MAGIC_FIELD_SIZE), AUTH_TAG_SIZE, ID_NONCE_SIZE, RlpUtil.ANY_LEN);
-    blank.authTag = bytesList.get(0);
-    blank.idNonce = bytesList.get(1);
-    blank.enrSeq = Utils.toUInt64(bytesList.get(2));
-    this.decoded = blank;
-  }
 
-  @Override
-  public String toString() {
-    if (decoded != null) {
-      return "WhoAreYou{"
-          + "magic="
-          + decoded.magic
-          + ", authTag="
-          + decoded.authTag
-          + ", idNonce="
-          + decoded.idNonce
-          + ", enrSeq="
-          + decoded.enrSeq
-          + '}';
-    } else {
-      return "WhoAreYou{" + getBytes() + '}';
+    Bytes32 getIdNonce();
+
+    UInt64 getEnrSeq();
+
+    @Override
+    Bytes52 getBytes();
+
+    @Override
+    default void validate() throws DecodeException {
+      AuthData.super.validate();
+      DecodeException.wrap(
+          () -> "Couldn't decode WhoAreYou auth data: " + getBytes(),
+          () -> {
+            getRequestNonce();
+            getIdNonce();
+            getEnrSeq();
+          });
     }
-  }
-
-  private static class WhoAreYouDecoded {
-    private Bytes magic; // Bytes32
-    private Bytes authTag;
-    private Bytes idNonce; // Bytes32
-    private UInt64 enrSeq;
   }
 }

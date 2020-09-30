@@ -4,23 +4,23 @@
 
 package org.ethereum.beacon.discovery.message.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import com.google.common.collect.Lists;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.NodeBucket;
 
 public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
   private static final Logger logger = LogManager.getLogger(FindNodeHandler.class);
+
   /**
    * The maximum size of any packet is 1280 bytes. Implementations should not generate or process
    * packets larger than this size. As per specification the maximum size of an ENR is 300 bytes. A
@@ -31,51 +31,44 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
    */
   private static final int MAX_NODES_PER_MESSAGE = 4;
 
+  /**
+   * Implementations should limit the number of nodes in the result set. The recommended result
+   * limit for FINDNODE queries is 16 nodes.
+   */
+  private static final int MAX_TOTAL_NODES_PER_RESPONSE = 16;
+
   public FindNodeHandler() {}
 
   @Override
   public void handle(FindNodeMessage message, NodeSession session) {
-    Optional<NodeBucket> nodeBucketOptional = session.getBucket(message.getDistance());
-    List<List<NodeRecord>> nodeRecordsList = new ArrayList<>();
-    int total = 0;
+    List<NodeRecord> nodeRecordInfos =
+        message.getDistances().stream()
+            .distinct()
+            .flatMap(d -> session.getBucket(d).stream())
+            .flatMap(b -> b.getNodeRecords().stream())
+            .limit(MAX_TOTAL_NODES_PER_RESPONSE)
+            .map(NodeRecordInfo::getNode)
+            .collect(Collectors.toList());
 
-    // Repack to lists of MAX_NODES_PER_MESSAGE size
-    List<NodeRecordInfo> bucketRecords =
-        nodeBucketOptional.isPresent()
-            ? nodeBucketOptional.get().getNodeRecords()
-            : Collections.emptyList();
-    for (NodeRecordInfo nodeRecordInfo : bucketRecords) {
-      if (total % MAX_NODES_PER_MESSAGE == 0) {
-        nodeRecordsList.add(new ArrayList<>());
-      }
-      List<NodeRecord> currentList = nodeRecordsList.get(nodeRecordsList.size() - 1);
-      currentList.add(nodeRecordInfo.getNode());
-      ++total;
-    }
+    List<List<NodeRecord>> nodeRecordBatches =
+        Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
+
     logger.trace(
         () ->
             String.format(
-                "Sending %s nodes in reply to request with distance %s in session %s",
-                bucketRecords.size(), message.getDistance(), session));
+                "Sending %s nodes in reply to request with distances %s in session %s",
+                nodeRecordInfos.size(), message.getDistances(), session));
 
-    // Send
-    if (nodeRecordsList.isEmpty()) {
-      nodeRecordsList.add(Collections.emptyList());
-    }
-    int finalTotal = total;
-    nodeRecordsList.forEach(
+    List<List<NodeRecord>> nonEmptyNodeRecordsList =
+        nodeRecordBatches.isEmpty() ? singletonList(emptyList()) : nodeRecordBatches;
+
+    nonEmptyNodeRecordsList.forEach(
         recordsList ->
-            session.sendOutgoing(
-                MessagePacket.create(
-                    session.getHomeNodeId(),
-                    session.getNodeId(),
-                    session.getAuthTag().orElseThrow(),
-                    session.getInitiatorKey(),
-                    DiscoveryV5Message.from(
-                        new NodesMessage(
-                            message.getRequestId(),
-                            finalTotal,
-                            () -> recordsList,
-                            recordsList.size())))));
+            session.sendOutgoingOrdinary(
+                new NodesMessage(
+                    message.getRequestId(),
+                    nodeRecordBatches.size(),
+                    () -> recordsList,
+                    recordsList.size())));
   }
 }

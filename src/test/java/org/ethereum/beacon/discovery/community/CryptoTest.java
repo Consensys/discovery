@@ -5,7 +5,9 @@
 package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
+import org.apache.tuweni.bytes.Bytes32;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -64,16 +66,13 @@ public class CryptoTest {
   }
 
   /**
-   * Nonce signatures should prefix the string `discovery-id-nonce` and post-fix the ephemeral key
-   * before taking the `sha256` hash of the `id-nonce`.
-   *
-   * <p>See {@link org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket}, idNonceSig is a
-   * part of this packet
+   * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
+   * id_sign(id-nonce-input)
    */
   @Test
   public void testIdNonceSigning() {
-    Bytes idNonce =
-        Bytes.fromHexString("0xa77e3aa0c144ae7c0a3af73692b7d6e5b7a2fdc0eda16e8d5e6cb0d08e88dd04");
+    Bytes32 idNonce =
+        Bytes32.fromHexString("0xa77e3aa0c144ae7c0a3af73692b7d6e5b7a2fdc0eda16e8d5e6cb0d08e88dd04");
     Bytes ephemeralKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
@@ -84,8 +83,7 @@ public class CryptoTest {
         Bytes.fromHexString(
             "0xc5036e702a79902ad8aa147dabfe3958b523fd6fa36cc78e2889b912d682d8d35fdea142e141f690736d86f50b39746ba2d2fc510b46f82ee08f08fd55d133a4");
     Assertions.assertEquals(
-        expectedIdNonceSig,
-        AuthHeaderMessagePacket.signIdNonce(idNonce, localSecretKey, ephemeralKey));
+        expectedIdNonceSig, HandshakeAuthData.signId(idNonce, ephemeralKey, localSecretKey));
   }
 
   /**
@@ -102,6 +100,6 @@ public class CryptoTest {
     Bytes expectedMessageCiphertext =
         Bytes.fromHexString("a5d12a2d94b8ccb3ba55558229867dc13bfa3648");
     Assertions.assertEquals(
-        expectedMessageCiphertext, Functions.aesgcm_encrypt(encryptionKey, nonce, pt, ad));
+        expectedMessageCiphertext, CryptoUtil.aesgcmEncrypt(encryptionKey, nonce, pt, ad));
   }
 }

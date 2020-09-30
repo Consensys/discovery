@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.Protocol;
+import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
@@ -53,6 +54,9 @@ public class DiscoveryV5Message implements DiscoveryMessage {
   public V5Message create(NodeRecordFactory nodeRecordFactory) {
     decode();
     MessageCode code = MessageCode.fromNumber(getBytes().get(0));
+    if (code == null) {
+      throw new DecodeException("Invalid message code: " + getBytes().get(0));
+    }
     switch (code) {
       case PING:
         {

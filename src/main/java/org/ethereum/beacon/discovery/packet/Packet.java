@@ -1,22 +1,37 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.packet.impl.PacketImpl;
+import org.ethereum.beacon.discovery.type.Bytes16;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
- * Network packet as defined by discovery v5 specification. See <a
- * href="https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#packet-encoding">https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#packet-encoding</a>
+ * Abstract packet consisting of header and message bytes
+ *
+ * <p>{@code packet = iv || masked-header || message}
+ *
+ * <p>In the scheme above the {@link Packet} represents {@code masked-header || message } part with
+ * decrypted (AES/CTR) masked-header
  */
-public interface Packet {
+public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Bytes createTag(Bytes homeNodeId, Bytes destNodeId) {
-    return homeNodeId.xor(Functions.hash(destNodeId), MutableBytes.create(destNodeId.size()));
+  static Packet<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId) throws DecodeException {
+    Packet<?> packet = PacketImpl.decrypt(data, iv, destNodeId);
+    packet.validate();
+    return packet;
   }
 
-  Bytes getBytes();
+  Bytes encrypt(Bytes16 iv, Bytes16 destNodeId);
+
+  Bytes getMessageBytes();
+
+  Header<TAuthData> getHeader();
+
+  @Override
+  default void validate() throws DecodeException {
+    getHeader().validate();
+  }
 }

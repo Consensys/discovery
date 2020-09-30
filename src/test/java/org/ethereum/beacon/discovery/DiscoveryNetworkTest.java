@@ -17,10 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
-import org.ethereum.beacon.discovery.packet.AuthHeaderMessagePacket;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
-import org.ethereum.beacon.discovery.packet.RandomPacket;
-import org.ethereum.beacon.discovery.packet.UnknownPacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
@@ -105,37 +103,36 @@ public class DiscoveryNetworkTest {
     CountDownLatch nodesSent2to1 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> new UnknownPacket(p.getPacket().getBytes()))
+        .map(p -> p.getPacket().decodePacket(nodeRecord2.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random
               if (randomSent1to2.getCount() != 0) {
-                RandomPacket randomPacket = networkPacket.getRandomPacket();
-                System.out.println("1 => 2: " + randomPacket);
+                assertTrue(networkPacket instanceof OrdinaryMessagePacket);
+                System.out.println("1 => 2: " + networkPacket);
                 randomSent1to2.countDown();
               } else if (authPacketSent1to2.getCount() != 0) {
                 // 1 -> 2 auth packet with FINDNODES
-                AuthHeaderMessagePacket authHeaderMessagePacket =
-                    networkPacket.getAuthHeaderMessagePacket();
-                System.out.println("1 => 2: " + authHeaderMessagePacket);
+                assertTrue(networkPacket instanceof HandshakeMessagePacket);
+                System.out.println("1 => 2: " + networkPacket);
                 authPacketSent1to2.countDown();
               } else {
                 throw new RuntimeException("Not expected!");
               }
             });
     Flux.from(discoveryManager2.getOutgoingMessages())
-        .map(p -> new UnknownPacket(p.getPacket().getBytes()))
+        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 2 -> 1 whoareyou
               if (whoareyouSent2to1.getCount() != 0) {
-                WhoAreYouPacket whoAreYouPacket = networkPacket.getWhoAreYouPacket();
-                System.out.println("2 => 1: " + whoAreYouPacket);
+                assertTrue(networkPacket instanceof WhoAreYouPacket);
+                System.out.println("2 => 1: " + networkPacket);
                 whoareyouSent2to1.countDown();
               } else {
                 // 2 -> 1 nodes
-                MessagePacket messagePacket = networkPacket.getMessagePacket();
-                System.out.println("2 => 1: " + messagePacket);
+                assertTrue(networkPacket instanceof OrdinaryMessagePacket);
+                System.out.println("2 => 1: " + networkPacket);
                 nodesSent2to1.countDown();
               }
             });

@@ -13,6 +13,7 @@ public enum Field {
   PACKET_WHOAREYOU, // WhoAreYou packet
   PACKET_AUTH_HEADER_MESSAGE, // Auth header message packet
   PACKET_MESSAGE, // Standard message packet
+  UNAUTHORIZED_PACKET_MESSAGE, // Standard message packet
   MESSAGE, // Message extracted from the packet
   NODE, // Sender/recipient node
   BAD_PACKET, // Bad, rejected packet
@@ -21,4 +22,6 @@ public enum Field {
   TASK, // Task to perform
   TASK_OPTIONS, // Task options
   FUTURE, // Completable future
+
+  PACKET,
 }

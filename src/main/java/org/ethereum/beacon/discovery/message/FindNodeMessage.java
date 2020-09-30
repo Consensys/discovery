@@ -4,8 +4,11 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Objects;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -22,17 +25,24 @@ public class FindNodeMessage implements V5Message {
   // Unique request id
   private final Bytes requestId;
   // The requested log2 distance, a positive integer
-  private final Integer distance;
+  private final List<Integer> distances;
 
-  public FindNodeMessage(Bytes requestId, Integer distance) {
+  public FindNodeMessage(Bytes requestId, List<Integer> distances) {
+    checkArgument(!distances.isEmpty(), "Distances size should be > 0");
     this.requestId = requestId;
-    this.distance = distance;
+    this.distances = distances;
   }
 
   public static FindNodeMessage fromRlp(List<RlpType> rlpList) {
-    return new FindNodeMessage(
-        Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
-        ((RlpString) rlpList.get(1)).asPositiveBigInteger().intValueExact());
+    Bytes requestId = Bytes.wrap(((RlpString) rlpList.get(0)).getBytes());
+    RlpList distanceList = (RlpList) rlpList.get(1);
+    List<Integer> distances =
+        distanceList.getValues().stream()
+            .map(rlpType -> (RlpString) rlpType)
+            .map(s -> s.asPositiveBigInteger().intValueExact())
+            .collect(Collectors.toList());
+
+    return new FindNodeMessage(requestId, distances);
   }
 
   @Override
@@ -40,8 +50,8 @@ public class FindNodeMessage implements V5Message {
     return requestId;
   }
 
-  public Integer getDistance() {
-    return distance;
+  public List<Integer> getDistances() {
+    return distances;
   }
 
   @Override
@@ -50,7 +60,12 @@ public class FindNodeMessage implements V5Message {
         Bytes.of(MessageCode.FINDNODE.byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
-                new RlpList(RlpString.create(requestId.toArray()), RlpString.create(distance)))));
+                new RlpList(
+                    RlpString.create(requestId.toArray()),
+                    new RlpList(
+                        getDistances().stream()
+                            .map(RlpString::create)
+                            .collect(Collectors.toList()))))));
   }
 
   @Override
@@ -58,16 +73,17 @@ public class FindNodeMessage implements V5Message {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     FindNodeMessage that = (FindNodeMessage) o;
-    return Objects.equal(requestId, that.requestId) && Objects.equal(distance, that.distance);
+    return Objects.equal(requestId, that.requestId)
+        && Objects.equal(getDistances(), that.getDistances());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(requestId, distance);
+    return Objects.hashCode(requestId, getDistances());
   }
 
   @Override
   public String toString() {
-    return "FindNodeMessage{" + "requestId=" + requestId + ", distance=" + distance + '}';
+    return "FindNodeMessage{" + "requestId=" + requestId + ", distances=" + getDistances() + '}';
   }
 }

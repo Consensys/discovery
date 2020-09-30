@@ -18,6 +18,9 @@ import org.apache.tuweni.bytes.Bytes;
  * </ul>
  */
 public interface IdentitySchemaInterpreter {
+
+  IdentitySchemaInterpreter V4 = new IdentitySchemaV4Interpreter();
+
   /** Returns supported scheme */
   IdentitySchema getScheme();
 

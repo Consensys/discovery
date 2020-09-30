@@ -11,17 +11,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import java.math.BigInteger;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -109,48 +100,6 @@ public class Functions {
       return false;
     }
     return false;
-  }
-
-  /**
-   * AES-GCM encryption/authentication with the given `key`, `nonce` and additional authenticated
-   * data `ad`. Size of `key` is 16 bytes (AES-128), size of `nonce` 12 bytes.
-   */
-  public static Bytes aesgcm_encrypt(Bytes privateKey, Bytes nonce, Bytes message, Bytes aad) {
-    try {
-      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-      cipher.init(
-          Cipher.ENCRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(message.toArray()));
-    } catch (Exception e) {
-      throw new RuntimeException("No AES/GCM cipher provider", e);
-    }
-  }
-
-  /**
-   * AES-GCM decryption of `encoded` data with the given `key`, `nonce` and additional authenticated
-   * data `ad`. Size of `key` is 16 bytes (AES-128), size of `nonce` 12 bytes.
-   */
-  public static Bytes aesgcm_decrypt(Bytes privateKey, Bytes nonce, Bytes encoded, Bytes aad) {
-    try {
-      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-      cipher.init(
-          Cipher.DECRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(encoded.toArray()));
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("No AES/GCM cipher provider", e);
-    } catch (InvalidKeyException
-        | InvalidAlgorithmParameterException
-        | NoSuchPaddingException
-        | BadPaddingException
-        | IllegalBlockSizeException e) {
-      throw new RuntimeException("Failed to decrypt message", e);
-    }
   }
 
   public static ECKeyPair generateECKeyPair() {

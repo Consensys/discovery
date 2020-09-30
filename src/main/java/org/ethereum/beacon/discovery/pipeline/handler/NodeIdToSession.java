@@ -84,6 +84,7 @@ public class NodeIdToSession implements EnvelopeHandler {
         "Envelope {}: Session lookup requested for nodeId {}",
         envelope.getId(),
         sessionRequest.getNodeId());
+
     getOrCreateSession(sessionRequest.getNodeId(), envelope)
         .ifPresentOrElse(
             nodeSession -> {

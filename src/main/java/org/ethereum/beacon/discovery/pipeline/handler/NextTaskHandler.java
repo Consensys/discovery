@@ -4,14 +4,15 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
-import org.ethereum.beacon.discovery.packet.RandomPacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -20,13 +21,16 @@ import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.task.TaskStatus;
+import org.ethereum.beacon.discovery.type.Bytes12;
 
 /** Gets next request task in session and processes it */
 public class NextTaskHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(NextTaskHandler.class);
   private static final int DEFAULT_DELAY_MS = 1000;
+  private static final int RANDOM_MESSAGE_SIZE = 128;
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
 
@@ -62,7 +66,7 @@ public class NextTaskHandler implements EnvelopeHandler {
 
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
     Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
-    if (!requestInfoOpt.isPresent()) {
+    if (requestInfoOpt.isEmpty()) {
       logger.trace(() -> String.format("Envelope %s: no awaiting requests", envelope.getId()));
       return;
     }
@@ -72,17 +76,18 @@ public class NextTaskHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
-    Bytes authTag = session.generateNonce();
+    Bytes12 authTag = session.generateNonce();
     Bytes requestId = requestInfo.getRequestId();
-    if (session.getStatus().equals(NodeSession.SessionStatus.INITIAL)) {
-      RandomPacket randomPacket =
-          RandomPacket.create(
-              session.getHomeNodeId(), session.getNodeId(), authTag, new SecureRandom());
+
+    if (session.getState().equals(SessionState.INITIAL)) {
+      Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
+      OrdinaryMessagePacket randomPacket =
+          OrdinaryMessagePacket.createRandom(header, RANDOM_MESSAGE_SIZE);
       session.setAuthTag(authTag);
       session.sendOutgoing(randomPacket);
-      session.setStatus(NodeSession.SessionStatus.RANDOM_PACKET_SENT);
-    } else if (session.getStatus().equals(NodeSession.SessionStatus.AUTHENTICATED)) {
-      MessagePacket messagePacket =
+      session.setState(SessionState.RANDOM_PACKET_SENT);
+    } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
+      MessagePacket<?> messagePacket =
           TaskMessageFactory.createPacketFromRequest(requestInfo, authTag, session);
       session.sendOutgoing(messagePacket);
       session.updateRequestInfo(requestId, requestInfo.withStatus(TaskStatus.SENT));

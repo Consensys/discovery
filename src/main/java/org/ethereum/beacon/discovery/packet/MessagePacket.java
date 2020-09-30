@@ -1,105 +1,28 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.ethereum.beacon.discovery.message.DiscoveryMessage;
-import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
-import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
- * Used when handshake is completed as a {@link DiscoveryMessage} authenticated container
+ * Represents a {@link Packet} with encrypted message.
  *
- * <p>Format:<code>
- * message-packet = tag || rlp_bytes(auth-tag) || message
- * message = aesgcm_encrypt(initiator-key, auth-tag, message-pt, tag)
- * message-pt = message-type || message-data</code>
+ * @see OrdinaryMessagePacket
+ * @see HandshakeMessagePacket
  */
-public class MessagePacket extends AbstractPacket {
+public interface MessagePacket<TAuthData extends AuthData> extends Packet<TAuthData> {
 
-  public static MessagePacket create(Bytes tag, Bytes authTag, Bytes messageCipherText) {
-    return new MessagePacket(new TaggedMessage(tag, authTag, messageCipherText));
-  }
-
-  public static MessagePacket create(
-      Bytes homeNodeId,
-      Bytes destNodeId,
-      Bytes authTag,
-      Bytes initiatorKey,
-      DiscoveryMessage message) {
-    Bytes tag = Packet.createTag(homeNodeId, destNodeId);
-    Bytes encryptedData = Functions.aesgcm_encrypt(initiatorKey, authTag, message.getBytes(), tag);
-    return create(tag, authTag, encryptedData);
-  }
-
-  private TaggedMessage decodedTaggedMessage = null;
-  private DiscoveryMessage decodedDiscoveryMessage = null;
-
-  public MessagePacket(Bytes bytes) {
-    super(bytes);
-  }
-
-  private MessagePacket(TaggedMessage taggedMessage) {
-    super(taggedMessage.getBytes());
-    this.decodedTaggedMessage = taggedMessage;
-  }
-
-  public Bytes getAuthTag() {
-    return getTaggedMessage().getAuthTag();
-  }
-
-  public Bytes getHomeNodeId(Bytes destNodeId) {
-    return Functions.hash(destNodeId)
-        .xor(getTaggedMessage().getTag(), MutableBytes.create(getTaggedMessage().getTag().size()));
-  }
-
-  public DiscoveryMessage getMessage() {
-    verifyDecode();
-    return decodedDiscoveryMessage;
-  }
-
-  private void verifyDecode() {
-    if (decodedDiscoveryMessage == null) {
-      throw new RuntimeException("You should decode packet at first!");
-    }
-  }
-
-  private TaggedMessage getTaggedMessage() {
-    if (decodedTaggedMessage == null) {
-      decodedTaggedMessage = TaggedMessage.decode(getBytes());
-    }
-    return decodedTaggedMessage;
-  }
-
-  public void decode(Bytes readKey) {
-    if (decodedDiscoveryMessage != null) {
-      return;
-    }
-    decodedDiscoveryMessage =
-        new DiscoveryV5Message(
-            Functions.aesgcm_decrypt(
-                readKey,
-                getTaggedMessage().getAuthTag(),
-                getTaggedMessage().getPayload(),
-                getTaggedMessage().getTag()));
-  }
+  V5Message decryptMessage(Bytes key, NodeRecordFactory nodeRecordFactory);
 
   @Override
-  public String toString() {
-    if (decodedDiscoveryMessage != null) {
-      return "MessagePacket{"
-          + "tag="
-          + getTaggedMessage().getTag()
-          + ", authTag="
-          + getTaggedMessage().getAuthTag()
-          + ", message="
-          + getMessage()
-          + '}';
-    } else {
-      return "MessagePacket{" + getBytes() + '}';
+  default void validate() throws DecodeException {
+    Packet.super.validate();
+    if (getMessageBytes().isEmpty()) {
+      throw new DecodeException("Message bytes are empty for message packet");
     }
   }
 }
