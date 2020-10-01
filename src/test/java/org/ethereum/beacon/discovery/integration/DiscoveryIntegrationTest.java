@@ -4,6 +4,7 @@
 package org.ethereum.beacon.discovery.integration;
 
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
@@ -17,17 +18,20 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
+import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
@@ -45,6 +49,7 @@ public class DiscoveryIntegrationTest {
   public static final String LOCALHOST = "127.0.0.1";
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
   public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
+  public static final Consumer<DiscoverySystemBuilder> NO_MODIFY = __ -> {};
   private int nextPort = 9001;
   private List<DiscoverySystem> managers = new ArrayList<>();
 
@@ -57,11 +62,9 @@ public class DiscoveryIntegrationTest {
   @Disabled
   @Test
   void runTestServer() throws Exception {
-    byte[] keyBytes = new byte[PRIVKEY_SIZE];
-    new Random(1).nextBytes(keyBytes);
-    final ECKeyPair keyPair = ECKeyPair.create(keyBytes);
+    final ECKeyPair keyPair = Functions.generateECKeyPair();
 
-    final DiscoverySystem node = createDiscoveryClient(true, "188.134.70.1", keyPair);
+    final DiscoverySystem node = createDiscoveryClient(true, "188.134.70.1", keyPair, NO_MODIFY);
     System.out.println("Running node: " + node.getLocalNodeRecord());
     System.out.println("Running node: " + node.getLocalNodeRecord().asEnr());
 
@@ -72,15 +75,14 @@ public class DiscoveryIntegrationTest {
   @Disabled
   @Test
   public void runTestClient() throws Exception {
-    byte[] keyBytes = new byte[PRIVKEY_SIZE];
-    new Random(1).nextBytes(keyBytes);
-    final ECKeyPair keyPair = ECKeyPair.create(keyBytes);
+    final ECKeyPair keyPair = Functions.generateECKeyPair();
 
     NodeRecord remote =
         NodeRecordFactory.DEFAULT.fromBase64(
             "-IS4QIrMgVOYuw2mq68f9hFGTlPzJT5pRWIqKTYL93C5xasmfUGUydi2XrjsbxO1MLYGEl1rR5H1iov6gxOyhegW9hYBgmlkgnY0gmlwhLyGRgGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyo");
     System.out.println("Connecting to: " + remote);
-    final DiscoverySystem client = createDiscoveryClient(true, "188.134.70.1", keyPair, remote);
+    final DiscoverySystem client =
+        createDiscoveryClient(true, "188.134.70.1", keyPair, NO_MODIFY, remote);
     final CompletableFuture<Void> pingResult = client.ping(remote);
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
@@ -217,30 +219,74 @@ public class DiscoveryIntegrationTest {
     assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
   }
 
+  @Test
+  public void checkTalkMessageHandling() throws Exception {
+    class TestTalkHandler implements TalkHandler {
+      final Executor delayedExecutor =
+          CompletableFuture.delayedExecutor(
+              200, MILLISECONDS, Executors.newSingleThreadScheduledExecutor());
+
+      NodeRecord srcNode;
+      String protocol;
+
+      @Override
+      public CompletableFuture<Bytes> talk(NodeRecord srcNode, String protocol, Bytes request) {
+        this.srcNode = srcNode;
+        this.protocol = protocol;
+        return CompletableFuture.supplyAsync(() -> Bytes.wrap(request, request), delayedExecutor);
+      }
+    }
+
+    TestTalkHandler testTalkHandler = new TestTalkHandler();
+
+    final DiscoverySystem bootnode =
+        createDiscoveryClient(
+            true, LOCALHOST, Functions.generateECKeyPair(), b -> b.talkHandler(testTalkHandler));
+    final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
+
+    List<CompletableFuture<Bytes>> responses = new ArrayList<>();
+
+    for (int i = 0; i < 16; i++) {
+      CompletableFuture<Bytes> resp =
+          client.talk(bootnode.getLocalNodeRecord(), "proto1", Bytes.of(i));
+      responses.add(resp);
+    }
+
+    for (CompletableFuture<Bytes> resp : responses) {
+      waitFor(resp);
+    }
+
+    assertThat(testTalkHandler.protocol).isEqualTo("proto1");
+    assertThat(testTalkHandler.srcNode.getNodeId())
+        .isEqualTo(client.getLocalNodeRecord().getNodeId());
+  }
+
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final ECKeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(true, LOCALHOST, keyPair, bootnodes);
+    return createDiscoveryClient(true, LOCALHOST, keyPair, NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(
-        signNodeRecord, LOCALHOST, Functions.generateECKeyPair(), bootnodes);
+        signNodeRecord, LOCALHOST, Functions.generateECKeyPair(), NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final String ipAddress, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(true, ipAddress, Functions.generateECKeyPair(), bootnodes);
+    return createDiscoveryClient(
+        true, ipAddress, Functions.generateECKeyPair(), NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord,
       final String ipAddress,
       final ECKeyPair keyPair,
+      final Consumer<DiscoverySystemBuilder> discModifier,
       final NodeRecord... bootnodes)
       throws Exception {
     final Bytes privateKey =
@@ -262,15 +308,16 @@ public class DiscoveryIntegrationTest {
               .address(ipAddress, port)
               .publicKey(Functions.derivePublicKeyFromPrivate(privateKey))
               .build();
-      final DiscoverySystem discoverySystem =
+      DiscoverySystemBuilder discoverySystemBuilder =
           new DiscoverySystemBuilder()
               .listen("0.0.0.0", port)
               .localNodeRecord(nodeRecord)
               .privateKey(privateKey)
               .retryTimeout(RETRY_TIMEOUT)
               .lifeCheckInterval(LIVE_CHECK_INTERVAL)
-              .bootnodes(bootnodes)
-              .build();
+              .bootnodes(bootnodes);
+      discModifier.accept(discoverySystemBuilder);
+      final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
       try {
         waitFor(discoverySystem.start());
         managers.add(discoverySystem);

@@ -30,7 +30,7 @@ public class TalkRespMessage implements V5Message {
 
   public static TalkRespMessage fromBytes(Bytes bytes) {
     List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_ANY);
-    return new TalkRespMessage(list.get(0), list.get(2));
+    return new TalkRespMessage(list.get(0), list.get(1));
   }
 
   @Override
@@ -45,7 +45,7 @@ public class TalkRespMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.TALKREQ.byteCode()),
+        Bytes.of(MessageCode.TALKRESP.byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(

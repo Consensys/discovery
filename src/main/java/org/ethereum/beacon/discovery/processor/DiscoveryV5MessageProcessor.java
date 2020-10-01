@@ -18,6 +18,7 @@ import org.ethereum.beacon.discovery.message.handler.NodesHandler;
 import org.ethereum.beacon.discovery.message.handler.PingHandler;
 import org.ethereum.beacon.discovery.message.handler.PongHandler;
 import org.ethereum.beacon.discovery.message.handler.TalkReqHandler;
+import org.ethereum.beacon.discovery.message.handler.TalkRespHandler;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.Protocol;
@@ -45,6 +46,7 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<Di
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
     messageHandlers.put(MessageCode.TALKREQ, new TalkReqHandler(talkHandler));
+    messageHandlers.put(MessageCode.TALKRESP, new TalkRespHandler());
     this.nodeRecordFactory = nodeRecordFactory;
   }
 

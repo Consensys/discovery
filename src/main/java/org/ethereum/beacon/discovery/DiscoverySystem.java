@@ -90,6 +90,16 @@ public class DiscoverySystem {
     return discoveryManager.ping(nodeRecord);
   }
 
+  /**
+   * Initiates TALK with node `nodeRecord`
+   *
+   * @param nodeRecord Ethereum Node record
+   * @return Promise of the node TALK response.
+   */
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
+    return discoveryManager.talk(nodeRecord, protocol, request);
+  }
+
   public Stream<NodeRecordInfo> streamKnownNodes() {
     // 0 indicates no limit to the number of nodes to return.
     return nodeTable.streamClosestNodes(Bytes32.ZERO, 0);

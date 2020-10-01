@@ -20,8 +20,8 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
- * Sends FindNode to closest NodeRecords added via {@link #add(NodeRecord, int)}.
- * Tasks is called failed if timeout is reached and reply from node is not received.
+ * Sends FindNode to closest NodeRecords added via {@link #add(NodeRecord, int)}. Tasks is called
+ * failed if timeout is reached and reply from node is not received.
  */
 public class RecursiveLookupTasks {
   private final Scheduler scheduler;

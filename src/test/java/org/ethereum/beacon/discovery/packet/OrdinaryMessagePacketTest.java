@@ -17,6 +17,8 @@ import org.ethereum.beacon.discovery.message.MessageCode;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
+import org.ethereum.beacon.discovery.message.TalkReqMessage;
+import org.ethereum.beacon.discovery.message.TalkRespMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.impl.MessagePacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl;
@@ -97,7 +99,17 @@ public class OrdinaryMessagePacketTest {
                             new EnrField("aaaaa1", Bytes.fromHexString("0xba0bab")),
                             new EnrField("aaaaa2", Bytes.fromHexString("0xb100da")))))),
             "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBD7F0869931F67D277EB043E271132D86BB04B84B4451C32B1429505701562CD65A166957417635DAD967A60681C07CF01B9EEEBB9E351F468996784D03ED88D3C38D63AB4E42C40A0560310D95EC44A6BA4E3F68C25C7DA984B1592151FABF2968A8D97455177F79AFE41CFE65BC81B26BE8520FE4463448532E333B764AC94CE0B542B591FF893C51594F6525333C1027B217A22C90446EB76E47ACF058B2788",
-            "Nodes-2"));
+            "Nodes-2"),
+        Arguments.of(
+            new TalkReqMessage(
+                Bytes.fromHexString("0x00000001"), "proto1", Bytes.fromHexString("0x11223344")),
+            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBC5602ED931F66558401FDCAB0A34E48F1E30FE2C3128835F4EAE2CB17E1BED8FC2D2B",
+            "TalkReq-1"),
+        Arguments.of(
+            new TalkRespMessage(
+                Bytes.fromHexString("0x00000001"), Bytes.fromHexString("0x11223344")),
+            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBF4D02ED931F6657E551A1FADC73384AA4B25DFF47E299FB71976AE1",
+            "TalkResp-1"));
   }
 
   @ParameterizedTest(name = "{index} {2}")

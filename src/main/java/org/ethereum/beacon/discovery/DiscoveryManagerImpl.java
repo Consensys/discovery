@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
+import org.ethereum.beacon.discovery.message.TalkReqMessage;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
@@ -178,8 +179,13 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
-    return null;
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes requestBytes) {
+    Request<Bytes> request =
+        new Request<>(
+            new CompletableFuture<>(),
+            reqId -> new TalkReqMessage(reqId, protocol, requestBytes),
+            MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER);
+    return executeTaskImpl(nodeRecord, request);
   }
 
   @VisibleForTesting
