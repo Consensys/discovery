@@ -25,8 +25,6 @@ import org.web3j.rlp.RlpType;
  * the only result.
  */
 public class FindNodeMessage implements V5Message {
-  // Logarithmic distance is 0..255 for 256-bit nodeIds
-  private static final int DISTANCE_BYTES_SIZE = 1;
   // Unique request id
   private final Bytes requestId;
   // The requested log2 distance, a positive integer

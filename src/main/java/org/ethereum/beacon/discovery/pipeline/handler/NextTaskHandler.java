@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -76,7 +75,6 @@ public class NextTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
     Bytes12 authTag = session.generateNonce();
-    Bytes requestId = requestInfo.getRequestId();
 
     if (session.getState().equals(SessionState.INITIAL)) {
       Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);

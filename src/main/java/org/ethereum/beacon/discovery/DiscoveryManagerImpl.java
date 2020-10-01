@@ -62,7 +62,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final TalkHandler talkHandler;
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
@@ -76,7 +75,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
     this.localNodeRecordStore = localNodeRecordStore;
-    this.talkHandler = talkHandler;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     AuthTagRepository authTagRepo = new AuthTagRepository();
 

@@ -23,7 +23,6 @@ import org.web3j.rlp.RlpType;
  * responses to a single query.
  */
 public class NodesMessage implements V5Message {
-  private static final int TOTAL_PACKETS_BYTES_SIZE = 1;
   // Unique request id
   private final Bytes requestId;
   // Total number of responses to the request

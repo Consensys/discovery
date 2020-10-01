@@ -141,7 +141,7 @@ public class NodeSession {
    * could ensure that restarts or even re-installs would increment the counter based on previously
    * saved state in all circumstances. The easiest to implement is a random number.
    */
-  public synchronized RequestInfo createNextRequest(Request request) {
+  public synchronized RequestInfo createNextRequest(Request<?> request) {
     byte[] requestId = new byte[REQUEST_ID_SIZE];
     rnd.nextBytes(requestId);
     Bytes wrappedId = Bytes.wrap(requestId);

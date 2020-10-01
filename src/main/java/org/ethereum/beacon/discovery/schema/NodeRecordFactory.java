@@ -77,7 +77,7 @@ public class NodeRecordFactory {
     IdentitySchema nodeIdentity = null;
     boolean idFound = false;
     for (int i = 2; i < rlpList.size() - 1; i += 2) {
-      Bytes id = RlpUtil.asString(rlpList.get(i), RlpUtil.maxSize(MAX_ENR_RLP_SIZE));
+      Bytes id = RlpUtil.asString(rlpList.get(i), RlpUtil.maxSize(MAX_FIELD_KEY_SIZE));
       if (!"id".equals(new String(id.toArrayUnsafe(), StandardCharsets.UTF_8))) {
         continue;
       }

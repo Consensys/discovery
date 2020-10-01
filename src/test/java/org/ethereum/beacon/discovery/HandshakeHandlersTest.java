@@ -160,7 +160,6 @@ public class HandshakeHandlersTest {
                 idNonce,
                 UInt64.ZERO)));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
-    CompletableFuture<Void> future = new CompletableFuture<>();
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
