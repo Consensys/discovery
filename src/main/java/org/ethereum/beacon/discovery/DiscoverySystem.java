@@ -71,12 +71,12 @@ public class DiscoverySystem {
    * Initiates FINDNODE with node `nodeRecord`
    *
    * @param nodeRecord Ethereum Node record
-   * @param distance Distance to search for
+   * @param distances Distances to search for
    * @return Future which is fired when reply is received or fails in timeout/not successful
    *     handshake/bad message exchange.
    */
-  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, int distance) {
-    return discoveryManager.findNodes(nodeRecord, distance);
+  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
+    return discoveryManager.findNodes(nodeRecord, distances);
   }
 
   /**

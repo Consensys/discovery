@@ -37,9 +37,7 @@ public enum MessageCode {
    */
   TALKREQ(0x05),
 
-  /**
-   * TALKRESP is the response to TALKREQ.
-   */
+  /** TALKRESP is the response to TALKREQ. */
   TALKRESP(0x06),
 
   /**

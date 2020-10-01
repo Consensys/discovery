@@ -14,11 +14,9 @@ import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /** PONG is the reply to PING {@link PingMessage} */
 public class PongMessage implements V5Message {
@@ -39,13 +37,11 @@ public class PongMessage implements V5Message {
   }
 
   public static PongMessage fromBytes(Bytes bytes) {
-    List<Bytes> list = RlpUtil
-        .decodeListOfStrings(bytes, maxSize(8), CONS_UINT64, enumSizes(4, 16), strictSize(2));
+    List<Bytes> list =
+        RlpUtil.decodeListOfStrings(
+            bytes, maxSize(8), CONS_UINT64, enumSizes(4, 16), strictSize(2));
     return new PongMessage(
-        list.get(0),
-        UInt64.fromBytes(list.get(1)),
-        list.get(2),
-        list.get(3).toInt());
+        list.get(0), UInt64.fromBytes(list.get(1)), list.get(2), list.get(3).toInt());
   }
 
   @Override

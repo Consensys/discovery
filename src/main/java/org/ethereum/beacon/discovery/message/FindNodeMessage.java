@@ -26,7 +26,7 @@ import org.web3j.rlp.RlpType;
  */
 public class FindNodeMessage implements V5Message {
   // Logarithmic distance is 0..255 for 256-bit nodeIds
-  private final static int DISTANCE_BYTES_SIZE = 1;
+  private static final int DISTANCE_BYTES_SIZE = 1;
   // Unique request id
   private final Bytes requestId;
   // The requested log2 distance, a positive integer
@@ -44,9 +44,8 @@ public class FindNodeMessage implements V5Message {
     }
     Bytes requestId = RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE));
     List<RlpType> rlpDistances = RlpUtil.asList(rlpList.get(1));
-    List<Integer> distances = rlpDistances.stream()
-        .map(RlpUtil::asInteger)
-        .collect(Collectors.toList());
+    List<Integer> distances =
+        rlpDistances.stream().map(RlpUtil::asInteger).collect(Collectors.toList());
 
     return new FindNodeMessage(requestId, distances);
   }

@@ -47,10 +47,10 @@ public class RlpUtil {
     return b -> Arrays.stream(sizes).anyMatch(s -> s == b.size());
   }
 
-    /**
-     * Calculates length of list beginning from the start of the data. So, there could everything else
-     * after first list in data, method helps to cut data in this case.
-     */
+  /**
+   * Calculates length of list beginning from the start of the data. So, there could everything else
+   * after first list in data, method helps to cut data in this case.
+   */
   private static int calcListLen(Bytes data) {
     int prefix = data.get(0) & 0xFF;
     int prefixAddon = 1;
@@ -152,7 +152,7 @@ public class RlpUtil {
   public static int asInteger(RlpType item) throws RlpDecodeException {
     Bytes bytes = asString(item, maxSize(4));
     long l = bytes.toLong();
-    if (l > Integer.MAX_VALUE){
+    if (l > Integer.MAX_VALUE) {
       throw new RlpDecodeException("Too large for integer: " + item);
     }
     return (int) l;

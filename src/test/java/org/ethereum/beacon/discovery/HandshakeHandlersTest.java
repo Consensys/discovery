@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.pipeline.Field.BAD_PACKET;
@@ -16,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -30,7 +30,10 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.message.FindNodeMessage;
+import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
@@ -43,6 +46,9 @@ import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHand
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
+import org.ethereum.beacon.discovery.pipeline.info.MultiPacketResponseHandler;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
@@ -56,9 +62,6 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
-import org.ethereum.beacon.discovery.task.TaskMessageFactory;
-import org.ethereum.beacon.discovery.task.TaskOptions;
-import org.ethereum.beacon.discovery.task.TaskType;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
@@ -158,7 +161,12 @@ public class HandshakeHandlersTest {
                 UInt64.ZERO)));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     CompletableFuture<Void> future = new CompletableFuture<>();
-    nodeSessionAt1For2.createNextRequest(TaskType.FINDNODE, new TaskOptions(true), future);
+    Request request =
+        new Request(
+            new CompletableFuture<>(),
+            id -> new FindNodeMessage(id, singletonList(1)),
+            new FindNodeResponseHandler());
+    nodeSessionAt1For2.createNextRequest(request);
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
 
     // Node2 handle AuthHeaderPacket and finish handshake
@@ -178,11 +186,15 @@ public class HandshakeHandlersTest {
     Envelope envelopeAt1From2WithMessage = new Envelope();
     Bytes12 pingAuthTag = nodeSessionAt1For2.generateNonce();
     OrdinaryMessagePacket pingPacketFrom2To1 =
-        TaskMessageFactory.createPingPacket(
+        createPingPacket(
             pingAuthTag,
             nodeSessionAt2For1,
             nodeSessionAt2For1
-                .createNextRequest(TaskType.PING, new TaskOptions(true), new CompletableFuture<>())
+                .createNextRequest(
+                    new Request(
+                        new CompletableFuture<>(),
+                        id -> new PingMessage(id, UInt64.ZERO),
+                        MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER))
                 .getRequestId());
     envelopeAt1From2WithMessage.put(PACKET_MESSAGE, pingPacketFrom2To1);
     envelopeAt1From2WithMessage.put(SESSION, nodeSessionAt1For2);
@@ -191,8 +203,8 @@ public class HandshakeHandlersTest {
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
 
     MessageHandler messageHandler =
-        new MessageHandler(NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1,
-            TalkHandler.NOOP);
+        new MessageHandler(
+            NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1, TalkHandler.NOOP);
     messageHandler.handle(envelopeAt1From2WithMessage);
 
     // Node 2 handles message from Node 1
@@ -205,5 +217,17 @@ public class HandshakeHandlersTest {
     messagePacketHandler2.handle(envelopeAt2From1WithMessage);
     assertNull(envelopeAt2From1WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt2From1WithMessage.get(MESSAGE));
+  }
+
+  private static OrdinaryMessagePacket createPingPacket(
+      Bytes12 authTag, NodeSession session, Bytes requestId) {
+
+    PingMessage pingMessage = createPing(session, requestId);
+    Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
+    return OrdinaryMessagePacket.create(header, pingMessage, session.getInitiatorKey());
+  }
+
+  private static PingMessage createPing(NodeSession session, Bytes requestId) {
+    return new PingMessage(requestId, session.getNodeRecord().orElseThrow().getSeq());
   }
 }

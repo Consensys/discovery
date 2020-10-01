@@ -4,14 +4,10 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.Protocol;
 import org.ethereum.beacon.discovery.util.DecodeException;
-import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 public class DiscoveryV5Message implements DiscoveryMessage {
   private final Bytes bytes;

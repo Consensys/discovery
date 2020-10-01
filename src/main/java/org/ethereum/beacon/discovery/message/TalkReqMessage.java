@@ -5,23 +5,16 @@
 package org.ethereum.beacon.discovery.message;
 
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
-import static org.ethereum.beacon.discovery.util.RlpUtil.enumSizes;
 import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
-import static org.ethereum.beacon.discovery.util.RlpUtil.strictSize;
 
-import com.google.common.base.Preconditions;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * TALKREQ sends an application-level request. The purpose of this message is pre-negotiating
@@ -43,10 +36,9 @@ public class TalkReqMessage implements V5Message {
   }
 
   public static TalkReqMessage fromBytes(Bytes bytes) {
-    List<Bytes> list = RlpUtil
-        .decodeListOfStrings(bytes, maxSize(8), CONS_ANY, CONS_ANY);
-    return new TalkReqMessage(list.get(0),
-        new String(list.get(1).toArrayUnsafe(), StandardCharsets.UTF_8), list.get(2));
+    List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_ANY, CONS_ANY);
+    return new TalkReqMessage(
+        list.get(0), new String(list.get(1).toArrayUnsafe(), StandardCharsets.UTF_8), list.get(2));
   }
 
   @Override
@@ -83,9 +75,9 @@ public class TalkReqMessage implements V5Message {
       return false;
     }
     TalkReqMessage that = (TalkReqMessage) o;
-    return Objects.equals(requestId, that.requestId) &&
-        Objects.equals(protocol, that.protocol) &&
-        Objects.equals(request, that.request);
+    return Objects.equals(requestId, that.requestId)
+        && Objects.equals(protocol, that.protocol)
+        && Objects.equals(request, that.request);
   }
 
   @Override
@@ -95,10 +87,14 @@ public class TalkReqMessage implements V5Message {
 
   @Override
   public String toString() {
-    return "TalkReqMessage{" +
-        "requestId=" + requestId +
-        ", protocol='" + protocol + '\'' +
-        ", request=" + request +
-        '}';
+    return "TalkReqMessage{"
+        + "requestId="
+        + requestId
+        + ", protocol='"
+        + protocol
+        + '\''
+        + ", request="
+        + request
+        + '}';
   }
 }

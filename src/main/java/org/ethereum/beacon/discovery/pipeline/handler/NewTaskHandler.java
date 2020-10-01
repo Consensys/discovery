@@ -4,18 +4,16 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.task.TaskOptions;
-import org.ethereum.beacon.discovery.task.TaskType;
 
-/** Enqueues task in session for any task found in {@link Field#TASK} */
+/** Enqueues task in session for any task found in {@link Field#REQUEST} */
 public class NewTaskHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(NewTaskHandler.class);
 
@@ -27,16 +25,10 @@ public class NewTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NewTaskHandler, checking requirements satisfaction",
                 envelope.getId()));
-    if (!HandlerUtil.requireField(Field.TASK, envelope)) {
-      return;
-    }
-    if (!HandlerUtil.requireField(Field.TASK_OPTIONS, envelope)) {
+    if (!HandlerUtil.requireField(Field.REQUEST, envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
-      return;
-    }
-    if (!HandlerUtil.requireField(Field.FUTURE, envelope)) {
       return;
     }
     logger.trace(
@@ -44,13 +36,9 @@ public class NewTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NewTaskHandler, requirements are satisfied!", envelope.getId()));
 
-    TaskType task = (TaskType) envelope.get(Field.TASK);
+    Request request = (Request) envelope.get(Field.REQUEST);
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    CompletableFuture<Void> completableFuture =
-        (CompletableFuture<Void>) envelope.get(Field.FUTURE);
-    TaskOptions taskOptions = (TaskOptions) envelope.get(Field.TASK_OPTIONS);
-    session.createNextRequest(task, taskOptions, completableFuture);
-    envelope.remove(Field.TASK);
-    envelope.remove(Field.FUTURE);
+    session.createNextRequest(request);
+    envelope.remove(Field.REQUEST);
   }
 }

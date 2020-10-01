@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.message.handler;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,14 +26,18 @@ public class TalkReqHandler implements MessageHandler<TalkReqMessage> {
   @Override
   public void handle(TalkReqMessage message, NodeSession session) {
     final NodeRecord srcNode = session.getNodeRecord().orElseThrow();
-    CompletableFuture<Bytes> response = appTalkHandler
-        .talk(srcNode, message.getProtocol(), message.getRequest());
-    response.thenAccept(respBytes -> {
-      TalkRespMessage respMessage = new TalkRespMessage(message.getRequestId(), respBytes);
-      session.sendOutgoingOrdinary(respMessage);
-    }).exceptionally(err -> {
-      logger.debug("Application TalkHandler completed with error", err);
-      return null;
-    });
+    CompletableFuture<Bytes> response =
+        appTalkHandler.talk(srcNode, message.getProtocol(), message.getRequest());
+    response
+        .thenAccept(
+            respBytes -> {
+              TalkRespMessage respMessage = new TalkRespMessage(message.getRequestId(), respBytes);
+              session.sendOutgoingOrdinary(respMessage);
+            })
+        .exceptionally(
+            err -> {
+              logger.debug("Application TalkHandler completed with error", err);
+              return null;
+            });
   }
 }

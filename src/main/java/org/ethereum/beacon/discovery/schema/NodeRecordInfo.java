@@ -40,8 +40,8 @@ public class NodeRecordInfo {
   }
 
   public static NodeRecordInfo fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
-    List<Bytes> bytesList = RlpUtil
-        .decodeListOfStrings(bytes, CONS_ANY, CONS_UINT64, CONS_ANY, CONS_UINT64);
+    List<Bytes> bytesList =
+        RlpUtil.decodeListOfStrings(bytes, CONS_ANY, CONS_UINT64, CONS_ANY, CONS_UINT64);
     return new NodeRecordInfo(
         nodeRecordFactory.fromBytes(bytesList.get(0)),
         Utils.toUInt64(bytesList.get(1)).toLong(),

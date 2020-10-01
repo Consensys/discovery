@@ -6,13 +6,14 @@ package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.message.FindNodeMessage;
+import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
@@ -36,6 +37,9 @@ import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
+import org.ethereum.beacon.discovery.pipeline.info.MultiPacketResponseHandler;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -44,8 +48,6 @@ import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.task.TaskOptions;
-import org.ethereum.beacon.discovery.task.TaskType;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -147,26 +149,32 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     localNodeRecordStore.onCustomFieldValueChanged(fieldName, value);
   }
 
-  private CompletableFuture<Void> executeTaskImpl(
-      NodeRecord nodeRecord, TaskType taskType, TaskOptions taskOptions) {
+  private CompletableFuture<Object> executeTaskImpl(NodeRecord nodeRecord, Request request) {
     Envelope envelope = new Envelope();
     envelope.put(Field.NODE, nodeRecord);
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    envelope.put(Field.TASK, taskType);
-    envelope.put(Field.FUTURE, future);
-    envelope.put(Field.TASK_OPTIONS, taskOptions);
+    envelope.put(Field.REQUEST, request);
     outgoingPipeline.push(envelope);
-    return future;
+    return request.getResultPromise();
   }
 
   @Override
-  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, int distance) {
-    return executeTaskImpl(nodeRecord, TaskType.FINDNODE, new TaskOptions(true, distance));
+  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
+    Request request =
+        new Request(
+            new CompletableFuture<>(),
+            reqId -> new FindNodeMessage(reqId, distances),
+            new FindNodeResponseHandler());
+    return executeTaskImpl(nodeRecord, request).thenApply(__ -> null);
   }
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
-    return executeTaskImpl(nodeRecord, TaskType.PING, new TaskOptions(true));
+    Request request =
+        new Request(
+            new CompletableFuture<>(),
+            reqId -> new PingMessage(reqId, nodeRecord.getSeq()),
+            MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER);
+    return executeTaskImpl(nodeRecord, request).thenApply(__ -> null);
   }
 
   @Override

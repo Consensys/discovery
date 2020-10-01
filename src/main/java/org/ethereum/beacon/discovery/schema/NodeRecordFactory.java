@@ -15,9 +15,6 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.ethereum.beacon.discovery.util.Utils;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 
 public class NodeRecordFactory {

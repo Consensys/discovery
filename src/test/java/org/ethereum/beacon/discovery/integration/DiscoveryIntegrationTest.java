@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery.integration;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
@@ -90,13 +91,14 @@ public class DiscoveryIntegrationTest {
   public void shouldSuccessfullyCommunicateWithBootnode() throws Exception {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
+
     final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
     final CompletableFuture<Void> findNodesResult =
-        client.findNodes(bootnode.getLocalNodeRecord(), 0);
+        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
     assertFalse(findNodesResult.isCompletedExceptionally());
@@ -129,7 +131,8 @@ public class DiscoveryIntegrationTest {
 
     // Find nodes at a distance we know has no node records to return.
     final CompletableFuture<Void> findNodesResult =
-        client.findNodes(bootnode.getLocalNodeRecord(), distance == 1 ? 2 : distance - 1);
+        client.findNodes(
+            bootnode.getLocalNodeRecord(), singletonList(distance == 1 ? 2 : distance - 1));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
     assertFalse(findNodesResult.isCompletedExceptionally());

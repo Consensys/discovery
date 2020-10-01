@@ -47,7 +47,6 @@ public class DiscoverySystemBuilder {
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private TalkHandler talkHandler = TalkHandler.NOOP;
 
-
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
     return this;

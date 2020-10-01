@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.message;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
 import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
@@ -16,9 +15,7 @@ import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
 
-/**
- * TALKRESP is the response to TALKREQ.
- */
+/** TALKRESP is the response to TALKREQ. */
 public class TalkRespMessage implements V5Message {
 
   // Unique request id
@@ -32,8 +29,7 @@ public class TalkRespMessage implements V5Message {
   }
 
   public static TalkRespMessage fromBytes(Bytes bytes) {
-    List<Bytes> list = RlpUtil
-        .decodeListOfStrings(bytes, maxSize(8), CONS_ANY);
+    List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_ANY);
     return new TalkRespMessage(list.get(0), list.get(2));
   }
 
@@ -53,8 +49,7 @@ public class TalkRespMessage implements V5Message {
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    RlpString.create(response.toArray())))));
+                    RlpString.create(requestId.toArray()), RlpString.create(response.toArray())))));
   }
 
   @Override
@@ -66,8 +61,7 @@ public class TalkRespMessage implements V5Message {
       return false;
     }
     TalkRespMessage that = (TalkRespMessage) o;
-    return Objects.equals(requestId, that.requestId) &&
-        Objects.equals(response, that.response);
+    return Objects.equals(requestId, that.requestId) && Objects.equals(response, that.response);
   }
 
   @Override
@@ -77,9 +71,6 @@ public class TalkRespMessage implements V5Message {
 
   @Override
   public String toString() {
-    return "TalkRespMessage{" +
-        "requestId=" + requestId +
-        ", request=" + response +
-        '}';
+    return "TalkRespMessage{" + "requestId=" + requestId + ", request=" + response + '}';
   }
 }
