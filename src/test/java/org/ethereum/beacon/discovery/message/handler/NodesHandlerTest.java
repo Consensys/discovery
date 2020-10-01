@@ -49,8 +49,8 @@ class NodesHandlerTest {
   public void shouldAddReceivedRecordsToNodeTableButNotNodeBuckets() {
     final NodeInfo nodeInfo = TestUtil.generateNode(9000);
     final int distance = Functions.logDistance(PEER_ID, nodeInfo.getNodeRecord().getNodeId());
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance)),
             new FindNodeResponseHandler());
@@ -71,8 +71,8 @@ class NodesHandlerTest {
   public void shouldRejectReceivedRecordsThatAreInvalid() {
     final NodeInfo nodeInfo = TestUtil.generateInvalidNode(9000);
     final int distance = Functions.logDistance(PEER_ID, nodeInfo.getNodeRecord().getNodeId());
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance)),
             new FindNodeResponseHandler());
@@ -90,8 +90,8 @@ class NodesHandlerTest {
   public void shouldRejectReceivedRecordsThatAreNotAtCorrectDistance() {
     final NodeInfo nodeInfo = TestUtil.generateNode(9000);
     final int distance = Functions.logDistance(PEER_ID, nodeInfo.getNodeRecord().getNodeId());
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance - 1)),
             new FindNodeResponseHandler());

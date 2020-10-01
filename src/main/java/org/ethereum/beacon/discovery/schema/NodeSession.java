@@ -251,10 +251,11 @@ public class NodeSession {
     this.reportedExternalAddress = Optional.of(reportedExternalAddress);
   }
 
-  public synchronized void clearRequestInfo(Bytes requestId, Object result) {
+  @SuppressWarnings("unchecked")
+  public synchronized <T> void clearRequestInfo(Bytes requestId, T result) {
     final RequestInfo requestInfo = clearRequestInfo(requestId);
     checkNotNull(requestInfo, "Attempting to clear an unknown request");
-    requestInfo.getRequest().getResultPromise().complete(result);
+    ((Request<T>) requestInfo.getRequest()).getResultPromise().complete(result);
   }
 
   /** Updates nodeRecord {@link NodeStatus} to ACTIVE of the node associated with this session */

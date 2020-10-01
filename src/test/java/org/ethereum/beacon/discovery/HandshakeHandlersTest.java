@@ -161,8 +161,8 @@ public class HandshakeHandlersTest {
                 UInt64.ZERO)));
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     CompletableFuture<Void> future = new CompletableFuture<>();
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(1)),
             new FindNodeResponseHandler());
@@ -191,7 +191,7 @@ public class HandshakeHandlersTest {
             nodeSessionAt2For1,
             nodeSessionAt2For1
                 .createNextRequest(
-                    new Request(
+                    new Request<Void>(
                         new CompletableFuture<>(),
                         id -> new PingMessage(id, UInt64.ZERO),
                         MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER))

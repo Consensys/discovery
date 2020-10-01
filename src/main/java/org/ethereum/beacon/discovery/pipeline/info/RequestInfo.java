@@ -11,16 +11,16 @@ import org.ethereum.beacon.discovery.task.TaskStatus;
 /** Stores info related to performed request */
 public class RequestInfo {
 
-  public static RequestInfo create(Bytes requestId, Request request) {
+  public static RequestInfo create(Bytes requestId, Request<?> request) {
     return new RequestInfo(TaskStatus.AWAIT, requestId, request);
   }
 
   private final Bytes requestId;
-  private final Request request;
+  private final Request<?> request;
   private TaskStatus taskStatus;
   private V5Message message;
 
-  private RequestInfo(TaskStatus taskStatus, Bytes requestId, Request request) {
+  private RequestInfo(TaskStatus taskStatus, Bytes requestId, Request<?> request) {
     this.taskStatus = taskStatus;
     this.requestId = requestId;
     this.request = request;
@@ -45,7 +45,7 @@ public class RequestInfo {
     return requestId;
   }
 
-  public Request getRequest() {
+  public Request<?> getRequest() {
     return request;
   }
 

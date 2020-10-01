@@ -149,7 +149,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     localNodeRecordStore.onCustomFieldValueChanged(fieldName, value);
   }
 
-  private CompletableFuture<Object> executeTaskImpl(NodeRecord nodeRecord, Request request) {
+  private <T> CompletableFuture<T> executeTaskImpl(NodeRecord nodeRecord, Request<T> request) {
     Envelope envelope = new Envelope();
     envelope.put(Field.NODE, nodeRecord);
     envelope.put(Field.REQUEST, request);
@@ -159,22 +159,22 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             reqId -> new FindNodeMessage(reqId, distances),
             new FindNodeResponseHandler());
-    return executeTaskImpl(nodeRecord, request).thenApply(__ -> null);
+    return executeTaskImpl(nodeRecord, request);
   }
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
-    Request request =
-        new Request(
+    Request<Void> request =
+        new Request<>(
             new CompletableFuture<>(),
             reqId -> new PingMessage(reqId, nodeRecord.getSeq()),
             MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER);
-    return executeTaskImpl(nodeRecord, request).thenApply(__ -> null);
+    return executeTaskImpl(nodeRecord, request);
   }
 
   @Override
