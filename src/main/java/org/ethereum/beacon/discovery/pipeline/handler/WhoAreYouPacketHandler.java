@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -117,12 +118,10 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           HandshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
-      if (packet
-              .getHeader()
-              .getAuthData()
-              .getEnrSeq()
-              .compareTo(session.getHomeNodeRecord().getSeq())
-          < 0) {
+      UInt64 lastKnownOurEnrVer = packet.getHeader().getAuthData().getEnrSeq();
+
+      if (lastKnownOurEnrVer.compareTo(session.getHomeNodeRecord().getSeq()) < 0
+          || lastKnownOurEnrVer.isZero()) {
         respRecord = session.getHomeNodeRecord();
       }
       Header<HandshakeAuthData> header =
