@@ -53,11 +53,9 @@ public class OrdinaryMessagePacketTest {
     return Stream.of(
         Arguments.of(
             new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2)),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EB84102ED931F66D180CBB4219F369A24F4E6B24D7BDC2A04",
             "Ping-1"),
         Arguments.of(
             new PingMessage(Bytes.fromHexString("0xFF00000000000001"), UInt64.MAX_VALUE),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EB8550E12931F67D3F4739336206D35A62C2FB47B92CED750094F1D2E14C55C11A36E0A28",
             "Ping-2"),
         Arguments.of(
             new PongMessage(
@@ -65,7 +63,6 @@ public class OrdinaryMessagePacketTest {
                 UInt64.valueOf(2),
                 Bytes.fromHexString("0x01020304"),
                 777),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBB4902ED931F66D1707290BDDB10C950C10A8487FEDE689A827F73B62B91BA52",
             "Pong-1"),
         Arguments.of(
             new PongMessage(
@@ -73,19 +70,15 @@ public class OrdinaryMessagePacketTest {
                 UInt64.MAX_VALUE,
                 Bytes.fromHexString("0xFFFFFFFF"),
                 65535),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBB5D0E12931F67D3F4739336206D35A62C2FB47B30BAE3CD4EC06AFA6C4B4A8025158BEE407D9492881A5AFE",
             "Pong-2"),
         Arguments.of(
             new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255)),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBA4F02ED931F6611758C08A287C6312135A3ED3CF924BB6830A7",
             "FindNode-1"),
         Arguments.of(
             new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255, 254, 253)),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBA4B02ED931F6615758C13405E6F172DDCCA3A4A63F9A9C1C688D8C9886E",
             "FindNode-2"),
         Arguments.of(
             new NodesMessage(Bytes.fromHexString("0x00000001"), 0, emptyList()),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBD4002ED931F6653343E01E34DAB73355B39C13FB4ED0FC493",
             "Nodes-1"),
         Arguments.of(
             new NodesMessage(
@@ -98,27 +91,22 @@ public class OrdinaryMessagePacketTest {
                         List.of(
                             new EnrField("aaaaa1", Bytes.fromHexString("0xba0bab")),
                             new EnrField("aaaaa2", Bytes.fromHexString("0xb100da")))))),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBD7F0869931F67D277EB043E271132D86BB04B84B4451C32B1429505701562CD65A166957417635DAD967A60681C07CF01B9EEEBB9E351F468996784D03ED88D3C38D63AB4E42C40A0560310D95EC44A6BA4E3F68C25C7DA984B1592151FABF2968A8D97455177F79AFE41CFE65BC81B26BE8520FE4463448532E333B764AC94CE0B542B591FF893C51594F6525333C1027B217A22C90446EB76E47ACF058B2788",
             "Nodes-2"),
         Arguments.of(
             new TalkReqMessage(
                 Bytes.fromHexString("0x00000001"), "proto1", Bytes.fromHexString("0x11223344")),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBC5602ED931F66558401FDCAB0A34E48F1E30FE2C3128835F4EAE2CB17E1BED8FC2D2B",
             "TalkReq-1"),
         Arguments.of(
             new TalkRespMessage(
                 Bytes.fromHexString("0x00000001"), Bytes.fromHexString("0x11223344")),
-            "0x00000000000000000000000000000000088B3D4342776668980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3FCBA22B1E9472D43C9AE48D04689EBF4D02ED931F6657E551A1FADC73384AA4B25DFF47E299FB71976AE1",
             "TalkResp-1"));
   }
 
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
-  void testMessageRoundtrip(V5Message message, String expectedBytesHex, String name) {
+  void testMessageRoundtrip(V5Message message, String name) {
     RawPacket rawPacket = createPacket(message);
     Bytes packetBytes = rawPacket.getBytes();
-    Bytes expectedPacketBytes = Bytes.fromHexString(expectedBytesHex);
-    assertThat(packetBytes).isEqualTo(expectedPacketBytes);
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     OrdinaryMessagePacket packet =
@@ -129,7 +117,7 @@ public class OrdinaryMessagePacketTest {
 
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
-  void testDecryptingWithWrongKeyFails(V5Message message, String __, String name) {
+  void testDecryptingWithWrongKeyFails(V5Message message, String name) {
     Bytes packetBytes = createPacket(message).getBytes();
     MessagePacket<?> msgPacket =
         (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
@@ -143,7 +131,7 @@ public class OrdinaryMessagePacketTest {
 
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
-  void testDecryptingWithWrongGcmNonceFails(V5Message message, String __, String name) {
+  void testDecryptingWithWrongGcmNonceFails(V5Message message, String name) {
     Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes12 wrongAesGcmNonce = Bytes12.fromHexString("0xafffffffffffffffffffffff");
     Bytes encryptedMessage =
@@ -203,7 +191,7 @@ public class OrdinaryMessagePacketTest {
 
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
-  void testDecryptingWithInvalidMessageRlpFails(V5Message message, String __, String name) {
+  void testDecryptingWithInvalidMessageRlpFails(V5Message message, String name) {
     Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes messageBytes = message.getBytes();
     Bytes invalidMessageBytes = messageBytes.slice(0, messageBytes.size() - 1);

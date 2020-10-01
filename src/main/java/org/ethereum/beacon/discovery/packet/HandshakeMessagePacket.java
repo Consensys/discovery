@@ -62,8 +62,6 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
       return Functions.sign(homeNodePrivateKey, idSignatureInput);
     }
 
-    byte getVersion();
-
     Bytes getIdSignature();
 
     Bytes getEphemeralPubKey();
@@ -79,9 +77,6 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
     @Override
     default void validate() throws DecodeException {
       AuthData.super.validate();
-      if (getVersion() != HANDSHAKE_VERSION) {
-        throw new DecodeException("Invalid Handshake version: " + getVersion());
-      }
       DecodeException.wrap(
           () -> "Couldn't decode Handshake auth data: " + getBytes(),
           () -> {

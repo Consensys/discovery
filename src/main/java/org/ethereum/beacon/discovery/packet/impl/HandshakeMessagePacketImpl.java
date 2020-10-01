@@ -22,7 +22,6 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
   public static class HandshakeAuthDataImpl extends AbstractBytes implements HandshakeAuthData {
 
     public static HandshakeAuthDataImpl create(
-        byte version,
         Bytes12 nonce,
         Bytes idSignature,
         Bytes ephemeralPubKey,
@@ -31,7 +30,6 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
       checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
       return new HandshakeAuthDataImpl(
           Bytes.concatenate(
-              Bytes.of(version),
               nonce,
               Bytes.of(idSignature.size()),
               Bytes.of(ephemeralPubKey.size()),
@@ -44,20 +42,13 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
       super(checkMinSize(bytes, ID_SIG_OFF));
     }
 
-    private static final int VERSION_OFF = 0;
-    private static final int VERSION_SIZE = 1;
-    private static final int NONCE_OFF = VERSION_SIZE;
+    private static final int NONCE_OFF = 0;
     private static final int NONCE_SIZE = 12;
     private static final int SIG_SIZE_OFF = NONCE_OFF + NONCE_SIZE;
     private static final int SIG_SIZE_SIZE = 1;
     private static final int EPH_KEY_SIZE_OFF = SIG_SIZE_OFF + SIG_SIZE_SIZE;
     private static final int EPH_KEY_SIZE_SIZE = 1;
     private static final int ID_SIG_OFF = EPH_KEY_SIZE_OFF + EPH_KEY_SIZE_SIZE;
-
-    @Override
-    public byte getVersion() {
-      return getBytes().get(VERSION_OFF);
-    }
 
     @Override
     public Bytes12 getAesGcmNonce() {
@@ -116,9 +107,7 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
 
     @Override
     public String toString() {
-      return "HandshakeAuthData{version="
-          + getVersion()
-          + ", aesGcmNonce="
+      return "HandshakeAuthData{aesGcmNonce="
           + getAesGcmNonce()
           + ", idSignature="
           + getIdSignature()

@@ -5,6 +5,7 @@ package org.ethereum.beacon.discovery.packet;
 
 import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HANDSHAKE_VERSION;
 import static org.ethereum.beacon.discovery.packet.StaticHeader.PROTOCOL_ID;
+import static org.ethereum.beacon.discovery.packet.StaticHeader.VERSION;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
@@ -38,7 +39,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
       Bytes32 sourceNodeId, Flag flag, TAuthData authData) {
 
     StaticHeaderImpl staticHeader =
-        StaticHeaderImpl.create(PROTOCOL_ID, sourceNodeId, flag, authData.getBytes().size());
+        StaticHeaderImpl.create(PROTOCOL_ID, VERSION, sourceNodeId, flag, authData.getBytes().size());
     return new HeaderImpl<>(staticHeader, authData);
   }
 
@@ -60,8 +61,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
       Bytes ephemeralPubKey,
       Optional<NodeRecord> nodeRecord) {
     HandshakeAuthData authData =
-        HandshakeAuthDataImpl.create(
-            HANDSHAKE_VERSION, nonce, idSignature, ephemeralPubKey, nodeRecord);
+        HandshakeAuthDataImpl.create(nonce, idSignature, ephemeralPubKey, nodeRecord);
     return create(srcNodeId, Flag.HANDSHAKE, authData);
   }
 

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
+import org.ethereum.beacon.discovery.type.Bytes2;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
@@ -15,13 +16,16 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface StaticHeader extends BytesSerializable {
 
-  String PROTOCOL_ID = "discv5  ";
+  String PROTOCOL_ID = "discv5";
+  Bytes2 VERSION = Bytes2.fromHexString("0x0001");
 
   static StaticHeader decode(Bytes staticHeaderBytes) {
     return new StaticHeaderImpl(staticHeaderBytes);
   }
 
   String getProtocolId();
+
+  Bytes2 getVersion();
 
   Bytes32 getSourceNodeId();
 
@@ -33,6 +37,9 @@ public interface StaticHeader extends BytesSerializable {
   default void validate() {
     if (!getProtocolId().equals(PROTOCOL_ID)) {
       throw new DecodeException("Invalid protocolId field: '" + getProtocolId() + "'");
+    }
+    if (!getVersion().equals(VERSION)) {
+      throw new DecodeException("Invalid version: " + getVersion());
     }
     DecodeException.wrap(
         () -> "Couldn't decode static header: " + getBytes(),
