@@ -89,10 +89,11 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
 
       Bytes32 idNonce = packet.getHeader().getAuthData().getIdNonce();
+      Bytes32 destNodeId = Bytes32.wrap(nodeRecord.getNodeId());
       Functions.HKDFKeys hkdfKeys =
           Functions.hkdf_expand(
               session.getHomeNodeId(),
-              nodeRecord.getNodeId(),
+              destNodeId,
               Bytes.wrap(ephemeralKeyBytes),
               remotePubKey,
               idNonce);
@@ -115,7 +116,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
       Bytes idSignature =
-          HandshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
+          HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
       UInt64 lastKnownOurEnrVer = packet.getHeader().getAuthData().getEnrSeq();

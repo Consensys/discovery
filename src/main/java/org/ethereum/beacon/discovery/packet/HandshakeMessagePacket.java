@@ -30,12 +30,14 @@ import org.ethereum.beacon.discovery.util.Functions;
  * matches the current sequence number of the sending node. If enr-seq is zero, the record must be
  * sent. Node records are encoded and verified as specified in EIP-778.
  *
- * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-size = 15 + sig-size
+ * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-size = 15 +
+ * sig-size
  * + eph-key-size + len(record) authdata-head = version || nonce || sig-size || eph-key-size version
  * = uint8 -- value: 1 sig-size = uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 --
  * value: 33 for ID scheme "v4"
  */
 public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData> {
+
   Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes(StandardCharsets.US_ASCII));
   byte HANDSHAKE_VERSION = 1;
 
@@ -47,12 +49,16 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
   interface HandshakeAuthData extends AuthData {
 
     /**
-     * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
-     * id_sign(id-nonce-input)
+     * <pre>
+     * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey || node-id-B)
+     * id-signature = id_sign(id-nonce-input)
+     * </pre>
      */
-    static Bytes signId(Bytes32 idNonce, Bytes ephemeralPubKey, Bytes homeNodePrivateKey) {
+    static Bytes signId(Bytes32 idNonce, Bytes ephemeralPubKey, Bytes32 destNodeId,
+        Bytes homeNodePrivateKey) {
+
       Bytes idSignatureInput =
-          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey));
+          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey, destNodeId));
       return Functions.sign(homeNodePrivateKey, idSignatureInput);
     }
 
@@ -63,6 +69,12 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
     Bytes getEphemeralPubKey();
 
     Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory);
+
+    default boolean verify(Bytes idNonce, Bytes32 homeNodeId, Bytes remotePublicKey) {
+      Bytes idSignatureInput = CryptoUtil.sha256(
+          Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, getEphemeralPubKey(), homeNodeId));
+      return Functions.verifyECDSASignature(getIdSignature(), idSignatureInput, remotePublicKey);
+    }
 
     @Override
     default void validate() throws DecodeException {

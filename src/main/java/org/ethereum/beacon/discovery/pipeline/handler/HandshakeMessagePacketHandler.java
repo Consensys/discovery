@@ -97,13 +97,11 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
 
-      Bytes idSignatureInput =
-          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, session.getIdNonce(), ephemeralPubKey));
+      boolean idNonceVerifyResult = packet.getHeader().getAuthData()
+          .verify(session.getIdNonce(), session.getHomeNodeId(),
+              (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
-      if (!Functions.verifyECDSASignature(
-          packet.getHeader().getAuthData().getIdSignature(),
-          idSignatureInput,
-          (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1))) {
+      if (!idNonceVerifyResult) {
         logger.info(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
