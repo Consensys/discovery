@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 public class IncomingDataPacker implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(IncomingDataPacker.class);
   public static final int MAX_PACKET_SIZE = 1280;
+  public static final int MIN_PACKET_SIZE = 63;
   private final Bytes16 homeNodeId;
 
   public IncomingDataPacker(Bytes homeNodeId) {
@@ -46,6 +47,9 @@ public class IncomingDataPacker implements EnvelopeHandler {
     try {
       if (rawPacketBytes.size() > MAX_PACKET_SIZE) {
         throw new DecodeException("Packet is too large: " + rawPacketBytes.size());
+      }
+      if (rawPacketBytes.size() < MIN_PACKET_SIZE) {
+        throw new DecodeException("Packet is too small: " + rawPacketBytes.size());
       }
       RawPacket rawPacket = RawPacket.decode(rawPacketBytes);
       Packet<?> packet = rawPacket.decodePacket(homeNodeId);
