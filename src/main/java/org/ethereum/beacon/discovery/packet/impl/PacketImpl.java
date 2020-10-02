@@ -45,8 +45,8 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
   }
 
   @Override
-  public Bytes encrypt(Bytes16 iv, Bytes16 destNodeId) {
-    return Bytes.wrap(header.encrypt(iv, destNodeId), getMessageBytes());
+  public Bytes encrypt(Bytes16 maskingIV, Bytes16 destNodeId) {
+    return Bytes.wrap(header.encrypt(maskingIV, destNodeId), getMessageBytes());
   }
 
   @Override

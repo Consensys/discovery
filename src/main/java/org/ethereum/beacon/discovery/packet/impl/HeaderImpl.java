@@ -89,9 +89,9 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
   }
 
   @Override
-  public Bytes encrypt(Bytes16 iv, Bytes16 destNodeId) {
+  public Bytes encrypt(Bytes16 maskingIV, Bytes16 destNodeId) {
     Bytes headerPlainBytes = Bytes.concatenate(staticHeader.getBytes(), getAuthDataBytes());
-    return CryptoUtil.aesctrEncrypt(destNodeId, iv, headerPlainBytes);
+    return CryptoUtil.aesctrEncrypt(destNodeId, maskingIV, headerPlainBytes);
   }
 
   private Bytes getAuthDataBytes() {

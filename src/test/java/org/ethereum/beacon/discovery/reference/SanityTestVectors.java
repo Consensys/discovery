@@ -102,7 +102,7 @@ public class SanityTestVectors {
     assertThat(rawPacketBytes).isEqualTo(expectedBytes);
 
     RawPacket rawPacket1 = RawPacket.decode(rawPacketBytes);
-    assertThat(rawPacket1.getIV()).isEqualTo(rawPacket.getIV());
+    assertThat(rawPacket1.getMaskingIV()).isEqualTo(rawPacket.getMaskingIV());
 
     WhoAreYouPacket packet1 =
         (WhoAreYouPacket) rawPacket1.decodePacket(Bytes16.wrap(destNodeId, 0));
@@ -155,7 +155,7 @@ public class SanityTestVectors {
     assertThat(rawPacketBytes).isEqualTo(expectedBytes);
 
     RawPacket rawPacket1 = RawPacket.decode(rawPacketBytes);
-    assertThat(rawPacket1.getIV()).isEqualTo(rawPacket.getIV());
+    assertThat(rawPacket1.getMaskingIV()).isEqualTo(rawPacket.getMaskingIV());
 
     OrdinaryMessagePacket packet1 = (OrdinaryMessagePacket) rawPacket1.decodePacket(destNodeId);
     assertThat(packet1.getMessageBytes()).isEqualTo(packet.getMessageBytes());

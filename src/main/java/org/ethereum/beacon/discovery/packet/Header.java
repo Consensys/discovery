@@ -31,8 +31,8 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Header<?> decrypt(Bytes headerBytes, Bytes16 iv, Bytes16 nodeId) {
-    return HeaderImpl.decrypt(headerBytes, iv, nodeId);
+  static Header<?> decrypt(Bytes headerBytes, Bytes16 maskingIV, Bytes16 nodeId) {
+    return HeaderImpl.decrypt(headerBytes, maskingIV, nodeId);
   }
 
   static <TAuthData extends AuthData> Header<TAuthData> create(
@@ -71,7 +71,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
   int getSize();
 
-  Bytes encrypt(Bytes16 iv, Bytes16 nodeId);
+  Bytes encrypt(Bytes16 maskingIV, Bytes16 nodeId);
 
   @Override
   default void validate() throws DecodeException {

@@ -11,14 +11,14 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 /**
  * Raw packet with encrypted (AES/CTR) header
  *
- * <p>{@code packet = iv || masked-header || message }
+ * <p>{@code packet = masking-iv || masked-header || message }
  *
- * <p>The ciphered raw packet can extract just {@code iv } field until decrypted
+ * <p>The ciphered raw packet can extract just {@code masking-iv } field until decrypted
  */
 public interface RawPacket extends BytesSerializable {
 
-  static RawPacket create(Bytes16 iv, Packet<?> packet, Bytes16 headerMaskingKey) {
-    return RawPacketImpl.create(iv, packet, headerMaskingKey);
+  static RawPacket create(Bytes16 maskingIV, Packet<?> packet, Bytes16 headerMaskingKey) {
+    return RawPacketImpl.create(maskingIV, packet, headerMaskingKey);
   }
 
   static RawPacket decode(Bytes data) throws DecodeException {
@@ -27,7 +27,7 @@ public interface RawPacket extends BytesSerializable {
     return rawPacket;
   }
 
-  Bytes16 getIV();
+  Bytes16 getMaskingIV();
 
   Packet<?> decodePacket(Bytes16 headerMaskingKey) throws DecodeException;
 
@@ -40,7 +40,7 @@ public interface RawPacket extends BytesSerializable {
     DecodeException.wrap(
         () -> "Couldn't decode IV: " + getBytes(),
         () -> {
-          getIV();
+          getMaskingIV();
         });
   }
 }

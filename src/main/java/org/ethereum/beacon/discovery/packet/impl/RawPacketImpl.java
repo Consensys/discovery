@@ -9,7 +9,7 @@ import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public class RawPacketImpl extends AbstractBytes implements RawPacket {
-  private static final int IV_SIZE = 16;
+  private static final int MASKING_IV_SIZE = 16;
 
   public static RawPacket create(Bytes16 iv, Packet<?> packet, Bytes16 destNodeId) {
     return new RawPacketImpl(Bytes.wrap(iv, packet.encrypt(iv, destNodeId)));
@@ -20,17 +20,17 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
   }
 
   public RawPacketImpl(Bytes bytes) {
-    super(checkMinSize(bytes, IV_SIZE));
+    super(checkMinSize(bytes, MASKING_IV_SIZE));
   }
 
   @Override
-  public Bytes16 getIV() {
-    return Bytes16.wrap(getBytes().slice(0, IV_SIZE));
+  public Bytes16 getMaskingIV() {
+    return Bytes16.wrap(getBytes().slice(0, MASKING_IV_SIZE));
   }
 
   @Override
   public Packet<?> decodePacket(Bytes16 destNodeId) {
-    Packet<?> packet = PacketImpl.decrypt(getBytes().slice(IV_SIZE), getIV(), destNodeId);
+    Packet<?> packet = PacketImpl.decrypt(getBytes().slice(MASKING_IV_SIZE), getMaskingIV(), destNodeId);
     packet.validate();
     return packet;
   }
