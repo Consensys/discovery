@@ -64,6 +64,6 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<Di
     if (messageHandler == null) {
       throw new RuntimeException("Not implemented yet");
     }
-    messageHandler.handle(message.create(nodeRecordFactory), session);
+    messageHandler.handle(message.decode(nodeRecordFactory), session);
   }
 }

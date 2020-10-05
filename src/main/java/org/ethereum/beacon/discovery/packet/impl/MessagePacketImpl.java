@@ -41,7 +41,7 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
                 getMessageBytes(),
                 getHeader().getBytes()));
     try {
-      return decodedDiscoveryMessage.create(nodeRecordFactory);
+      return decodedDiscoveryMessage.decode(nodeRecordFactory);
     } catch (Exception e) {
       throw new DecodeException("Error decoding message " + decodedDiscoveryMessage.getBytes(), e);
     }

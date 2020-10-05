@@ -34,7 +34,7 @@ public class DiscoveryV5Message implements DiscoveryMessage {
     return MessageCode.fromNumber(getBytes().get(0));
   }
 
-  public V5Message create(NodeRecordFactory nodeRecordFactory) {
+  public V5Message decode(NodeRecordFactory nodeRecordFactory) {
     MessageCode code = MessageCode.fromNumber(getBytes().get(0));
     if (code == null) {
       throw new DecodeException("Invalid message code: " + getBytes().get(0));
