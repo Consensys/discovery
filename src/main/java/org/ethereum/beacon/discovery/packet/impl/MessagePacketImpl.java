@@ -35,14 +35,14 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
   public V5Message decryptMessage(Bytes key, NodeRecordFactory nodeRecordFactory) {
     DiscoveryV5MessageDecoder messageDecoder = new DiscoveryV5MessageDecoder(nodeRecordFactory);
 
-    try {
-      return messageDecoder.decode(
-          CryptoUtil.aesgcmDecrypt(
-              key,
-              getHeader().getAuthData().getAesGcmNonce(),
-              getMessageBytes(),
-              getHeader().getBytes()));
+    Bytes plainBytes = CryptoUtil.aesgcmDecrypt(
+        key,
+        getHeader().getAuthData().getAesGcmNonce(),
+        getMessageBytes(),
+        getHeader().getBytes());
 
+    try {
+      return messageDecoder.decode(plainBytes);
     } catch (Exception e) {
       throw new DecodeException("Error decoding message " + getBytes(), e);
     }
