@@ -227,10 +227,10 @@ public class DiscoveryIntegrationTest {
               200, MILLISECONDS, Executors.newSingleThreadScheduledExecutor());
 
       NodeRecord srcNode;
-      String protocol;
+      Bytes protocol;
 
       @Override
-      public CompletableFuture<Bytes> talk(NodeRecord srcNode, String protocol, Bytes request) {
+      public CompletableFuture<Bytes> talk(NodeRecord srcNode, Bytes protocol, Bytes request) {
         this.srcNode = srcNode;
         this.protocol = protocol;
         return CompletableFuture.supplyAsync(() -> Bytes.wrap(request, request), delayedExecutor);
@@ -248,7 +248,7 @@ public class DiscoveryIntegrationTest {
 
     for (int i = 0; i < 16; i++) {
       CompletableFuture<Bytes> resp =
-          client.talk(bootnode.getLocalNodeRecord(), "proto1", Bytes.of(i));
+          client.talk(bootnode.getLocalNodeRecord(), Bytes.fromHexString("0xaabbcc"), Bytes.of(i));
       responses.add(resp);
     }
 
@@ -256,7 +256,7 @@ public class DiscoveryIntegrationTest {
       waitFor(resp);
     }
 
-    assertThat(testTalkHandler.protocol).isEqualTo("proto1");
+    assertThat(testTalkHandler.protocol).isEqualTo(Bytes.fromHexString("0xaabbcc"));
     assertThat(testTalkHandler.srcNode.getNodeId())
         .isEqualTo(client.getLocalNodeRecord().getNodeId());
   }

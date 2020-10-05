@@ -96,7 +96,7 @@ public class DiscoverySystem {
    * @param nodeRecord Ethereum Node record
    * @return Promise of the node TALK response.
    */
-  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request) {
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes request) {
     return discoveryManager.talk(nodeRecord, protocol, request);
   }
 

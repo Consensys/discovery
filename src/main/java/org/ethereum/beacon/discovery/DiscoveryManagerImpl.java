@@ -177,7 +177,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes requestBytes) {
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),

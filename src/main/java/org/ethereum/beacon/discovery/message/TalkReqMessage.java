@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.message;
 import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
 import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
@@ -25,11 +24,11 @@ public class TalkReqMessage implements V5Message {
   // Unique request id
   private final Bytes requestId;
 
-  private final String protocol;
+  private final Bytes protocol;
 
   private final Bytes request;
 
-  public TalkReqMessage(Bytes requestId, String protocol, Bytes request) {
+  public TalkReqMessage(Bytes requestId, Bytes protocol, Bytes request) {
     this.requestId = requestId;
     this.protocol = protocol;
     this.request = request;
@@ -37,8 +36,7 @@ public class TalkReqMessage implements V5Message {
 
   public static TalkReqMessage fromBytes(Bytes bytes) {
     List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_ANY, CONS_ANY);
-    return new TalkReqMessage(
-        list.get(0), new String(list.get(1).toArrayUnsafe(), StandardCharsets.UTF_8), list.get(2));
+    return new TalkReqMessage(list.get(0), list.get(1), list.get(2));
   }
 
   @Override
@@ -46,7 +44,7 @@ public class TalkReqMessage implements V5Message {
     return requestId;
   }
 
-  public String getProtocol() {
+  public Bytes getProtocol() {
     return protocol;
   }
 
@@ -61,9 +59,9 @@ public class TalkReqMessage implements V5Message {
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    RlpString.create(protocol.getBytes(StandardCharsets.UTF_8)),
-                    RlpString.create(request.toArray())))));
+                    RlpString.create(requestId.toArrayUnsafe()),
+                    RlpString.create(protocol.toArrayUnsafe()),
+                    RlpString.create(request.toArrayUnsafe())))));
   }
 
   @Override
@@ -90,9 +88,8 @@ public class TalkReqMessage implements V5Message {
     return "TalkReqMessage{"
         + "requestId="
         + requestId
-        + ", protocol='"
+        + ", protocol="
         + protocol
-        + '\''
         + ", request="
         + request
         + '}';
