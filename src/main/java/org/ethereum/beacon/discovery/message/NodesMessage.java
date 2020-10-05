@@ -90,7 +90,7 @@ public class NodesMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.NODES.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
@@ -100,6 +100,11 @@ public class NodesMessage implements V5Message {
                         getNodeRecords().stream()
                             .map(NodeRecord::asRlp)
                             .collect(Collectors.toList()))))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.NODES;
   }
 
   @Override

@@ -105,7 +105,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
-        .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore, talkHandler))
+        .addHandler(new MessageHandler(localNodeRecordStore, talkHandler))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline

@@ -4,7 +4,7 @@
 package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.message.DiscoveryV5Message;
+import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -33,17 +33,18 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
 
   @Override
   public V5Message decryptMessage(Bytes key, NodeRecordFactory nodeRecordFactory) {
-    DiscoveryV5Message decodedDiscoveryMessage =
-        new DiscoveryV5Message(
-            CryptoUtil.aesgcmDecrypt(
-                key,
-                getHeader().getAuthData().getAesGcmNonce(),
-                getMessageBytes(),
-                getHeader().getBytes()));
+    DiscoveryV5MessageDecoder messageDecoder = new DiscoveryV5MessageDecoder(nodeRecordFactory);
+
     try {
-      return decodedDiscoveryMessage.decode(nodeRecordFactory);
+      return messageDecoder.decode(
+          CryptoUtil.aesgcmDecrypt(
+              key,
+              getHeader().getAuthData().getAesGcmNonce(),
+              getMessageBytes(),
+              getHeader().getBytes()));
+
     } catch (Exception e) {
-      throw new DecodeException("Error decoding message " + decodedDiscoveryMessage.getBytes(), e);
+      throw new DecodeException("Error decoding message " + getBytes(), e);
     }
   }
 }

@@ -47,12 +47,17 @@ public class PingMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.PING.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
                     RlpString.create(requestId.toArray()),
                     RlpString.create(enrSeq.toBigInteger())))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.PING;
   }
 
   @Override

@@ -64,7 +64,7 @@ public class PongMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.PONG.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
@@ -72,6 +72,11 @@ public class PongMessage implements V5Message {
                     RlpString.create(enrSeq.toBigInteger()),
                     RlpString.create(recipientIp.toArray()),
                     RlpString.create(recipientPort)))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.PONG;
   }
 
   @Override

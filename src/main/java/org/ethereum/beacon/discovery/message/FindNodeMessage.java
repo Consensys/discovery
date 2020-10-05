@@ -64,7 +64,7 @@ public class FindNodeMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.FINDNODE.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
@@ -73,6 +73,11 @@ public class FindNodeMessage implements V5Message {
                         getDistances().stream()
                             .map(RlpString::create)
                             .collect(Collectors.toList()))))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.FINDNODE;
   }
 
   @Override

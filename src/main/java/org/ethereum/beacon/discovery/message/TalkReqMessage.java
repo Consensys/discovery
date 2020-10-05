@@ -55,13 +55,18 @@ public class TalkReqMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.TALKREQ.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
                     RlpString.create(requestId.toArrayUnsafe()),
                     RlpString.create(protocol.toArrayUnsafe()),
                     RlpString.create(request.toArrayUnsafe())))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.TALKREQ;
   }
 
   @Override

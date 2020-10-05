@@ -5,41 +5,29 @@
 package org.ethereum.beacon.discovery.message;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.schema.DiscoveryProtocol;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.Protocol;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
-public class DiscoveryV5Message implements DiscoveryMessage {
-  private final Bytes bytes;
+public class DiscoveryV5MessageDecoder implements DiscoveryMessageDecoder {
+  private final NodeRecordFactory nodeRecordFactory;
 
-  public DiscoveryV5Message(Bytes bytes) {
-    this.bytes = bytes;
-  }
-
-  public static DiscoveryV5Message from(V5Message v5Message) {
-    return new DiscoveryV5Message(v5Message.getBytes());
+  public DiscoveryV5MessageDecoder(NodeRecordFactory nodeRecordFactory) {
+    this.nodeRecordFactory = nodeRecordFactory;
   }
 
   @Override
-  public Bytes getBytes() {
-    return bytes;
+  public DiscoveryProtocol getProtocol() {
+    return DiscoveryProtocol.V5;
   }
 
   @Override
-  public Protocol getProtocol() {
-    return Protocol.V5;
-  }
-
-  public MessageCode getCode() {
-    return MessageCode.fromNumber(getBytes().get(0));
-  }
-
-  public V5Message decode(NodeRecordFactory nodeRecordFactory) {
-    MessageCode code = MessageCode.fromNumber(getBytes().get(0));
+  public V5Message decode(Bytes bytes) {
+    MessageCode code = MessageCode.fromNumber(bytes.get(0));
     if (code == null) {
-      throw new DecodeException("Invalid message code: " + getBytes().get(0));
+      throw new DecodeException("Invalid message code: " + bytes.get(0));
     }
-    Bytes messageBytes = getBytes().slice(1);
+    Bytes messageBytes = bytes.slice(1);
     switch (code) {
       case PING:
         {
@@ -72,10 +60,5 @@ public class DiscoveryV5Message implements DiscoveryMessage {
                   "Creation of discovery V5 messages from code %s is not supported", code));
         }
     }
-  }
-
-  @Override
-  public String toString() {
-    return "DiscoveryV5Message{" + "code=" + getCode() + ", bytes=" + getBytes() + '}';
   }
 }
