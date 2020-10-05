@@ -4,25 +4,62 @@
 
 package org.ethereum.beacon.discovery.pipeline.info;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.task.TaskStatus;
-import org.ethereum.beacon.discovery.task.TaskType;
 
 /** Stores info related to performed request */
-public interface RequestInfo {
-  /** Task type, in execution of which request was created */
-  TaskType getTaskType();
+public class RequestInfo {
 
-  /** Status of corresponding task */
-  TaskStatus getTaskStatus();
+  public static RequestInfo create(Bytes requestId, Request<?> request) {
+    return new RequestInfo(TaskStatus.AWAIT, requestId, request);
+  }
 
-  /** Id of request */
-  Bytes getRequestId();
+  private final Bytes requestId;
+  private final Request<?> request;
+  private TaskStatus taskStatus;
+  private V5Message message;
 
-  /** Future that should be fired when request is fulfilled or cancelled due to errors */
-  CompletableFuture<Void> getFuture();
+  private RequestInfo(TaskStatus taskStatus, Bytes requestId, Request<?> request) {
+    this.taskStatus = taskStatus;
+    this.requestId = requestId;
+    this.request = request;
+  }
 
-  /** Return a new RequestInfo with the same information as this one but task status changed. */
-  RequestInfo withStatus(TaskStatus status);
+  public synchronized TaskStatus getTaskStatus() {
+    return taskStatus;
+  }
+
+  public synchronized void setTaskStatus(TaskStatus taskStatus) {
+    this.taskStatus = taskStatus;
+  }
+
+  public synchronized V5Message getMessage() {
+    if (message == null) {
+      message = getRequest().getRequestMessageFactory().apply(getRequestId());
+    }
+    return message;
+  }
+
+  public Bytes getRequestId() {
+    return requestId;
+  }
+
+  public Request<?> getRequest() {
+    return request;
+  }
+
+  @Override
+  public synchronized String toString() {
+    return "GeneralRequestInfo{"
+        + "taskStatus="
+        + taskStatus
+        + ", requestId="
+        + requestId
+        + ", requestMessage="
+        + getMessage()
+        + ", request="
+        + request
+        + '}';
+  }
 }

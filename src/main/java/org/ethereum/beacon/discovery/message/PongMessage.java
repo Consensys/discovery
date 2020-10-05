@@ -4,15 +4,19 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
+import static org.ethereum.beacon.discovery.util.RlpUtil.enumSizes;
+import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
+import static org.ethereum.beacon.discovery.util.RlpUtil.strictSize;
+
 import com.google.common.base.Objects;
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.util.Utils;
+import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /** PONG is the reply to PING {@link PingMessage} */
 public class PongMessage implements V5Message {
@@ -32,12 +36,12 @@ public class PongMessage implements V5Message {
     this.recipientPort = recipientPort;
   }
 
-  public static PongMessage fromRlp(List<RlpType> rlpList) {
+  public static PongMessage fromBytes(Bytes bytes) {
+    List<Bytes> list =
+        RlpUtil.decodeListOfStrings(
+            bytes, maxSize(8), CONS_UINT64, enumSizes(4, 16), strictSize(2));
     return new PongMessage(
-        Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
-        UInt64.fromBytes(Utils.leftPad(Bytes.wrap(((RlpString) rlpList.get(1)).getBytes()), 8)),
-        Bytes.wrap(((RlpString) rlpList.get(2)).getBytes()),
-        ((RlpString) rlpList.get(3)).asPositiveBigInteger().intValueExact());
+        list.get(0), UInt64.fromBytes(list.get(1)), list.get(2), list.get(3).toInt());
   }
 
   @Override
@@ -60,7 +64,7 @@ public class PongMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.PONG.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
@@ -68,6 +72,11 @@ public class PongMessage implements V5Message {
                     RlpString.create(enrSeq.toBigInteger()),
                     RlpString.create(recipientIp.toArray()),
                     RlpString.create(recipientPort)))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.PONG;
   }
 
   @Override

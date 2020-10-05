@@ -9,6 +9,7 @@ import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -81,7 +82,8 @@ public class DiscoveryInteropTest {
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
-            new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor()));
+            new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor()),
+            TalkHandler.NOOP);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);
@@ -109,7 +111,7 @@ public class DiscoveryInteropTest {
     // 4) fire 1 to 2 dialog
     discoveryManager1.start();
     int distance = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
-    discoveryManager1.findNodes(nodeRecord2, distance);
+    discoveryManager1.findNodes(nodeRecord2, Collections.singletonList(distance));
 
     assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
     //    assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));

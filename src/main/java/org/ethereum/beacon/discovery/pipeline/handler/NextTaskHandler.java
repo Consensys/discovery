@@ -8,10 +8,9 @@ import java.time.Duration;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
-import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -22,7 +21,6 @@ import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
-import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
@@ -77,7 +75,6 @@ public class NextTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
     Bytes12 authTag = session.generateNonce();
-    Bytes requestId = requestInfo.getRequestId();
 
     if (session.getState().equals(SessionState.INITIAL)) {
       Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
@@ -87,10 +84,9 @@ public class NextTaskHandler implements EnvelopeHandler {
       session.sendOutgoing(randomPacket);
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
-      MessagePacket<?> messagePacket =
-          TaskMessageFactory.createPacketFromRequest(requestInfo, authTag, session);
-      session.sendOutgoing(messagePacket);
-      session.updateRequestInfo(requestId, requestInfo.withStatus(TaskStatus.SENT));
+      V5Message message = requestInfo.getMessage();
+      session.sendOutgoingOrdinary(message);
+      requestInfo.setTaskStatus(TaskStatus.SENT);
       tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     }
   }

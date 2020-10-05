@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.task.TaskType;
 
 public class PongHandler implements MessageHandler<PongMessage> {
   private static final Logger logger = LogManager.getLogger();
@@ -40,7 +39,7 @@ public class PongHandler implements MessageHandler<PongMessage> {
         logger.trace("Failed to update local node record because recipient IP was invalid", e);
       }
     }
-    session.clearRequestId(message.getRequestId(), TaskType.PING);
+    session.clearRequestInfo(message.getRequestId(), null);
   }
 
   private boolean addressDiffers(
