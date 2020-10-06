@@ -84,7 +84,17 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       Functions.getRandom().nextBytes(ephemeralKeyBytes);
       ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
 
-      Bytes16 idNonce = whoAreYouPacket.getHeader().getAuthData().getIdNonce();
+      // The handshake uses the unmasked WHOAREYOU challenge as an input:
+      //challenge-data     = masking-iv || static-header || authdata
+      if (!envelope.contains(Field.MASKING_IV)) {
+        throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
+      }
+      Bytes16 whoAreYouMaskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
+      Bytes challengeData = Bytes.wrap(
+          whoAreYouMaskingIV,
+          whoAreYouPacket.getHeader().getBytes() // this is effectively `static-header || authdata`
+      );
+
       Bytes32 destNodeId = Bytes32.wrap(nodeRecord.getNodeId());
       Functions.HKDFKeys hkdfKeys =
           Functions.hkdf_expand(
@@ -92,7 +102,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               destNodeId,
               Bytes.wrap(ephemeralKeyBytes),
               remotePubKey,
-              idNonce);
+              challengeData);
       session.setInitiatorKey(hkdfKeys.getInitiatorKey());
       session.setRecipientKey(hkdfKeys.getRecipientKey());
       Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
@@ -111,16 +121,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Bytes.wrap(
               Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
 
-      // The handshake uses the unmasked WHOAREYOU challenge as an input:
-      //challenge-data     = masking-iv || static-header || authdata
-      if (envelope.contains(Field.MASKING_IV)) {
-        throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
-      }
-      Bytes16 whoAreYouMaskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
-      Bytes challengeData = Bytes.wrap(
-          whoAreYouMaskingIV,
-          whoAreYouPacket.getHeader().getBytes() // this is effectively `static-header || authdata`
-      );
       Bytes idSignature =
           HandshakeAuthData.signId(challengeData, ephemeralPubKey, destNodeId, session.getStaticNodeKey());
 

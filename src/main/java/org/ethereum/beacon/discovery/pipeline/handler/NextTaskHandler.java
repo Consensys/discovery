@@ -79,11 +79,7 @@ public class NextTaskHandler implements EnvelopeHandler {
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
       V5Message message = requestInfo.getMessage();
-      if (!envelope.contains(Field.MASKING_IV)) {
-        logger.debug(() -> "Internal error: envelope has no MASKING_IV to send message " + message);
-      } else {
-        session.sendOutgoingOrdinary(message);
-      }
+      session.sendOutgoingOrdinary(message);
       requestInfo.setTaskStatus(TaskStatus.SENT);
       tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     }

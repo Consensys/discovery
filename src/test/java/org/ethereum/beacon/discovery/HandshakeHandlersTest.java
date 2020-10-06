@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.pipeline.Field.BAD_PACKET;
+import static org.ethereum.beacon.discovery.pipeline.Field.MASKING_IV;
 import static org.ethereum.beacon.discovery.pipeline.Field.MESSAGE;
 import static org.ethereum.beacon.discovery.pipeline.Field.PACKET_AUTH_HEADER_MESSAGE;
 import static org.ethereum.beacon.discovery.pipeline.Field.PACKET_MESSAGE;
@@ -44,6 +45,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
 import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.IncomingDataPacker;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
@@ -145,6 +147,7 @@ public class HandshakeHandlersTest {
 
     Scheduler taskScheduler = Schedulers.createDefault().events();
     Pipeline outgoingPipeline = new PipelineImpl().build();
+    IncomingDataPacker incomingDataPacker1 = new IncomingDataPacker(nodeRecord1.getNodeId());
     WhoAreYouPacketHandler whoAreYouPacketHandlerNode1 =
         new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler);
     Envelope envelopeAt1From2 = new Envelope();
@@ -166,6 +169,8 @@ public class HandshakeHandlersTest {
             id -> new FindNodeMessage(id, singletonList(1)),
             new FindNodeResponseHandler());
     nodeSessionAt1For2.createNextRequest(request);
+
+    envelopeAt1From2.put(MASKING_IV, Bytes16.random(rnd));
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
 
     // Node2 handle AuthHeaderPacket and finish handshake

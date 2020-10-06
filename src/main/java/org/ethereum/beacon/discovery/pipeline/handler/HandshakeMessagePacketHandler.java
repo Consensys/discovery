@@ -61,6 +61,15 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         (HandshakeMessagePacket) envelope.get(Field.PACKET_AUTH_HEADER_MESSAGE);
     NodeSession session = (NodeSession) envelope.get(Field.SESSION);
     try {
+
+      if (session.getWhoAreYouChallenge().isEmpty()) {
+        logger
+            .debug(String.format("Outbound WhoAreYou challenge not found for session %s", session));
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
+      Bytes whoAreYouChallenge = session.getWhoAreYouChallenge().get();
+
       Bytes ephemeralPubKey = packet.getHeader().getAuthData().getEphemeralPubKey();
       Functions.HKDFKeys keys =
           Functions.hkdf_expand(
@@ -68,7 +77,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
               session.getHomeNodeId(),
               session.getStaticNodeKey(),
               ephemeralPubKey,
-              session.getIdNonce());
+              whoAreYouChallenge);
       // Swap keys because we are not initiator, other side is
       session.setInitiatorKey(keys.getRecipientKey());
       session.setRecipientKey(keys.getInitiatorKey());
@@ -94,15 +103,8 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
 
-      if (session.getWhoAreYouChallenge().isEmpty()) {
-        logger
-            .debug(String.format("Outbound WhoAreYou challenge not found for session %s", session));
-        markHandshakeAsFailed(envelope, session);
-        return;
-      }
-
       boolean idNonceVerifyResult = packet.getHeader().getAuthData()
-          .verify(session.getWhoAreYouChallenge().get(), session.getHomeNodeId(),
+          .verify(whoAreYouChallenge, session.getHomeNodeId(),
               (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
       if (!idNonceVerifyResult) {
