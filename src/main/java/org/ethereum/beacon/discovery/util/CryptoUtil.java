@@ -45,8 +45,13 @@ public class CryptoUtil {
           new SecretKeySpec(key.toArrayUnsafe(), "AES"),
           new IvParameterSpec(iv.toArrayUnsafe()));
       return Bytes.wrap(cipher.doFinal(plain.toArrayUnsafe()));
-    } catch (Exception e) {
-      throw new RuntimeException("No AES/CTR cipher provider", e);
+    } catch (NoSuchAlgorithmException
+        | NoSuchPaddingException
+        | InvalidKeyException
+        | InvalidAlgorithmParameterException
+        | IllegalBlockSizeException
+        | BadPaddingException e) {
+      throw new RuntimeException("Unexpected crypto setup problem", e);
     }
   }
 
