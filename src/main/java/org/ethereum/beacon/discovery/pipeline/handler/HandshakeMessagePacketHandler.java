@@ -63,8 +63,8 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
     try {
 
       if (session.getWhoAreYouChallenge().isEmpty()) {
-        logger
-            .debug(String.format("Outbound WhoAreYou challenge not found for session %s", session));
+        logger.debug(
+            String.format("Outbound WhoAreYou challenge not found for session %s", session));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -103,9 +103,14 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
 
-      boolean idNonceVerifyResult = packet.getHeader().getAuthData()
-          .verify(whoAreYouChallenge, session.getHomeNodeId(),
-              (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
+      boolean idNonceVerifyResult =
+          packet
+              .getHeader()
+              .getAuthData()
+              .verify(
+                  whoAreYouChallenge,
+                  session.getHomeNodeId(),
+                  (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
       if (!idNonceVerifyResult) {
         logger.info(
@@ -117,7 +122,8 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
 
       Bytes16 maskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
-      V5Message message = packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
+      V5Message message =
+          packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
       enr.ifPresent(

@@ -33,11 +33,11 @@ import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -128,8 +128,8 @@ public class NodeSession {
     Bytes16 maskingIV = generateMaskingIV();
     Header<OrdinaryAuthData> header =
         Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
-    OrdinaryMessagePacket packet = OrdinaryMessagePacket
-        .create(maskingIV, header, message, getInitiatorKey());
+    OrdinaryMessagePacket packet =
+        OrdinaryMessagePacket.create(maskingIV, header, message, getInitiatorKey());
     sendOutgoing(maskingIV, packet);
   }
 
@@ -151,8 +151,10 @@ public class NodeSession {
   }
 
   public void sendOutgoingHandshake(Header<HandshakeAuthData> header, V5Message message) {
-    logger.trace(() -> String
-        .format("Sending outgoing Handshake message %s, %s in session %s", header, message, this));
+    logger.trace(
+        () ->
+            String.format(
+                "Sending outgoing Handshake message %s, %s in session %s", header, message, this));
     Bytes16 maskingIV = Bytes16.random(Functions.getRandom());
     HandshakeMessagePacket handshakeMessagePacket =
         HandshakeMessagePacket.create(maskingIV, header, message, getInitiatorKey());

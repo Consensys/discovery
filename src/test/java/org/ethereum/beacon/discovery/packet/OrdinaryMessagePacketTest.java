@@ -53,11 +53,9 @@ public class OrdinaryMessagePacketTest {
   static Stream<Arguments> testMessages() {
     return Stream.of(
         Arguments.of(
-            new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2)),
-            "Ping-1"),
+            new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2)), "Ping-1"),
         Arguments.of(
-            new PingMessage(Bytes.fromHexString("0xFF00000000000001"), UInt64.MAX_VALUE),
-            "Ping-2"),
+            new PingMessage(Bytes.fromHexString("0xFF00000000000001"), UInt64.MAX_VALUE), "Ping-2"),
         Arguments.of(
             new PongMessage(
                 Bytes.fromHexString("0x00000001"),
@@ -73,14 +71,12 @@ public class OrdinaryMessagePacketTest {
                 65535),
             "Pong-2"),
         Arguments.of(
-            new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255)),
-            "FindNode-1"),
+            new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255)), "FindNode-1"),
         Arguments.of(
             new FindNodeMessage(Bytes.fromHexString("0x00000001"), List.of(255, 254, 253)),
             "FindNode-2"),
         Arguments.of(
-            new NodesMessage(Bytes.fromHexString("0x00000001"), 0, emptyList()),
-            "Nodes-1"),
+            new NodesMessage(Bytes.fromHexString("0x00000001"), 0, emptyList()), "Nodes-1"),
         Arguments.of(
             new NodesMessage(
                 Bytes.fromHexString("0x00000001"),
@@ -136,8 +132,7 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithWrongGcmNonceFails(V5Message message, String name) {
-    Header<OrdinaryAuthData> header = Header
-        .createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes12 wrongAesGcmNonce = Bytes12.fromHexString("0xafffffffffffffffffffffff");
     Bytes encryptedMessage =
         MessagePacketImpl.encrypt(
@@ -181,8 +176,8 @@ public class OrdinaryMessagePacketTest {
   void testDecryptingRandomMessageFails() {
     Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
 
-    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket
-        .createRandom(header, Bytes.random(111));
+    OrdinaryMessagePacket messagePacket =
+        OrdinaryMessagePacket.createRandom(header, Bytes.random(111));
     RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
@@ -246,8 +241,8 @@ public class OrdinaryMessagePacketTest {
 
   private RawPacket createPacket(V5Message msg) {
     Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
-    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket
-        .create(aesCtrIV, header, msg, secretKey);
+    OrdinaryMessagePacket messagePacket =
+        OrdinaryMessagePacket.create(aesCtrIV, header, msg, secretKey);
     return RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
   }
 }

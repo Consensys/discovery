@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.util.Pack;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -46,8 +45,8 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
                 envelope.getId()));
 
     WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) packet;
-    Optional<NodeSession> nodeSessionMaybe = nonceRepository.get(
-        whoAreYouPacket.getHeader().getStaticHeader().getNonce());
+    Optional<NodeSession> nodeSessionMaybe =
+        nonceRepository.get(whoAreYouPacket.getHeader().getStaticHeader().getNonce());
 
     nodeSessionMaybe.ifPresentOrElse(
         session -> {
@@ -58,7 +57,6 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
           envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_WHOAREYOU));
           envelope.remove(Field.PACKET_WHOAREYOU);
           envelope.put(Field.BAD_EXCEPTION, new RuntimeException("Not expected WHOAREYOU packet"));
-        }
-    );
+        });
   }
 }

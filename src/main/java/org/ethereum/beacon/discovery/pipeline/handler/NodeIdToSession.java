@@ -26,10 +26,10 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 
 /**
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
@@ -82,9 +82,7 @@ public class NodeIdToSession implements EnvelopeHandler {
     SessionLookup sessionRequest = (SessionLookup) envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
-        "Envelope {}: Session lookup requested for nodeId {}",
-        envelope.getId(),
-        sessionRequest);
+        "Envelope {}: Session lookup requested for nodeId {}", envelope.getId(), sessionRequest);
 
     getOrCreateSession(sessionRequest.getNodeId(), envelope)
         .ifPresentOrElse(

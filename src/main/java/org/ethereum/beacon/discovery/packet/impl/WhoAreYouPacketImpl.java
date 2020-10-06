@@ -4,14 +4,11 @@
 package org.ethereum.beacon.discovery.packet.impl;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
-import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.type.Bytes52;
 
 public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implements WhoAreYouPacket {
 
@@ -46,11 +43,7 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
 
     @Override
     public String toString() {
-      return "WhoAreYouAuthData{idNonce="
-          + getIdNonce()
-          + ", enrSeq="
-          + getEnrSeq()
-          + "}";
+      return "WhoAreYouAuthData{idNonce=" + getIdNonce() + ", enrSeq=" + getEnrSeq() + "}";
     }
   }
 }

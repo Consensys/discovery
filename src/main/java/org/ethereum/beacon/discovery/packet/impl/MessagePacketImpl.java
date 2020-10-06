@@ -20,8 +20,10 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
 
   public static Bytes encrypt(Bytes16 maskingIV, Header<?> header, V5Message message, Bytes key) {
     return encrypt(
-        Bytes.wrap(maskingIV, header.getBytes()), message.getBytes(),
-        header.getStaticHeader().getNonce(), key);
+        Bytes.wrap(maskingIV, header.getBytes()),
+        message.getBytes(),
+        header.getStaticHeader().getNonce(),
+        key);
   }
 
   public static Bytes encrypt(
@@ -34,15 +36,14 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
   }
 
   @Override
-  public V5Message decryptMessage(Bytes16 maskingIV, Bytes key, NodeRecordFactory nodeRecordFactory) {
+  public V5Message decryptMessage(
+      Bytes16 maskingIV, Bytes key, NodeRecordFactory nodeRecordFactory) {
     DiscoveryV5MessageDecoder messageDecoder = new DiscoveryV5MessageDecoder(nodeRecordFactory);
 
     Bytes messageAD = Bytes.wrap(maskingIV, getHeader().getBytes());
-    Bytes plainBytes = CryptoUtil.aesgcmDecrypt(
-                key,
-                getHeader().getStaticHeader().getNonce(),
-                getMessageCyphered(),
-                messageAD);
+    Bytes plainBytes =
+        CryptoUtil.aesgcmDecrypt(
+            key, getHeader().getStaticHeader().getNonce(), getMessageCyphered(), messageAD);
     try {
       return messageDecoder.decode(plainBytes);
     } catch (Exception e) {

@@ -5,13 +5,10 @@ package org.ethereum.beacon.discovery.packet;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl;
-import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.type.Bytes52;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
@@ -21,7 +18,8 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface OrdinaryMessagePacket extends MessagePacket<OrdinaryAuthData> {
 
-  static OrdinaryMessagePacket create(Bytes16 maskingIV, Header<OrdinaryAuthData> header, V5Message message, Bytes gcmKey) {
+  static OrdinaryMessagePacket create(
+      Bytes16 maskingIV, Header<OrdinaryAuthData> header, V5Message message, Bytes gcmKey) {
     return new OrdinaryMessageImpl(maskingIV, header, message, gcmKey);
   }
 

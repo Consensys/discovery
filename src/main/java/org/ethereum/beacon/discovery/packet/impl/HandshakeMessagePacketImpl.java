@@ -14,7 +14,6 @@ import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuth
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
 

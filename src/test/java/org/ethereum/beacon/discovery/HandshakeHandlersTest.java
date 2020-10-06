@@ -27,14 +27,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
-import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
@@ -46,7 +44,6 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
 import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
-import org.ethereum.beacon.discovery.pipeline.handler.IncomingDataPacker;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
@@ -60,15 +57,14 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
@@ -157,16 +153,11 @@ public class HandshakeHandlersTest {
     nodeSessionAt2For1.setIdNonce(idNonce);
     Bytes12 authTag = nodeSessionAt2For1.generateNonce();
     nonceRepository1.put(authTag, nodeSessionAt1For2);
-    WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(
-        Header.createWhoAreYouHeader(
-            authTag,
-            idNonce,
-            UInt64.ZERO));
+    WhoAreYouPacket whoAreYouPacket =
+        WhoAreYouPacket.create(Header.createWhoAreYouHeader(authTag, idNonce, UInt64.ZERO));
     nodeSessionAt2For1.sendOutgoingWhoAreYou(whoAreYouPacket);
 
-    envelopeAt1From2.put(
-        Field.PACKET_WHOAREYOU,
-        whoAreYouPacket);
+    envelopeAt1From2.put(Field.PACKET_WHOAREYOU, whoAreYouPacket);
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     Request<Void> request =
         new Request<>(
@@ -185,8 +176,9 @@ public class HandshakeHandlersTest {
             outgoingPipeline, taskScheduler, NODE_RECORD_FACTORY_NO_VERIFICATION);
     Envelope envelopeAt2From1 = new Envelope();
     RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
-    envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, handshakeRawPacket
-        .demaskPacket(nodePair2.getNodeRecord().getNodeId()));
+    envelopeAt2From1.put(
+        PACKET_AUTH_HEADER_MESSAGE,
+        handshakeRawPacket.demaskPacket(nodePair2.getNodeRecord().getNodeId()));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
 
@@ -227,8 +219,8 @@ public class HandshakeHandlersTest {
         new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
     RawPacket rawMesssagePacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
-    Packet<?> pongPacketFrom1To2 = rawMesssagePacket
-        .demaskPacket(nodePair2.getNodeRecord().getNodeId());
+    Packet<?> pongPacketFrom1To2 =
+        rawMesssagePacket.demaskPacket(nodePair2.getNodeRecord().getNodeId());
     envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongPacketFrom1To2);
     envelopeAt2From1WithMessage.put(SESSION, nodeSessionAt2For1);
     envelopeAt2From1WithMessage.put(MASKING_IV, rawMesssagePacket.getMaskingIV());
@@ -237,14 +229,12 @@ public class HandshakeHandlersTest {
     assertNotNull(envelopeAt2From1WithMessage.get(MESSAGE));
   }
 
-  private OrdinaryMessagePacket createPingPacket(Bytes16 maskingIV,
-      Bytes12 authTag, NodeSession session, Bytes requestId) {
+  private OrdinaryMessagePacket createPingPacket(
+      Bytes16 maskingIV, Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
-    Header<OrdinaryAuthData> header = Header
-        .createOrdinaryHeader(session.getHomeNodeId(), authTag);
-    return OrdinaryMessagePacket
-        .create(maskingIV, header, pingMessage, session.getInitiatorKey());
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
+    return OrdinaryMessagePacket.create(maskingIV, header, pingMessage, session.getInitiatorKey());
   }
 
   private static PingMessage createPing(NodeSession session, Bytes requestId) {

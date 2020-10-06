@@ -9,7 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes2;
@@ -68,7 +67,6 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
   public Flag getFlag() {
     return Flag.fromCode(getBytes().get(FLAG_OFFSET));
   }
-
 
   @Override
   public Bytes12 getNonce() {

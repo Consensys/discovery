@@ -20,24 +20,28 @@ import org.ethereum.beacon.discovery.util.Functions;
 /**
  * Handshake packet
  *
- * For handshake message packets, the authdata section has variable size since public key and signature sizes depend on the ENR identity scheme. For the "v4" identity scheme, we assume 64-byte signature size and 33 bytes of (compressed) public key size.
+ * <p>For handshake message packets, the authdata section has variable size since public key and
+ * signature sizes depend on the ENR identity scheme. For the "v4" identity scheme, we assume
+ * 64-byte signature size and 33 bytes of (compressed) public key size.
  *
- * authdata starts with a fixed-size authdata-head component, followed by the ID signature, ephemeral public key and optional node record.
+ * <p>authdata starts with a fixed-size authdata-head component, followed by the ID signature,
+ * ephemeral public key and optional node record.
  *
- * The record field may be omitted if the enr-seq of WHOAREYOU is recent enough, i.e. when it matches the current sequence number of the sending node. If enr-seq is zero, the record must be sent. Node records are encoded and verified as specified in EIP-778.
+ * <p>The record field may be omitted if the enr-seq of WHOAREYOU is recent enough, i.e. when it
+ * matches the current sequence number of the sending node. If enr-seq is zero, the record must be
+ * sent. Node records are encoded and verified as specified in EIP-778.
  *
- * Please refer to the handshake section for more information about the content of the handshake packet.
+ * <p>Please refer to the handshake section for more information about the content of the handshake
+ * packet.
  *
- * authdata      = authdata-head || id-signature || eph-pubkey || record
- * authdata-head = src-id || sig-size || eph-key-size
- * authdata-size = 34 + sig-size + eph-key-size + len(record)
- * sig-size      = uint8     -- value: 64 for ID scheme "v4"
- * eph-key-size  = uint8     -- value: 33 for ID scheme "v4"
+ * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-head = src-id ||
+ * sig-size || eph-key-size authdata-size = 34 + sig-size + eph-key-size + len(record) sig-size =
+ * uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 -- value: 33 for ID scheme "v4"
  */
 public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData> {
 
-  Bytes ID_SIGNATURE_PREFIX = Bytes
-      .wrap("discovery v5 identity proof".getBytes(StandardCharsets.US_ASCII));
+  Bytes ID_SIGNATURE_PREFIX =
+      Bytes.wrap("discovery v5 identity proof".getBytes(StandardCharsets.US_ASCII));
   byte HANDSHAKE_VERSION = 1;
 
   static HandshakeMessagePacket create(
@@ -48,17 +52,20 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
   interface HandshakeAuthData extends AuthData {
 
     /**
+     *
+     *
      * <pre>
      * id-signature-text  = "discovery v5 identity proof"
      * id-signature-input = id-signature-text || challenge-data || ephemeral-pubkey || node-id-B
      * id-signature       = id_sign(sha256(id-signature-input))
      * </pre>
      */
-    static Bytes signId(Bytes challengeData, Bytes ephemeralPubKey, Bytes32 destNodeId,
-        Bytes homeNodePrivateKey) {
+    static Bytes signId(
+        Bytes challengeData, Bytes ephemeralPubKey, Bytes32 destNodeId, Bytes homeNodePrivateKey) {
 
-      Bytes idSignatureInput = CryptoUtil
-          .sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, ephemeralPubKey, destNodeId));
+      Bytes idSignatureInput =
+          CryptoUtil.sha256(
+              Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, ephemeralPubKey, destNodeId));
       return Functions.sign(homeNodePrivateKey, idSignatureInput);
     }
 
@@ -71,8 +78,9 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
     Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory);
 
     default boolean verify(Bytes challengeData, Bytes32 homeNodeId, Bytes remotePublicKey) {
-      Bytes idSignatureInput = CryptoUtil.sha256(
-          Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, getEphemeralPubKey(), homeNodeId));
+      Bytes idSignatureInput =
+          CryptoUtil.sha256(
+              Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, getEphemeralPubKey(), homeNodeId));
       return Functions.verifyECDSASignature(getIdSignature(), idSignatureInput, remotePublicKey);
     }
 

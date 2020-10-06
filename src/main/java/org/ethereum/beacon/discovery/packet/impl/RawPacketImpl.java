@@ -19,18 +19,16 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
   }
 
   static Bytes mask(Packet<?> packet, Bytes16 maskingIV, Bytes16 destNodeId) {
-    return Bytes
-        .wrap(maskHeader(packet.getHeader(), maskingIV, destNodeId), packet.getMessageCyphered());
+    return Bytes.wrap(
+        maskHeader(packet.getHeader(), maskingIV, destNodeId), packet.getMessageCyphered());
   }
 
   @VisibleForTesting
   public static Bytes maskHeader(Header<?> header, Bytes16 maskingIV, Bytes16 maskingKey) {
-    Bytes headerPlainBytes = Bytes
-        .concatenate(header.getStaticHeader().getBytes(), header.getAuthData().getBytes());
+    Bytes headerPlainBytes =
+        Bytes.concatenate(header.getStaticHeader().getBytes(), header.getAuthData().getBytes());
     return CryptoUtil.aesctrEncrypt(maskingKey, maskingIV, headerPlainBytes);
   }
-
-
 
   public static RawPacket create(Bytes data) {
     return new RawPacketImpl(data);
@@ -47,7 +45,8 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
 
   @Override
   public Packet<?> demaskPacket(Bytes16 destNodeId) {
-    Packet<?> packet = PacketImpl.decrypt(getBytes().slice(MASKING_IV_SIZE), getMaskingIV(), destNodeId);
+    Packet<?> packet =
+        PacketImpl.decrypt(getBytes().slice(MASKING_IV_SIZE), getMaskingIV(), destNodeId);
     packet.validate();
     return packet;
   }

@@ -6,17 +6,16 @@ package org.ethereum.beacon.discovery.packet.impl;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
-import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 
 public class OrdinaryMessageImpl extends MessagePacketImpl<OrdinaryAuthData>
     implements OrdinaryMessagePacket {
 
-  public OrdinaryMessageImpl(Bytes16 maskingIV, Header<OrdinaryAuthData> header, V5Message message, Bytes gcmKey) {
+  public OrdinaryMessageImpl(
+      Bytes16 maskingIV, Header<OrdinaryAuthData> header, V5Message message, Bytes gcmKey) {
     this(header, encrypt(maskingIV, header, message, gcmKey));
   }
 

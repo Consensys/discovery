@@ -31,5 +31,4 @@ public class Bytes16 extends DelegateBytes {
   private Bytes16(Bytes delegate) {
     super(delegate, 16);
   }
-
 }

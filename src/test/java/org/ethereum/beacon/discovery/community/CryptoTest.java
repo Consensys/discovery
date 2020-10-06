@@ -85,7 +85,8 @@ public class CryptoTest {
         Bytes.fromHexString(
             "0xDAC01B977399E6154AB67C8866A3B84BE2A5413257B2407F83FEC024933A7BEA269FDB7C474AED07612862016D379CA544F3593A7E3A465F52F3AE692F6EEFCB");
     Assertions.assertEquals(
-        expectedIdNonceSig, HandshakeAuthData.signId(idNonce, ephemeralKey, nodeIdB, localSecretKey));
+        expectedIdNonceSig,
+        HandshakeAuthData.signId(idNonce, ephemeralKey, nodeIdB, localSecretKey));
   }
 
   /**

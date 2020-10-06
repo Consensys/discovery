@@ -70,8 +70,8 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
             // However the remote node could also send us a random packet at the same moment.
             // In this case the following rule applies: the node with larger nodeId should response
             // another node should ignore
-            Bytes32 remoteNodeId = ((OrdinaryMessagePacket) packet).getHeader().getAuthData()
-                .getSourceNodeId();
+            Bytes32 remoteNodeId =
+                ((OrdinaryMessagePacket) packet).getHeader().getAuthData().getSourceNodeId();
             if (Utils.compareBytes(session.getHomeNodeId(), remoteNodeId) > 0) {
               envelope.put(Field.PACKET_WHOAREYOU, packet);
             } // else ignore

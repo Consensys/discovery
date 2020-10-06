@@ -46,7 +46,8 @@ public class HandshakePacketTest {
   @Test
   void testPacketRoundtrip() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
-    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature =
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -61,7 +62,8 @@ public class HandshakePacketTest {
                     List.of(
                         new EnrField("aaaaa1", Bytes.fromHexString("0xba0bab")),
                         new EnrField("aaaaa2", Bytes.fromHexString("0xb100da"))))));
-    HandshakeMessagePacket packet = HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
+    HandshakeMessagePacket packet =
+        HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
     RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
@@ -75,8 +77,9 @@ public class HandshakePacketTest {
         (HandshakeMessagePacket) rawPacket1.demaskPacket(headerMaskingKey);
     assertThat(packet1).isEqualTo(packet);
 
-    PingMessage pingMessage1 = (PingMessage) packet1
-        .decryptMessage(rawPacket1.getMaskingIV(), secretKey, NodeRecordFactory.DEFAULT);
+    PingMessage pingMessage1 =
+        (PingMessage)
+            packet1.decryptMessage(rawPacket1.getMaskingIV(), secretKey, NodeRecordFactory.DEFAULT);
     assertThat(pingMessage1).isEqualTo(pingMessage);
   }
 
@@ -84,7 +87,8 @@ public class HandshakePacketTest {
   void testWrongVersionFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature =
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -96,8 +100,8 @@ public class HandshakePacketTest {
                 idSignature,
                 ephemeralPubKey));
     Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket
-        .create(aesCtrIV, header, pingMessage, secretKey);
+    HandshakeMessagePacket packet =
+        HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
     RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
@@ -113,7 +117,8 @@ public class HandshakePacketTest {
   void testTooLargeSigSizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature =
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -125,8 +130,8 @@ public class HandshakePacketTest {
                 idSignature,
                 ephemeralPubKey));
     Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket
-        .create(aesCtrIV, header, pingMessage, secretKey);
+    HandshakeMessagePacket packet =
+        HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
     RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
@@ -142,7 +147,8 @@ public class HandshakePacketTest {
   void testTooLargeEphKeySizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature =
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -154,8 +160,8 @@ public class HandshakePacketTest {
                 idSignature,
                 ephemeralPubKey));
     Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket
-        .create(aesCtrIV, header, pingMessage, secretKey);
+    HandshakeMessagePacket packet =
+        HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
     RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
