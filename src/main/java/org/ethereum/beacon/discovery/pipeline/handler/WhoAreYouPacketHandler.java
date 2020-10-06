@@ -141,8 +141,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      Bytes16 maskingIV = session.generateMaskingIV();
-      envelope.put(Field.MASKING_IV, maskingIV);
       session.setState(SessionState.AUTHENTICATED);
 
       session.sendOutgoingHandshake(header, message);
