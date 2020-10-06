@@ -137,7 +137,7 @@ class NodeIdToSessionTest {
     envelope.put(Field.REMOTE_SENDER, remoteSender);
     handler.handle(envelope);
 
-    return (NodeSession) envelope.get(Field.SESSION);
+    return envelope.get(Field.SESSION);
   }
 
   private NodeSession lookupSessionForOutgoingMessage(final InetSocketAddress destination) {
@@ -147,6 +147,6 @@ class NodeIdToSessionTest {
         Field.NODE, SimpleIdentitySchemaInterpreter.createNodeRecord(NODE_ID, destination));
     handler.handle(envelope);
 
-    return (NodeSession) envelope.get(Field.SESSION);
+    return envelope.get(Field.SESSION);
   }
 }

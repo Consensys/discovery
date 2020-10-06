@@ -31,8 +31,8 @@ public class NewTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NewTaskHandler, requirements are satisfied!", envelope.getId()));
 
-    Request request = (Request) envelope.get(Field.REQUEST);
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    Request request = envelope.get(Field.REQUEST);
+    NodeSession session = envelope.get(Field.SESSION);
     session.createNextRequest(request);
     envelope.remove(Field.REQUEST);
   }

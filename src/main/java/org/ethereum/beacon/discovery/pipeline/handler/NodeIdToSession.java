@@ -79,7 +79,7 @@ public class NodeIdToSession implements EnvelopeHandler {
     }
     logger.trace("Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getId());
 
-    SessionLookup sessionRequest = (SessionLookup) envelope.get(Field.SESSION_LOOKUP);
+    SessionLookup sessionRequest = envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
         "Envelope {}: Session lookup requested for nodeId {}", envelope.getId(), sessionRequest);
@@ -131,8 +131,8 @@ public class NodeIdToSession implements EnvelopeHandler {
   }
 
   private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
-    return Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
-        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress());
+    return Optional.ofNullable(envelope.get(Field.REMOTE_SENDER))
+        .or(() -> envelope.get(Field.NODE).getUdpAddress());
   }
 
   private static class SessionKey {

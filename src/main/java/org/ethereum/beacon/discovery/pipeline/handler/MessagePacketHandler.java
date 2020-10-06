@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -43,11 +44,11 @@ public class MessagePacketHandler implements EnvelopeHandler {
                 "Envelope %s in MessagePacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    MessagePacket<?> packet = (MessagePacket<?>) envelope.get(Field.PACKET_MESSAGE);
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    MessagePacket<?> packet = envelope.get(Field.PACKET_MESSAGE);
+    NodeSession session = envelope.get(Field.SESSION);
 
     try {
-      Bytes16 maskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
+      Bytes16 maskingIV = envelope.get(Field.MASKING_IV);
       V5Message message =
           packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
@@ -60,7 +61,9 @@ public class MessagePacketHandler implements EnvelopeHandler {
                   packet, session.getNodeRecord(), session.getState()));
 
       envelope.remove(Field.PACKET_MESSAGE);
-      envelope.put(Field.UNAUTHORIZED_PACKET_MESSAGE, packet);
+      if (packet instanceof OrdinaryMessagePacket) {
+        envelope.put(Field.UNAUTHORIZED_PACKET_MESSAGE, (OrdinaryMessagePacket) packet);
+      }
     } catch (Exception ex) {
       String error =
           String.format(

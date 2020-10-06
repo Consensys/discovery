@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 
 /**
- * Assuming we have some unknown packet in {@link Field#PACKET_UNKNOWN}, resolves sender node id
+ * Assuming we have some unknown packet in {@link Field#PACKET}, resolves sender node id
  * using `tag` field of the packet. Next, puts it to the {@link Field#SESSION_LOOKUP} so sender
  * session could be resolved by another handler.
  */
@@ -38,7 +38,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
                 "Envelope %s in UnknownPacketTagToSender, requirements are satisfied!",
                 envelope.getId()));
 
-    Packet<?> packet = (Packet<?>) envelope.get(Field.PACKET);
+    Packet<?> packet = envelope.get(Field.PACKET);
     Bytes32 nodeId;
     if (packet instanceof HandshakeMessagePacket) {
       nodeId = ((HandshakeMessagePacket) packet).getHeader().getAuthData().getSourceNodeId();

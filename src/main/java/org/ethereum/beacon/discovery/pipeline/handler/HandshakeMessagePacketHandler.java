@@ -26,7 +26,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
-/** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
+/** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_HANDSHAKE} field */
 public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(HandshakeMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
@@ -42,7 +42,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    if (!HandlerUtil.requireField(Field.PACKET_AUTH_HEADER_MESSAGE, envelope)) {
+    if (!HandlerUtil.requireField(Field.PACKET_HANDSHAKE, envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.MASKING_IV, envelope)) {
@@ -57,9 +57,8 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
                 "Envelope %s in AuthHeaderMessagePacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    HandshakeMessagePacket packet =
-        (HandshakeMessagePacket) envelope.get(Field.PACKET_AUTH_HEADER_MESSAGE);
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    HandshakeMessagePacket packet = envelope.get(Field.PACKET_HANDSHAKE);
+    NodeSession session = envelope.get(Field.SESSION);
     try {
 
       if (session.getWhoAreYouChallenge().isEmpty()) {
@@ -121,7 +120,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         return;
       }
 
-      Bytes16 maskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
+      Bytes16 maskingIV = envelope.get(Field.MASKING_IV);
       V5Message message =
           packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
@@ -133,7 +132,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
           });
 
       session.setState(AUTHENTICATED);
-      envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+      envelope.remove(Field.PACKET_HANDSHAKE);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(
@@ -146,7 +145,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   }
 
   private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {
-    envelope.remove(Field.PACKET_AUTH_HEADER_MESSAGE);
+    envelope.remove(Field.PACKET_HANDSHAKE);
     session.cancelAllRequests("Failed to handshake");
   }
 }

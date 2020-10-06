@@ -39,8 +39,8 @@ public class MessageHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in MessageHandler, requirements are satisfied!", envelope.getId()));
 
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    V5Message message = (V5Message) envelope.get(Field.MESSAGE);
+    NodeSession session = envelope.get(Field.SESSION);
+    V5Message message = envelope.get(Field.MESSAGE);
     try {
       messageProcessor.handleIncoming(message, session);
     } catch (Exception ex) {
@@ -49,7 +49,6 @@ public class MessageHandler implements EnvelopeHandler {
               String.format(
                   "Failed to handle message %s in envelope #%s", message, envelope.getId()),
           ex);
-      envelope.put(Field.BAD_MESSAGE, message);
       envelope.put(Field.BAD_EXCEPTION, ex);
       envelope.remove(Field.MESSAGE);
     }

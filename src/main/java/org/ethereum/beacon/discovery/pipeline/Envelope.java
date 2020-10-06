@@ -10,26 +10,27 @@ import java.util.UUID;
 
 /** Container for any kind of objects used in packet-messages-tasks flow */
 public class Envelope {
-  private UUID id;
-  private Map<Field, Object> data = new HashMap<>();
+  private final UUID id;
+  private final Map<Field<?>, Object> data = new HashMap<>();
 
   public Envelope() {
     this.id = UUID.randomUUID();
   }
 
-  public synchronized void put(Field key, Object value) {
+  public synchronized <T> void put(Field<T> key, T value) {
     data.put(key, value);
   }
 
-  public synchronized Object get(Field key) {
-    return data.get(key);
+  @SuppressWarnings("unchecked")
+  public synchronized <T> T get(Field<T> key) {
+    return (T) data.get(key);
   }
 
-  public synchronized boolean remove(Field key) {
+  public synchronized boolean remove(Field<?> key) {
     return data.remove(key) != null;
   }
 
-  public synchronized boolean contains(Field key) {
+  public synchronized boolean contains(Field<?> key) {
     return data.containsKey(key);
   }
 

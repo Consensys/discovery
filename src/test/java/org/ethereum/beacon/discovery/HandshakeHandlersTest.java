@@ -10,7 +10,7 @@ import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.pipeline.Field.BAD_PACKET;
 import static org.ethereum.beacon.discovery.pipeline.Field.MASKING_IV;
 import static org.ethereum.beacon.discovery.pipeline.Field.MESSAGE;
-import static org.ethereum.beacon.discovery.pipeline.Field.PACKET_AUTH_HEADER_MESSAGE;
+import static org.ethereum.beacon.discovery.pipeline.Field.PACKET_HANDSHAKE;
 import static org.ethereum.beacon.discovery.pipeline.Field.PACKET_MESSAGE;
 import static org.ethereum.beacon.discovery.pipeline.Field.SESSION;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,7 +33,9 @@ import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.Packet;
@@ -177,8 +179,9 @@ public class HandshakeHandlersTest {
     Envelope envelopeAt2From1 = new Envelope();
     RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     envelopeAt2From1.put(
-        PACKET_AUTH_HEADER_MESSAGE,
-        handshakeRawPacket.demaskPacket(nodePair2.getNodeRecord().getNodeId()));
+        PACKET_HANDSHAKE,
+        (HandshakeMessagePacket) handshakeRawPacket
+            .demaskPacket(nodePair2.getNodeRecord().getNodeId()));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
 
@@ -221,7 +224,7 @@ public class HandshakeHandlersTest {
     RawPacket rawMesssagePacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     Packet<?> pongPacketFrom1To2 =
         rawMesssagePacket.demaskPacket(nodePair2.getNodeRecord().getNodeId());
-    envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongPacketFrom1To2);
+    envelopeAt2From1WithMessage.put(PACKET_MESSAGE, (MessagePacket<?>) pongPacketFrom1To2);
     envelopeAt2From1WithMessage.put(SESSION, nodeSessionAt2For1);
     envelopeAt2From1WithMessage.put(MASKING_IV, rawMesssagePacket.getMaskingIV());
     messagePacketHandler2.handle(envelopeAt2From1WithMessage);

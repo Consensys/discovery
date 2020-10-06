@@ -58,7 +58,6 @@ public class IncomingDataPacker implements EnvelopeHandler {
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
-      envelope.put(Field.BAD_MESSAGE, "Incoming packet verification not passed");
       logger.trace(
           () ->
               String.format(

@@ -40,9 +40,8 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
                 "Envelope %s in NotExpectedIncomingPacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
-    OrdinaryMessagePacket unknownPacket =
-        (OrdinaryMessagePacket) envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
+    NodeSession session = envelope.get(Field.SESSION);
+    OrdinaryMessagePacket unknownPacket = envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
       Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
@@ -65,7 +64,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
               "Failed to read message [%s] from node %s in status %s",
               unknownPacket, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
-      envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_MESSAGE));
+      envelope.put(Field.BAD_PACKET, unknownPacket);
       envelope.put(Field.BAD_EXCEPTION, ex);
     }
     envelope.remove(Field.PACKET_MESSAGE);

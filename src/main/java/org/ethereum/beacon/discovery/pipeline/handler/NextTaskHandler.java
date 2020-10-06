@@ -55,7 +55,7 @@ public class NextTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NextTaskHandler, requirements are satisfied!", envelope.getId()));
 
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    NodeSession session = envelope.get(Field.SESSION);
     Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
     if (requestInfoOpt.isEmpty()) {
       logger.trace(() -> String.format("Envelope %s: no awaiting requests", envelope.getId()));

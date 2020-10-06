@@ -32,6 +32,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
 
     envelope.put(
         Field.SESSION_LOOKUP,
-        new SessionLookup(((NodeRecord) envelope.get(Field.NODE)).getNodeId()));
+        new SessionLookup(envelope.get(Field.NODE).getNodeId()));
   }
 }

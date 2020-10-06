@@ -33,7 +33,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.PACKET, envelope)) {
       return;
     }
-    Packet<?> packet = (Packet<?>) envelope.get(Field.PACKET);
+    Packet<?> packet = envelope.get(Field.PACKET);
     if (!(packet instanceof WhoAreYouPacket)) {
       return;
     }
@@ -54,8 +54,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
         },
         () -> {
           logger.trace("Unexpected WHOAREYOU packet: no source nonce found");
-          envelope.put(Field.BAD_PACKET, envelope.get(Field.PACKET_WHOAREYOU));
-          envelope.remove(Field.PACKET_WHOAREYOU);
+          envelope.put(Field.BAD_PACKET, packet);
           envelope.put(Field.BAD_EXCEPTION, new RuntimeException("Not expected WHOAREYOU packet"));
         });
   }

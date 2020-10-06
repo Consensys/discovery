@@ -59,8 +59,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                 "Envelope %s in WhoAreYouPacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) envelope.get(Field.PACKET_WHOAREYOU);
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    WhoAreYouPacket whoAreYouPacket = envelope.get(Field.PACKET_WHOAREYOU);
+    NodeSession session = envelope.get(Field.SESSION);
     try {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
@@ -88,7 +88,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       if (!envelope.contains(Field.MASKING_IV)) {
         throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
       }
-      Bytes16 whoAreYouMaskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
+      Bytes16 whoAreYouMaskingIV = envelope.get(Field.MASKING_IV);
       Bytes challengeData =
           Bytes.wrap(
               whoAreYouMaskingIV,

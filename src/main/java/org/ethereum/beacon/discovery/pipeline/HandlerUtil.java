@@ -29,7 +29,7 @@ public class HandlerUtil {
     if (!requireField(Field.SESSION, envelope)) {
       return false;
     }
-    if (((NodeSession) envelope.get(Field.SESSION)).getNodeRecord().isEmpty()) {
+    if ((envelope.get(Field.SESSION)).getNodeRecord().isEmpty()) {
       logger.trace(
           () ->
               String.format(
