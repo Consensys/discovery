@@ -139,13 +139,13 @@ public class NodeSession {
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
     logger.trace(
         () -> String.format("Sending outgoing Random message %s in session %s", packet, this));
-    sendOutgoing(Bytes16.random(Functions.getRandom()), packet);
+    sendOutgoing(generateMaskingIV(), packet);
   }
 
   public void sendOutgoingWhoAreYou(WhoAreYouPacket packet) {
     logger.trace(
         () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
-    Bytes16 maskingIV = Bytes16.random(Functions.getRandom());
+    Bytes16 maskingIV = generateMaskingIV();
     whoAreYouChallenge = Optional.of(Bytes.wrap(maskingIV, packet.getHeader().getBytes()));
     sendOutgoing(maskingIV, packet);
   }
@@ -155,7 +155,7 @@ public class NodeSession {
         () ->
             String.format(
                 "Sending outgoing Handshake message %s, %s in session %s", header, message, this));
-    Bytes16 maskingIV = Bytes16.random(Functions.getRandom());
+    Bytes16 maskingIV = generateMaskingIV();
     HandshakeMessagePacket handshakeMessagePacket =
         HandshakeMessagePacket.create(maskingIV, header, message, getInitiatorKey());
     sendOutgoing(maskingIV, handshakeMessagePacket);
