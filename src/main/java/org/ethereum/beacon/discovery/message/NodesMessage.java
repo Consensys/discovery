@@ -6,7 +6,6 @@ package org.ethereum.beacon.discovery.message;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -30,8 +29,7 @@ public class NodesMessage implements V5Message {
   // List of nodes upon request
   private final List<NodeRecord> nodeRecords;
 
-  public NodesMessage(Bytes requestId, Integer total,
-      List<NodeRecord> nodeRecords) {
+  public NodesMessage(Bytes requestId, Integer total, List<NodeRecord> nodeRecords) {
     this.requestId = requestId;
     this.total = total;
     this.nodeRecords = nodeRecords;
@@ -45,9 +43,9 @@ public class NodesMessage implements V5Message {
     return new NodesMessage(
         RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE)),
         RlpUtil.asInteger(rlpList.get(1)),
-            nodeRecords.stream()
-                .map(rl -> nodeRecordFactory.fromRlpList(RlpUtil.asList(rl)))
-                .collect(Collectors.toList()));
+        nodeRecords.stream()
+            .map(rl -> nodeRecordFactory.fromRlpList(RlpUtil.asList(rl)))
+            .collect(Collectors.toList()));
   }
 
   public static NodesMessage fromBytes(Bytes messageBytes, NodeRecordFactory nodeRecordFactory) {
@@ -96,9 +94,9 @@ public class NodesMessage implements V5Message {
       return false;
     }
     NodesMessage that = (NodesMessage) o;
-    return requestId.equals(that.requestId) &&
-        total.equals(that.total) &&
-        nodeRecords.equals(that.nodeRecords);
+    return requestId.equals(that.requestId)
+        && total.equals(that.total)
+        && nodeRecords.equals(that.nodeRecords);
   }
 
   @Override
@@ -108,10 +106,13 @@ public class NodesMessage implements V5Message {
 
   @Override
   public String toString() {
-    return "NodesMessage{" +
-        "requestId=" + requestId +
-        ", total=" + total +
-        ", nodeRecords=" + nodeRecords +
-        '}';
+    return "NodesMessage{"
+        + "requestId="
+        + requestId
+        + ", total="
+        + total
+        + ", nodeRecords="
+        + nodeRecords
+        + '}';
   }
 }

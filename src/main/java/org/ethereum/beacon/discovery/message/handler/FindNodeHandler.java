@@ -66,8 +66,6 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
         recordsList ->
             session.sendOutgoingOrdinary(
                 new NodesMessage(
-                    message.getRequestId(),
-                    nonEmptyNodeRecordsList.size(),
-                    recordsList)));
+                    message.getRequestId(), nonEmptyNodeRecordsList.size(), recordsList)));
   }
 }
