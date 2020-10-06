@@ -68,7 +68,6 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
                 new NodesMessage(
                     message.getRequestId(),
                     nodeRecordBatches.size(),
-                    () -> recordsList,
-                    recordsList.size())));
+                    recordsList)));
   }
 }

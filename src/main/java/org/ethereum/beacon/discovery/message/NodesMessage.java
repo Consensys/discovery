@@ -4,8 +4,8 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import com.google.common.base.Objects;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
@@ -26,24 +26,13 @@ public class NodesMessage implements V5Message {
   // Total number of responses to the request
   private final Integer total;
   // List of nodes upon request
-  private final Supplier<List<NodeRecord>> nodeRecordsSupplier;
-  // Size of nodes in current response
-  private final Integer nodeRecordsSize;
-  private List<NodeRecord> nodeRecords = null;
+  private final List<NodeRecord> nodeRecords;
 
-  public NodesMessage(Bytes requestId, Integer total, List<NodeRecord> nodeRecords) {
-    this(requestId, total, () -> nodeRecords, nodeRecords.size());
-  }
-
-  public NodesMessage(
-      Bytes requestId,
-      Integer total,
-      Supplier<List<NodeRecord>> nodeRecordsSupplier,
-      Integer nodeRecordsSize) {
+  public NodesMessage(Bytes requestId, Integer total,
+      List<NodeRecord> nodeRecords) {
     this.requestId = requestId;
     this.total = total;
-    this.nodeRecordsSupplier = nodeRecordsSupplier;
-    this.nodeRecordsSize = nodeRecordsSize;
+    this.nodeRecords = nodeRecords;
   }
 
   public static NodesMessage fromRlp(List<RlpType> rlpList, NodeRecordFactory nodeRecordFactory) {
@@ -51,11 +40,9 @@ public class NodesMessage implements V5Message {
     return new NodesMessage(
         Bytes.wrap(((RlpString) rlpList.get(0)).getBytes()),
         ((RlpString) rlpList.get(1)).asPositiveBigInteger().intValueExact(),
-        () ->
-            nodeRecords.getValues().stream()
-                .map(rl -> nodeRecordFactory.fromRlpList((RlpList) rl))
-                .collect(Collectors.toList()),
-        nodeRecords.getValues().size());
+        nodeRecords.getValues().stream()
+            .map(rl -> nodeRecordFactory.fromRlpList((RlpList) rl))
+            .collect(Collectors.toList()));
   }
 
   @Override
@@ -68,14 +55,7 @@ public class NodesMessage implements V5Message {
   }
 
   public synchronized List<NodeRecord> getNodeRecords() {
-    if (nodeRecords == null) {
-      this.nodeRecords = nodeRecordsSupplier.get();
-    }
     return nodeRecords;
-  }
-
-  public Integer getNodeRecordsSize() {
-    return nodeRecordsSize;
   }
 
   @Override
@@ -95,28 +75,29 @@ public class NodesMessage implements V5Message {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     NodesMessage that = (NodesMessage) o;
-    return Objects.equal(requestId, that.requestId)
-        && Objects.equal(total, that.total)
-        && Objects.equal(nodeRecordsSize, that.nodeRecordsSize);
+    return requestId.equals(that.requestId) &&
+        total.equals(that.total) &&
+        nodeRecords.equals(that.nodeRecords);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(requestId, total, nodeRecordsSize);
+    return Objects.hash(requestId, total, nodeRecords);
   }
 
   @Override
   public String toString() {
-    return "NodesMessage{"
-        + "requestId="
-        + requestId
-        + ", total="
-        + total
-        + ", nodeRecordsSize="
-        + nodeRecordsSize
-        + '}';
+    return "NodesMessage{" +
+        "requestId=" + requestId +
+        ", total=" + total +
+        ", nodeRecords=" + nodeRecords +
+        '}';
   }
 }
