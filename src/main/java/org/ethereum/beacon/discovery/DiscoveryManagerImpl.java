@@ -107,7 +107,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
-        .addHandler(new MessageHandler(nodeRecordFactory, localNodeRecordStore, talkHandler))
+        .addHandler(new MessageHandler(localNodeRecordStore, talkHandler))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
@@ -179,7 +179,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes requestBytes) {
+  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),

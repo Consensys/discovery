@@ -42,5 +42,6 @@ public interface DiscoveryManager {
    */
   CompletableFuture<Void> ping(NodeRecord nodeRecord);
 
-  CompletableFuture<Bytes> talk(NodeRecord nodeRecord, String protocol, Bytes request);
+  /** Sends the TALKREQ so the specified {@code node} and returns the TALKRESP promise */
+  CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes request);
 }

@@ -201,9 +201,7 @@ public class HandshakeHandlersTest {
     assertNull(envelopeAt1From2WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
 
-    MessageHandler messageHandler =
-        new MessageHandler(
-            NODE_RECORD_FACTORY_NO_VERIFICATION, localNodeRecordStoreAt1, TalkHandler.NOOP);
+    MessageHandler messageHandler = new MessageHandler(localNodeRecordStoreAt1, TalkHandler.NOOP);
     messageHandler.handle(envelopeAt1From2WithMessage);
 
     // Node 2 handles message from Node 1

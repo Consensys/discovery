@@ -45,11 +45,16 @@ public class TalkRespMessage implements V5Message {
   @Override
   public Bytes getBytes() {
     return Bytes.concatenate(
-        Bytes.of(MessageCode.TALKRESP.byteCode()),
+        Bytes.of(getCode().byteCode()),
         Bytes.wrap(
             RlpEncoder.encode(
                 new RlpList(
                     RlpString.create(requestId.toArray()), RlpString.create(response.toArray())))));
+  }
+
+  @Override
+  public MessageCode getCode() {
+    return MessageCode.TALKRESP;
   }
 
   @Override
