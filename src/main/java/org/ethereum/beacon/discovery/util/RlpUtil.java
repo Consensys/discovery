@@ -9,8 +9,10 @@ import static org.web3j.rlp.RlpDecoder.OFFSET_SHORT_LIST;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
@@ -24,7 +26,26 @@ import org.web3j.rlp.RlpType;
  * org.web3j.rlp.RlpEncoder} and {@link RlpDecoder}
  */
 public class RlpUtil {
-  public static final int ANY_LEN = -1;
+  public interface BytesConstraint extends Predicate<Bytes> {}
+
+  public static final BytesConstraint CONS_ANY = b -> true;
+  public static final BytesConstraint CONS_UINT64 = maxSize(8);
+
+  public static BytesConstraint strictSize(int size) {
+    return b -> b.size() == size;
+  }
+
+  public static BytesConstraint maxSize(int maxSize) {
+    return b -> b.size() <= maxSize;
+  }
+
+  public static BytesConstraint minMaxSize(int minSize, int maxSize) {
+    return b -> b.size() <= maxSize && b.size() >= minSize;
+  }
+
+  public static BytesConstraint enumSizes(int... sizes) {
+    return b -> Arrays.stream(sizes).anyMatch(s -> s == b.size());
+  }
 
   /**
    * Calculates length of list beginning from the start of the data. So, there could everything else
@@ -72,22 +93,22 @@ public class RlpUtil {
    * Decodes strictly the list of byte strings of specified lengths The list should contain strictly
    * {@code lengths.length} strings
    *
-   * @param lengths the expected length of each string in the list. ANY_LEN if any size is accepted
+   * @param constraints constrains for every string in the list
    * @throws RlpDecodeException if this rlp doesn't represent a single list of strings of specified
    *     lengths
    */
-  public static List<Bytes> decodeListOfStrings(Bytes rlp, int... lengths)
+  public static List<Bytes> decodeListOfStrings(Bytes rlp, BytesConstraint... constraints)
       throws RlpDecodeException {
 
     List<Bytes> bytesList = decodeListOfStrings(rlp);
-    if (bytesList.size() != lengths.length) {
-      throw new RlpDecodeException("Expected RLP list of " + lengths.length + " items: " + rlp);
+    if (bytesList.size() != constraints.length) {
+      throw new RlpDecodeException("Expected RLP list of " + constraints.length + " items: " + rlp);
     }
 
-    for (int i = 0; i < lengths.length; i++) {
-      if (lengths[i] >= 0 && bytesList.get(i).size() != lengths[i]) {
+    for (int i = 0; i < constraints.length; i++) {
+      if (!constraints[i].test(bytesList.get(i))) {
         throw new RlpDecodeException(
-            "Expected RLP string of size " + lengths[i] + " for item #" + i + ": " + rlp);
+            "Failed constraints check (" + constraints[i] + ") for item #" + i + ": " + rlp);
       }
     }
     return bytesList;
@@ -99,8 +120,7 @@ public class RlpUtil {
    * @throws RlpDecodeException if this rlp doesn't represent a single list of strings
    */
   public static List<Bytes> decodeListOfStrings(Bytes rlp) throws RlpDecodeException {
-    RlpList items = decodeSingleList(rlp);
-    List<RlpType> values = items.getValues();
+    List<RlpType> values = decodeSingleList(rlp);
 
     List<Bytes> ret = new ArrayList<>();
     for (RlpType val : values) {
@@ -118,23 +138,33 @@ public class RlpUtil {
    *
    * @throws RlpDecodeException if this rlp doesn't represent a single list
    */
-  public static RlpList decodeSingleList(Bytes rlp) throws RlpDecodeException {
-    RlpType item = decodeSingleItem(rlp);
-    if (!(item instanceof RlpList)) {
-      throw new RlpDecodeException("Expected RLP list, but got a string from bytes: " + rlp);
-    }
-    return (RlpList) item;
+  public static List<RlpType> decodeSingleList(Bytes rlp) throws RlpDecodeException {
+    return asList(decodeSingleItem(rlp));
   }
 
-  /**
-   * Decodes strictly one bytes string item from rlp bytes
-   *
-   * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
-   */
-  public static Bytes decodeSingleString(Bytes rlp, int expectedSize) throws RlpDecodeException {
-    Bytes ret = decodeSingleString(rlp);
-    if (ret.size() != expectedSize) {
-      throw new RlpDecodeException("Expected string size doesn't match: " + rlp);
+  public static List<RlpType> asList(RlpType item) throws RlpDecodeException {
+    if (!(item instanceof RlpList)) {
+      throw new RlpDecodeException("Expected RLP list, but got a string: " + item);
+    }
+    return ((RlpList) item).getValues();
+  }
+
+  public static int asInteger(RlpType item) throws RlpDecodeException {
+    Bytes bytes = asString(item, maxSize(4));
+    long l = bytes.toLong();
+    if (l > Integer.MAX_VALUE) {
+      throw new RlpDecodeException("Too large for integer: " + item);
+    }
+    return (int) l;
+  }
+
+  public static Bytes asString(RlpType item, BytesConstraint constraint) throws RlpDecodeException {
+    if (!(item instanceof RlpString)) {
+      throw new RlpDecodeException("Expected RLP bytes string, but got a list: " + item);
+    }
+    Bytes ret = Bytes.wrap(((RlpString) item).getBytes());
+    if (!constraint.test(ret)) {
+      throw new RlpDecodeException("The RLP string violates constraint: " + ret);
     }
     return ret;
   }
@@ -145,11 +175,7 @@ public class RlpUtil {
    * @throws RlpDecodeException if this rlp doesn't represent a single bytes string
    */
   public static Bytes decodeSingleString(Bytes rlp) throws RlpDecodeException {
-    RlpType item = decodeSingleItem(rlp);
-    if (!(item instanceof RlpString)) {
-      throw new RlpDecodeException("Expected RLP bytes string, but got a list from bytes: " + rlp);
-    }
-    return Bytes.wrap(((RlpString) item).getBytes());
+    return asString(decodeSingleItem(rlp), CONS_ANY);
   }
 
   /**

@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.beacon.discovery.task.TaskStatus.AWAIT;
 
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
@@ -29,16 +27,14 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
-import org.ethereum.beacon.discovery.pipeline.info.RequestInfoFactory;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.task.TaskOptions;
-import org.ethereum.beacon.discovery.task.TaskType;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -48,9 +44,11 @@ import org.ethereum.beacon.discovery.util.Functions;
  * other `node`
  */
 public class NodeSession {
+  private static final Logger logger = LogManager.getLogger(NodeSession.class);
+
   public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
-  private static final Logger logger = LogManager.getLogger(NodeSession.class);
+  private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AuthTagRepository authTagRepo;
@@ -118,6 +116,7 @@ public class NodeSession {
   }
 
   public void sendOutgoingOrdinary(V5Message message) {
+    logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Header<AuthData> header =
         Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
@@ -141,27 +140,22 @@ public class NodeSession {
    * also prevent replay of responses. Using a simple counter would be fine if the implementation
    * could ensure that restarts or even re-installs would increment the counter based on previously
    * saved state in all circumstances. The easiest to implement is a random number.
-   *
-   * @param taskType Type of task, clarifies starting and reply message types
-   * @param taskOptions Task options
-   * @param future Future to be fired when task is successfully completed or exceptionally break
-   *     when its failed
-   * @return info bundle.
    */
-  public synchronized RequestInfo createNextRequest(
-      TaskType taskType, TaskOptions taskOptions, CompletableFuture<Void> future) {
+  public synchronized RequestInfo createNextRequest(Request<?> request) {
     byte[] requestId = new byte[REQUEST_ID_SIZE];
     rnd.nextBytes(requestId);
     Bytes wrappedId = Bytes.wrap(requestId);
-    if (taskOptions.isLivenessUpdate()) {
-      future.whenComplete(
-          (aVoid, throwable) -> {
-            if (throwable == null) {
-              updateLiveness();
-            }
-          });
+    if (IS_LIVENESS_UPDATE) {
+      request
+          .getResultPromise()
+          .whenComplete(
+              (aVoid, throwable) -> {
+                if (throwable == null) {
+                  updateLiveness();
+                }
+              });
     }
-    RequestInfo requestInfo = RequestInfoFactory.create(taskType, wrappedId, taskOptions, future);
+    RequestInfo requestInfo = RequestInfo.create(wrappedId, request);
     requestIdStatuses.put(wrappedId, requestInfo);
     requestExpirationScheduler.put(
         wrappedId,
@@ -180,39 +174,15 @@ public class NodeSession {
   }
 
   /** Updates request info. Thread-safe. */
-  public synchronized void updateRequestInfo(Bytes requestId, RequestInfo newRequestInfo) {
-    RequestInfo oldRequestInfo = requestIdStatuses.remove(requestId);
-    if (oldRequestInfo == null) {
-      logger.debug(
-          () ->
-              String.format(
-                  "An attempt to update requestId %s in session %s which does not exist",
-                  requestId, this));
-      return;
-    }
-    requestIdStatuses.put(requestId, newRequestInfo);
-    requestExpirationScheduler.put(
-        requestId,
-        new Runnable() {
-          @Override
-          public void run() {
-            logger.debug(
-                String.format(
-                    "Request %s expired for id %s in session %s: no reply",
-                    newRequestInfo, requestId, this));
-            requestIdStatuses.remove(requestId);
-          }
-        });
-  }
-
   public synchronized void cancelAllRequests(String message) {
     logger.debug(() -> String.format("Cancelling all requests in session %s", this));
     Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
     requestIdsCopy.forEach(
         requestId -> {
-          RequestInfo requestInfo = clearRequestId(requestId);
+          RequestInfo requestInfo = clearRequestInfo(requestId);
           requestInfo
-              .getFuture()
+              .getRequest()
+              .getResultPromise()
               .completeExceptionally(
                   new RuntimeException(
                       String.format(
@@ -281,13 +251,11 @@ public class NodeSession {
     this.reportedExternalAddress = Optional.of(reportedExternalAddress);
   }
 
-  public synchronized void clearRequestId(Bytes requestId, TaskType taskType) {
-    final RequestInfo requestInfo = clearRequestId(requestId);
+  @SuppressWarnings("unchecked")
+  public synchronized <T> void clearRequestInfo(Bytes requestId, T result) {
+    final RequestInfo requestInfo = clearRequestInfo(requestId);
     checkNotNull(requestInfo, "Attempting to clear an unknown request");
-    checkArgument(
-        taskType.equals(requestInfo.getTaskType()),
-        "Attempting to clear a request but task type did not match");
-    requestInfo.getFuture().complete(null);
+    ((Request<T>) requestInfo.getRequest()).getResultPromise().complete(result);
   }
 
   /** Updates nodeRecord {@link NodeStatus} to ACTIVE of the node associated with this session */
@@ -301,13 +269,13 @@ public class NodeSession {
         });
   }
 
-  private synchronized RequestInfo clearRequestId(Bytes requestId) {
+  private synchronized RequestInfo clearRequestInfo(Bytes requestId) {
     RequestInfo requestInfo = requestIdStatuses.remove(requestId);
     requestExpirationScheduler.cancel(requestId);
     return requestInfo;
   }
 
-  public synchronized Optional<RequestInfo> getRequestId(Bytes requestId) {
+  public synchronized Optional<RequestInfo> getRequestInfo(Bytes requestId) {
     RequestInfo requestInfo = requestIdStatuses.get(requestId);
     return requestId == null ? Optional.empty() : Optional.of(requestInfo);
   }

@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,7 +84,8 @@ public class DiscoveryNetworkTest {
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            TalkHandler.NOOP);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
             Optional.empty(),
@@ -94,7 +96,8 @@ public class DiscoveryNetworkTest {
             nodePair2.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            TalkHandler.NOOP);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);
@@ -140,7 +143,7 @@ public class DiscoveryNetworkTest {
     // 4) fire 1 to 2 dialog
     discoveryManager2.start();
     discoveryManager1.start();
-    discoveryManager1.findNodes(nodeRecord2, 0);
+    discoveryManager1.findNodes(nodeRecord2, singletonList(0));
 
     assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
     assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));

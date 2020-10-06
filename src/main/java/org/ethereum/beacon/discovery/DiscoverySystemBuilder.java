@@ -45,6 +45,7 @@ public class DiscoverySystemBuilder {
   private NodeRecordListener localNodeRecordListener = (a, b) -> {};
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
+  private TalkHandler talkHandler = TalkHandler.NOOP;
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -100,6 +101,11 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
+  public DiscoverySystemBuilder talkHandler(TalkHandler talkHandler) {
+    this.talkHandler = talkHandler;
+    return this;
+  }
+
   public DiscoverySystem build() {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(privateKey, "Missing private key");
@@ -134,7 +140,8 @@ public class DiscoverySystemBuilder {
             privateKey,
             nodeRecordFactory,
             schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            talkHandler);
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(

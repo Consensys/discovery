@@ -19,9 +19,7 @@ public enum Field {
   BAD_PACKET, // Bad, rejected packet
   BAD_MESSAGE, // Bad, rejected message
   BAD_EXCEPTION, // Stores exception for bad packet or message
-  TASK, // Task to perform
-  TASK_OPTIONS, // Task options
-  FUTURE, // Completable future
+  REQUEST, // Task to perform
 
   PACKET,
 }

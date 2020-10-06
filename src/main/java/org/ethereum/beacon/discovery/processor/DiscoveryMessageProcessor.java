@@ -4,13 +4,13 @@
 
 package org.ethereum.beacon.discovery.processor;
 
-import org.ethereum.beacon.discovery.message.DiscoveryMessage;
+import org.ethereum.beacon.discovery.message.Message;
+import org.ethereum.beacon.discovery.schema.DiscoveryProtocol;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.Protocol;
 
 /** Handles discovery messages of several types */
-public interface DiscoveryMessageProcessor<M extends DiscoveryMessage> {
-  Protocol getSupportedIdentity();
+public interface DiscoveryMessageProcessor<M extends Message> {
+  DiscoveryProtocol getSupportedIdentity();
 
   void handleMessage(M message, NodeSession session);
 }

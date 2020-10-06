@@ -7,14 +7,14 @@ package org.ethereum.beacon.discovery.message.handler;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
-import org.ethereum.beacon.discovery.pipeline.info.FindNodeRequestInfo;
+import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.task.TaskStatus;
-import org.ethereum.beacon.discovery.task.TaskType;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public class NodesHandler implements MessageHandler<NodesMessage> {
@@ -23,31 +23,22 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
   @Override
   public void handle(NodesMessage message, NodeSession session) {
     // NODES total count handling
-    Optional<RequestInfo> requestInfoOpt = session.getRequestId(message.getRequestId());
+    Optional<RequestInfo> requestInfoOpt = session.getRequestInfo(message.getRequestId());
     if (requestInfoOpt.isEmpty()) {
       throw new RuntimeException(
           String.format(
               "Request #%s not found in session %s when handling message %s",
               message.getRequestId(), session, message));
     }
-    FindNodeRequestInfo requestInfo = (FindNodeRequestInfo) requestInfoOpt.get();
-    int newNodesCount =
-        requestInfo.getRemainingNodes() == null
-            ? message.getTotal() - 1
-            : requestInfo.getRemainingNodes() - 1;
-    if (newNodesCount <= 0) {
-      session.clearRequestId(message.getRequestId(), TaskType.FINDNODE);
-    } else {
-      session.updateRequestInfo(
-          message.getRequestId(),
-          new FindNodeRequestInfo(
-              TaskStatus.IN_PROCESS,
-              message.getRequestId(),
-              requestInfo.getFuture(),
-              requestInfo.getDistance(),
-              newNodesCount));
-    }
+    RequestInfo requestInfo = requestInfoOpt.get();
+    FindNodeResponseHandler respHandler =
+        (FindNodeResponseHandler) requestInfo.getRequest().getResponseHandler();
 
+    if (respHandler.handleResponseMessage(message)) {
+      session.clearRequestInfo(message.getRequestId(), null);
+    } else {
+      requestInfo.setTaskStatus(TaskStatus.IN_PROCESS);
+    }
     // Parse node records
     logger.trace(
         () ->
@@ -56,7 +47,9 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
                 message.getNodeRecords().size(), session, message.getTotal()));
     message.getNodeRecords().stream()
         .filter(this::isValid)
-        .filter(record -> hasCorrectDistance(session, requestInfo, record))
+        .filter(
+            record ->
+                hasCorrectDistance(session, (FindNodeMessage) requestInfo.getMessage(), record))
         .forEach(
             nodeRecordV5 -> {
               NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
@@ -75,17 +68,14 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
   }
 
   private boolean hasCorrectDistance(
-      final NodeSession session,
-      final FindNodeRequestInfo requestInfo,
-      final NodeRecord nodeRecordV5) {
+      final NodeSession session, final FindNodeMessage requestMsg, final NodeRecord nodeRecordV5) {
     final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
-    final int requestedDistance = requestInfo.getDistance();
-    if (actualDistance != requestedDistance) {
+    if (!requestMsg.getDistances().contains(actualDistance)) {
       logger.debug(
-          "Rejecting node record {} received from {} because distance was not {}.",
+          "Rejecting node record {} received from {} because distance was not in {}.",
           nodeRecordV5.getNodeId(),
           session.getNodeId(),
-          requestInfo.getDistance());
+          requestMsg.getDistances());
       return false;
     }
     return true;

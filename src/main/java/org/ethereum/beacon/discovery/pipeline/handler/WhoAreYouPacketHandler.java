@@ -28,7 +28,6 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
-import org.ethereum.beacon.discovery.task.TaskMessageFactory;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.crypto.ECKeyPair;
@@ -101,7 +100,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
       final V5Message message =
           requestInfoOpt
-              .map(requestInfo -> TaskMessageFactory.createMessageFromRequest(requestInfo, session))
+              .map(requestInfo -> requestInfo.getMessage())
               .orElseThrow(
                   (Supplier<Throwable>)
                       () ->

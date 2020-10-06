@@ -15,7 +15,6 @@ import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.util.RlpUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,8 +45,7 @@ public class MessageEncodingTest {
         new FindNodeMessage(
             Bytes.wrap(UInt64.valueOf(1).toBigInteger().toByteArray()), List.of(256, 255));
     FindNodeMessage findNodeMessage1 =
-        FindNodeMessage.fromRlp(
-            RlpUtil.decodeSingleList(findNodeMessage.getBytes().slice(1)).getValues());
+        FindNodeMessage.fromBytes(findNodeMessage.getBytes().slice(1));
     Assertions.assertEquals(findNodeMessage1, findNodeMessage);
     Assertions.assertEquals(
         Bytes.fromHexString("0x03C701C582010081FF"), findNodeMessage.getBytes());

@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.task;
 import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,8 +20,8 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
- * Sends {@link TaskType#FINDNODE} to closest NodeRecords added via {@link #add(NodeRecord, int)}.
- * Tasks is called failed if timeout is reached and reply from node is not received.
+ * Sends FindNode to closest NodeRecords added via {@link #add(NodeRecord, int)}. Tasks is called
+ * failed if timeout is reached and reply from node is not received.
  */
 public class RecursiveLookupTasks {
   private final Scheduler scheduler;
@@ -47,7 +48,8 @@ public class RecursiveLookupTasks {
     final CompletableFuture<Void> result = new CompletableFuture<>();
     scheduler.execute(
         () -> {
-          CompletableFuture<Void> request = discoveryManager.findNodes(nodeRecord, distance);
+          CompletableFuture<Void> request =
+              discoveryManager.findNodes(nodeRecord, Collections.singletonList(distance));
           addTimeout(nodeRecord, request);
           request.whenComplete(
               (aVoid, throwable) -> {

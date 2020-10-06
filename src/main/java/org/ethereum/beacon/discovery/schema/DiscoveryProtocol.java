@@ -8,25 +8,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Discovery protocol versions */
-public enum Protocol {
+public enum DiscoveryProtocol {
   V4("v4"),
   V5("v5");
 
-  private static final Map<String, Protocol> nameMap = new HashMap<>();
+  private static final Map<String, DiscoveryProtocol> nameMap = new HashMap<>();
 
   static {
-    for (Protocol scheme : Protocol.values()) {
+    for (DiscoveryProtocol scheme : DiscoveryProtocol.values()) {
       nameMap.put(scheme.name, scheme);
     }
   }
 
   private String name;
 
-  private Protocol(String name) {
+  private DiscoveryProtocol(String name) {
     this.name = name;
   }
 
-  public static Protocol fromString(String name) {
+  public static DiscoveryProtocol fromString(String name) {
     return nameMap.get(name);
   }
 
