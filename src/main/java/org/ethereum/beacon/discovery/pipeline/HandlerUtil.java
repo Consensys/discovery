@@ -7,12 +7,11 @@ package org.ethereum.beacon.discovery.pipeline;
 import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class HandlerUtil {
   private static final Logger logger = LogManager.getLogger(HandlerUtil.class);
 
-  public static boolean requireField(Field field, Envelope envelope) {
+  public static boolean requireField(Field<?> field, Envelope envelope) {
     if (envelope.contains(field)) {
       return true;
     } else {
@@ -29,7 +28,7 @@ public class HandlerUtil {
     if (!requireField(Field.SESSION, envelope)) {
       return false;
     }
-    if ((envelope.get(Field.SESSION)).getNodeRecord().isEmpty()) {
+    if (envelope.get(Field.SESSION).getNodeRecord().isEmpty()) {
       logger.trace(
           () ->
               String.format(

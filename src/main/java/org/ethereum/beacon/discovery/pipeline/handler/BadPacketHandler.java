@@ -25,8 +25,10 @@ public class BadPacketHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in BadPacketLogger, requirements are satisfied!", envelope.getId()));
 
-    logger.debug(() -> String
-            .format("Bad packet: %s in envelope #%s", envelope.get(Field.BAD_PACKET), envelope.getId()),
+    logger.debug(
+        () ->
+            String.format(
+                "Bad packet: %s in envelope #%s", envelope.get(Field.BAD_PACKET), envelope.getId()),
         envelope.get(Field.BAD_EXCEPTION));
     // TODO: Reputation penalty etc
   }

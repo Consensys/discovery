@@ -180,8 +180,8 @@ public class HandshakeHandlersTest {
     RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     envelopeAt2From1.put(
         PACKET_HANDSHAKE,
-        (HandshakeMessagePacket) handshakeRawPacket
-            .demaskPacket(nodePair2.getNodeRecord().getNodeId()));
+        (HandshakeMessagePacket)
+            handshakeRawPacket.demaskPacket(nodePair2.getNodeRecord().getNodeId()));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
 

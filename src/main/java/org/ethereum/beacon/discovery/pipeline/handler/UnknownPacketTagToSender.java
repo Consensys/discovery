@@ -16,9 +16,9 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 
 /**
- * Assuming we have some unknown packet in {@link Field#PACKET}, resolves sender node id
- * using `tag` field of the packet. Next, puts it to the {@link Field#SESSION_LOOKUP} so sender
- * session could be resolved by another handler.
+ * Assuming we have some unknown packet in {@link Field#PACKET}, resolves sender node id using `tag`
+ * field of the packet. Next, puts it to the {@link Field#SESSION_LOOKUP} so sender session could be
+ * resolved by another handler.
  */
 public class UnknownPacketTagToSender implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(UnknownPacketTagToSender.class);
