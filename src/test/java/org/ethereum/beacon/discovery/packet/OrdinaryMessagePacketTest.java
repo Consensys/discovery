@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.message.TalkReqMessage;
 import org.ethereum.beacon.discovery.message.TalkRespMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.impl.MessagePacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl;
 import org.ethereum.beacon.discovery.schema.EnrField;
@@ -110,8 +111,8 @@ public class OrdinaryMessagePacketTest {
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     OrdinaryMessagePacket packet =
-        (OrdinaryMessagePacket) rawPacket1.decodePacket(headerMaskingKey);
-    V5Message message1 = packet.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+        (OrdinaryMessagePacket) rawPacket1.demaskPacket(headerMaskingKey);
+    V5Message message1 = packet.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
     assertThat(message1).isEqualTo(message);
   }
 
@@ -120,11 +121,11 @@ public class OrdinaryMessagePacketTest {
   void testDecryptingWithWrongKeyFails(V5Message message, String name) {
     Bytes packetBytes = createPacket(message).getBytes();
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     Bytes wrongSecretKey = Bytes.fromHexString("0x00000000000000000000000000000001");
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(wrongSecretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, wrongSecretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecryptException.class);
   }
@@ -132,21 +133,22 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithWrongGcmNonceFails(V5Message message, String name) {
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header
+        .createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes12 wrongAesGcmNonce = Bytes12.fromHexString("0xafffffffffffffffffffffff");
     Bytes encryptedMessage =
         MessagePacketImpl.encrypt(
             header.getBytes(), message.getBytes(), wrongAesGcmNonce, secretKey);
 
     OrdinaryMessagePacket messagePacket = new OrdinaryMessageImpl(header, encryptedMessage);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecryptException.class);
   }
@@ -154,37 +156,38 @@ public class OrdinaryMessagePacketTest {
   @Test
   void testDecryptingWithInvalidMessageCodeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(2));
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes invalidMessageBytes = Bytes.wrap(Bytes.of(111), pingMessage.getBytes().slice(1));
     Bytes encryptedInvalidMessage =
         MessagePacketImpl.encrypt(header.getBytes(), invalidMessageBytes, aesGcmNonce, secretKey);
 
     OrdinaryMessagePacket messagePacket = new OrdinaryMessageImpl(header, encryptedInvalidMessage);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecodeException.class);
   }
 
   @Test
   void testDecryptingRandomMessageFails() {
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
 
-    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.createRandom(header, 111);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket
+        .createRandom(header, Bytes.random(111));
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecodeException.class);
   }
@@ -192,28 +195,28 @@ public class OrdinaryMessagePacketTest {
   @ParameterizedTest(name = "{index} {2}")
   @MethodSource("testMessages")
   void testDecryptingWithInvalidMessageRlpFails(V5Message message, String name) {
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     Bytes messageBytes = message.getBytes();
     Bytes invalidMessageBytes = messageBytes.slice(0, messageBytes.size() - 1);
     Bytes encryptedInvalidMessage =
         MessagePacketImpl.encrypt(header.getBytes(), invalidMessageBytes, aesGcmNonce, secretKey);
 
     OrdinaryMessagePacket messagePacket = new OrdinaryMessageImpl(header, encryptedInvalidMessage);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecodeException.class);
   }
 
   @Test
   void testDecryptingWithInvalidMessageRequestIdRlpFails() {
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
     RlpList rlpList =
         new RlpList(
             new RlpList(), // should be RlpString with requestId
@@ -226,21 +229,22 @@ public class OrdinaryMessagePacketTest {
         MessagePacketImpl.encrypt(header.getBytes(), invalidMessageBytes, aesGcmNonce, secretKey);
 
     OrdinaryMessagePacket messagePacket = new OrdinaryMessageImpl(header, encryptedInvalidMessage);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     MessagePacket<?> msgPacket =
-        (MessagePacket<?>) RawPacket.decode(packetBytes).decodePacket(headerMaskingKey);
+        (MessagePacket<?>) RawPacket.decode(packetBytes).demaskPacket(headerMaskingKey);
     assertThatThrownBy(
             () -> {
-              msgPacket.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+              msgPacket.decryptMessage(aesCtrIV, secretKey, NodeRecordFactory.DEFAULT);
             })
         .isInstanceOf(DecodeException.class);
   }
 
   private RawPacket createPacket(V5Message msg) {
-    Header<AuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
-    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket.create(header, msg, secretKey);
-    return RawPacket.create(aesCtrIV, messagePacket, headerMaskingKey);
+    Header<OrdinaryAuthData> header = Header.createOrdinaryHeader(srcNodeId, aesGcmNonce);
+    OrdinaryMessagePacket messagePacket = OrdinaryMessagePacket
+        .create(aesCtrIV, header, msg, secretKey);
+    return RawPacket.createAndMask(aesCtrIV, messagePacket, headerMaskingKey);
   }
 }

@@ -18,15 +18,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface Packet<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Packet<?> decrypt(Bytes data, Bytes16 maskingIV, Bytes16 destNodeId) throws DecodeException {
-    Packet<?> packet = PacketImpl.decrypt(data, maskingIV, destNodeId);
-    packet.validate();
-    return packet;
-  }
-
-  Bytes encrypt(Bytes16 maskingIV, Bytes16 destNodeId);
-
-  Bytes getMessageBytes();
+  Bytes getMessageCyphered();
 
   Header<TAuthData> getHeader();
 

@@ -20,11 +20,6 @@ public class NewTaskHandler implements EnvelopeHandler {
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NewTaskHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.REQUEST, envelope)) {
       return;
     }

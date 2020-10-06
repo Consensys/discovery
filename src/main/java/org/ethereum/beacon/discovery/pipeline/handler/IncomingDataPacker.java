@@ -29,11 +29,6 @@ public class IncomingDataPacker implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in IncomingDataPacker, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }
@@ -52,11 +47,12 @@ public class IncomingDataPacker implements EnvelopeHandler {
         throw new DecodeException("Packet is too small: " + rawPacketBytes.size());
       }
       RawPacket rawPacket = RawPacket.decode(rawPacketBytes);
-      Packet<?> packet = rawPacket.decodePacket(homeNodeId);
+      rawPacket.validate();
+      Packet<?> packet = rawPacket.demaskPacket(homeNodeId);
       // check that AES/CTR decoded correctly
-      packet.getHeader().validate();
 
       envelope.put(Field.PACKET, packet);
+      envelope.put(Field.MASKING_IV, rawPacket.getMaskingIV());
       logger.trace(
           () -> String.format("Incoming packet %s in envelope #%s", packet, envelope.getId()));
     } catch (Exception ex) {

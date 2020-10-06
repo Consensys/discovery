@@ -17,11 +17,6 @@ public class BadPacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in BadPacketLogger, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.BAD_PACKET, envelope)) {
       return;
     }

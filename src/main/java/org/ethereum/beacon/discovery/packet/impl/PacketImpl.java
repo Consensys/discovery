@@ -7,6 +7,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.type.Bytes16;
@@ -27,7 +29,7 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
         }
         return new WhoAreYouPacketImpl((Header<WhoAreYouAuthData>) header);
       case MESSAGE:
-        return new OrdinaryMessageImpl((Header<AuthData>) header, messageData);
+        return new OrdinaryMessageImpl((Header<OrdinaryAuthData>) header, messageData);
       case HANDSHAKE:
         return new HandshakeMessagePacketImpl((Header<HandshakeAuthData>) header, messageData);
       default:
@@ -45,17 +47,12 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
   }
 
   @Override
-  public Bytes encrypt(Bytes16 maskingIV, Bytes16 destNodeId) {
-    return Bytes.wrap(header.encrypt(maskingIV, destNodeId), getMessageBytes());
-  }
-
-  @Override
   public Header<TAuthData> getHeader() {
     return header;
   }
 
   @Override
-  public Bytes getMessageBytes() {
+  public Bytes getMessageCyphered() {
     return messageBytes;
   }
 
@@ -66,7 +63,7 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
         + "header="
         + header
         + ", cipherMsgSize="
-        + getMessageBytes().size()
+        + getMessageCyphered().size()
         + '}';
   }
 }

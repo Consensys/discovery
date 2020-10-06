@@ -14,13 +14,13 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 /**
- * In memory repository with authTags, corresponding sessions {@link NodeSession} and 2-way getters:
- * {@link #get(Bytes12)} and {@link #getTag(NodeSession)}
+ * In memory repository with nonces, corresponding sessions {@link NodeSession} and 2-way getters:
+ * {@link #get(Bytes12)} and {@link #getNonce(NodeSession)}
  *
  * <p>Expired authTags should be manually removed with {@link #expire(NodeSession)}
  */
-public class AuthTagRepository {
-  private static final Logger logger = LogManager.getLogger(AuthTagRepository.class);
+public class NonceRepository {
+  private static final Logger logger = LogManager.getLogger(NonceRepository.class);
   private Map<Bytes12, NodeSession> authTags = new ConcurrentHashMap<>();
   private Map<NodeSession, Bytes12> sessions = new ConcurrentHashMap<>();
 
@@ -31,13 +31,13 @@ public class AuthTagRepository {
     sessions.put(session, authTag);
   }
 
-  public Optional<NodeSession> get(Bytes12 authTag) {
-    logger.trace(() -> String.format("GET: authTag[%s]", authTag));
-    NodeSession session = authTags.get(authTag);
+  public Optional<NodeSession> get(Bytes12 nonce) {
+    logger.trace(() -> String.format("GET: nonce[%s]", nonce));
+    NodeSession session = authTags.get(nonce);
     return session == null ? Optional.empty() : Optional.of(session);
   }
 
-  public Optional<Bytes12> getTag(NodeSession session) {
+  public Optional<Bytes12> getNonce(NodeSession session) {
     logger.trace(() -> String.format("GET: session %s", session));
     Bytes12 authTag = sessions.get(session);
     return authTag == null ? Optional.empty() : Optional.of(authTag);

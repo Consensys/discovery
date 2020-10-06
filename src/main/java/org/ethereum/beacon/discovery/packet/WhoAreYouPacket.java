@@ -8,6 +8,7 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.type.Bytes52;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
@@ -27,24 +28,15 @@ public interface WhoAreYouPacket extends Packet<WhoAreYouAuthData> {
 
   interface WhoAreYouAuthData extends AuthData {
 
-    default Bytes12 getRequestNonce() {
-      return getAesGcmNonce();
-    }
-
-    Bytes32 getIdNonce();
+    Bytes16 getIdNonce();
 
     UInt64 getEnrSeq();
 
     @Override
-    Bytes52 getBytes();
-
-    @Override
     default void validate() throws DecodeException {
-      AuthData.super.validate();
       DecodeException.wrap(
           () -> "Couldn't decode WhoAreYou auth data: " + getBytes(),
           () -> {
-            getRequestNonce();
             getIdNonce();
             getEnrSeq();
           });

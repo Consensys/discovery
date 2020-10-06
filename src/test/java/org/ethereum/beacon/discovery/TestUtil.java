@@ -112,18 +112,13 @@ public class TestUtil {
 
   public static boolean isFieldsEqual(StaticHeader that, StaticHeader other) {
     return that.getProtocolId().equals(other.getProtocolId())
-        && that.getSourceNodeId().equals(other.getSourceNodeId())
+        && that.getVersion().equals(other.getVersion())
         && that.getFlag().equals(other.getFlag())
         && that.getAuthDataSize() == other.getAuthDataSize();
   }
 
-  public static boolean isFieldsEqual(AuthData that, AuthData other) {
-    return that.getAesGcmNonce().equals(other.getAesGcmNonce());
-  }
-
   public static boolean isFieldsEqual(WhoAreYouAuthData that, WhoAreYouAuthData other) {
-    return that.getRequestNonce().equals(other.getRequestNonce())
-        && that.getIdNonce().equals(other.getIdNonce())
+    return  that.getIdNonce().equals(other.getIdNonce())
         && that.getEnrSeq().equals(other.getEnrSeq());
   }
 }

@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.ID_SIGNATURE_PREFIX;
 import static org.ethereum.beacon.discovery.schema.NodeSession.SessionState.AUTHENTICATED;
 
 import java.util.Optional;
@@ -24,7 +23,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.util.CryptoUtil;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_AUTH_HEADER_MESSAGE} field */
@@ -43,12 +42,10 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in AuthHeaderMessagePacketHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.PACKET_AUTH_HEADER_MESSAGE, envelope)) {
+      return;
+    }
+    if (!HandlerUtil.requireField(Field.MASKING_IV, envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
@@ -97,8 +94,15 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
 
+      if (session.getWhoAreYouChallenge().isEmpty()) {
+        logger
+            .debug(String.format("Outbound WhoAreYou challenge not found for session %s", session));
+        markHandshakeAsFailed(envelope, session);
+        return;
+      }
+
       boolean idNonceVerifyResult = packet.getHeader().getAuthData()
-          .verify(session.getIdNonce(), session.getHomeNodeId(),
+          .verify(session.getWhoAreYouChallenge().get(), session.getHomeNodeId(),
               (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
       if (!idNonceVerifyResult) {
@@ -110,7 +114,8 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         return;
       }
 
-      V5Message message = packet.decryptMessage(session.getRecipientKey(), nodeRecordFactory);
+      Bytes16 maskingIV = (Bytes16) envelope.get(Field.MASKING_IV);
+      V5Message message = packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
       enr.ifPresent(

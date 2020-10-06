@@ -15,6 +15,7 @@ public enum Field {
   PACKET_MESSAGE, // Standard message packet
   UNAUTHORIZED_PACKET_MESSAGE, // Standard message packet
   MESSAGE, // Message extracted from the packet
+  MASKING_IV, // need to keep RawPacket IV for decrypting a message
   NODE, // Sender/recipient node
   BAD_PACKET, // Bad, rejected packet
   BAD_MESSAGE, // Bad, rejected message

@@ -21,11 +21,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NodeSessionRequestHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.NODE, envelope)) {
       return;
     }

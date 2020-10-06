@@ -29,11 +29,6 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in OutgoingParcelHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }

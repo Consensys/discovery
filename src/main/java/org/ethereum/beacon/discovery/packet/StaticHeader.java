@@ -5,8 +5,8 @@ package org.ethereum.beacon.discovery.packet;
 
 import java.util.Arrays;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
+import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes2;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
@@ -27,9 +27,9 @@ public interface StaticHeader extends BytesSerializable {
 
   Bytes2 getVersion();
 
-  Bytes32 getSourceNodeId();
-
   Flag getFlag();
+
+  Bytes12 getNonce();
 
   int getAuthDataSize();
 
@@ -44,8 +44,8 @@ public interface StaticHeader extends BytesSerializable {
     DecodeException.wrap(
         () -> "Couldn't decode static header: " + getBytes(),
         () -> {
-          getSourceNodeId();
           getFlag();
+          getNonce();
           getAuthDataSize();
         });
   }

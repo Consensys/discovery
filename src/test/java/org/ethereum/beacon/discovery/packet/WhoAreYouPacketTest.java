@@ -25,24 +25,24 @@ public class WhoAreYouPacketTest {
   private final Bytes16 headerMaskingKey = Bytes16.wrap(destNodeId, 0);
   private final Bytes12 aesGcmNonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");
   private final Bytes16 aesCtrIV = Bytes16.fromHexString("0x00000000000000000000000000000000");
-  private final Bytes32 idNonce =
-      Bytes32.fromHexString("0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+  private final Bytes16 idNonce =
+      Bytes16.fromHexString("0xdddddddddddddddddddddddddddddddd");
 
   @Test
   void checkWhoAreYouWithMessageDataFails() {
     Header<WhoAreYouAuthData> header =
-        Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
+        Header.createWhoAreYouHeader(aesGcmNonce, idNonce, UInt64.ONE);
     Bytes extraMessageData = Bytes32.ZERO;
     RawPacketImpl rawPacket =
         new RawPacketImpl(
             Bytes.wrap(
                 aesCtrIV,
-                Bytes.wrap(header.encrypt(aesCtrIV, headerMaskingKey)),
+                RawPacketImpl.maskHeader(header, aesCtrIV, headerMaskingKey),
                 extraMessageData));
 
     assertThatThrownBy(
             () -> {
-              rawPacket.decodePacket(headerMaskingKey);
+              rawPacket.demaskPacket(headerMaskingKey);
             })
         .isInstanceOf(DecodeException.class);
   }
@@ -50,7 +50,7 @@ public class WhoAreYouPacketTest {
   @Test
   void checkTruncatedHeaderFails() {
     Header<WhoAreYouAuthData> header =
-        Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE);
+        Header.createWhoAreYouHeader(aesGcmNonce, idNonce, UInt64.ONE);
     Bytes maskedHeaderBytes =
         CryptoUtil.aesctrEncrypt(headerMaskingKey, aesCtrIV, header.getBytes());
 
@@ -61,7 +61,7 @@ public class WhoAreYouPacketTest {
 
       assertThatThrownBy(
               () -> {
-                rawPacket.decodePacket(headerMaskingKey);
+                rawPacket.demaskPacket(headerMaskingKey);
               })
           .isInstanceOf(DecodeException.class);
     }
@@ -71,16 +71,16 @@ public class WhoAreYouPacketTest {
   void testPacketRoundtrip() {
     WhoAreYouPacket packet =
         WhoAreYouPacket.create(
-            Header.createWhoAreYouHeader(srcNodeId, aesGcmNonce, idNonce, UInt64.ONE));
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
+            Header.createWhoAreYouHeader(aesGcmNonce, idNonce, UInt64.ONE));
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
     Bytes expectedPacketBytes =
         Bytes.fromHexString(
-            "0x00000000000000000000000000000000088B3D4342774649980A4ADF72A8FCAA963F24B27A2F6BB44C7ED5CA10E87DE130F94D2390B9853C3ECB9A2B1E9472D43C9AE48D04689ED64E4F7CBDC7959485C06B2BDCA96AA72BF6A74A593136F5DD50DE3035E60CEB9631F9F3D8DA0B44");
+            "0x00000000000000000000000000000000088B3D4342774649335F313964A39E55EA96C005AD5286FB0239850E59482C3215ABBAB61BC2C7873FCBAED4E16B8C");
 
     assertThat(packetBytes).isEqualTo(expectedPacketBytes);
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
-    Packet<?> packet1 = rawPacket1.decodePacket(headerMaskingKey);
+    Packet<?> packet1 = rawPacket1.demaskPacket(headerMaskingKey);
     assertThat(packet).isEqualTo(packet1);
   }
 }

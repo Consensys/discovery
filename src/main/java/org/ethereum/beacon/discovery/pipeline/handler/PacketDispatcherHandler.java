@@ -25,11 +25,6 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in UnknownPacketTypeByStatus, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
       return;
     }
@@ -75,7 +70,8 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
             // However the remote node could also send us a random packet at the same moment.
             // In this case the following rule applies: the node with larger nodeId should response
             // another node should ignore
-            Bytes32 remoteNodeId = packet.getHeader().getStaticHeader().getSourceNodeId();
+            Bytes32 remoteNodeId = ((OrdinaryMessagePacket) packet).getHeader().getAuthData()
+                .getSourceNodeId();
             if (Utils.compareBytes(session.getHomeNodeId(), remoteNodeId) > 0) {
               envelope.put(Field.PACKET_WHOAREYOU, packet);
             } // else ignore

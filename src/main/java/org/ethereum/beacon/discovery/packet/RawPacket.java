@@ -17,7 +17,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface RawPacket extends BytesSerializable {
 
-  static RawPacket create(Bytes16 maskingIV, Packet<?> packet, Bytes16 headerMaskingKey) {
+  static RawPacket createAndMask(Bytes16 maskingIV, Packet<?> packet, Bytes16 headerMaskingKey) {
     return RawPacketImpl.create(maskingIV, packet, headerMaskingKey);
   }
 
@@ -29,10 +29,10 @@ public interface RawPacket extends BytesSerializable {
 
   Bytes16 getMaskingIV();
 
-  Packet<?> decodePacket(Bytes16 headerMaskingKey) throws DecodeException;
+  Packet<?> demaskPacket(Bytes16 headerMaskingKey) throws DecodeException;
 
-  default Packet<?> decodePacket(Bytes homeNodeId) throws DecodeException {
-    return decodePacket(Bytes16.wrap(homeNodeId, 0));
+  default Packet<?> demaskPacket(Bytes homeNodeId) throws DecodeException {
+    return demaskPacket(Bytes16.wrap(homeNodeId, 0));
   }
 
   @Override

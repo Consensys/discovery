@@ -106,7 +106,7 @@ public class DiscoveryNetworkTest {
     CountDownLatch nodesSent2to1 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord2.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord2.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random
@@ -124,7 +124,7 @@ public class DiscoveryNetworkTest {
               }
             });
     Flux.from(discoveryManager2.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 2 -> 1 whoareyou

@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
@@ -28,11 +29,6 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NotExpectedIncomingPacketHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.UNAUTHORIZED_PACKET_MESSAGE, envelope)) {
       return;
     }
@@ -50,19 +46,18 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
         (OrdinaryMessagePacket) envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
-      Bytes12 msgNonce = unknownPacket.getHeader().getAuthData().getAesGcmNonce();
-      session.setAuthTag(msgNonce);
-      Bytes32 idNonce = Bytes32.random(Functions.getRandom());
+      Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
+      session.setNonce(msgNonce);
+      Bytes16 idNonce = Bytes16.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
       Header<WhoAreYouAuthData> header =
           Header.createWhoAreYouHeader(
-              session.getHomeNodeId(),
               msgNonce,
               idNonce,
               session.getNodeRecord().map(NodeRecord::getSeq).orElse(UInt64.ZERO));
       WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(header);
-      session.sendOutgoing(whoAreYouPacket);
+      session.sendOutgoingWhoAreYou(whoAreYouPacket);
 
       session.setState(SessionState.WHOAREYOU_SENT);
     } catch (Exception ex) {

@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -14,6 +15,7 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthData>
@@ -22,7 +24,7 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
   public static class HandshakeAuthDataImpl extends AbstractBytes implements HandshakeAuthData {
 
     public static HandshakeAuthDataImpl create(
-        Bytes12 nonce,
+        Bytes32 srcNodeId,
         Bytes idSignature,
         Bytes ephemeralPubKey,
         Optional<NodeRecord> nodeRecord) {
@@ -30,29 +32,29 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
       checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
       return new HandshakeAuthDataImpl(
           Bytes.concatenate(
-              nonce,
+              srcNodeId,
               Bytes.of(idSignature.size()),
               Bytes.of(ephemeralPubKey.size()),
               idSignature,
               ephemeralPubKey,
-              nodeRecord.map(r -> r.serialize()).orElse(Bytes.EMPTY)));
+              nodeRecord.map(NodeRecord::serialize).orElse(Bytes.EMPTY)));
     }
 
     public HandshakeAuthDataImpl(Bytes bytes) {
       super(checkMinSize(bytes, ID_SIG_OFF));
     }
 
-    private static final int NONCE_OFF = 0;
-    private static final int NONCE_SIZE = 12;
-    private static final int SIG_SIZE_OFF = NONCE_OFF + NONCE_SIZE;
+    private static final int SRC_NODE_ID_OFF = 0;
+    private static final int SRC_NODE_ID_SIZE = 32;
+    private static final int SIG_SIZE_OFF = SRC_NODE_ID_OFF + SRC_NODE_ID_SIZE;
     private static final int SIG_SIZE_SIZE = 1;
     private static final int EPH_KEY_SIZE_OFF = SIG_SIZE_OFF + SIG_SIZE_SIZE;
     private static final int EPH_KEY_SIZE_SIZE = 1;
     private static final int ID_SIG_OFF = EPH_KEY_SIZE_OFF + EPH_KEY_SIZE_SIZE;
 
     @Override
-    public Bytes12 getAesGcmNonce() {
-      return Bytes12.wrap(getBytes(), NONCE_OFF);
+    public Bytes32 getSourceNodeId() {
+      return Bytes32.wrap(getBytes(), SRC_NODE_ID_OFF);
     }
 
     private int getSignatureSize() {
@@ -107,8 +109,8 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
 
     @Override
     public String toString() {
-      return "HandshakeAuthData{aesGcmNonce="
-          + getAesGcmNonce()
+      return "HandshakeAuthData{srcNodeId="
+          + getSourceNodeId()
           + ", idSignature="
           + getIdSignature()
           + ", ephemeralPubKey="
@@ -124,7 +126,7 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
   }
 
   public HandshakeMessagePacketImpl(
-      Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
-    this(header, encrypt(header, message, gcmKey));
+      Bytes16 maskingIV, Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
+    this(header, encrypt(maskingIV, header, message, gcmKey));
   }
 }

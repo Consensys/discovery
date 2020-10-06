@@ -90,7 +90,7 @@ public class DiscoveryInteropTest {
     CountDownLatch authPacketSent1to2 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random

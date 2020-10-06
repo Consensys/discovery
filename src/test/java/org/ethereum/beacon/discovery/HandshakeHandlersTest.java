@@ -36,6 +36,7 @@ import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -56,18 +57,21 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class HandshakeHandlersTest {
+
+  Random rnd = new Random(1);
 
   @Test
   @SuppressWarnings("rawtypes")
@@ -78,7 +82,6 @@ public class HandshakeHandlersTest {
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    Random rnd = new Random();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     Database database1 = Database.inMemoryDB();
     Database database2 = Database.inMemoryDB();
@@ -99,9 +102,9 @@ public class HandshakeHandlersTest {
         parcel -> {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
           outgoing1Packets.add(
-              parcel.getPacket().decodePacket(nodePair2.getNodeRecord().getNodeId()));
+              parcel.getPacket().demaskPacket(nodePair2.getNodeRecord().getNodeId()));
         };
-    AuthTagRepository authTagRepository1 = new AuthTagRepository();
+    NonceRepository nonceRepository1 = new NonceRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
@@ -117,7 +120,7 @@ public class HandshakeHandlersTest {
             nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
-            authTagRepository1,
+            nonceRepository1,
             outgoingMessages1to2,
             rnd,
             reqeustExpirationScheduler);
@@ -135,7 +138,7 @@ public class HandshakeHandlersTest {
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
-            new AuthTagRepository(),
+            new NonceRepository(),
             outgoingMessages2to1,
             rnd,
             reqeustExpirationScheduler);
@@ -145,17 +148,14 @@ public class HandshakeHandlersTest {
     WhoAreYouPacketHandler whoAreYouPacketHandlerNode1 =
         new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler);
     Envelope envelopeAt1From2 = new Envelope();
-    byte[] idNonceBytes = new byte[32];
-    Functions.getRandom().nextBytes(idNonceBytes);
-    Bytes32 idNonce = Bytes32.wrap(idNonceBytes);
+    Bytes16 idNonce = Bytes16.random(rnd);
     nodeSessionAt2For1.setIdNonce(idNonce);
     Bytes12 authTag = nodeSessionAt2For1.generateNonce();
-    authTagRepository1.put(authTag, nodeSessionAt1For2);
+    nonceRepository1.put(authTag, nodeSessionAt1For2);
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
         WhoAreYouPacket.create(
             Header.createWhoAreYouHeader(
-                Bytes32.wrap(nodePair1.getNodeRecord().getNodeId()),
                 authTag,
                 idNonce,
                 UInt64.ZERO)));
@@ -218,12 +218,14 @@ public class HandshakeHandlersTest {
     assertNotNull(envelopeAt2From1WithMessage.get(MESSAGE));
   }
 
-  private static OrdinaryMessagePacket createPingPacket(
+  private OrdinaryMessagePacket createPingPacket(
       Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
-    Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
-    return OrdinaryMessagePacket.create(header, pingMessage, session.getInitiatorKey());
+    Header<OrdinaryAuthData> header = Header
+        .createOrdinaryHeader(session.getHomeNodeId(), authTag);
+    return OrdinaryMessagePacket
+        .create(Bytes16.random(rnd), header, pingMessage, session.getInitiatorKey());
   }
 
   private static PingMessage createPing(NodeSession session, Bytes requestId) {

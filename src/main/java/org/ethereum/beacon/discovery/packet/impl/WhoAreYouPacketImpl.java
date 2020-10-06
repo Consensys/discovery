@@ -10,6 +10,7 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.type.Bytes52;
 
 public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implements WhoAreYouPacket {
@@ -19,16 +20,14 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
   }
 
   public static class WhoAreYouAuthDataImpl extends AbstractBytes implements WhoAreYouAuthData {
-    private static final int REQ_NONCE_OFF = 0;
-    private static final int REQ_NONCE_SIZE = 12;
-    private static final int ID_NONCE_OFF = REQ_NONCE_OFF + REQ_NONCE_SIZE;
-    private static final int ID_NONCE_SIZE = 32;
+    private static final int ID_NONCE_OFF = 0;
+    private static final int ID_NONCE_SIZE = 16;
     private static final int ENR_SEQ_OFF = ID_NONCE_OFF + ID_NONCE_SIZE;
     private static final int ENR_SEQ_SIZE = 8;
     private static final int AUTH_DATA_SIZE = ENR_SEQ_OFF + ENR_SEQ_SIZE;
 
-    public WhoAreYouAuthDataImpl(Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
-      this(Bytes.concatenate(requestNonce, idNonce, enrSeq.toBytes()));
+    public WhoAreYouAuthDataImpl(Bytes16 idNonce, UInt64 enrSeq) {
+      this(Bytes.concatenate(idNonce, enrSeq.toBytes()));
     }
 
     public WhoAreYouAuthDataImpl(Bytes bytes) {
@@ -36,13 +35,8 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
     }
 
     @Override
-    public Bytes12 getAesGcmNonce() {
-      return Bytes12.wrap(getBytes(), REQ_NONCE_OFF);
-    }
-
-    @Override
-    public Bytes32 getIdNonce() {
-      return Bytes32.wrap(getBytes(), ID_NONCE_OFF);
+    public Bytes16 getIdNonce() {
+      return Bytes16.wrap(getBytes(), ID_NONCE_OFF);
     }
 
     @Override
@@ -51,15 +45,8 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
     }
 
     @Override
-    public Bytes52 getBytes() {
-      return Bytes52.wrap(super.getBytes());
-    }
-
-    @Override
     public String toString() {
-      return "WhoAreYouAuthData{aesGcmNonce="
-          + getAesGcmNonce()
-          + ", idNonce="
+      return "WhoAreYouAuthData{idNonce="
           + getIdNonce()
           + ", enrSeq="
           + getEnrSeq()

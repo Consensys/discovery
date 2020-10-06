@@ -61,8 +61,8 @@ public class HandshakePacketTest {
                     List.of(
                         new EnrField("aaaaa1", Bytes.fromHexString("0xba0bab")),
                         new EnrField("aaaaa2", Bytes.fromHexString("0xb100da"))))));
-    HandshakeMessagePacket packet = HandshakeMessagePacket.create(header, pingMessage, secretKey);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
+    HandshakeMessagePacket packet = HandshakeMessagePacket.create(aesCtrIV, header, pingMessage, secretKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     Bytes expectedPacketBytes =
@@ -72,11 +72,11 @@ public class HandshakePacketTest {
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     HandshakeMessagePacket packet1 =
-        (HandshakeMessagePacket) rawPacket1.decodePacket(headerMaskingKey);
+        (HandshakeMessagePacket) rawPacket1.demaskPacket(headerMaskingKey);
     assertThat(packet1).isEqualTo(packet);
 
-    PingMessage pingMessage1 =
-        (PingMessage) packet1.decryptMessage(secretKey, NodeRecordFactory.DEFAULT);
+    PingMessage pingMessage1 = (PingMessage) packet1
+        .decryptMessage(rawPacket1.getMaskingIV(), secretKey, NodeRecordFactory.DEFAULT);
     assertThat(pingMessage1).isEqualTo(pingMessage);
   }
 
@@ -95,15 +95,16 @@ public class HandshakePacketTest {
                 Bytes.of(ephemeralPubKey.size()),
                 idSignature,
                 ephemeralPubKey));
-    Header<HandshakeAuthData> header = Header.create(srcNodeId, Flag.HANDSHAKE, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket.create(header, pingMessage, secretKey);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
+    Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
+    HandshakeMessagePacket packet = HandshakeMessagePacket
+        .create(aesCtrIV, header, pingMessage, secretKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     assertThatThrownBy(
             () -> {
-              rawPacket1.decodePacket(headerMaskingKey);
+              rawPacket1.demaskPacket(headerMaskingKey);
             })
         .isInstanceOf(DecodeException.class);
   }
@@ -123,15 +124,16 @@ public class HandshakePacketTest {
                 Bytes.of(ephemeralPubKey.size()),
                 idSignature,
                 ephemeralPubKey));
-    Header<HandshakeAuthData> header = Header.create(srcNodeId, Flag.HANDSHAKE, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket.create(header, pingMessage, secretKey);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
+    Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
+    HandshakeMessagePacket packet = HandshakeMessagePacket
+        .create(aesCtrIV, header, pingMessage, secretKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     assertThatThrownBy(
             () -> {
-              rawPacket1.decodePacket(headerMaskingKey);
+              rawPacket1.demaskPacket(headerMaskingKey);
             })
         .isInstanceOf(DecodeException.class);
   }
@@ -151,15 +153,16 @@ public class HandshakePacketTest {
                 Bytes.of(255), // invalid key size
                 idSignature,
                 ephemeralPubKey));
-    Header<HandshakeAuthData> header = Header.create(srcNodeId, Flag.HANDSHAKE, authData);
-    HandshakeMessagePacket packet = HandshakeMessagePacket.create(header, pingMessage, secretKey);
-    RawPacket rawPacket = RawPacket.create(aesCtrIV, packet, headerMaskingKey);
+    Header<HandshakeAuthData> header = Header.create(Flag.HANDSHAKE, aesGcmNonce, authData);
+    HandshakeMessagePacket packet = HandshakeMessagePacket
+        .create(aesCtrIV, header, pingMessage, secretKey);
+    RawPacket rawPacket = RawPacket.createAndMask(aesCtrIV, packet, headerMaskingKey);
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
     assertThatThrownBy(
             () -> {
-              rawPacket1.decodePacket(headerMaskingKey);
+              rawPacket1.demaskPacket(headerMaskingKey);
             })
         .isInstanceOf(DecodeException.class);
   }

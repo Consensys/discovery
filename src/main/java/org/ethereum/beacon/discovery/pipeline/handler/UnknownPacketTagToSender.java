@@ -6,6 +6,9 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes32;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -22,14 +25,13 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in UnknownPacketTagToSender, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.PACKET, envelope)) {
       return;
     }
+    if (envelope.contains(Field.SESSION)) {
+      return;
+    }
+
     logger.trace(
         () ->
             String.format(
@@ -37,8 +39,12 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
                 envelope.getId()));
 
     Packet<?> packet = (Packet<?>) envelope.get(Field.PACKET);
-    envelope.put(
-        Field.SESSION_LOOKUP,
-        new SessionLookup(packet.getHeader().getStaticHeader().getSourceNodeId()));
+    Bytes32 nodeId;
+    if (packet instanceof HandshakeMessagePacket) {
+      nodeId = ((HandshakeMessagePacket) packet).getHeader().getAuthData().getSourceNodeId();
+    } else {
+      nodeId = ((OrdinaryMessagePacket) packet).getHeader().getAuthData().getSourceNodeId();
+    }
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(nodeId));
   }
 }

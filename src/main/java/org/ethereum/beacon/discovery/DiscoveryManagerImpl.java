@@ -38,6 +38,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouSessionResolver;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.MultiPacketResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
@@ -45,7 +46,7 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -76,7 +77,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       TalkHandler talkHandler) {
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-    AuthTagRepository authTagRepo = new AuthTagRepository();
+    NonceRepository nonceRepository = new NonceRepository();
 
     this.discoveryServer =
         new NettyDiscoveryServerImpl(
@@ -91,12 +92,13 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
-            authTagRepo,
+            nonceRepository,
             nodeTable,
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
+        .addHandler(new WhoAreYouSessionResolver(nonceRepository))
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
         .addHandler(new PacketDispatcherHandler())

@@ -3,7 +3,6 @@
  */
 package org.ethereum.beacon.discovery.packet;
 
-import static org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HANDSHAKE_VERSION;
 import static org.ethereum.beacon.discovery.packet.StaticHeader.PROTOCOL_ID;
 import static org.ethereum.beacon.discovery.packet.StaticHeader.VERSION;
 
@@ -12,11 +11,12 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
 import org.ethereum.beacon.discovery.packet.impl.HeaderImpl;
-import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImpl;
+import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.OrdinaryAuthDataImpl;
 import org.ethereum.beacon.discovery.packet.impl.StaticHeaderImpl;
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl.WhoAreYouAuthDataImpl;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -31,27 +31,23 @@ import org.ethereum.beacon.discovery.util.DecodeException;
  */
 public interface Header<TAuthData extends AuthData> extends BytesSerializable {
 
-  static Header<?> decrypt(Bytes headerBytes, Bytes16 maskingIV, Bytes16 nodeId) {
-    return HeaderImpl.decrypt(headerBytes, maskingIV, nodeId);
-  }
-
   static <TAuthData extends AuthData> Header<TAuthData> create(
-      Bytes32 sourceNodeId, Flag flag, TAuthData authData) {
+      Flag flag, Bytes12 nonce, TAuthData authData) {
 
     StaticHeaderImpl staticHeader =
-        StaticHeaderImpl.create(PROTOCOL_ID, VERSION, sourceNodeId, flag, authData.getBytes().size());
+        StaticHeaderImpl.create(PROTOCOL_ID, VERSION, flag, nonce, authData.getBytes().size());
     return new HeaderImpl<>(staticHeader, authData);
   }
 
-  static Header<AuthData> createOrdinaryHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
-    AuthData authData = new AuthDataImpl(gcmNonce);
-    return create(srcNodeId, Flag.MESSAGE, authData);
+  static Header<OrdinaryAuthData> createOrdinaryHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
+    OrdinaryAuthData authData = new OrdinaryAuthDataImpl(srcNodeId);
+    return create(Flag.MESSAGE, gcmNonce, authData);
   }
 
   static Header<WhoAreYouAuthData> createWhoAreYouHeader(
-      Bytes32 srcNodeId, Bytes12 requestNonce, Bytes32 idNonce, UInt64 enrSeq) {
-    WhoAreYouAuthData authData = new WhoAreYouAuthDataImpl(requestNonce, idNonce, enrSeq);
-    return create(srcNodeId, Flag.WHOAREYOU, authData);
+      Bytes12 requestNonce, Bytes16 idNonce, UInt64 enrSeq) {
+    WhoAreYouAuthData authData = new WhoAreYouAuthDataImpl(idNonce, enrSeq);
+    return create(Flag.WHOAREYOU, requestNonce, authData);
   }
 
   static Header<HandshakeAuthData> createHandshakeHeader(
@@ -61,8 +57,8 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
       Bytes ephemeralPubKey,
       Optional<NodeRecord> nodeRecord) {
     HandshakeAuthData authData =
-        HandshakeAuthDataImpl.create(nonce, idSignature, ephemeralPubKey, nodeRecord);
-    return create(srcNodeId, Flag.HANDSHAKE, authData);
+        HandshakeAuthDataImpl.create(srcNodeId, idSignature, ephemeralPubKey, nodeRecord);
+    return create(Flag.HANDSHAKE, nonce, authData);
   }
 
   StaticHeader getStaticHeader();
@@ -70,8 +66,6 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
   TAuthData getAuthData();
 
   int getSize();
-
-  Bytes encrypt(Bytes16 maskingIV, Bytes16 nodeId);
 
   @Override
   default void validate() throws DecodeException {
