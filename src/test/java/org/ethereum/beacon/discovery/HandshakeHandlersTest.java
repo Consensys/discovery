@@ -39,6 +39,7 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.Packet;
+import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -99,12 +100,11 @@ public class HandshakeHandlersTest {
         nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
 
     // Node1 create AuthHeaderPacket
-    LinkedBlockingQueue<Packet<?>> outgoing1Packets = new LinkedBlockingQueue<>();
+    LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();
     final Consumer<NetworkParcel> outgoingMessages1to2 =
         parcel -> {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
-          outgoing1Packets.add(
-              parcel.getPacket().demaskPacket(nodePair2.getNodeRecord().getNodeId()));
+          outgoing1Packets.add(parcel.getPacket());
         };
     NonceRepository nonceRepository1 = new NonceRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
@@ -126,9 +126,12 @@ public class HandshakeHandlersTest {
             outgoingMessages1to2,
             rnd,
             reqeustExpirationScheduler);
+    LinkedBlockingQueue<RawPacket> outgoing2Packets = new LinkedBlockingQueue<>();
     final Consumer<NetworkParcel> outgoingMessages2to1 =
-        packet -> {
+        parcel -> {
           // do nothing, we don't need to test it here
+          System.out.println("Outgoing packet from 2 to 1: " + parcel.getPacket());
+          outgoing2Packets.add(parcel.getPacket());
         };
     NodeSession nodeSessionAt2For1 =
         new NodeSession(
@@ -147,7 +150,6 @@ public class HandshakeHandlersTest {
 
     Scheduler taskScheduler = Schedulers.createDefault().events();
     Pipeline outgoingPipeline = new PipelineImpl().build();
-    IncomingDataPacker incomingDataPacker1 = new IncomingDataPacker(nodeRecord1.getNodeId());
     WhoAreYouPacketHandler whoAreYouPacketHandlerNode1 =
         new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler);
     Envelope envelopeAt1From2 = new Envelope();
@@ -155,13 +157,16 @@ public class HandshakeHandlersTest {
     nodeSessionAt2For1.setIdNonce(idNonce);
     Bytes12 authTag = nodeSessionAt2For1.generateNonce();
     nonceRepository1.put(authTag, nodeSessionAt1For2);
+    WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(
+        Header.createWhoAreYouHeader(
+            authTag,
+            idNonce,
+            UInt64.ZERO));
+    nodeSessionAt2For1.sendOutgoingWhoAreYou(whoAreYouPacket);
+
     envelopeAt1From2.put(
         Field.PACKET_WHOAREYOU,
-        WhoAreYouPacket.create(
-            Header.createWhoAreYouHeader(
-                authTag,
-                idNonce,
-                UInt64.ZERO)));
+        whoAreYouPacket);
     envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
     Request<Void> request =
         new Request<>(
@@ -170,7 +175,8 @@ public class HandshakeHandlersTest {
             new FindNodeResponseHandler());
     nodeSessionAt1For2.createNextRequest(request);
 
-    envelopeAt1From2.put(MASKING_IV, Bytes16.random(rnd));
+    RawPacket whoAreYouRawPacket = outgoing2Packets.poll(1, TimeUnit.SECONDS);
+    envelopeAt1From2.put(MASKING_IV, whoAreYouRawPacket.getMaskingIV());
     whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
 
     // Node2 handle AuthHeaderPacket and finish handshake
@@ -178,9 +184,13 @@ public class HandshakeHandlersTest {
         new HandshakeMessagePacketHandler(
             outgoingPipeline, taskScheduler, NODE_RECORD_FACTORY_NO_VERIFICATION);
     Envelope envelopeAt2From1 = new Envelope();
-    envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, outgoing1Packets.poll(1, TimeUnit.SECONDS));
+    RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
+    envelopeAt2From1.put(PACKET_AUTH_HEADER_MESSAGE, handshakeRawPacket
+        .demaskPacket(nodePair2.getNodeRecord().getNodeId()));
     envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
     assertFalse(nodeSessionAt2For1.isAuthenticated());
+
+    envelopeAt2From1.put(MASKING_IV, handshakeRawPacket.getMaskingIV());
     handshakeMessagePacketHandlerNode2.handle(envelopeAt2From1);
     assertTrue(nodeSessionAt2For1.isAuthenticated());
 
@@ -189,8 +199,10 @@ public class HandshakeHandlersTest {
         new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt1From2WithMessage = new Envelope();
     Bytes12 pingAuthTag = nodeSessionAt1For2.generateNonce();
+    Bytes16 maskingIV = nodeSessionAt1For2.generateMaskingIV();
     OrdinaryMessagePacket pingPacketFrom2To1 =
         createPingPacket(
+            maskingIV,
             pingAuthTag,
             nodeSessionAt2For1,
             nodeSessionAt2For1
@@ -202,6 +214,7 @@ public class HandshakeHandlersTest {
                 .getRequestId());
     envelopeAt1From2WithMessage.put(PACKET_MESSAGE, pingPacketFrom2To1);
     envelopeAt1From2WithMessage.put(SESSION, nodeSessionAt1For2);
+    envelopeAt1From2WithMessage.put(MASKING_IV, maskingIV);
     messagePacketHandler1.handle(envelopeAt1From2WithMessage);
     assertNull(envelopeAt1From2WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
@@ -213,22 +226,25 @@ public class HandshakeHandlersTest {
     MessagePacketHandler messagePacketHandler2 =
         new MessagePacketHandler(NodeRecordFactory.DEFAULT);
     Envelope envelopeAt2From1WithMessage = new Envelope();
-    Packet<?> pongPacketFrom1To2 = outgoing1Packets.poll(1, TimeUnit.SECONDS);
+    RawPacket rawMesssagePacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
+    Packet<?> pongPacketFrom1To2 = rawMesssagePacket
+        .demaskPacket(nodePair2.getNodeRecord().getNodeId());
     envelopeAt2From1WithMessage.put(PACKET_MESSAGE, pongPacketFrom1To2);
     envelopeAt2From1WithMessage.put(SESSION, nodeSessionAt2For1);
+    envelopeAt2From1WithMessage.put(MASKING_IV, rawMesssagePacket.getMaskingIV());
     messagePacketHandler2.handle(envelopeAt2From1WithMessage);
     assertNull(envelopeAt2From1WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt2From1WithMessage.get(MESSAGE));
   }
 
-  private OrdinaryMessagePacket createPingPacket(
+  private OrdinaryMessagePacket createPingPacket(Bytes16 maskingIV,
       Bytes12 authTag, NodeSession session, Bytes requestId) {
 
     PingMessage pingMessage = createPing(session, requestId);
     Header<OrdinaryAuthData> header = Header
         .createOrdinaryHeader(session.getHomeNodeId(), authTag);
     return OrdinaryMessagePacket
-        .create(Bytes16.random(rnd), header, pingMessage, session.getInitiatorKey());
+        .create(maskingIV, header, pingMessage, session.getInitiatorKey());
   }
 
   private static PingMessage createPing(NodeSession session, Bytes requestId) {
