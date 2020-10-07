@@ -71,6 +71,11 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
+  public DiscoverySystemBuilder bootnodes(final List<NodeRecord> records) {
+    bootnodes = records;
+    return this;
+  }
+
   public DiscoverySystemBuilder bootnodes(final NodeRecord... records) {
     bootnodes = asList(records);
     return this;

@@ -3,6 +3,7 @@ import net.ltgt.gradle.errorprone.*
 //discovery v5
 
 plugins {
+  id 'application'
   id 'java-library'
   id 'com.diffplug.gradle.spotless' version '3.26.0'
   id 'com.jfrog.bintray' version '1.8.4'
@@ -145,6 +146,12 @@ javadoc {
 task sourcesJar(type: Jar, dependsOn: classes) {
   classifier = 'sources'
   from sourceSets.main.allSource
+}
+
+task runTestDiscovery(type:JavaExec) {
+    main = 'org.ethereum.beacon.discovery.app.DiscoveryTestServer'
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    systemProperty "log4j.configurationFile", "log4j2-test-discovery.xml"
 }
 
 def resolvedVersion = calculateVersion()

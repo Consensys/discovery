@@ -103,8 +103,12 @@ public class Functions {
   }
 
   public static ECKeyPair generateECKeyPair() {
+    return generateECKeyPair(Functions.getRandom());
+  }
+
+  public static ECKeyPair generateECKeyPair(Random rnd) {
     byte[] keyBytes = new byte[PRIVKEY_SIZE];
-    Functions.getRandom().nextBytes(keyBytes);
+    rnd.nextBytes(keyBytes);
     return ECKeyPair.create(keyBytes);
   }
 
