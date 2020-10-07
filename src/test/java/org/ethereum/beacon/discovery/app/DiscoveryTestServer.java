@@ -1,8 +1,10 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.ethereum.beacon.discovery.app;
 
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -48,7 +50,8 @@ public class DiscoveryTestServer {
     try {
       address = InetAddress.getByName(sExternalIP);
     } catch (Exception e) {
-      System.out.println("ERROR: Couldn't parse <externalIp> argument: '" + sExternalIP + "': " + e);
+      System.out.println(
+          "ERROR: Couldn't parse <externalIp> argument: '" + sExternalIP + "': " + e);
       printHelp();
       return;
     }
@@ -70,7 +73,8 @@ public class DiscoveryTestServer {
         pkSeed = Integer.parseInt(sPrivateKeySeed);
       }
     } catch (Exception e) {
-      System.out.println("ERROR: Couldn't parse <privateKeySeed> argument: '" + sPrivateKeySeed + "': " + e);
+      System.out.println(
+          "ERROR: Couldn't parse <privateKeySeed> argument: '" + sPrivateKeySeed + "': " + e);
       printHelp();
       return;
     }
@@ -92,11 +96,11 @@ public class DiscoveryTestServer {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
-      final NodeRecord nodeRecord =
-          new NodeRecordBuilder()
-              .privateKey(privateKey)
-              .address(address.getHostAddress(), port)
-              .build();
+    final NodeRecord nodeRecord =
+        new NodeRecordBuilder()
+            .privateKey(privateKey)
+            .address(address.getHostAddress(), port)
+            .build();
 
     DiscoverySystemBuilder discoverySystemBuilder =
         new DiscoverySystemBuilder()
@@ -109,24 +113,32 @@ public class DiscoveryTestServer {
 
     NodeRecord myNode = discoverySystem.getLocalNodeRecord();
     System.out.println("Discovery started!");
-    System.out.println("Home node: " +
-        myNode.getUdpAddress().map(InetSocketAddress::toString).orElse("<unknown>") +
-        ", nodeId: " + myNode.getNodeId());
+    System.out.println(
+        "Home node: "
+            + myNode.getUdpAddress().map(InetSocketAddress::toString).orElse("<unknown>")
+            + ", nodeId: "
+            + myNode.getNodeId());
     System.out.println("Home node ENR: " + myNode.asEnr());
 
     Set<NodeRecord> activeKnownNodes = new HashSet<>();
     while (true) {
-      List<NodeRecord> newActiveNodes = discoverySystem.streamKnownNodes()
-          .filter(r -> r.getStatus() == NodeStatus.ACTIVE)
-          .map(NodeRecordInfo::getNode)
-          .filter(r -> !activeKnownNodes.contains(r))
-          .collect(Collectors.toList());
+      List<NodeRecord> newActiveNodes =
+          discoverySystem
+              .streamKnownNodes()
+              .filter(r -> r.getStatus() == NodeStatus.ACTIVE)
+              .map(NodeRecordInfo::getNode)
+              .filter(r -> !activeKnownNodes.contains(r))
+              .collect(Collectors.toList());
 
       activeKnownNodes.addAll(newActiveNodes);
-      newActiveNodes.forEach(n -> {
-        System.out.println("New active node: " + n.getNodeId() + " @ " + n.getUdpAddress().map(
-            InetSocketAddress::toString).orElse("<unknown>"));
-      });
+      newActiveNodes.forEach(
+          n -> {
+            System.out.println(
+                "New active node: "
+                    + n.getNodeId()
+                    + " @ "
+                    + n.getUdpAddress().map(InetSocketAddress::toString).orElse("<unknown>"));
+          });
     }
   }
 
