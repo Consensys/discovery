@@ -4,27 +4,14 @@
 package org.ethereum.beacon.discovery;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 
 import java.time.Duration;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestManagerWrapper.TestMessage;
-import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
-import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
-import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.Field;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
-import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryManagerTest {
   public static final String LOCALHOST = "127.0.0.1";
@@ -121,6 +108,5 @@ public class DiscoveryManagerTest {
     CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
     m1.exchangeAll(m2_1);
     assertThat(pingRes2).isCompleted();
-
   }
 }
