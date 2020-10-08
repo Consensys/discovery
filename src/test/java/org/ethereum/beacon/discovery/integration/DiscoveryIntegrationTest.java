@@ -40,11 +40,11 @@ import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryIntegrationTest {
+
   private static final Logger logger = LogManager.getLogger();
   public static final String LOCALHOST = "127.0.0.1";
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
@@ -56,37 +56,6 @@ public class DiscoveryIntegrationTest {
   @AfterEach
   public void tearDown() {
     managers.forEach(DiscoverySystem::stop);
-  }
-
-  /** Runs a discovery server for interactive interop testing */
-  @Disabled
-  @Test
-  void runTestServer() throws Exception {
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
-
-    final DiscoverySystem node = createDiscoveryClient(true, "188.134.70.1", keyPair, NO_MODIFY);
-    System.out.println("Running node: " + node.getLocalNodeRecord());
-    System.out.println("Running node: " + node.getLocalNodeRecord().asEnr());
-
-    Thread.sleep(100000000000L);
-  }
-
-  /** Runs a discovery client, sends a ping and waits for pong for interactive interop testing */
-  @Disabled
-  @Test
-  public void runTestClient() throws Exception {
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
-
-    NodeRecord remote =
-        NodeRecordFactory.DEFAULT.fromBase64(
-            "-IS4QIrMgVOYuw2mq68f9hFGTlPzJT5pRWIqKTYL93C5xasmfUGUydi2XrjsbxO1MLYGEl1rR5H1iov6gxOyhegW9hYBgmlkgnY0gmlwhLyGRgGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCIyo");
-    System.out.println("Connecting to: " + remote);
-    final DiscoverySystem client =
-        createDiscoveryClient(true, "188.134.70.1", keyPair, NO_MODIFY, remote);
-    final CompletableFuture<Void> pingResult = client.ping(remote);
-    waitFor(pingResult);
-    assertTrue(pingResult.isDone());
-    assertFalse(pingResult.isCompletedExceptionally());
   }
 
   @Test
@@ -222,6 +191,7 @@ public class DiscoveryIntegrationTest {
   @Test
   public void checkTalkMessageHandling() throws Exception {
     class TestTalkHandler implements TalkHandler {
+
       final Executor delayedExecutor =
           CompletableFuture.delayedExecutor(
               200, MILLISECONDS, Executors.newSingleThreadScheduledExecutor());
@@ -360,6 +330,7 @@ public class DiscoveryIntegrationTest {
   }
 
   private interface ThrowingRunnable {
+
     void run() throws Exception;
   }
 }
