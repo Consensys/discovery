@@ -93,7 +93,8 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
             envelope.put(Field.PACKET_HANDSHAKE, (HandshakeMessagePacket) packet);
           } else if (packet instanceof OrdinaryMessagePacket) {
             // this can be the case if a remote node has an old session with our node
-            // and sending us regular messages. Just ignore it and wait for WHOAREYOU
+            // and sending us regular messages. Again send WhoAreYou
+            envelope.put(Field.UNAUTHORIZED_PACKET_MESSAGE, (OrdinaryMessagePacket) packet);
           } else {
             // WHOAREYOU packet is considered as remote peer misbehaviour
             throw new IllegalStateException(
