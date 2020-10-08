@@ -5,9 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +16,6 @@ import org.ethereum.beacon.discovery.message.TalkReqMessage;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
-import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -160,7 +157,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     }
   }
 
-
   @Override
   public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
     addNode(nodeRecord);
@@ -197,5 +193,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @VisibleForTesting
   public Publisher<NetworkParcel> getOutgoingMessages() {
     return outgoingMessages;
+  }
+
+  @VisibleForTesting
+  public Pipeline getIncomingPipeline() {
+    return incomingPipeline;
+  }
+
+  @VisibleForTesting
+  public Pipeline getOutgoingPipeline() {
+    return outgoingPipeline;
   }
 }
