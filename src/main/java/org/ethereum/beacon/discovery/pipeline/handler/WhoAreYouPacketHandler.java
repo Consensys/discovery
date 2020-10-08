@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -107,17 +106,17 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               challengeData);
       session.setInitiatorKey(hkdfKeys.getInitiatorKey());
       session.setRecipientKey(hkdfKeys.getRecipientKey());
-      Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
       final V5Message message =
-          requestInfoOpt
-              .map(requestInfo -> requestInfo.getMessage())
+          session
+              .getFirstAwaitRequestInfo()
+              .or(session::getFirstSentRequestInfo)
+              .map(RequestInfo::getMessage)
               .orElseThrow(
-                  (Supplier<Throwable>)
-                      () ->
-                          new RuntimeException(
-                              String.format(
-                                  "Received WHOAREYOU in envelope #%s but no requests await in %s session",
-                                  envelope.getId(), session)));
+                  () ->
+                      new RuntimeException(
+                          String.format(
+                              "Received WHOAREYOU in envelope #%s but no requests await in %s session",
+                              envelope.getId(), session)));
 
       Bytes ephemeralPubKey =
           Bytes.wrap(
