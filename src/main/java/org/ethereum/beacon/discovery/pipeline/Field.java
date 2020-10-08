@@ -20,25 +20,44 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 public class Field<T> {
 
   public static final Field<SessionLookup> SESSION_LOOKUP =
-      new Field<>(); // Node id, requests session lookup
-  public static final Field<NodeSession> SESSION = new Field<>(); // Node session
-  public static final Field<Request<?>> REQUEST = new Field<>(); // Task to perform
-  public static final Field<Object> INCOMING = new Field<>(); // Raw incoming data
-  public static final Field<Packet<?>> PACKET = new Field<>(); // unknown inbound packet
-  public static final Field<WhoAreYouPacket> PACKET_WHOAREYOU = new Field<>(); // WhoAreYou packet
+      new Field<>("SESSION_LOOKUP"); // Node id, requests session lookup
+  public static final Field<NodeSession> SESSION =
+      new Field<>("SESSION"); // Node session
+  public static final Field<Request<?>> REQUEST =
+      new Field<>("REQUEST"); // Task to perform
+  public static final Field<Object> INCOMING =
+      new Field<>("INCOMING"); // Raw incoming data
+  public static final Field<Packet<?>> PACKET =
+      new Field<>("PACKET"); // unknown inbound packet
+  public static final Field<WhoAreYouPacket> PACKET_WHOAREYOU =
+      new Field<>("PACKET_WHOAREYOU"); // WhoAreYou packet
   public static final Field<HandshakeMessagePacket> PACKET_HANDSHAKE =
-      new Field<>(); // Auth header message packet
+      new Field<>("PACKET_HANDSHAKE"); // Auth header message packet
   public static final Field<MessagePacket<?>> PACKET_MESSAGE =
-      new Field<>(); // Standard message packet
+      new Field<>("PACKET_MESSAGE"); // Standard message packet
   public static final Field<OrdinaryMessagePacket> UNAUTHORIZED_PACKET_MESSAGE =
-      new Field<>(); // Standard message packet
-  public static final Field<V5Message> MESSAGE = new Field<>(); // Message extracted from the packet
+      new Field<>("UNAUTHORIZED_PACKET_MESSAGE"); // Standard message packet
+  public static final Field<V5Message> MESSAGE =
+      new Field<>("MESSAGE"); // Message extracted from the packet
   public static final Field<Bytes16> MASKING_IV =
-      new Field<>(); // need to keep RawPacket IV for decrypting a message
+      new Field<>("MASKING_IV"); // need to keep RawPacket IV for decrypting a message
   public static final Field<InetSocketAddress> REMOTE_SENDER =
-      new Field<>(); // InetSocketAddress of remote sender
-  public static final Field<NodeRecord> NODE = new Field<>(); // Sender/recipient node
-  public static final Field<Object> BAD_PACKET = new Field<>(); // Bad, rejected packet
+      new Field<>("REMOTE_SENDER"); // InetSocketAddress of remote sender
+  public static final Field<NodeRecord> NODE =
+      new Field<>("NODE"); // Sender/recipient node
+  public static final Field<Object> BAD_PACKET =
+      new Field<>("BAD_PACKET"); // Bad, rejected packet
   public static final Field<Throwable> BAD_EXCEPTION =
-      new Field<>(); // Stores exception for bad packet or message
+      new Field<>("BAD_EXCEPTION"); // Stores exception for bad packet or message
+
+  private final String name;
+
+  public Field(String name) {
+    this.name = name;
+  }
+
+  @Override
+  public String toString() {
+    return "Field[" + name + ']';
+  }
 }
