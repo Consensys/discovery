@@ -46,6 +46,7 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -63,6 +64,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
@@ -75,6 +77,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
+    this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     NonceRepository nonceRepository = new NonceRepository();
@@ -151,8 +154,16 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return request.getResultPromise();
   }
 
+  private void addNode(NodeRecord nodeRecord) {
+    if (nodeTable.getNode(nodeRecord.getNodeId()).isEmpty()) {
+      nodeTable.save(NodeRecordInfo.createDefault(nodeRecord));
+    }
+  }
+
+
   @Override
   public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
+    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -163,6 +174,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
+    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -173,6 +185,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
+    addNode(nodeRecord);
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),
