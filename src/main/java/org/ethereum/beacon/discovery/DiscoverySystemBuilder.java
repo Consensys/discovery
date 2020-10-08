@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -34,6 +37,7 @@ import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystemBuilder {
+
   private static final AtomicInteger COUNTER = new AtomicInteger();
   private List<NodeRecord> bootnodes = Collections.emptyList();
   private Optional<InetSocketAddress> listenAddress = Optional.empty();
@@ -42,10 +46,12 @@ public class DiscoverySystemBuilder {
   private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Database database;
   private Schedulers schedulers;
-  private NodeRecordListener localNodeRecordListener = (a, b) -> {};
+  private NodeRecordListener localNodeRecordListener = (a, b) -> {
+  };
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private TalkHandler talkHandler = TalkHandler.NOOP;
+  private NettyDiscoveryServer discoveryServer = null;
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -136,9 +142,19 @@ public class DiscoverySystemBuilder {
         new ExpirationSchedulerFactory(
             Executors.newSingleThreadScheduledExecutor(
                 new ThreadFactoryBuilder().setNameFormat("discovery-expiration-%d").build()));
+
+    NettyDiscoveryServer server = Objects.requireNonNullElseGet(discoveryServer, () ->
+        new NettyDiscoveryServerImpl(
+            listenAddress
+                .or(localNodeRecord::getUdpAddress)
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Local node record must contain an IP and UDP port"))));
+
     final DiscoveryManager discoveryManager =
         new DiscoveryManagerImpl(
-            listenAddress,
+            server,
             nodeTable,
             nodeBucketStorage,
             localNodeRecordStore,

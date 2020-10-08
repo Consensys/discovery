@@ -66,7 +66,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
-      Optional<InetSocketAddress> listenAddress,
+      NettyDiscoveryServer discoveryServer,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
       LocalNodeRecordStore localNodeRecordStore,
@@ -79,14 +79,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     NonceRepository nonceRepository = new NonceRepository();
 
-    this.discoveryServer =
-        new NettyDiscoveryServerImpl(
-            listenAddress
-                .or(homeNodeRecord::getUdpAddress)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Local node record must contain an IP and UDP port")));
+    this.discoveryServer = discoveryServer;
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             localNodeRecordStore,

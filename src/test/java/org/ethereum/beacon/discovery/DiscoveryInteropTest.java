@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -74,7 +75,7 @@ public class DiscoveryInteropTest {
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            Optional.empty(),
+            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get()),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
