@@ -98,7 +98,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m2_1 = network.createDiscoveryManager(2);
 
     // ping 1 => 2 would be unathorized on 2
-    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     TestMessage out1_2 = m1.nextOutbound();
     m2_1.deliver(out1_2); // sending Ping 1 => 2
@@ -106,7 +106,7 @@ public class DiscoveryManagerTest {
     TestMessage out2_1_1 = m2_1.nextOutbound(); // should be WHoAreYou
     assertThat(out2_1_1.getPacket()).isInstanceOf(WhoAreYouPacket.class);
 
-    CompletableFuture<Void> pingRes3 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     TestMessage out1_3 = m1.nextOutbound();
     m2_1.deliver(out1_3); // instead of 1 => 2 Handshake sending an unathorized Ping again
@@ -115,45 +115,12 @@ public class DiscoveryManagerTest {
     assertThat(out2_1_2.getPacket()).isInstanceOf(WhoAreYouPacket.class);
     m1.deliver(out2_1_2);
 
-    m1.exchangeAll(m2);
+    m1.exchangeAll(m2_1);
 
-    Thread.sleep(2000);
-
-    m1.exchangeAll(m2);
-
+    // should be ok now
+    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    m1.exchangeAll(m2_1);
     assertThat(pingRes2).isCompleted();
-    assertThat(pingRes3).isCompleted();
-  }
 
-  private static void deliver(
-      DiscoveryManagerImpl from, DiscoveryManagerImpl to, NetworkParcel packet) {
-    deliver(from, to, packet.getPacket().getBytes());
-  }
-
-  private static void deliver(DiscoveryManagerImpl from, DiscoveryManagerImpl to, Bytes packet) {
-    Envelope envelope = new Envelope();
-    envelope.put(Field.INCOMING, packet);
-    envelope.put(Field.NODE, from.getLocalNodeRecord());
-    to.getIncomingPipeline().push(envelope);
-  }
-
-  private static DiscoveryManagerImpl createTestManager(int seed) {
-    ECKeyPair keyPair = Functions.generateECKeyPair(new Random(seed));
-    final Bytes privateKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
-
-    final NodeRecord nodeRecord =
-        new NodeRecordBuilder().privateKey(privateKey).address(LOCALHOST, 9000 + seed).build();
-    TestDiscoverySystemBuilder builder = new TestDiscoverySystemBuilder();
-    builder
-        .discoveryServer(Mockito.mock(NettyDiscoveryServer.class))
-        .localNodeRecord(nodeRecord)
-        .privateKey(privateKey)
-        .retryTimeout(RETRY_TIMEOUT)
-        .lifeCheckInterval(LIVE_CHECK_INTERVAL);
-    DiscoveryManagerImpl mgr = builder.buildDiscoveryManager();
-    mgr.getIncomingPipeline().build();
-    mgr.getOutgoingPipeline().build();
-    return mgr;
   }
 }
