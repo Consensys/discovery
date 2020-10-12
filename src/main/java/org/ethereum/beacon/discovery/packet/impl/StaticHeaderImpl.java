@@ -83,6 +83,8 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
   public String toString() {
     return "{protocolId="
         + getProtocolId()
+        + ", version="
+        + getVersion()
         + ", flag="
         + getFlag()
         + ", nonce="
