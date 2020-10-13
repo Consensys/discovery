@@ -69,13 +69,13 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       }
       Bytes whoAreYouChallenge = session.getWhoAreYouChallenge().get();
 
-      Bytes ephemeralPubKey = packet.getHeader().getAuthData().getEphemeralPubKey();
+      Bytes ephemeralPubKeyCompressed = packet.getHeader().getAuthData().getEphemeralPubKey();
       Functions.HKDFKeys keys =
           Functions.hkdf_expand(
               session.getNodeId(),
               session.getHomeNodeId(),
               session.getStaticNodeKey(),
-              ephemeralPubKey,
+              ephemeralPubKeyCompressed,
               whoAreYouChallenge);
       // Swap keys because we are not initiator, other side is
       session.setInitiatorKey(keys.getRecipientKey());

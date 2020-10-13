@@ -118,9 +118,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                               "Received WHOAREYOU in envelope #%s but no requests await in %s session",
                               envelope.getId(), session)));
 
-      Bytes ephemeralPubKey =
-          Bytes.wrap(
-              Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
+      Bytes ephemeralPubKey = Functions.getCompressedPublicKey(ephemeralKey);
 
       Bytes idSignature =
           HandshakeAuthData.signId(
