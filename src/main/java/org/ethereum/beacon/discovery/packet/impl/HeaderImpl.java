@@ -13,7 +13,7 @@ import org.ethereum.beacon.discovery.packet.AuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl.HandshakeAuthDataImpl;
-import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.AuthDataImpl;
+import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl.OrdinaryAuthDataImpl;
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl.WhoAreYouAuthDataImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
@@ -55,7 +55,7 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
       case HANDSHAKE:
         return new HandshakeAuthDataImpl(authDataBytes);
       case MESSAGE:
-        return new AuthDataImpl(authDataBytes);
+        return new OrdinaryAuthDataImpl(authDataBytes);
       default:
         throw new DecodeException("Unknown flag: " + header.getFlag());
     }
@@ -86,12 +86,6 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
   @Override
   public TAUthData getAuthData() {
     return authData;
-  }
-
-  @Override
-  public Bytes encrypt(Bytes16 iv, Bytes16 destNodeId) {
-    Bytes headerPlainBytes = Bytes.concatenate(staticHeader.getBytes(), getAuthDataBytes());
-    return CryptoUtil.aesctrEncrypt(destNodeId, iv, headerPlainBytes);
   }
 
   private Bytes getAuthDataBytes() {

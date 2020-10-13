@@ -66,8 +66,8 @@ public class CryptoTest {
   }
 
   /**
-   * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
-   * id_sign(id-nonce-input)
+   * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey || dest-node-id)
+   * id-signature = id_sign(id-nonce-input)
    */
   @Test
   public void testIdNonceSigning() {
@@ -78,12 +78,15 @@ public class CryptoTest {
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
     Bytes localSecretKey =
         Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
+    Bytes32 nodeIdB =
+        Bytes32.fromHexString("0x885bba8dfeddd49855459df852ad5b63d13a3fae593f3f9fa7e317fd43651409");
 
     Bytes expectedIdNonceSig =
         Bytes.fromHexString(
-            "0xc5036e702a79902ad8aa147dabfe3958b523fd6fa36cc78e2889b912d682d8d35fdea142e141f690736d86f50b39746ba2d2fc510b46f82ee08f08fd55d133a4");
+            "0xDAC01B977399E6154AB67C8866A3B84BE2A5413257B2407F83FEC024933A7BEA269FDB7C474AED07612862016D379CA544F3593A7E3A465F52F3AE692F6EEFCB");
     Assertions.assertEquals(
-        expectedIdNonceSig, HandshakeAuthData.signId(idNonce, ephemeralKey, localSecretKey));
+        expectedIdNonceSig,
+        HandshakeAuthData.signId(idNonce, ephemeralKey, nodeIdB, localSecretKey));
   }
 
   /**

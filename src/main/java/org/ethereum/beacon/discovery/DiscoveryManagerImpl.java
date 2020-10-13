@@ -5,9 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +16,6 @@ import org.ethereum.beacon.discovery.message.TalkReqMessage;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
-import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -38,6 +35,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouSessionResolver;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.MultiPacketResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
@@ -45,10 +43,11 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
+import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -62,10 +61,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
 
   public DiscoveryManagerImpl(
-      Optional<InetSocketAddress> listenAddress,
+      NettyDiscoveryServer discoveryServer,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
       LocalNodeRecordStore localNodeRecordStore,
@@ -74,29 +74,24 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
+    this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-    AuthTagRepository authTagRepo = new AuthTagRepository();
+    NonceRepository nonceRepository = new NonceRepository();
 
-    this.discoveryServer =
-        new NettyDiscoveryServerImpl(
-            listenAddress
-                .or(homeNodeRecord::getUdpAddress)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Local node record must contain an IP and UDP port")));
+    this.discoveryServer = discoveryServer;
     NodeIdToSession nodeIdToSession =
         new NodeIdToSession(
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
-            authTagRepo,
+            nonceRepository,
             nodeTable,
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
+        .addHandler(new WhoAreYouSessionResolver(nonceRepository))
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeIdToSession)
         .addHandler(new PacketDispatcherHandler())
@@ -156,8 +151,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return request.getResultPromise();
   }
 
+  private void addNode(NodeRecord nodeRecord) {
+    if (nodeTable.getNode(nodeRecord.getNodeId()).isEmpty()) {
+      nodeTable.save(NodeRecordInfo.createDefault(nodeRecord));
+    }
+  }
+
   @Override
   public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
+    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -168,6 +170,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
+    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -178,6 +181,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
+    addNode(nodeRecord);
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -189,5 +193,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @VisibleForTesting
   public Publisher<NetworkParcel> getOutgoingMessages() {
     return outgoingMessages;
+  }
+
+  @VisibleForTesting
+  public Pipeline getIncomingPipeline() {
+    return incomingPipeline;
+  }
+
+  @VisibleForTesting
+  public Pipeline getOutgoingPipeline() {
+    return outgoingPipeline;
   }
 }

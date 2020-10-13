@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 public class IncomingDataPacker implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(IncomingDataPacker.class);
   public static final int MAX_PACKET_SIZE = 1280;
+  public static final int MIN_PACKET_SIZE = 63;
   private final Bytes16 homeNodeId;
 
   public IncomingDataPacker(Bytes homeNodeId) {
@@ -28,11 +29,6 @@ public class IncomingDataPacker implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in IncomingDataPacker, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }
@@ -47,18 +43,21 @@ public class IncomingDataPacker implements EnvelopeHandler {
       if (rawPacketBytes.size() > MAX_PACKET_SIZE) {
         throw new DecodeException("Packet is too large: " + rawPacketBytes.size());
       }
+      if (rawPacketBytes.size() < MIN_PACKET_SIZE) {
+        throw new DecodeException("Packet is too small: " + rawPacketBytes.size());
+      }
       RawPacket rawPacket = RawPacket.decode(rawPacketBytes);
-      Packet<?> packet = rawPacket.decodePacket(homeNodeId);
+      rawPacket.validate();
+      Packet<?> packet = rawPacket.demaskPacket(homeNodeId);
       // check that AES/CTR decoded correctly
-      packet.getHeader().validate();
 
       envelope.put(Field.PACKET, packet);
+      envelope.put(Field.MASKING_IV, rawPacket.getMaskingIV());
       logger.trace(
           () -> String.format("Incoming packet %s in envelope #%s", packet, envelope.getId()));
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
-      envelope.put(Field.BAD_MESSAGE, "Incoming packet verification not passed");
       logger.trace(
           () ->
               String.format(

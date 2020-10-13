@@ -5,7 +5,9 @@ package org.ethereum.beacon.discovery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNullElseGet;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -34,6 +38,7 @@ import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystemBuilder {
+
   private static final AtomicInteger COUNTER = new AtomicInteger();
   private List<NodeRecord> bootnodes = Collections.emptyList();
   private Optional<InetSocketAddress> listenAddress = Optional.empty();
@@ -46,6 +51,7 @@ public class DiscoverySystemBuilder {
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private TalkHandler talkHandler = TalkHandler.NOOP;
+  private NettyDiscoveryServer discoveryServer = null;
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -68,6 +74,11 @@ public class DiscoverySystemBuilder {
             .map(enr -> enr.startsWith("enr:") ? enr.substring("enr:".length()) : enr)
             .map(nodeRecordFactory::fromBase64)
             .collect(Collectors.toList());
+    return this;
+  }
+
+  public DiscoverySystemBuilder bootnodes(final List<NodeRecord> records) {
+    bootnodes = records;
     return this;
   }
 
@@ -106,42 +117,68 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
+  public DiscoverySystemBuilder discoveryServer(NettyDiscoveryServer discoveryServer) {
+    this.discoveryServer = discoveryServer;
+    return this;
+  }
+
+  private void createDefaults() {
+    database = requireNonNullElseGet(database, () -> Database.inMemoryDB());
+    schedulers = requireNonNullElseGet(schedulers, () -> Schedulers.createDefault());
+    discoveryServer =
+        requireNonNullElseGet(
+            discoveryServer,
+            () ->
+                new NettyDiscoveryServerImpl(
+                    listenAddress
+                        .or(localNodeRecord::getUdpAddress)
+                        .orElseThrow(
+                            () ->
+                                new IllegalArgumentException(
+                                    "Local node record must contain an IP and UDP port"))));
+
+    nodeTableStorage =
+        requireNonNullElseGet(
+            nodeTableStorage,
+            () ->
+                nodeTableStorageFactory.createTable(
+                    database, serializerFactory, oldSeq -> localNodeRecord, () -> bootnodes));
+    nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
+    nodeBucketStorage =
+        requireNonNullElseGet(
+            nodeBucketStorage,
+            () -> new NodeBucketStorageImpl(database, serializerFactory, localNodeRecord));
+    localNodeRecordStore =
+        requireNonNullElseGet(
+            localNodeRecordStore,
+            () -> new LocalNodeRecordStore(localNodeRecord, privateKey, localNodeRecordListener));
+    expirationSchedulerFactory =
+        requireNonNullElseGet(
+            expirationSchedulerFactory,
+            () ->
+                new ExpirationSchedulerFactory(
+                    Executors.newSingleThreadScheduledExecutor(
+                        new ThreadFactoryBuilder()
+                            .setNameFormat("discovery-expiration-%d")
+                            .build())));
+  }
+
+  final NodeTableStorageFactory nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
+  final NodeSerializerFactory serializerFactory = new NodeSerializerFactory(nodeRecordFactory);
+  final int clientNumber = COUNTER.incrementAndGet();
+
+  NodeTableStorage nodeTableStorage;
+  NodeTable nodeTable;
+  NodeBucketStorage nodeBucketStorage;
+  LocalNodeRecordStore localNodeRecordStore;
+  ExpirationSchedulerFactory expirationSchedulerFactory;
+
   public DiscoverySystem build() {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(privateKey, "Missing private key");
+    createDefaults();
 
-    if (database == null) {
-      database = Database.inMemoryDB();
-    }
-    final NodeTableStorageFactory nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    final NodeSerializerFactory serializerFactory = new NodeSerializerFactory(nodeRecordFactory);
-    final NodeTableStorage nodeTableStorage =
-        nodeTableStorageFactory.createTable(
-            database, serializerFactory, oldSeq -> localNodeRecord, () -> bootnodes);
-    final NodeTable nodeTable = nodeTableStorage.get();
-    if (schedulers == null) {
-      schedulers = Schedulers.createDefault();
-    }
-    final NodeBucketStorage nodeBucketStorage =
-        new NodeBucketStorageImpl(database, serializerFactory, localNodeRecord);
-    final int clientNumber = COUNTER.incrementAndGet();
-    final LocalNodeRecordStore localNodeRecordStore =
-        new LocalNodeRecordStore(localNodeRecord, privateKey, localNodeRecordListener);
-    final ExpirationSchedulerFactory expirationSchedulerFactory =
-        new ExpirationSchedulerFactory(
-            Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("discovery-expiration-%d").build()));
-    final DiscoveryManager discoveryManager =
-        new DiscoveryManagerImpl(
-            listenAddress,
-            nodeTable,
-            nodeBucketStorage,
-            localNodeRecordStore,
-            privateKey,
-            nodeRecordFactory,
-            schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
-            expirationSchedulerFactory,
-            talkHandler);
+    final DiscoveryManager discoveryManager = buildDiscoveryManager();
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
@@ -157,5 +194,20 @@ public class DiscoverySystemBuilder {
             lifeCheckInterval);
     return new DiscoverySystem(
         discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
+  }
+
+  @VisibleForTesting
+  DiscoveryManagerImpl buildDiscoveryManager() {
+    createDefaults();
+    return new DiscoveryManagerImpl(
+        discoveryServer,
+        nodeTable,
+        nodeBucketStorage,
+        localNodeRecordStore,
+        privateKey,
+        nodeRecordFactory,
+        schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
+        expirationSchedulerFactory,
+        talkHandler);
   }
 }

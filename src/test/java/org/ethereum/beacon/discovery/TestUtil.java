@@ -9,7 +9,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.format.SerializerFactory;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
-import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
@@ -112,18 +112,22 @@ public class TestUtil {
 
   public static boolean isFieldsEqual(StaticHeader that, StaticHeader other) {
     return that.getProtocolId().equals(other.getProtocolId())
-        && that.getSourceNodeId().equals(other.getSourceNodeId())
+        && that.getVersion().equals(other.getVersion())
         && that.getFlag().equals(other.getFlag())
         && that.getAuthDataSize() == other.getAuthDataSize();
   }
 
-  public static boolean isFieldsEqual(AuthData that, AuthData other) {
-    return that.getAesGcmNonce().equals(other.getAesGcmNonce());
+  public static boolean isFieldsEqual(WhoAreYouAuthData that, WhoAreYouAuthData other) {
+    return that.getIdNonce().equals(other.getIdNonce())
+        && that.getEnrSeq().equals(other.getEnrSeq());
   }
 
-  public static boolean isFieldsEqual(WhoAreYouAuthData that, WhoAreYouAuthData other) {
-    return that.getRequestNonce().equals(other.getRequestNonce())
-        && that.getIdNonce().equals(other.getIdNonce())
-        && that.getEnrSeq().equals(other.getEnrSeq());
+  public static boolean isFieldsEqual(
+      HandshakeAuthData that, HandshakeAuthData other, NodeRecordFactory nodeRecordFactory) {
+
+    return that.getSourceNodeId().equals(other.getSourceNodeId())
+        && that.getEphemeralPubKey().equals(other.getEphemeralPubKey())
+        && that.getIdSignature().equals(other.getIdSignature())
+        && that.getNodeRecord(nodeRecordFactory).equals(other.getNodeRecord(nodeRecordFactory));
   }
 }

@@ -8,10 +8,8 @@ import java.time.Duration;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet.AuthData;
-import org.ethereum.beacon.discovery.packet.Header;
-import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -49,11 +47,6 @@ public class NextTaskHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NextTaskHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }
@@ -62,7 +55,7 @@ public class NextTaskHandler implements EnvelopeHandler {
             String.format(
                 "Envelope %s in NextTaskHandler, requirements are satisfied!", envelope.getId()));
 
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    NodeSession session = envelope.get(Field.SESSION);
     Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
     if (requestInfoOpt.isEmpty()) {
       logger.trace(() -> String.format("Envelope %s: no awaiting requests", envelope.getId()));
@@ -74,14 +67,11 @@ public class NextTaskHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
-    Bytes12 authTag = session.generateNonce();
+    Bytes12 nonce = session.generateNonce();
 
     if (session.getState().equals(SessionState.INITIAL)) {
-      Header<AuthData> header = Header.createOrdinaryHeader(session.getHomeNodeId(), authTag);
-      OrdinaryMessagePacket randomPacket =
-          OrdinaryMessagePacket.createRandom(header, RANDOM_MESSAGE_SIZE);
-      session.setAuthTag(authTag);
-      session.sendOutgoing(randomPacket);
+      session.setNonce(nonce);
+      session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE));
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
       V5Message message = requestInfo.getMessage();
