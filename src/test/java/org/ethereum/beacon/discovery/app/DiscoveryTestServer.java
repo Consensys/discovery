@@ -139,6 +139,7 @@ public class DiscoveryTestServer {
                     + " @ "
                     + n.getUdpAddress().map(InetSocketAddress::toString).orElse("<unknown>"));
           });
+      Thread.sleep(500);
     }
   }
 
