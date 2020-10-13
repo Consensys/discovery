@@ -11,8 +11,8 @@ import org.ethereum.beacon.discovery.type.Bytes2;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 /**
- * Static part of {@link Packet}'s {@link Header}
- * {@code static-header = protocol-id || version || flag || nonce || authdata-size}
+ * Static part of {@link Packet}'s {@link Header} {@code static-header = protocol-id || version ||
+ * flag || nonce || authdata-size}
  */
 public interface StaticHeader extends BytesSerializable {
 
