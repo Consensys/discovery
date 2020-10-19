@@ -12,6 +12,7 @@ import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuth
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -30,33 +31,45 @@ import org.ethereum.beacon.discovery.util.Functions;
  * matches the current sequence number of the sending node. If enr-seq is zero, the record must be
  * sent. Node records are encoded and verified as specified in EIP-778.
  *
- * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-size = 15 + sig-size
- * + eph-key-size + len(record) authdata-head = version || nonce || sig-size || eph-key-size version
- * = uint8 -- value: 1 sig-size = uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 --
- * value: 33 for ID scheme "v4"
+ * <p>Please refer to the handshake section for more information about the content of the handshake
+ * packet.
+ *
+ * <p>authdata = authdata-head || id-signature || eph-pubkey || record authdata-head = src-id ||
+ * sig-size || eph-key-size authdata-size = 34 + sig-size + eph-key-size + len(record) sig-size =
+ * uint8 -- value: 64 for ID scheme "v4" eph-key-size = uint8 -- value: 33 for ID scheme "v4"
  */
 public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData> {
-  Bytes ID_SIGNATURE_PREFIX = Bytes.wrap("discovery-id-nonce".getBytes(StandardCharsets.US_ASCII));
+
+  Bytes ID_SIGNATURE_PREFIX =
+      Bytes.wrap("discovery v5 identity proof".getBytes(StandardCharsets.US_ASCII));
   byte HANDSHAKE_VERSION = 1;
 
   static HandshakeMessagePacket create(
-      Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
-    return new HandshakeMessagePacketImpl(header, message, gcmKey);
+      Bytes16 maskingIV, Header<HandshakeAuthData> header, V5Message message, Bytes gcmKey) {
+    return new HandshakeMessagePacketImpl(maskingIV, header, message, gcmKey);
   }
 
   interface HandshakeAuthData extends AuthData {
 
     /**
-     * id-nonce-input = sha256("discovery-id-nonce" || id-nonce || ephemeral-pubkey) id-signature =
-     * id_sign(id-nonce-input)
+     *
+     *
+     * <pre>
+     * id-signature-text  = "discovery v5 identity proof"
+     * id-signature-input = id-signature-text || challenge-data || ephemeral-pubkey || node-id-B
+     * id-signature       = id_sign(sha256(id-signature-input))
+     * </pre>
      */
-    static Bytes signId(Bytes32 idNonce, Bytes ephemeralPubKey, Bytes homeNodePrivateKey) {
+    static Bytes signId(
+        Bytes challengeData, Bytes ephemeralPubKey, Bytes32 destNodeId, Bytes homeNodePrivateKey) {
+
       Bytes idSignatureInput =
-          CryptoUtil.sha256(Bytes.wrap(ID_SIGNATURE_PREFIX, idNonce, ephemeralPubKey));
+          CryptoUtil.sha256(
+              Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, ephemeralPubKey, destNodeId));
       return Functions.sign(homeNodePrivateKey, idSignatureInput);
     }
 
-    byte getVersion();
+    Bytes32 getSourceNodeId();
 
     Bytes getIdSignature();
 
@@ -64,15 +77,19 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
 
     Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory);
 
+    default boolean verify(Bytes challengeData, Bytes32 homeNodeId, Bytes remotePublicKey) {
+      Bytes idSignatureInput =
+          CryptoUtil.sha256(
+              Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, getEphemeralPubKey(), homeNodeId));
+      return Functions.verifyECDSASignature(getIdSignature(), idSignatureInput, remotePublicKey);
+    }
+
     @Override
     default void validate() throws DecodeException {
-      AuthData.super.validate();
-      if (getVersion() != HANDSHAKE_VERSION) {
-        throw new DecodeException("Invalid Handshake version: " + getVersion());
-      }
       DecodeException.wrap(
           () -> "Couldn't decode Handshake auth data: " + getBytes(),
           () -> {
+            getSourceNodeId();
             getIdSignature();
             getEphemeralPubKey();
           });

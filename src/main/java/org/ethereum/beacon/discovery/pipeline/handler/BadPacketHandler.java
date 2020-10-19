@@ -17,11 +17,6 @@ public class BadPacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in BadPacketLogger, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.BAD_PACKET, envelope)) {
       return;
     }
@@ -34,9 +29,7 @@ public class BadPacketHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Bad packet: %s in envelope #%s", envelope.get(Field.BAD_PACKET), envelope.getId()),
-        envelope.get(Field.BAD_EXCEPTION) == null
-            ? null
-            : (Exception) envelope.get(Field.BAD_EXCEPTION));
+        envelope.get(Field.BAD_EXCEPTION));
     // TODO: Reputation penalty etc
   }
 }

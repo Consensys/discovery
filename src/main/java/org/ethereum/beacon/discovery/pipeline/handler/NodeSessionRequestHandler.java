@@ -10,7 +10,6 @@ import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
  * Searches for node in {@link Field#NODE} and requests session resolving using {@link
@@ -21,11 +20,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in NodeSessionRequestHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireField(Field.NODE, envelope)) {
       return;
     }
@@ -35,8 +29,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
                 "Envelope %s in NodeSessionRequestHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    envelope.put(
-        Field.SESSION_LOOKUP,
-        new SessionLookup(((NodeRecord) envelope.get(Field.NODE)).getNodeId()));
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(envelope.get(Field.NODE).getNodeId()));
   }
 }

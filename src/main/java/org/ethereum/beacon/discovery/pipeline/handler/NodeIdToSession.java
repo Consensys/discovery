@@ -26,10 +26,10 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 
 /**
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
@@ -42,7 +42,7 @@ public class NodeIdToSession implements EnvelopeHandler {
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
-  private final AuthTagRepository authTagRepo;
+  private final NonceRepository nonceRepository;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
@@ -53,14 +53,14 @@ public class NodeIdToSession implements EnvelopeHandler {
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeBucketStorage nodeBucketStorage,
-      AuthTagRepository authTagRepo,
+      NonceRepository nonceRepository,
       NodeTable nodeTable,
       Pipeline outgoingPipeline,
       ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
-    this.authTagRepo = authTagRepo;
+    this.nonceRepository = nonceRepository;
     this.nodeTable = nodeTable;
     this.outgoingPipeline = outgoingPipeline;
     this.sessionExpirationScheduler =
@@ -71,19 +71,18 @@ public class NodeIdToSession implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        "Envelope {} in NodeIdToSession, checking requirements satisfaction", envelope.getId());
     if (!HandlerUtil.requireField(Field.SESSION_LOOKUP, envelope)) {
+      return;
+    }
+    if (envelope.contains(Field.SESSION)) {
       return;
     }
     logger.trace("Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getId());
 
-    SessionLookup sessionRequest = (SessionLookup) envelope.get(Field.SESSION_LOOKUP);
+    SessionLookup sessionRequest = envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
-        "Envelope {}: Session lookup requested for nodeId {}",
-        envelope.getId(),
-        sessionRequest.getNodeId());
+        "Envelope {}: Session lookup requested for nodeId {}", envelope.getId(), sessionRequest);
 
     getOrCreateSession(sessionRequest.getNodeId(), envelope)
         .ifPresentOrElse(
@@ -125,15 +124,15 @@ public class NodeIdToSession implements EnvelopeHandler {
         staticNodeKey,
         nodeTable,
         nodeBucketStorage,
-        authTagRepo,
+        nonceRepository,
         outgoingPipeline::push,
         random,
         requestExpirationScheduler);
   }
 
   private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
-    return Optional.ofNullable((InetSocketAddress) envelope.get(Field.REMOTE_SENDER))
-        .or(() -> ((NodeRecord) envelope.get(Field.NODE)).getUdpAddress());
+    return Optional.ofNullable(envelope.get(Field.REMOTE_SENDER))
+        .or(() -> envelope.get(Field.NODE).getUdpAddress());
   }
 
   private static class SessionKey {

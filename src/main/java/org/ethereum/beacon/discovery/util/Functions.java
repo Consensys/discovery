@@ -103,8 +103,12 @@ public class Functions {
   }
 
   public static ECKeyPair generateECKeyPair() {
+    return generateECKeyPair(Functions.getRandom());
+  }
+
+  public static ECKeyPair generateECKeyPair(Random rnd) {
     byte[] keyBytes = new byte[PRIVKEY_SIZE];
-    Functions.getRandom().nextBytes(keyBytes);
+    rnd.nextBytes(keyBytes);
     return ECKeyPair.create(keyBytes);
   }
 
@@ -124,9 +128,17 @@ public class Functions {
   /** Derives public key in SECP256K1, compressed */
   public static Bytes derivePublicKeyFromPrivate(Bytes privateKey) {
     ECKeyPair ecKeyPair = ECKeyPair.create(privateKey.toArray());
+    return getCompressedPublicKey(ecKeyPair);
+  }
+
+  public static Bytes getCompressedPublicKey(ECKeyPair ecKeyPair) {
     final Bytes pubKey =
         Bytes.wrap(extractBytesFromUnsignedBigInt(ecKeyPair.getPublicKey(), PUBKEY_SIZE));
-    ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
+    return compressPublicKey(pubKey);
+  }
+
+  public static Bytes compressPublicKey(Bytes uncompressedPublicKey) {
+    ECPoint ecPoint = Functions.publicKeyToPoint(uncompressedPublicKey);
     return Bytes.wrap(ecPoint.getEncoded(true));
   }
 

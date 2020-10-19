@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.beacon.discovery.task.TaskStatus.AWAIT;
+import static org.ethereum.beacon.discovery.task.TaskStatus.SENT;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -22,19 +23,22 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
-import org.ethereum.beacon.discovery.packet.AuthData;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
+import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -51,7 +55,7 @@ public class NodeSession {
   private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final AuthTagRepository authTagRepo;
+  private final NonceRepository nonceRepo;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
@@ -67,6 +71,7 @@ public class NodeSession {
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
   private final Bytes staticNodeKey;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
+  private Optional<Bytes> whoAreYouChallenge = Optional.empty();
 
   public NodeSession(
       Bytes nodeId,
@@ -76,7 +81,7 @@ public class NodeSession {
       Bytes staticNodeKey,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
-      AuthTagRepository authTagRepo,
+      NonceRepository nonceRepo,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
       ExpirationScheduler<Bytes> requestExpirationScheduler) {
@@ -84,7 +89,7 @@ public class NodeSession {
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
     this.localNodeRecordStore = localNodeRecordStore;
-    this.authTagRepo = authTagRepo;
+    this.nonceRepo = nonceRepo;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
@@ -106,6 +111,10 @@ public class NodeSession {
     return remoteAddress;
   }
 
+  public Optional<Bytes> getWhoAreYouChallenge() {
+    return whoAreYouChallenge;
+  }
+
   public synchronized void updateNodeRecord(NodeRecord nodeRecord) {
     logger.trace(
         () ->
@@ -117,16 +126,45 @@ public class NodeSession {
 
   public void sendOutgoingOrdinary(V5Message message) {
     logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
-    Header<AuthData> header =
-        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getAuthTag().get()));
-    OrdinaryMessagePacket packet = OrdinaryMessagePacket.create(header, message, getInitiatorKey());
-    sendOutgoing(packet);
+    Bytes16 maskingIV = generateMaskingIV();
+    Header<OrdinaryAuthData> header =
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+    OrdinaryMessagePacket packet =
+        OrdinaryMessagePacket.create(maskingIV, header, message, getInitiatorKey());
+    sendOutgoing(maskingIV, packet);
   }
 
-  public void sendOutgoing(Packet<?> packet) {
-    logger.trace(() -> String.format("Sending outgoing packet %s in session %s", packet, this));
+  public void sendOutgoingRandom(Bytes randomData) {
+    Header<OrdinaryAuthData> header =
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+    OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
+    logger.trace(
+        () -> String.format("Sending outgoing Random message %s in session %s", packet, this));
+    sendOutgoing(generateMaskingIV(), packet);
+  }
+
+  public void sendOutgoingWhoAreYou(WhoAreYouPacket packet) {
+    logger.trace(
+        () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
+    Bytes16 maskingIV = generateMaskingIV();
+    whoAreYouChallenge = Optional.of(Bytes.wrap(maskingIV, packet.getHeader().getBytes()));
+    sendOutgoing(maskingIV, packet);
+  }
+
+  public void sendOutgoingHandshake(Header<HandshakeAuthData> header, V5Message message) {
+    logger.trace(
+        () ->
+            String.format(
+                "Sending outgoing Handshake message %s, %s in session %s", header, message, this));
+    Bytes16 maskingIV = generateMaskingIV();
+    HandshakeMessagePacket handshakeMessagePacket =
+        HandshakeMessagePacket.create(maskingIV, header, message, getInitiatorKey());
+    sendOutgoing(maskingIV, handshakeMessagePacket);
+  }
+
+  private void sendOutgoing(Bytes16 maskingIV, Packet<?> packet) {
     Bytes16 destNodeId = Bytes16.wrap(getNodeId(), 0);
-    RawPacket rawPacket = RawPacket.create(generateAesCtrIV(), packet, destNodeId);
+    RawPacket rawPacket = RawPacket.createAndMask(maskingIV, packet, destNodeId);
     outgoingPipeline.accept(new NetworkParcelV5(rawPacket, remoteAddress));
   }
 
@@ -204,22 +242,22 @@ public class NodeSession {
 
   /** Resets stored authTags for this session making them obsolete */
   public void cleanup() {
-    authTagRepo.expire(this);
+    nonceRepo.expire(this);
   }
 
-  public Optional<Bytes12> getAuthTag() {
-    return authTagRepo.getTag(this);
+  public Optional<Bytes12> getNonce() {
+    return nonceRepo.getNonce(this);
   }
 
-  public void setAuthTag(Bytes12 authTag) {
-    authTagRepo.put(authTag, this);
+  public void setNonce(Bytes12 nonce) {
+    nonceRepo.put(nonce, this);
   }
 
   public Bytes32 getHomeNodeId() {
     return homeNodeId;
   }
 
-  public Bytes16 generateAesCtrIV() {
+  public Bytes16 generateMaskingIV() {
     byte[] ivBytes = new byte[16];
     rnd.nextBytes(ivBytes);
     return Bytes16.wrap(ivBytes);
@@ -287,6 +325,12 @@ public class NodeSession {
   public synchronized Optional<RequestInfo> getFirstAwaitRequestInfo() {
     return requestIdStatuses.values().stream()
         .filter(requestInfo -> AWAIT.equals(requestInfo.getTaskStatus()))
+        .findFirst();
+  }
+
+  public synchronized Optional<RequestInfo> getFirstSentRequestInfo() {
+    return requestIdStatuses.values().stream()
+        .filter(requestInfo -> SENT.equals(requestInfo.getTaskStatus()))
         .findFirst();
   }
 

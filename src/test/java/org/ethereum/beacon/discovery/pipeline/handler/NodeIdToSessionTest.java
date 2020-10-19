@@ -23,11 +23,11 @@ import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.AuthTagRepository;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +38,7 @@ class NodeIdToSessionTest {
   private final NodeInfo homeNodeInfo = TestUtil.generateNode(9000);
   private final NodeRecord homeNodeRecord = homeNodeInfo.getNodeRecord();
   private final NodeBucketStorage nodeBucketStorage = mock(NodeBucketStorage.class);
-  private final AuthTagRepository authTagRepository = mock(AuthTagRepository.class);
+  private final NonceRepository nonceRepository = mock(NonceRepository.class);
   private final ExpirationSchedulerFactory expirationSchedulerFactory =
       new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
   private final NodeTable nodeTable = mock(NodeTable.class);
@@ -50,7 +50,7 @@ class NodeIdToSessionTest {
               homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP),
           STATIC_NODE_KEY,
           nodeBucketStorage,
-          authTagRepository,
+          nonceRepository,
           nodeTable,
           outgoingPipeline,
           expirationSchedulerFactory);
@@ -137,7 +137,7 @@ class NodeIdToSessionTest {
     envelope.put(Field.REMOTE_SENDER, remoteSender);
     handler.handle(envelope);
 
-    return (NodeSession) envelope.get(Field.SESSION);
+    return envelope.get(Field.SESSION);
   }
 
   private NodeSession lookupSessionForOutgoingMessage(final InetSocketAddress destination) {
@@ -147,6 +147,6 @@ class NodeIdToSessionTest {
         Field.NODE, SimpleIdentitySchemaInterpreter.createNodeRecord(NODE_ID, destination));
     handler.handle(envelope);
 
-    return (NodeSession) envelope.get(Field.SESSION);
+    return envelope.get(Field.SESSION);
   }
 }

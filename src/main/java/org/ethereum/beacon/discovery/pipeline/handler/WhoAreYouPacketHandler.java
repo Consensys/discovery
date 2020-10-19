@@ -4,16 +4,13 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
-
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.V5Message;
-import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -28,8 +25,8 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.crypto.ECKeyPair;
 
 /** Handles {@link WhoAreYouPacket} in {@link Field#PACKET_WHOAREYOU} field */
@@ -46,11 +43,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
-    logger.trace(
-        () ->
-            String.format(
-                "Envelope %s in WhoAreYouPacketHandler, checking requirements satisfaction",
-                envelope.getId()));
     if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }
@@ -63,19 +55,19 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                 "Envelope %s in WhoAreYouPacketHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    WhoAreYouPacket packet = (WhoAreYouPacket) envelope.get(Field.PACKET_WHOAREYOU);
-    NodeSession session = (NodeSession) envelope.get(Field.SESSION);
+    WhoAreYouPacket whoAreYouPacket = envelope.get(Field.PACKET_WHOAREYOU);
+    NodeSession session = envelope.get(Field.SESSION);
     try {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
-      if (!packet
+      if (!whoAreYouPacket
           .getHeader()
-          .getAuthData()
-          .getRequestNonce()
-          .equals(session.getAuthTag().orElseThrow())) {
+          .getStaticHeader()
+          .getNonce()
+          .equals(session.getNonce().orElseThrow())) {
         logger.error(
             "Verification not passed for message [{}] from node {} in status {}",
-            packet,
+            whoAreYouPacket,
             nodeRecord,
             session.getState());
         envelope.remove(Field.PACKET_WHOAREYOU);
@@ -87,42 +79,53 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       Functions.getRandom().nextBytes(ephemeralKeyBytes);
       ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
 
-      Bytes32 idNonce = packet.getHeader().getAuthData().getIdNonce();
+      // The handshake uses the unmasked WHOAREYOU challenge as an input:
+      // challenge-data     = masking-iv || static-header || authdata
+      if (!envelope.contains(Field.MASKING_IV)) {
+        throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
+      }
+      Bytes16 whoAreYouMaskingIV = envelope.get(Field.MASKING_IV);
+      Bytes challengeData =
+          Bytes.wrap(
+              whoAreYouMaskingIV,
+              whoAreYouPacket
+                  .getHeader()
+                  .getBytes() // this is effectively `static-header || authdata`
+              );
+
+      Bytes32 destNodeId = Bytes32.wrap(nodeRecord.getNodeId());
       Functions.HKDFKeys hkdfKeys =
           Functions.hkdf_expand(
               session.getHomeNodeId(),
-              nodeRecord.getNodeId(),
+              destNodeId,
               Bytes.wrap(ephemeralKeyBytes),
               remotePubKey,
-              idNonce);
+              challengeData);
       session.setInitiatorKey(hkdfKeys.getInitiatorKey());
       session.setRecipientKey(hkdfKeys.getRecipientKey());
-      Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
       final V5Message message =
-          requestInfoOpt
-              .map(requestInfo -> requestInfo.getMessage())
+          session
+              .getFirstAwaitRequestInfo()
+              .or(session::getFirstSentRequestInfo)
+              .map(RequestInfo::getMessage)
               .orElseThrow(
-                  (Supplier<Throwable>)
-                      () ->
-                          new RuntimeException(
-                              String.format(
-                                  "Received WHOAREYOU in envelope #%s but no requests await in %s session",
-                                  envelope.getId(), session)));
+                  () ->
+                      new RuntimeException(
+                          String.format(
+                              "Received WHOAREYOU in envelope #%s but no requests await in %s session",
+                              envelope.getId(), session)));
 
-      Bytes ephemeralPubKey =
-          Bytes.wrap(
-              Utils.extractBytesFromUnsignedBigInt(ephemeralKey.getPublicKey(), PUBKEY_SIZE));
+      Bytes ephemeralPubKey = Functions.getCompressedPublicKey(ephemeralKey);
 
       Bytes idSignature =
-          HandshakeAuthData.signId(idNonce, ephemeralPubKey, session.getStaticNodeKey());
+          HandshakeAuthData.signId(
+              challengeData, ephemeralPubKey, destNodeId, session.getStaticNodeKey());
 
       NodeRecord respRecord = null;
-      if (packet
-              .getHeader()
-              .getAuthData()
-              .getEnrSeq()
-              .compareTo(session.getHomeNodeRecord().getSeq())
-          < 0) {
+      UInt64 lastKnownOurEnrVer = whoAreYouPacket.getHeader().getAuthData().getEnrSeq();
+
+      if (lastKnownOurEnrVer.compareTo(session.getHomeNodeRecord().getSeq()) < 0
+          || lastKnownOurEnrVer.isZero()) {
         respRecord = session.getHomeNodeRecord();
       }
       Header<HandshakeAuthData> header =
@@ -132,11 +135,9 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      HandshakeMessagePacket handshakeMessagePacket =
-          HandshakeMessagePacket.create(header, message, session.getInitiatorKey());
       session.setState(SessionState.AUTHENTICATED);
 
-      session.sendOutgoing(handshakeMessagePacket);
+      session.sendOutgoingHandshake(header, message);
 
       envelope.remove(Field.PACKET_WHOAREYOU);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
@@ -144,7 +145,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       String error =
           String.format(
               "Failed to read message [%s] from node %s in status %s",
-              packet, session.getNodeRecord(), session.getState());
+              whoAreYouPacket, session.getNodeRecord(), session.getState());
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");

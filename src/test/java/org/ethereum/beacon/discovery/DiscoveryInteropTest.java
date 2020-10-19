@@ -10,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -74,7 +74,7 @@ public class DiscoveryInteropTest {
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            Optional.empty(),
+            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get()),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
@@ -90,7 +90,7 @@ public class DiscoveryInteropTest {
     CountDownLatch authPacketSent1to2 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random

@@ -12,12 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.database.Database;
+import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
@@ -76,7 +76,7 @@ public class DiscoveryNetworkTest {
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            Optional.empty(),
+            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get()),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
@@ -88,7 +88,7 @@ public class DiscoveryNetworkTest {
             TalkHandler.NOOP);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
-            Optional.empty(),
+            new NettyDiscoveryServerImpl(nodeRecord2.getUdpAddress().get()),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             new LocalNodeRecordStore(
@@ -106,7 +106,7 @@ public class DiscoveryNetworkTest {
     CountDownLatch nodesSent2to1 = new CountDownLatch(1);
 
     Flux.from(discoveryManager1.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord2.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord2.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 1 -> 2 random
@@ -124,7 +124,7 @@ public class DiscoveryNetworkTest {
               }
             });
     Flux.from(discoveryManager2.getOutgoingMessages())
-        .map(p -> p.getPacket().decodePacket(nodeRecord1.getNodeId()))
+        .map(p -> p.getPacket().demaskPacket(nodeRecord1.getNodeId()))
         .subscribe(
             networkPacket -> {
               // 2 -> 1 whoareyou
