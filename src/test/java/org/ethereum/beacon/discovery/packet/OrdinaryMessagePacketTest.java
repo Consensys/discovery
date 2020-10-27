@@ -24,6 +24,7 @@ import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthDa
 import org.ethereum.beacon.discovery.packet.impl.MessagePacketImpl;
 import org.ethereum.beacon.discovery.packet.impl.OrdinaryMessageImpl;
 import org.ethereum.beacon.discovery.schema.EnrField;
+import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -86,6 +87,7 @@ public class OrdinaryMessagePacketTest {
                         IdentitySchemaInterpreter.V4,
                         UInt64.MAX_VALUE,
                         List.of(
+                            new EnrField(EnrField.ID, IdentitySchema.V4),
                             new EnrField("aaaaa1", Bytes.fromHexString("0xba0bab")),
                             new EnrField("aaaaa2", Bytes.fromHexString("0xb100da")))))),
             "Nodes-2"),

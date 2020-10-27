@@ -57,8 +57,7 @@ class NodesHandlerTest {
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
-    final NodesMessage message =
-        new NodesMessage(REQUEST_ID, records.size(), () -> records, records.size());
+    final NodesMessage message = new NodesMessage(REQUEST_ID, records.size(), records);
     handler.handle(message, session);
 
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeInfo.getNodeRecord());
@@ -79,8 +78,7 @@ class NodesHandlerTest {
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
-    final NodesMessage message =
-        new NodesMessage(REQUEST_ID, records.size(), () -> records, records.size());
+    final NodesMessage message = new NodesMessage(REQUEST_ID, records.size(), records);
     handler.handle(message, session);
 
     verifyNoInteractions(nodeTable);
@@ -98,8 +96,7 @@ class NodesHandlerTest {
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
-    final NodesMessage message =
-        new NodesMessage(REQUEST_ID, records.size(), () -> records, records.size());
+    final NodesMessage message = new NodesMessage(REQUEST_ID, records.size(), records);
     handler.handle(message, session);
 
     verifyNoInteractions(nodeTable);

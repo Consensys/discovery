@@ -44,7 +44,7 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
         () ->
             String.format(
                 "Received %s node records in session %s. Total buckets expected: %s",
-                message.getNodeRecordsSize(), session, message.getTotal()));
+                message.getNodeRecords().size(), session, message.getTotal()));
     message.getNodeRecords().stream()
         .filter(this::isValid)
         .filter(
