@@ -43,16 +43,6 @@ public class Utils {
         });
   }
 
-  @SuppressWarnings({"MissingOverride"})
-  public static <C> Set<C> newLRUSet(int size) {
-    return Collections.newSetFromMap(
-        new LinkedHashMap<C, Boolean>() {
-          protected boolean removeEldestEntry(Map.Entry<C, Boolean> eldest) {
-            return size() > size;
-          }
-        });
-  }
-
   /**
    * @param size required size, in bytes
    * @return byte array representation of BigInteger for unsigned numeric
