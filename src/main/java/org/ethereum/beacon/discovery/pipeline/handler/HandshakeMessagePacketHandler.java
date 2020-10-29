@@ -83,7 +83,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
       Optional<NodeRecord> enr = packet.getHeader().getAuthData().getNodeRecord(nodeRecordFactory);
       if (!enr.map(NodeRecord::isValid).orElse(true)) {
-        logger.info(
+        logger.debug(
             String.format(
                 "Node record not valid for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
@@ -93,7 +93,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       final Optional<NodeRecord> nodeRecordMaybe = session.getNodeRecord().or(() -> enr);
       // Check the node record matches the ID we expect
       if (!nodeRecordMaybe.map(r -> r.getNodeId().equals(session.getNodeId())).orElse(false)) {
-        logger.info(
+        logger.debug(
             String.format(
                 "Incorrect node ID for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
@@ -112,7 +112,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
                   (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
       if (!idNonceVerifyResult) {
-        logger.info(
+        logger.debug(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
