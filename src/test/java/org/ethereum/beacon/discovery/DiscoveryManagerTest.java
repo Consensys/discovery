@@ -63,8 +63,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper attackerNode = network.createDiscoveryManager(1);
     TestManagerWrapper victimNode = network.createDiscoveryManager(2);
 
-    CompletableFuture<Void> pingRes =
-        attackerNode.getDiscoveryManager().ping(victimNode.getNodeRecord());
+    attackerNode.getDiscoveryManager().ping(victimNode.getNodeRecord());
 
     TestMessage out1_1 = attackerNode.nextOutbound();
     assertThat(out1_1.getPacket()).isInstanceOf(OrdinaryMessagePacket.class);
