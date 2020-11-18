@@ -31,7 +31,7 @@ import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-class NodeIdToSessionTest {
+class NodeSessionManagerTest {
 
   private static final Bytes STATIC_NODE_KEY = Bytes.fromHexString("0x1234");
   public static final Bytes NODE_ID = Bytes.fromHexString("0x888888");
@@ -44,8 +44,8 @@ class NodeIdToSessionTest {
   private final NodeTable nodeTable = mock(NodeTable.class);
   private final Pipeline outgoingPipeline = mock(Pipeline.class);
 
-  private final NodeIdToSession handler =
-      new NodeIdToSession(
+  private final NodeSessionManager handler =
+      new NodeSessionManager(
           new LocalNodeRecordStore(
               homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP),
           STATIC_NODE_KEY,

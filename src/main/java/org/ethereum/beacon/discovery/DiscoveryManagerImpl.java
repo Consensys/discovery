@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +29,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.NewTaskHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.NextTaskHandler;
-import org.ethereum.beacon.discovery.pipeline.handler.NodeIdToSession;
+import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionRequestHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.OutgoingParcelHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
@@ -44,6 +45,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
+import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -63,6 +65,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
+  private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
       NettyDiscoveryServer discoveryServer,
@@ -80,8 +83,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     NonceRepository nonceRepository = new NonceRepository();
 
     this.discoveryServer = discoveryServer;
-    NodeIdToSession nodeIdToSession =
-        new NodeIdToSession(
+    nodeSessionManager =
+        new NodeSessionManager(
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
@@ -93,11 +96,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
         .addHandler(new WhoAreYouSessionResolver(nonceRepository))
         .addHandler(new UnknownPacketTagToSender())
-        .addHandler(nodeIdToSession)
+        .addHandler(nodeSessionManager)
         .addHandler(new PacketDispatcherHandler())
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
-            new HandshakeMessagePacketHandler(outgoingPipeline, taskScheduler, nodeRecordFactory))
+            new HandshakeMessagePacketHandler(
+                outgoingPipeline, taskScheduler, nodeRecordFactory, nodeSessionManager))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
         .addHandler(new MessageHandler(localNodeRecordStore, talkHandler))
@@ -106,7 +110,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     outgoingPipeline
         .addHandler(new OutgoingParcelHandler(outgoingSink))
         .addHandler(new NodeSessionRequestHandler())
-        .addHandler(nodeIdToSession)
+        .addHandler(nodeSessionManager)
         .addHandler(new NewTaskHandler())
         .addHandler(new NextTaskHandler(outgoingPipeline, taskScheduler));
   }
@@ -203,5 +207,10 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @VisibleForTesting
   public Pipeline getOutgoingPipeline() {
     return outgoingPipeline;
+  }
+
+  @VisibleForTesting
+  public Optional<NodeSession> getNodeSession(Bytes remoteNodeId) {
+    return nodeSessionManager.getNodeSession(remoteNodeId);
   }
 }

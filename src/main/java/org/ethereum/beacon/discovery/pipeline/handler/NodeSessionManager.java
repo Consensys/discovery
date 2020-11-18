@@ -6,9 +6,11 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,10 +37,10 @@ import org.ethereum.beacon.discovery.storage.NonceRepository;
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
  * should be in request field and stores it in {@link Field#SESSION} field.
  */
-public class NodeIdToSession implements EnvelopeHandler {
+public class NodeSessionManager implements EnvelopeHandler {
   private static final int SESSION_CLEANUP_DELAY_SECONDS = 180;
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
-  private static final Logger logger = LogManager.getLogger(NodeIdToSession.class);
+  private static final Logger logger = LogManager.getLogger(NodeSessionManager.class);
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
@@ -49,7 +51,7 @@ public class NodeIdToSession implements EnvelopeHandler {
   private final ExpirationScheduler<SessionKey> sessionExpirationScheduler;
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
 
-  public NodeIdToSession(
+  public NodeSessionManager(
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeBucketStorage nodeBucketStorage,
@@ -103,14 +105,30 @@ public class NodeIdToSession implements EnvelopeHandler {
               NodeSession context =
                   recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
 
-              sessionExpirationScheduler.put(
-                  sessionKey,
-                  () -> {
-                    recentSessions.remove(sessionKey);
-                    context.cleanup();
-                  });
+              sessionExpirationScheduler.put(sessionKey, () -> deleteSession(sessionKey));
               return context;
             });
+  }
+
+  public void dropSession(NodeSession session) {
+    SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
+    sessionExpirationScheduler.cancel(sessionKey);
+    deleteSession(sessionKey);
+  }
+
+  private void deleteSession(SessionKey sessionKey) {
+    NodeSession session = recentSessions.remove(sessionKey);
+    if (session != null) {
+      session.cleanup();
+    }
+  }
+
+  @VisibleForTesting
+  public Optional<NodeSession> getNodeSession(Bytes nodeId) {
+    return recentSessions.entrySet().stream()
+        .filter(e -> e.getKey().nodeId.equals(nodeId))
+        .map(Entry::getValue)
+        .findFirst();
   }
 
   private NodeSession createNodeSession(final SessionKey key) {
