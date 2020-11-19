@@ -8,6 +8,7 @@ import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,6 +32,7 @@ import reactor.core.publisher.Flux;
 public class TestManagerWrapper {
 
   public class TestMessage {
+
     private final NodeRecord from;
     private final NetworkParcel parcel;
 
@@ -91,15 +93,23 @@ public class TestManagerWrapper {
     return getNodeRecord().getUdpAddress().orElseThrow().getPort();
   }
 
-  public TestMessage nextOutbound() {
+  /**
+   * Polls for the next outbound message
+   *
+   * @throws RuntimeException if no outbound messages created during 5 seconds
+   */
+  public TestMessage nextOutbound() throws RuntimeException {
+    return maybeNextOutbound(Duration.ofSeconds(5))
+        .orElseThrow(() -> new RuntimeException("No outbound messages"));
+  }
+
+  public Optional<TestMessage> maybeNextOutbound(Duration timeout) {
     try {
-      NetworkParcel ret = outbound.poll(5, TimeUnit.SECONDS);
-      if (ret == null) {
-        throw new RuntimeException("No outbound messages");
-      }
-      return new TestMessage(getNodeRecord(), ret);
+      return Optional.ofNullable(outbound.poll(timeout.toMillis(), TimeUnit.SECONDS))
+          .map(parcel -> new TestMessage(getNodeRecord(), parcel));
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      Thread.currentThread().interrupt();
+      return Optional.empty();
     }
   }
 

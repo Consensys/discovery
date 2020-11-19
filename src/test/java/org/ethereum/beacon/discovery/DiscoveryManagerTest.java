@@ -3,8 +3,8 @@
  */
 package org.ethereum.beacon.discovery;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
 
 public class DiscoveryManagerTest {
   public static final String LOCALHOST = "127.0.0.1";
-  public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
-  public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
+  public static final Duration RETRY_TIMEOUT = ofSeconds(30);
+  public static final Duration LIVE_CHECK_INTERVAL = ofSeconds(30);
 
   @Test
   public void testRegularHandshake() throws Exception {
@@ -112,7 +112,7 @@ public class DiscoveryManagerTest {
 
     // victim node should drop the session on the first malformed handshake message
     // and ignore any subsequent handshake messages
-    assertThatThrownBy(victimNode::nextOutbound);
+    assertThat(victimNode.maybeNextOutbound(ofSeconds(1))).isEmpty();
   }
 
   @Test
