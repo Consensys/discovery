@@ -105,7 +105,7 @@ public class TestManagerWrapper {
 
   public Optional<TestMessage> maybeNextOutbound(Duration timeout) {
     try {
-      return Optional.ofNullable(outbound.poll(timeout.toMillis(), TimeUnit.SECONDS))
+      return Optional.ofNullable(outbound.poll(timeout.toMillis(), TimeUnit.MILLISECONDS))
           .map(parcel -> new TestMessage(getNodeRecord(), parcel));
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
