@@ -32,12 +32,17 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
   private final NodeRecordFactory nodeRecordFactory;
+  private final NodeSessionManager nodeSessionManager;
 
   public HandshakeMessagePacketHandler(
-      Pipeline outgoingPipeline, Scheduler scheduler, NodeRecordFactory nodeRecordFactory) {
+      Pipeline outgoingPipeline,
+      Scheduler scheduler,
+      NodeRecordFactory nodeRecordFactory,
+      NodeSessionManager nodeSessionManager) {
     this.outgoingPipeline = outgoingPipeline;
     this.scheduler = scheduler;
     this.nodeRecordFactory = nodeRecordFactory;
+    this.nodeSessionManager = nodeSessionManager;
   }
 
   @Override
@@ -147,5 +152,6 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   private void markHandshakeAsFailed(final Envelope envelope, final NodeSession session) {
     envelope.remove(Field.PACKET_HANDSHAKE);
     session.cancelAllRequests("Failed to handshake");
+    nodeSessionManager.dropSession(session);
   }
 }

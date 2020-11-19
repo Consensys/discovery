@@ -3,20 +3,32 @@
  */
 package org.ethereum.beacon.discovery;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestManagerWrapper.TestMessage;
+import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
+import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.type.Bytes16;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 public class DiscoveryManagerTest {
   public static final String LOCALHOST = "127.0.0.1";
-  public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
-  public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
+  public static final Duration RETRY_TIMEOUT = ofSeconds(30);
+  public static final Duration LIVE_CHECK_INTERVAL = ofSeconds(30);
 
   @Test
   public void testRegularHandshake() throws Exception {
@@ -43,6 +55,64 @@ public class DiscoveryManagerTest {
     m1.deliver(out2_2); // Pong
 
     assertThat(pingRes).isCompleted();
+  }
+
+  @Test
+  public void testInvalidHandshakeShouldDropsSession() throws Exception {
+    TestNetwork network = new TestNetwork();
+    TestManagerWrapper attackerNode = network.createDiscoveryManager(1);
+    TestManagerWrapper victimNode = network.createDiscoveryManager(2);
+
+    attackerNode.getDiscoveryManager().ping(victimNode.getNodeRecord());
+
+    TestMessage out1_1 = attackerNode.nextOutbound();
+    assertThat(out1_1.getPacket()).isInstanceOf(OrdinaryMessagePacket.class);
+    victimNode.deliver(out1_1); // Random (Ping is pending)
+
+    TestMessage out2_1 = victimNode.nextOutbound();
+    assertThat(out2_1.getPacket()).isInstanceOf(WhoAreYouPacket.class);
+    attackerNode.deliver(out2_1); // WhoAreYou
+
+    TestMessage validHandshakeMessage = attackerNode.nextOutbound(); // valid Handshake
+    assertThat(validHandshakeMessage.getPacket()).isInstanceOf(HandshakeMessagePacket.class);
+
+    // preparing Handshake with invalid id signature
+    NodeSession attackerToVictimSession =
+        attackerNode
+            .getDiscoveryManager()
+            .getNodeSession(victimNode.getNodeRecord().getNodeId())
+            .orElseThrow();
+    HandshakeMessagePacket handshakePacket =
+        (HandshakeMessagePacket) validHandshakeMessage.getPacket();
+    RawPacket handshakeRawPacket = validHandshakeMessage.getRawPacket();
+    Header<HandshakeAuthData> header = handshakePacket.getHeader();
+    Bytes invalidSignature = Functions.sign(attackerNode.getPrivateKey(), Bytes32.ZERO);
+    Header<HandshakeAuthData> malformedHeader =
+        Header.createHandshakeHeader(
+            header.getAuthData().getSourceNodeId(),
+            header.getStaticHeader().getNonce(),
+            invalidSignature,
+            header.getAuthData().getEphemeralPubKey(),
+            header.getAuthData().getNodeRecord(NodeRecordFactory.DEFAULT));
+    HandshakeMessagePacket malformedHandshakePacket =
+        HandshakeMessagePacket.create(
+            handshakeRawPacket.getMaskingIV(),
+            malformedHeader,
+            new PingMessage(Bytes.EMPTY, UInt64.ONE),
+            attackerToVictimSession.getInitiatorKey());
+    Bytes16 maskingKey = Bytes16.wrap(victimNode.getNodeRecord().getNodeId(), 0);
+    RawPacket malformedRawPacket =
+        RawPacket.createAndMask(
+            handshakeRawPacket.getMaskingIV(), malformedHandshakePacket, maskingKey);
+    TestMessage malformedMessage = attackerNode.createOutbound(malformedRawPacket, victimNode);
+
+    victimNode.deliver(malformedMessage); // Malformed Handshake
+    victimNode.deliver(malformedMessage); // Malformed Handshake
+    victimNode.deliver(validHandshakeMessage);
+
+    // victim node should drop the session on the first malformed handshake message
+    // and ignore any subsequent handshake messages
+    assertThat(victimNode.maybeNextOutbound(ofSeconds(1))).isEmpty();
   }
 
   @Test

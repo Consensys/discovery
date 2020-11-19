@@ -8,6 +8,7 @@ import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.network.NetworkParcelV5;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -30,6 +32,7 @@ import reactor.core.publisher.Flux;
 public class TestManagerWrapper {
 
   public class TestMessage {
+
     private final NodeRecord from;
     private final NetworkParcel parcel;
 
@@ -62,15 +65,19 @@ public class TestManagerWrapper {
 
   private final TestNetwork testNetwork;
   private final DiscoveryManagerImpl discoveryManager;
+  private final ECKeyPair keyPair;
   private final BlockingQueue<NetworkParcel> outbound = new LinkedBlockingQueue<>();
 
   public static TestManagerWrapper create(TestNetwork testNetwork, int seed) {
-    return new TestManagerWrapper(testNetwork, createTestManager(seed));
+    ECKeyPair keyPair = Functions.generateECKeyPair(new Random(seed));
+    return new TestManagerWrapper(testNetwork, createTestManager(keyPair, 9000 + seed), keyPair);
   }
 
-  private TestManagerWrapper(TestNetwork testNetwork, DiscoveryManagerImpl discoveryManager) {
+  private TestManagerWrapper(
+      TestNetwork testNetwork, DiscoveryManagerImpl discoveryManager, ECKeyPair keyPair) {
     this.testNetwork = testNetwork;
     this.discoveryManager = discoveryManager;
+    this.keyPair = keyPair;
     Flux.from(discoveryManager.getOutgoingMessages()).subscribe(outbound::add);
   }
 
@@ -86,15 +93,23 @@ public class TestManagerWrapper {
     return getNodeRecord().getUdpAddress().orElseThrow().getPort();
   }
 
-  public TestMessage nextOutbound() {
+  /**
+   * Polls for the next outbound message
+   *
+   * @throws RuntimeException if no outbound messages created during 5 seconds
+   */
+  public TestMessage nextOutbound() throws RuntimeException {
+    return maybeNextOutbound(Duration.ofSeconds(5))
+        .orElseThrow(() -> new RuntimeException("No outbound messages"));
+  }
+
+  public Optional<TestMessage> maybeNextOutbound(Duration timeout) {
     try {
-      NetworkParcel ret = outbound.poll(5, TimeUnit.SECONDS);
-      if (ret == null) {
-        throw new RuntimeException("No outbound messages");
-      }
-      return new TestMessage(getNodeRecord(), ret);
+      return Optional.ofNullable(outbound.poll(timeout.toMillis(), TimeUnit.MILLISECONDS))
+          .map(parcel -> new TestMessage(getNodeRecord(), parcel));
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      Thread.currentThread().interrupt();
+      return Optional.empty();
     }
   }
 
@@ -122,13 +137,23 @@ public class TestManagerWrapper {
     return ret;
   }
 
-  private static DiscoveryManagerImpl createTestManager(int seed) {
-    ECKeyPair keyPair = Functions.generateECKeyPair(new Random(seed));
-    final Bytes privateKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
+  public Bytes getPrivateKey() {
+    return toPrivateKey(keyPair);
+  }
 
+  public TestMessage createOutbound(RawPacket packet, TestManagerWrapper to) {
+    return new TestMessage(
+        getNodeRecord(), new NetworkParcelV5(packet, to.getNodeRecord().getUdpAddress().get()));
+  }
+
+  private static Bytes toPrivateKey(ECKeyPair keyPair) {
+    return Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
+  }
+
+  private static DiscoveryManagerImpl createTestManager(ECKeyPair keyPair, int port) {
+    final Bytes privateKey = toPrivateKey(keyPair);
     final NodeRecord nodeRecord =
-        new NodeRecordBuilder().privateKey(privateKey).address(LOCALHOST, 9000 + seed).build();
+        new NodeRecordBuilder().privateKey(privateKey).address(LOCALHOST, port).build();
     DiscoverySystemBuilder builder = new DiscoverySystemBuilder();
     builder
         .discoveryServer(Mockito.mock(NettyDiscoveryServer.class))

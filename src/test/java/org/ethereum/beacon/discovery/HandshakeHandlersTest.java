@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,7 @@ import org.ethereum.beacon.discovery.pipeline.PipelineImpl;
 import org.ethereum.beacon.discovery.pipeline.handler.HandshakeMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessageHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.MessagePacketHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
 import org.ethereum.beacon.discovery.pipeline.info.MultiPacketResponseHandler;
@@ -175,7 +177,10 @@ public class HandshakeHandlersTest {
     // Node2 handle AuthHeaderPacket and finish handshake
     HandshakeMessagePacketHandler handshakeMessagePacketHandlerNode2 =
         new HandshakeMessagePacketHandler(
-            outgoingPipeline, taskScheduler, NODE_RECORD_FACTORY_NO_VERIFICATION);
+            outgoingPipeline,
+            taskScheduler,
+            NODE_RECORD_FACTORY_NO_VERIFICATION,
+            mock(NodeSessionManager.class));
     Envelope envelopeAt2From1 = new Envelope();
     RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     envelopeAt2From1.put(
