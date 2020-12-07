@@ -22,17 +22,10 @@ dependencyManagement {
     dependency 'org.web3j:core:4.2.0'
     dependency 'org.mockito:mockito-core:3.1.0'
 
-    dependencySet(group: 'org.apache.tuweni', version: '0.9.0') {
-      entry 'tuweni-bytes'
-      entry 'tuweni-config'
-      entry 'tuweni-crypto'
-      entry 'tuweni-junit'
-      entry 'tuweni-kv'
-      entry 'tuweni-plumtree'
-      entry 'tuweni-rlpx'
-      entry 'tuweni-ssz'
-      entry 'tuweni-toml'
-      entry 'tuweni-units'
+    dependencySet(group: 'org.apache.tuweni', version: '1.3.0') {
+      entry 'bytes'
+      entry 'crypto'
+      entry 'units'
     }
 
     dependencySet(group: 'org.junit.jupiter', version: '5.5.2') {

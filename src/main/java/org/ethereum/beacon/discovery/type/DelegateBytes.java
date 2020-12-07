@@ -5,7 +5,6 @@ package org.ethereum.beacon.discovery.type;
 
 import com.google.common.base.Preconditions;
 import io.vertx.core.buffer.Buffer;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -252,7 +251,7 @@ class DelegateBytes implements Bytes {
   }
 
   @Override
-  public <T extends Appendable> T appendHexTo(T appendable) throws IOException {
+  public <T extends Appendable> T appendHexTo(T appendable) {
     return delegate.appendHexTo(appendable);
   }
 
