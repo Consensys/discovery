@@ -33,6 +33,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionRequestHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.OutgoingParcelHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.RateLimiter;
 import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
@@ -66,6 +67,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
+  private final RateLimiter rateLimiter;
 
   public DiscoveryManagerImpl(
       NettyDiscoveryServer discoveryServer,
@@ -82,6 +84,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
     NonceRepository nonceRepository = new NonceRepository();
 
+    rateLimiter = new RateLimiter(taskScheduler);
     this.discoveryServer = discoveryServer;
     nodeSessionManager =
         new NodeSessionManager(
@@ -93,6 +96,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
+        .addHandler(rateLimiter)
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
         .addHandler(new WhoAreYouSessionResolver(nonceRepository))
         .addHandler(new UnknownPacketTagToSender())
@@ -117,6 +121,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Void> start() {
+    rateLimiter.start();
     incomingPipeline.build();
     outgoingPipeline.build();
     Flux.from(discoveryServer.getIncomingPackets())
