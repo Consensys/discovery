@@ -75,7 +75,8 @@ public class DiscoveryInteropTest {
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
+            new NettyDiscoveryServerImpl(
+                nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(

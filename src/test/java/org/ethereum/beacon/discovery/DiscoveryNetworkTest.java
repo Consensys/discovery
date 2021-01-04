@@ -77,7 +77,8 @@ public class DiscoveryNetworkTest {
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
+            new NettyDiscoveryServerImpl(
+                nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
@@ -89,7 +90,8 @@ public class DiscoveryNetworkTest {
             TalkHandler.NOOP);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
+            new NettyDiscoveryServerImpl(
+                nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             new LocalNodeRecordStore(

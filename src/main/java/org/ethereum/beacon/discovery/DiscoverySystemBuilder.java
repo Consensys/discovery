@@ -142,8 +142,7 @@ public class DiscoverySystemBuilder {
                             () ->
                                 new IllegalArgumentException(
                                     "Local node record must contain an IP and UDP port")),
-                        trafficReadLimit
-                ));
+                    trafficReadLimit));
 
     nodeTableStorage =
         requireNonNullElseGet(
