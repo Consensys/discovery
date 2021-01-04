@@ -32,12 +32,14 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final InetSocketAddress listenAddress;
+  private final int trafficReadLimit; // bytes per sec
   private AtomicBoolean listen = new AtomicBoolean(false);
   private Channel channel;
   private NioEventLoopGroup nioGroup;
 
-  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress) {
+  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress, final int trafficReadLimit) {
     this.listenAddress = listenAddress;
+    this.trafficReadLimit = trafficReadLimit;
   }
 
   @Override
@@ -61,7 +63,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               @Override
               public void initChannel(NioDatagramChannel ch) {
                 ch.pipeline()
-                    .addFirst(new ChannelTrafficShapingHandler(0, 500000))
+                    .addFirst(new ChannelTrafficShapingHandler(0, trafficReadLimit))
                     .addFirst(new LoggingHandler(LogLevel.TRACE))
                     .addLast(new DatagramToEnvelope())
                     .addLast(new IncomingMessageSink(incomingSink));

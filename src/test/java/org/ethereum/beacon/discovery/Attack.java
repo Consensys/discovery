@@ -34,7 +34,7 @@ public class Attack {
             RawPacketImpl.create(
                     Bytes16.wrap(Bytes.random(16)),
                     randomPacket,
-                    Bytes16.wrap(Bytes32.fromHexString("0x2d7e86e33de22114b58be88fdc42117dfec65db8f4463b9e0eef74ef2e836f95").slice(0, 16)));
+                    Bytes16.wrap(Bytes32.fromHexString("0x121f667d09a42b4facbbd447c98f448e6b128bca1ee5dabb74353b226b6f6aac").slice(0, 16)));
 
     DatagramPacket datagramPacket = new DatagramPacket(
             packet.getBytes().toArrayUnsafe(),

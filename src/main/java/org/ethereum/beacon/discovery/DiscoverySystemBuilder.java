@@ -50,8 +50,14 @@ public class DiscoverySystemBuilder {
   private NodeRecordListener localNodeRecordListener = (a, b) -> {};
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
+  private int trafficReadLimit = 250000; // bytes per sec
   private TalkHandler talkHandler = TalkHandler.NOOP;
   private NettyDiscoveryServer discoveryServer = null;
+
+  public DiscoverySystemBuilder trafficReadLimit(final int trafficReadLimit) {
+    this.trafficReadLimit = trafficReadLimit;
+    return this;
+  }
 
   public DiscoverySystemBuilder localNodeRecord(final NodeRecord localNodeRecord) {
     this.localNodeRecord = localNodeRecord;
@@ -135,7 +141,9 @@ public class DiscoverySystemBuilder {
                         .orElseThrow(
                             () ->
                                 new IllegalArgumentException(
-                                    "Local node record must contain an IP and UDP port"))));
+                                    "Local node record must contain an IP and UDP port")),
+                        trafficReadLimit
+                ));
 
     nodeTableStorage =
         requireNonNullElseGet(

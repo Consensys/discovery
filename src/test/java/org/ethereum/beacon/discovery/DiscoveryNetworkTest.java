@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery;
 import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
+import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -76,7 +77,7 @@ public class DiscoveryNetworkTest {
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get()),
+            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
@@ -88,7 +89,7 @@ public class DiscoveryNetworkTest {
             TalkHandler.NOOP);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord2.getUdpAddress().get()),
+            new NettyDiscoveryServerImpl(nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
             new LocalNodeRecordStore(
