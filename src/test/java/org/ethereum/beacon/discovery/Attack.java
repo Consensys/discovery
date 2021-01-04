@@ -15,10 +15,12 @@ import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.packet.impl.RawPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class Attack {
   @Test
+  @Disabled
   void dos() throws Exception {
     String host = "localhost";
     int port = 9002; // Random Port
