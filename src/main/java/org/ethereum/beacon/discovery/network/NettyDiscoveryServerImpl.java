@@ -8,6 +8,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
@@ -59,11 +60,15 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
             new ChannelInitializer<NioDatagramChannel>() {
               @Override
               public void initChannel(NioDatagramChannel ch) {
-                ch.pipeline()
-                    .addFirst(new ChannelTrafficShapingHandler(0, trafficReadLimit))
-                    .addFirst(new LoggingHandler(LogLevel.TRACE))
-                    .addLast(new DatagramToEnvelope())
-                    .addLast(new IncomingMessageSink(incomingSink));
+                ChannelPipeline pipeline = ch.pipeline();
+                pipeline
+                        .addFirst(new LoggingHandler(LogLevel.TRACE))
+                        .addLast(new DatagramToEnvelope())
+                        .addLast(new IncomingMessageSink(incomingSink));
+
+                if (trafficReadLimit != 0) {
+                  pipeline.addFirst(new ChannelTrafficShapingHandler(0, trafficReadLimit));
+                }
               }
             });
 
