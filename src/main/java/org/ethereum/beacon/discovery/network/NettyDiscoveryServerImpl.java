@@ -62,9 +62,9 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               public void initChannel(NioDatagramChannel ch) {
                 ChannelPipeline pipeline = ch.pipeline();
                 pipeline
-                        .addFirst(new LoggingHandler(LogLevel.TRACE))
-                        .addLast(new DatagramToEnvelope())
-                        .addLast(new IncomingMessageSink(incomingSink));
+                    .addFirst(new LoggingHandler(LogLevel.TRACE))
+                    .addLast(new DatagramToEnvelope())
+                    .addLast(new IncomingMessageSink(incomingSink));
 
                 if (trafficReadLimit != 0) {
                   pipeline.addFirst(new ChannelTrafficShapingHandler(0, trafficReadLimit));
