@@ -32,8 +32,6 @@ public class DiscoveryTestServer {
 
   public static void main(String[] args)
       throws InterruptedException, ExecutionException, TimeoutException {
-    long pid = ProcessHandle.current().pid();
-    System.out.println("process id: " + pid);
     if (args.length < 2) {
       System.out.println("ERROR: Too few arguments");
       printHelp();
