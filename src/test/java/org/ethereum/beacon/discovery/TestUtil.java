@@ -28,6 +28,7 @@ public class TestUtil {
       new NodeSerializerFactory(NODE_RECORD_FACTORY_NO_VERIFICATION);
   public static final String LOCALHOST = "127.0.0.1";
   static final int SEED = 123456789;
+  public static final int TEST_TRAFFIC_READ_LIMIT = 250000;
 
   /**
    * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
