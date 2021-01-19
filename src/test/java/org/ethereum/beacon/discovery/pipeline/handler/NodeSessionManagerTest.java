@@ -24,6 +24,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
+import org.ethereum.beacon.discovery.storage.NewAddressListener;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTable;
@@ -47,7 +48,7 @@ class NodeSessionManagerTest {
   private final NodeSessionManager handler =
       new NodeSessionManager(
           new LocalNodeRecordStore(
-              homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP),
+              homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP, NewAddressListener.NOOP),
           STATIC_NODE_KEY,
           nodeBucketStorage,
           nonceRepository,
