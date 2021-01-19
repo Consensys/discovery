@@ -4,10 +4,8 @@
 
 package org.ethereum.beacon.discovery.storage;
 
-import org.ethereum.beacon.discovery.schema.NodeRecord;
-
-import java.net.InetSocketAddress;
 import java.util.Optional;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /** Listens for a node record updates */
 public interface NewAddressListener {

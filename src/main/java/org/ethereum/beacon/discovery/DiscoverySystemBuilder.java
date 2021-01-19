@@ -164,7 +164,9 @@ public class DiscoverySystemBuilder {
     localNodeRecordStore =
         requireNonNullElseGet(
             localNodeRecordStore,
-            () -> new LocalNodeRecordStore(localNodeRecord, privateKey, localNodeRecordListener, newAddressListener));
+            () ->
+                new LocalNodeRecordStore(
+                    localNodeRecord, privateKey, localNodeRecordListener, newAddressListener));
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,

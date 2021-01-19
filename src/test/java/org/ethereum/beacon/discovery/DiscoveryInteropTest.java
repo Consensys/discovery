@@ -81,7 +81,10 @@ public class DiscoveryInteropTest {
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
-                nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP, NewAddressListener.NOOP),
+                nodeRecord1,
+                nodePair1.getPrivateKey(),
+                NodeRecordListener.NOOP,
+                NewAddressListener.NOOP),
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),

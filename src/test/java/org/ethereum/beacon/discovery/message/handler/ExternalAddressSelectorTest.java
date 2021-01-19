@@ -29,7 +29,8 @@ class ExternalAddressSelectorTest {
   private final NodeRecord originalNodeRecord =
       SimpleIdentitySchemaInterpreter.createNodeRecord(nodeId, ADDRESS1);
   private final LocalNodeRecordStore localNodeRecordStore =
-      new LocalNodeRecordStore(originalNodeRecord, nodeId, NodeRecordListener.NOOP, NewAddressListener.NOOP);
+      new LocalNodeRecordStore(
+          originalNodeRecord, nodeId, NodeRecordListener.NOOP, NewAddressListener.NOOP);
 
   private final ExternalAddressSelector selector =
       new ExternalAddressSelector(localNodeRecordStore);

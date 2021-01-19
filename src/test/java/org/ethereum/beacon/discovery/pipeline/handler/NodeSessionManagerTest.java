@@ -48,7 +48,10 @@ class NodeSessionManagerTest {
   private final NodeSessionManager handler =
       new NodeSessionManager(
           new LocalNodeRecordStore(
-              homeNodeRecord, homeNodeInfo.getPrivateKey(), NodeRecordListener.NOOP, NewAddressListener.NOOP),
+              homeNodeRecord,
+              homeNodeInfo.getPrivateKey(),
+              NodeRecordListener.NOOP,
+              NewAddressListener.NOOP),
           STATIC_NODE_KEY,
           nodeBucketStorage,
           nonceRepository,

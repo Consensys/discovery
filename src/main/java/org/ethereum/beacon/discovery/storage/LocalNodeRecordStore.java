@@ -16,7 +16,10 @@ public class LocalNodeRecordStore {
   private final NewAddressListener newAddressListener;
 
   public LocalNodeRecordStore(
-      NodeRecord record, Bytes privateKey, NodeRecordListener recordListener, NewAddressListener newAddressListener) {
+      NodeRecord record,
+      Bytes privateKey,
+      NodeRecordListener recordListener,
+      NewAddressListener newAddressListener) {
     this.latestRecord = record;
     this.privateKey = privateKey;
     this.recordListener = recordListener;
@@ -30,8 +33,9 @@ public class LocalNodeRecordStore {
   public void onSocketAddressChanged(final InetSocketAddress newAddress) {
     NodeRecord oldRecord = this.latestRecord;
     NodeRecord newRecord = oldRecord.withNewAddress(newAddress, privateKey);
-    newAddressListener.newAddress(oldRecord, newRecord)
-            .ifPresent(record -> this.latestRecord = record);
+    newAddressListener
+        .newAddress(oldRecord, newRecord)
+        .ifPresent(record -> this.latestRecord = record);
   }
 
   public void onCustomFieldValueChanged(final String fieldName, Bytes value) {

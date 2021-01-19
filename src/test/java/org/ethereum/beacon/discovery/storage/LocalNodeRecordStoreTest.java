@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
@@ -36,12 +35,13 @@ public class LocalNodeRecordStoreTest {
     List<Update> listenerCalls = new ArrayList<>();
     LocalNodeRecordStore recordStore =
         new LocalNodeRecordStore(
-            nodeRecord1, nodePair1.getPrivateKey(),
-                (o, n) -> listenerCalls.add(new Update(o, n)),
-                (o, n) -> {
-                  listenerCalls.add(new Update(o, n));
-                  return Optional.of(n);
-                });
+            nodeRecord1,
+            nodePair1.getPrivateKey(),
+            (o, n) -> listenerCalls.add(new Update(o, n)),
+            (o, n) -> {
+              listenerCalls.add(new Update(o, n));
+              return Optional.of(n);
+            });
     assertThat(listenerCalls).isEmpty();
 
     recordStore.onSocketAddressChanged(nodeRecord2.getUdpAddress().get());

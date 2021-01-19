@@ -109,7 +109,11 @@ public class HandshakeHandlersTest {
         };
     NonceRepository nonceRepository1 = new NonceRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
-        new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP, NewAddressListener.NOOP);
+        new LocalNodeRecordStore(
+            nodeRecord1,
+            nodePair1.getPrivateKey(),
+            NodeRecordListener.NOOP,
+            NewAddressListener.NOOP);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     final ExpirationScheduler<Bytes> reqeustExpirationScheduler =
@@ -140,7 +144,10 @@ public class HandshakeHandlersTest {
             Optional.of(nodeRecord1),
             nodeRecord1.getUdpAddress().orElseThrow(),
             new LocalNodeRecordStore(
-                nodeRecord2, nodePair2.getPrivateKey(), NodeRecordListener.NOOP, NewAddressListener.NOOP),
+                nodeRecord2,
+                nodePair2.getPrivateKey(),
+                NodeRecordListener.NOOP,
+                NewAddressListener.NOOP),
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
