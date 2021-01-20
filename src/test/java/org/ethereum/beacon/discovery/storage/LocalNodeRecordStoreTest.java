@@ -38,10 +38,7 @@ public class LocalNodeRecordStoreTest {
             nodeRecord1,
             nodePair1.getPrivateKey(),
             (o, n) -> listenerCalls.add(new Update(o, n)),
-            (o, n) -> {
-              listenerCalls.add(new Update(o, n));
-              return Optional.of(n);
-            });
+            (o, n) -> Optional.of(n));
     assertThat(listenerCalls).isEmpty();
 
     recordStore.onSocketAddressChanged(nodeRecord2.getUdpAddress().get());
@@ -50,6 +47,8 @@ public class LocalNodeRecordStoreTest {
     assertThat(listenerCalls.get(0).oldRec).isEqualTo(nodeRecord1);
     assertThat(listenerCalls.get(0).newRec.getUdpAddress())
         .contains(nodeRecord2.getTcpAddress().get());
+    assertThat(recordStore.getLocalNodeRecord().getUdpAddress().get())
+        .isEqualTo(nodeRecord2.getUdpAddress().get());
 
     recordStore.onCustomFieldValueChanged("fieldName", Bytes.fromHexString("0x112233"));
 
