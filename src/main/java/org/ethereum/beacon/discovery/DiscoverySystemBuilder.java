@@ -110,8 +110,8 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder newAddressListener(final NewAddressHandler listener) {
-    this.newAddressHandler = listener;
+  public DiscoverySystemBuilder newAddressHandler(final NewAddressHandler handler) {
+    this.newAddressHandler = handler;
     return this;
   }
 
