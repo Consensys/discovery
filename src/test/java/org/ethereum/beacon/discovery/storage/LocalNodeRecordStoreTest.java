@@ -38,7 +38,7 @@ public class LocalNodeRecordStoreTest {
             nodeRecord1,
             nodePair1.getPrivateKey(),
             (o, n) -> listenerCalls.add(new Update(o, n)),
-            (o, n) -> Optional.of(n));
+            NewAddressHandler.NOOP);
     assertThat(listenerCalls).isEmpty();
 
     recordStore.onSocketAddressChanged(nodeRecord2.getUdpAddress().get());
