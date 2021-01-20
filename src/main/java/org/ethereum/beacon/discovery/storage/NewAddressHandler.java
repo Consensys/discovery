@@ -8,9 +8,9 @@ import java.util.Optional;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /** Listens for a node record updates */
-public interface NewAddressListener {
+public interface NewAddressHandler {
 
-  NewAddressListener NOOP = (oldVal, newVal) -> Optional.of(newVal);
+  NewAddressHandler NOOP = (oldVal, newVal) -> Optional.of(newVal);
 
   Optional<NodeRecord> newAddress(NodeRecord oldRecord, NodeRecord proposedRecord);
 }

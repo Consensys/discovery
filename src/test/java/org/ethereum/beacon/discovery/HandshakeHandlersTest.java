@@ -62,7 +62,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NewAddressListener;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
@@ -113,7 +113,7 @@ public class HandshakeHandlersTest {
             nodeRecord1,
             nodePair1.getPrivateKey(),
             NodeRecordListener.NOOP,
-            NewAddressListener.NOOP);
+            NewAddressHandler.NOOP);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     final ExpirationScheduler<Bytes> reqeustExpirationScheduler =
@@ -147,7 +147,7 @@ public class HandshakeHandlersTest {
                 nodeRecord2,
                 nodePair2.getPrivateKey(),
                 NodeRecordListener.NOOP,
-                NewAddressListener.NOOP),
+                NewAddressHandler.NOOP),
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,

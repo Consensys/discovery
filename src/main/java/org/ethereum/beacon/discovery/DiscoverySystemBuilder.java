@@ -27,7 +27,7 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NewAddressListener;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorageImpl;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
@@ -49,7 +49,7 @@ public class DiscoverySystemBuilder {
   private Database database;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
-  private NewAddressListener newAddressListener = NewAddressListener.NOOP;
+  private NewAddressHandler newAddressHandler = NewAddressHandler.NOOP;
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private int trafficReadLimit = 250000; // bytes per sec
@@ -110,8 +110,8 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder newAddressListener(final NewAddressListener listener) {
-    this.newAddressListener = listener;
+  public DiscoverySystemBuilder newAddressListener(final NewAddressHandler listener) {
+    this.newAddressHandler = listener;
     return this;
   }
 
@@ -166,7 +166,7 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             () ->
                 new LocalNodeRecordStore(
-                    localNodeRecord, privateKey, localNodeRecordListener, newAddressListener));
+                    localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,

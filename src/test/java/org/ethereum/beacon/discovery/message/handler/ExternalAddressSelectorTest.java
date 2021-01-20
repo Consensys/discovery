@@ -14,7 +14,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NewAddressListener;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class ExternalAddressSelectorTest {
       SimpleIdentitySchemaInterpreter.createNodeRecord(nodeId, ADDRESS1);
   private final LocalNodeRecordStore localNodeRecordStore =
       new LocalNodeRecordStore(
-          originalNodeRecord, nodeId, NodeRecordListener.NOOP, NewAddressListener.NOOP);
+          originalNodeRecord, nodeId, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
 
   private final ExternalAddressSelector selector =
       new ExternalAddressSelector(localNodeRecordStore);
