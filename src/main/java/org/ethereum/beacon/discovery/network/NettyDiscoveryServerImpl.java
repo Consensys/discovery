@@ -8,10 +8,12 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,12 +30,14 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final InetSocketAddress listenAddress;
+  private final int trafficReadLimit; // bytes per sec
   private AtomicBoolean listen = new AtomicBoolean(false);
   private Channel channel;
   private NioEventLoopGroup nioGroup;
 
-  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress) {
+  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress, final int trafficReadLimit) {
     this.listenAddress = listenAddress;
+    this.trafficReadLimit = trafficReadLimit;
   }
 
   @Override
@@ -56,10 +60,15 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
             new ChannelInitializer<NioDatagramChannel>() {
               @Override
               public void initChannel(NioDatagramChannel ch) {
-                ch.pipeline()
+                ChannelPipeline pipeline = ch.pipeline();
+                pipeline
                     .addFirst(new LoggingHandler(LogLevel.TRACE))
                     .addLast(new DatagramToEnvelope())
                     .addLast(new IncomingMessageSink(incomingSink));
+
+                if (trafficReadLimit != 0) {
+                  pipeline.addFirst(new ChannelTrafficShapingHandler(0, trafficReadLimit));
+                }
               }
             });
 

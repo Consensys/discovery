@@ -62,6 +62,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
@@ -108,7 +109,11 @@ public class HandshakeHandlersTest {
         };
     NonceRepository nonceRepository1 = new NonceRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
-        new LocalNodeRecordStore(nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP);
+        new LocalNodeRecordStore(
+            nodeRecord1,
+            nodePair1.getPrivateKey(),
+            NodeRecordListener.NOOP,
+            NewAddressHandler.NOOP);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     final ExpirationScheduler<Bytes> reqeustExpirationScheduler =
@@ -139,7 +144,10 @@ public class HandshakeHandlersTest {
             Optional.of(nodeRecord1),
             nodeRecord1.getUdpAddress().orElseThrow(),
             new LocalNodeRecordStore(
-                nodeRecord2, nodePair2.getPrivateKey(), NodeRecordListener.NOOP),
+                nodeRecord2,
+                nodePair2.getPrivateKey(),
+                NodeRecordListener.NOOP,
+                NewAddressHandler.NOOP),
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,

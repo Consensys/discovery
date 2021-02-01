@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
+import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
@@ -74,11 +76,15 @@ public class DiscoveryInteropTest {
         nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(nodeRecord1.getUdpAddress().get()),
+            new NettyDiscoveryServerImpl(
+                nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
-                nodeRecord1, nodePair1.getPrivateKey(), NodeRecordListener.NOOP),
+                nodeRecord1,
+                nodePair1.getPrivateKey(),
+                NodeRecordListener.NOOP,
+                NewAddressHandler.NOOP),
             nodePair1.getPrivateKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
