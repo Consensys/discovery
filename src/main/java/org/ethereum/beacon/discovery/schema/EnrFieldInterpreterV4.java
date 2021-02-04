@@ -7,8 +7,10 @@ package org.ethereum.beacon.discovery.schema;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.RlpUtil;
+import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 
@@ -16,9 +18,9 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
 
   public static final Function<RlpString, Object> DEFAULT_DECODER =
       rlp -> Bytes.wrap(rlp.getBytes());
-  public static EnrFieldInterpreterV4 DEFAULT = new EnrFieldInterpreterV4();
+  public static final EnrFieldInterpreterV4 DEFAULT = new EnrFieldInterpreterV4();
 
-  private Map<String, Function<RlpString, Object>> fieldDecoders = new HashMap<>();
+  private final Map<String, Function<RlpString, Object>> fieldDecoders = new HashMap<>();
 
   @SuppressWarnings({"DefaultCharset"})
   public EnrFieldInterpreterV4() {
@@ -34,9 +36,16 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
   }
 
   @Override
-  public Object decode(String key, RlpString rlpString) {
+  public Object decode(String key, RlpType rlpType) {
+    if (rlpType instanceof RlpList) {
+      return ((RlpList) rlpType)
+          .getValues().stream()
+              .map(v -> DEFAULT_DECODER.apply((RlpString) v))
+              .collect(Collectors.toList());
+    }
+
     Function<RlpString, Object> fieldDecoder = fieldDecoders.getOrDefault(key, DEFAULT_DECODER);
-    return fieldDecoder.apply(rlpString);
+    return fieldDecoder.apply((RlpString) rlpType);
   }
 
   @Override
