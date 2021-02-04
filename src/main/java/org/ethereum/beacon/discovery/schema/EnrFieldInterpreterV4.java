@@ -39,9 +39,7 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
   public Object decode(String key, RlpType rlpType) {
     if (rlpType instanceof RlpList) {
       return ((RlpList) rlpType)
-          .getValues().stream()
-              .map(v -> DEFAULT_DECODER.apply((RlpString) v))
-              .collect(Collectors.toList());
+          .getValues().stream().map(v -> decode(key, v)).collect(Collectors.toList());
     }
 
     Function<RlpString, Object> fieldDecoder = fieldDecoders.getOrDefault(key, DEFAULT_DECODER);
