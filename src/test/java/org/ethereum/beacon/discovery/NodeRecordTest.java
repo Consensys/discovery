@@ -13,6 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
@@ -182,5 +185,36 @@ public class NodeRecordTest {
         nodeRecord.get(EnrField.PKEY_SECP256K1));
     assertEquals(Bytes.fromHexString("0x7F000001"), nodeRecord.get(EnrField.IP_V4));
     assertEquals(30303, nodeRecord.get(EnrField.UDP));
+  }
+
+  @Test
+  public void testEnrWithEthFieldDecodes() {
+    final int port = 30303;
+    final Bytes ip = Bytes.fromHexString("0x7F000001");
+    final Bytes nodeId =
+        Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
+    final Bytes privateKey =
+        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final List<Bytes> forkIdList = new ArrayList<>();
+    forkIdList.add(Bytes.fromHexString("0x7a739ef1"));
+    forkIdList.add(Bytes.fromHexString("0x"));
+    final NodeRecord record =
+        NODE_RECORD_FACTORY.createFromValues(
+            UInt64.ONE,
+            new EnrField(EnrField.ID, IdentitySchema.V4),
+            new EnrField(EnrField.PKEY_SECP256K1, nodeId),
+            new EnrField(EnrField.IP_V4, ip),
+            new EnrField(EnrField.TCP, port),
+            new EnrField("eth", Collections.singletonList(forkIdList)));
+    record.sign(privateKey);
+
+    final String serialized = record.asBase64();
+    final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
+    assertThat(result).isEqualTo(record);
+    assertThat(result.asEnr())
+        .isEqualTo(
+            "enr:-I-4QN2E5eqaGOEaXAOdceWIep5oUHalCBvzWSH108iKhF6gAdoeBhp4V6nr71xSEaWrs_2Of6ZRhoxQh2"
+                + "2TAGE3H1gBg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoKRI8kxtGOV1RT2xMXFWK3"
+                + "GZmHPbWyht-VevGZ7JRhf3g3RjcIJ2Xw");
   }
 }
