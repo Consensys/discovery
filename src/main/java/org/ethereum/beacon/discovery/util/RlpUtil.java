@@ -201,7 +201,7 @@ public class RlpUtil {
    * @throws RuntimeException with errorMessageFunction applied with `object` when encoding is not
    *     possible
    */
-  public static RlpString encode(Object object, Function<Object, String> errorMessageFunction) {
+  public static RlpType encode(Object object, Function<Object, String> errorMessageFunction) {
     if (object instanceof Bytes) {
       return fromBytesValue((Bytes) object);
     } else if (object instanceof Number) {
@@ -210,9 +210,16 @@ public class RlpUtil {
       return RlpString.create(new byte[0]);
     } else if (object instanceof IdentitySchema) {
       return RlpString.create(((IdentitySchema) object).stringName());
+    } else if (object instanceof List) {
+      return fromList((List<?>) object, errorMessageFunction);
     } else {
       throw new RuntimeException(errorMessageFunction.apply(object));
     }
+  }
+
+  private static RlpList fromList(List<?> object, Function<Object, String> errorMessageFunction) {
+    return new RlpList(
+        object.stream().map(o -> encode(o, errorMessageFunction)).toArray(RlpType[]::new));
   }
 
   private static RlpString fromNumber(Number number) {
