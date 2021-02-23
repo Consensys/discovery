@@ -71,5 +71,6 @@ workflows:
               only:
                 - master
                 - /^release-.*/
+                - cloudsmith
           requires:
             - build
