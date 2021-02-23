@@ -66,11 +66,5 @@ workflows:
     jobs:
       - build
       - publish:
-          filters:
-            branches:
-              only:
-                - master
-                - /^release-.*/
-                - cloudsmith
           requires:
             - build
