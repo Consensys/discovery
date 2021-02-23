@@ -68,3 +68,5 @@ workflows:
       - publish:
           requires:
             - build
+          context:
+            - quorum-gradle
