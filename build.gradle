@@ -237,9 +237,3 @@ task printVersion() {
     print "Specific version: ${specificVersion}  Publish version: ${project.version}"
   }
 }
-
-
-def getCheckedOutGitCommitHash() {
-  def takeFromHash = 8
-  grgit ? grgit.head().id.take(takeFromHash) : 'UNKNOWN'
-}
