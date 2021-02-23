@@ -3,6 +3,9 @@ executors:
   medium_executor:
     docker:
       - image: circleci/openjdk:11.0.4-jdk-stretch
+        auth:
+          username: $DOCKER_USER_RO
+          password: $DOCKER_PASSWORD_RO
     resource_class: medium
     working_directory: ~/project
     environment:
@@ -58,13 +61,15 @@ jobs:
       - run:
           name: Publish
           command: |
-            ./gradlew --no-daemon --parallel bintrayUpload
+            ./gradlew --no-daemon --parallel publish
 
 workflows:
   version: 2
   circleci:
     jobs:
-      - build
+      - build:
+          context:
+            - dockerhub-quorumengineering-ro
       - publish:
           filters:
             branches:
@@ -73,3 +78,6 @@ workflows:
                 - /^release-.*/
           requires:
             - build
+          context:
+            - quorum-gradle
+            - dockerhub-quorumengineering-ro

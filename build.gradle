@@ -3,7 +3,6 @@
 plugins {
   id 'java-library'
   id 'com.diffplug.gradle.spotless' version '3.26.0'
-  id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
   id 'io.spring.dependency-management' version '1.0.8.RELEASE'
@@ -152,11 +151,22 @@ task runTestDiscovery(type:JavaExec) {
 }
 
 def resolvedVersion = calculateVersion()
-def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
+
+def cloudsmithUser = project.hasProperty('cloudsmithUser') ? project.property('cloudsmithUser') : System.getenv('CLOUDSMITH_USER')
+def cloudsmithKey = project.hasProperty('cloudsmithApiKey') ? project.property('cloudsmithApiKey') : System.getenv('CLOUDSMITH_API_KEY')
 
 apply plugin: 'maven-publish'
 publishing {
+  repositories {
+    maven {
+      name = "cloudsmith"
+      url = "https://api-g.cloudsmith.io/maven/consensys/maven/"
+      credentials {
+        username = cloudsmithUser
+        password = cloudsmithKey
+      }
+    }
+  }
   publications {
     mavenJava(MavenPublication) {
       groupId "tech.pegasys.discovery"
@@ -183,32 +193,6 @@ publishing {
           url = 'https://github.com/PegaSysEng/discovery'
         }
       }
-    }
-  }
-}
-
-bintray {
-  user = bintrayUser
-  key = bintrayKey
-
-  publications = ['mavenJava']
-  override = version.endsWith('SNAPSHOT')
-
-  publish = true
-
-  pkg {
-    repo = 'pegasys-repo'
-    name = 'discovery'
-    userOrg = 'consensys'
-    desc = 'Java implementation of discovery v5'
-    licenses = ['Apache-2.0']
-    websiteUrl = 'https://github.com/PegaSysEng/discovery'
-    issueTrackerUrl = 'https://github.com/PegaSysEng/discovery/issues'
-    vcsUrl = 'https://github.com/PegaSysEng/discovery.git'
-
-    version {
-      name = resolvedVersion
-      released = new Date()
     }
   }
 }
