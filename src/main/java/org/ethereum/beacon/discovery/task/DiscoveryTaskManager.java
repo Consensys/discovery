@@ -59,6 +59,7 @@ public class DiscoveryTaskManager {
    *
    * <p>In all other cases method returns true, meaning node is ready for ping check
    */
+  @SuppressWarnings("UnnecessaryLambda")
   private static final Predicate<NodeRecordInfo> LIVE_CHECK_NODE_RULE =
       nodeRecord -> {
         long currentTime = Functions.getTime();
@@ -87,12 +88,14 @@ public class DiscoveryTaskManager {
    *   <li>Node is ACTIVE and last connection retry was not too much time ago
    * </ul>
    */
+  @SuppressWarnings("UnnecessaryLambda")
   static final Predicate<NodeRecordInfo> RECURSIVE_LOOKUP_NODE_RULE =
       nodeRecord ->
           nodeRecord.getStatus() == NodeStatus.ACTIVE
               && nodeRecord.getLastRetry() > Functions.getTime() - STATUS_EXPIRATION_SECONDS;
 
   /** Checks whether node is eligible to be considered as dead */
+  @SuppressWarnings("UnnecessaryLambda")
   private static final Predicate<NodeRecordInfo> DEAD_RULE =
       nodeRecord -> nodeRecord.getRetry() >= MAX_RETRIES;
 

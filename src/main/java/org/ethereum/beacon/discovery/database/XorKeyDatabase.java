@@ -13,7 +13,7 @@ public abstract class XorKeyDatabase implements Database {
   private final DataSource<Bytes, Bytes> backingDataSource;
   private final Function<Bytes, Bytes> sourceNameHasher;
 
-  public XorKeyDatabase(
+  XorKeyDatabase(
       DataSource<Bytes, Bytes> backingDataSource, Function<Bytes, Bytes> sourceNameHasher) {
     this.backingDataSource = backingDataSource;
     this.sourceNameHasher = sourceNameHasher;

@@ -10,7 +10,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,7 +126,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   public Optional<NodeSession> getNodeSession(Bytes nodeId) {
     return recentSessions.entrySet().stream()
         .filter(e -> e.getKey().nodeId.equals(nodeId))
-        .map(Entry::getValue)
+        .map(Map.Entry::getValue)
         .findFirst();
   }
 

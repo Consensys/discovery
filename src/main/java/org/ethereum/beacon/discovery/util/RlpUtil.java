@@ -82,7 +82,7 @@ public class RlpUtil {
   }
 
   /**
-   * @return first rlp list in provided data, plus remaining data starting from the end of this list
+   * return first rlp list in provided data, plus remaining data starting from the end of this list
    */
   public static DecodedList decodeFirstList(Bytes data) {
     int len = RlpUtil.calcListLen(data);
