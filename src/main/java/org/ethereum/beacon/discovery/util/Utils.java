@@ -40,12 +40,14 @@ public class Utils {
   }
 
   /**
+   * Return byte array representation of BigInteger for unsigned numeric
+   *
+   * <p>{@link BigInteger#toByteArray()} adds a bit for the sign. If you work with unsigned numerics
+   * it's always a 0. But if an integer uses exactly 8-some bits, sign bit will add an extra 0 byte
+   * to the result, which could broke some things. This method removes this redundant prefix byte
+   * when extracting byte array from BigInteger
+   *
    * @param size required size, in bytes
-   * @return byte array representation of BigInteger for unsigned numeric
-   *     <p>{@link BigInteger#toByteArray()} adds a bit for the sign. If you work with unsigned
-   *     numerics it's always a 0. But if an integer uses exactly 8-some bits, sign bit will add an
-   *     extra 0 byte to the result, which could broke some things. This method removes this
-   *     redundant prefix byte when extracting byte array from BigInteger
    */
   public static byte[] extractBytesFromUnsignedBigInt(BigInteger bigInteger, int size) {
     byte[] bigIntBytes = bigInteger.toByteArray();
@@ -70,7 +72,7 @@ public class Utils {
    *
    * @param value The bytes value pad.
    * @return A {@link Bytes} that exposes the left-padded bytes of {@code value}.
-   * @throws IllegalArgumentException if {@code value.size() &gt; 4}.
+   * @throws IllegalArgumentException if { @code value.size() &gt; 4}.
    */
   public static Bytes leftPad(Bytes value, int length) {
     checkNotNull(value);

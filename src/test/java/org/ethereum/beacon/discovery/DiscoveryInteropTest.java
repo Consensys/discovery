@@ -37,15 +37,12 @@ import reactor.core.publisher.Flux;
  * Inter-operational test with Geth. Start it in docker separately
  *
  * <p>You need to build and run Geth discv5 test to interact with. Configure Geth running time in
- * test.sh located in `resources/geth`, after that build docker and run it: <code>
- *   cd discovery/src/test/resources/geth
- *   docker build -t gethv5:1.0 . && docker run --network host -d gethv5:1.0
- * </code>
+ * test.sh located in `resources/geth`, after that build docker and run it: { @code cd
+ * discovery/src/test/resources/geth docker build -t gethv5:1.0 . && docker run --network host -d
+ * gethv5:1.0 }
  *
  * <p>After container starts, fire this test to fall in Geth's side running time and it should pass!
- * You could check Geth test logs by following command:<code>
- *   docker logs <container-id/>
- * </code>
+ * You could check Geth test logs by following command:{ @code docker logs container-id }
  */
 // @Ignore("Requires manual startup, takes a bit to start")
 public class DiscoveryInteropTest {

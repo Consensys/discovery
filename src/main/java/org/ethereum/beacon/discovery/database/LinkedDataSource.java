@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 public interface LinkedDataSource<KeyType, ValueType, UpKeyType, UpValueType>
     extends DataSource<KeyType, ValueType> {
 
-  /** @return Upstream {@link DataSource} */
+  /** Return Upstream {@link DataSource} */
   @Nonnull
   DataSource<UpKeyType, UpValueType> getUpstream();
 

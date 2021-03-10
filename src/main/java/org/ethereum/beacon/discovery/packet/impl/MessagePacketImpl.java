@@ -31,7 +31,7 @@ public abstract class MessagePacketImpl<TAuthData extends AuthData> extends Pack
     return CryptoUtil.aesgcmEncrypt(key, aesGcmNonce, messageBytes, headerBytes);
   }
 
-  public MessagePacketImpl(Header<TAuthData> header, Bytes cipheredMessageBytes) {
+  protected MessagePacketImpl(Header<TAuthData> header, Bytes cipheredMessageBytes) {
     super(header, cipheredMessageBytes);
   }
 
