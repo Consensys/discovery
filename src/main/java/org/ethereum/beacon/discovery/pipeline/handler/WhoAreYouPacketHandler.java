@@ -65,7 +65,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           .getStaticHeader()
           .getNonce()
           .equals(session.getNonce().orElseThrow())) {
-        logger.debug(
+        logger.error(
             "Verification not passed for message [{}] from node {} in status {}",
             whoAreYouPacket,
             nodeRecord,
