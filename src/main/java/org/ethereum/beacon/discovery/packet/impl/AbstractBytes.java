@@ -28,7 +28,7 @@ public abstract class AbstractBytes implements BytesSerializable {
     return bytes;
   }
 
-  public AbstractBytes(Bytes bytes) {
+  protected AbstractBytes(Bytes bytes) {
     this.bytes = bytes;
   }
 

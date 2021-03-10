@@ -23,8 +23,8 @@ public interface Schedulers {
    * specified delegate Executor factory.
    *
    * @param delegateExecutor all the tasks are finally executed on executors created by this
-   *     factory. Normally a single executor should be sufficient and could be supplied as <code>
-   *     () -> mySingleExecutor</code>
+   *     factory. Normally a single executor should be sufficient and could be supplied as { @code
+   *     () -&gt; mySingleExecutor}
    */
   static ControlledSchedulers createControlled(Supplier<Executor> delegateExecutor) {
     return new ControlledSchedulersImpl() {

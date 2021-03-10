@@ -263,7 +263,7 @@ public class NodeSession {
     return Bytes16.wrap(ivBytes);
   }
 
-  /** @return initiator key, also known as write key */
+  /** return initiator key, also known as write key */
   public Bytes getInitiatorKey() {
     return initiatorKey;
   }
@@ -272,7 +272,7 @@ public class NodeSession {
     this.initiatorKey = initiatorKey;
   }
 
-  /** @return recipient key, also known as read key */
+  /** return recipient key, also known as read key */
   public Bytes getRecipientKey() {
     return recipientKey;
   }
