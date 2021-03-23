@@ -67,7 +67,6 @@ public class NextTaskHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
-    Bytes12 nonce = session.generateNonce();
 
     if (session.getState().equals(SessionState.INITIAL)) {
       session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE));
