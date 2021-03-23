@@ -39,7 +39,7 @@ public abstract class PacketImpl<TAuthData extends AuthData> extends AbstractByt
   private final Header<TAuthData> header;
   private final Bytes messageBytes;
 
-  public PacketImpl(Header<TAuthData> header, Bytes cipheredMessageBytes) {
+  protected PacketImpl(Header<TAuthData> header, Bytes cipheredMessageBytes) {
     super(Bytes.wrap(header.getBytes(), cipheredMessageBytes));
     this.header = header;
     this.messageBytes = cipheredMessageBytes;

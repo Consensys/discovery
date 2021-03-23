@@ -160,7 +160,7 @@ public class FindNodeHandlerTest {
     NodeInfo nodeInfo = TestUtil.generateNode(counter++);
     NodeRecord record = spy(nodeInfo.getNodeRecord());
     when(record.getNodeId()).thenReturn(newNodeId);
-    assert Functions.logDistance(nodeId, newNodeId) == distance;
+    assertThat(Functions.logDistance(nodeId, newNodeId)).isEqualTo(distance);
     return record;
   }
 }

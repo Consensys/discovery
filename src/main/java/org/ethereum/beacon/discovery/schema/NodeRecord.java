@@ -42,8 +42,8 @@ public class NodeRecord {
   // Signature
   private Bytes signature;
   // optional fields
-  private Map<String, Object> fields = new HashMap<>();
-  private IdentitySchemaInterpreter identitySchemaInterpreter;
+  private final Map<String, Object> fields = new HashMap<>();
+  private final IdentitySchemaInterpreter identitySchemaInterpreter;
 
   private NodeRecord(
       IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, Bytes signature) {
@@ -76,7 +76,7 @@ public class NodeRecord {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
     for (int i = 0; i < rawFields.size(); i += 2) {
       String key = new String(((RlpString) rawFields.get(i)).getBytes());
-      nodeRecord.set(key, enrFieldInterpreter.decode(key, (RlpString) rawFields.get(i + 1)));
+      nodeRecord.set(key, enrFieldInterpreter.decode(key, rawFields.get(i + 1)));
     }
     return nodeRecord;
   }

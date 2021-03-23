@@ -27,8 +27,10 @@ public class NodeBucket {
   /** Bucket size, number of nodes */
   public static final int K = 16;
 
+  @SuppressWarnings("UnnecessaryLambda")
   private static final Predicate<NodeRecordInfo> FILTER =
       nodeRecord -> nodeRecord.getStatus().equals(NodeStatus.ACTIVE);
+
   private final TreeSet<NodeRecordInfo> bucket =
       new TreeSet<>((o1, o2) -> o2.getNode().hashCode() - o1.getNode().hashCode());
 

@@ -14,7 +14,7 @@ public interface TalkHandler {
   TalkHandler NOOP = (a, b, c) -> CompletableFuture.completedFuture(Bytes.EMPTY);
 
   /**
-   * @return empty bytes if the application doesn't support the protocol. Response bytes otherwise
+   * return empty bytes if the application doesn't support the protocol. Response bytes otherwise
    */
   CompletableFuture<Bytes> talk(NodeRecord srcNode, Bytes protocol, Bytes request);
 }

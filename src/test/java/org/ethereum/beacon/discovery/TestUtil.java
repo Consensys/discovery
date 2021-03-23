@@ -34,7 +34,7 @@ public class TestUtil {
    * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
    * same port. Signature is not validated.
    *
-   * @return <code><private key, node record></code>
+   * <p>return { @code (privateKey, nodeRecord) }
    */
   public static NodeInfo generateUnverifiedNode(int port) {
     return generateNode(port, false, true);
@@ -44,7 +44,7 @@ public class TestUtil {
    * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
    * same port. Validation will fail.
    *
-   * @return <code><private key, node record></code>
+   * <p>return { @code (privateKey, nodeRecord) }
    */
   public static NodeInfo generateInvalidNode(int port) {
     return generateNode(port, true, false);
@@ -54,8 +54,7 @@ public class TestUtil {
    * Generates node on 127.0.0.1 with provided port. Node key is random, but always the same for the
    * same port.
    *
-   * @param port listen port
-   * @return <code><private key, node record></code>
+   * @param port listen port return { @code (privateKey, nodeRecord) }
    */
   public static NodeInfo generateNode(int port) {
     return generateNode(port, true, true);
@@ -67,8 +66,7 @@ public class TestUtil {
    *
    * @param port listen port
    * @param verification whether to verify signatures
-   * @param sign whether or not to sign the record
-   * @return <code><private key, node record></code>
+   * @param sign whether or not to sign the record return { @code (privateKey, nodeRecord) }
    */
   private static NodeInfo generateNode(int port, boolean verification, boolean sign) {
     final Random rnd = new Random(SEED);
