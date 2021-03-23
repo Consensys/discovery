@@ -62,8 +62,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
       Bytes12 whoAreYouNonce = whoAreYouPacket.getHeader().getStaticHeader().getNonce();
-      boolean nonceMatches = session.getLastOutboundNonce()
-          .map(whoAreYouNonce::equals).orElse(false);
+      boolean nonceMatches =
+          session.getLastOutboundNonce().map(whoAreYouNonce::equals).orElse(false);
       if (!nonceMatches) {
         logger.error(
             "Verification not passed for message [{}] from node {} in status {}",

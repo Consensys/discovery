@@ -131,7 +131,6 @@ public class NodeSessionManager implements EnvelopeHandler {
         .findFirst();
   }
 
-
   private NodeSession createNodeSession(final SessionKey key) {
     Optional<NodeRecord> nodeRecord = nodeTable.getNode(key.nodeId).map(NodeRecordInfo::getNode);
     SecureRandom random = new SecureRandom();

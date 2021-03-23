@@ -165,7 +165,8 @@ public class HandshakeHandlersTest {
     Bytes16 idNonce = Bytes16.random(rnd);
     nodeSessionAt2For1.setIdNonce(idNonce);
     WhoAreYouPacket whoAreYouPacket =
-        WhoAreYouPacket.create(Header.createWhoAreYouHeader(randomMessageNonce, idNonce, UInt64.ZERO));
+        WhoAreYouPacket.create(
+            Header.createWhoAreYouHeader(randomMessageNonce, idNonce, UInt64.ZERO));
     nodeSessionAt2For1.sendOutgoingWhoAreYou(whoAreYouPacket);
 
     envelopeAt1From2.put(Field.PACKET_WHOAREYOU, whoAreYouPacket);

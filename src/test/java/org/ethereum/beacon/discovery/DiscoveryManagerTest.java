@@ -6,7 +6,6 @@ package org.ethereum.beacon.discovery;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
@@ -197,7 +196,6 @@ public class DiscoveryManagerTest {
         .isEqualTo(
             ((OrdinaryMessagePacket) out1_1.getPacket()).getHeader().getStaticHeader().getNonce());
 
-
     TestMessage out1_2 = m1.nextOutbound();
     m2.deliver(out1_2); // Handshake + pending Ping
 
@@ -217,8 +215,9 @@ public class DiscoveryManagerTest {
     assertThat(pingRes2).isCompleted();
 
     // all message (except WhoAreYou) nonces should be distinct
-    assertThat(Stream.of(out1_1, out1_2, out1_3, out2_2, out2_3)
-        .map(packet -> packet.getPacket().getHeader().getStaticHeader().getNonce()))
+    assertThat(
+            Stream.of(out1_1, out1_2, out1_3, out2_2, out2_3)
+                .map(packet -> packet.getPacket().getHeader().getStaticHeader().getNonce()))
         .doesNotHaveDuplicates();
   }
 }

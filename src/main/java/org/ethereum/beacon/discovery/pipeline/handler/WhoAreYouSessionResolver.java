@@ -23,7 +23,6 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(WhoAreYouSessionResolver.class);
   private final NodeSessionManager nodeSessionManager;
 
-
   public WhoAreYouSessionResolver(NodeSessionManager nodeSessionManager) {
     this.nodeSessionManager = nodeSessionManager;
   }
