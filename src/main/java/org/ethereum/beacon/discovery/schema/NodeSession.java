@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -70,6 +71,7 @@ public class NodeSession {
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
+  private final Function<Random, Bytes12> nonceGenerator;
 
   public NodeSession(
       Bytes nodeId,
@@ -93,6 +95,7 @@ public class NodeSession {
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
     this.requestExpirationScheduler = requestExpirationScheduler;
+    this.nonceGenerator = new NonceGenerator();
   }
 
   public Bytes getNodeId() {
@@ -226,7 +229,7 @@ public class NodeSession {
 
   /** Generates random nonce */
   public synchronized Bytes12 generateNonce() {
-    Bytes12 nonceBytes = Bytes12.random(rnd);
+    Bytes12 nonceBytes = nonceGenerator.apply(rnd);
     lastOutboundNonce = Optional.of(nonceBytes);
     return nonceBytes;
   }

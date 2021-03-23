@@ -20,7 +20,6 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskStatus;
-import org.ethereum.beacon.discovery.type.Bytes12;
 
 /** Gets next request task in session and processes it */
 public class NextTaskHandler implements EnvelopeHandler {
