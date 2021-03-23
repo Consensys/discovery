@@ -49,7 +49,6 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -80,7 +79,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-    NonceRepository nonceRepository = new NonceRepository();
 
     this.discoveryServer = discoveryServer;
     nodeSessionManager =
@@ -88,13 +86,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
-            nonceRepository,
             nodeTable,
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
-        .addHandler(new WhoAreYouSessionResolver(nonceRepository))
+        .addHandler(new WhoAreYouSessionResolver(nodeSessionManager))
         .addHandler(new UnknownPacketTagToSender())
         .addHandler(nodeSessionManager)
         .addHandler(new PacketDispatcherHandler())

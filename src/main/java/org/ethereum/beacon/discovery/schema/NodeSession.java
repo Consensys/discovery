@@ -38,7 +38,6 @@ import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -50,12 +49,10 @@ import org.ethereum.beacon.discovery.util.Functions;
 public class NodeSession {
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
 
-  public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
   private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final NonceRepository nonceRepo;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
@@ -72,6 +69,7 @@ public class NodeSession {
   private final Bytes staticNodeKey;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
+  private Optional<Bytes12> lastOutboundNonce = Optional.empty();
 
   public NodeSession(
       Bytes nodeId,
@@ -81,7 +79,6 @@ public class NodeSession {
       Bytes staticNodeKey,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
-      NonceRepository nonceRepo,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
       ExpirationScheduler<Bytes> requestExpirationScheduler) {
@@ -89,7 +86,6 @@ public class NodeSession {
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
     this.localNodeRecordStore = localNodeRecordStore;
-    this.nonceRepo = nonceRepo;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
@@ -128,7 +124,7 @@ public class NodeSession {
     logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Bytes16 maskingIV = generateMaskingIV();
     Header<OrdinaryAuthData> header =
-        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet =
         OrdinaryMessagePacket.create(maskingIV, header, message, getInitiatorKey());
     sendOutgoing(maskingIV, packet);
@@ -136,7 +132,7 @@ public class NodeSession {
 
   public void sendOutgoingRandom(Bytes randomData) {
     Header<OrdinaryAuthData> header =
-        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
     logger.trace(
         () -> String.format("Sending outgoing Random message %s in session %s", packet, this));
@@ -228,29 +224,20 @@ public class NodeSession {
         });
   }
 
-  /** Generates random nonce of {@link #NONCE_SIZE} size */
+  /** Generates random nonce */
   public synchronized Bytes12 generateNonce() {
-    byte[] nonce = new byte[NONCE_SIZE];
-    rnd.nextBytes(nonce);
-    return Bytes12.wrap(nonce);
+    Bytes12 nonceBytes = Bytes12.random(rnd);
+    lastOutboundNonce = Optional.of(nonceBytes);
+    return nonceBytes;
+  }
+
+  public Optional<Bytes12> getLastOutboundNonce() {
+    return lastOutboundNonce;
   }
 
   /** If true indicates that handshake is complete */
   public synchronized boolean isAuthenticated() {
     return SessionState.AUTHENTICATED.equals(state);
-  }
-
-  /** Resets stored authTags for this session making them obsolete */
-  public void cleanup() {
-    nonceRepo.expire(this);
-  }
-
-  public Optional<Bytes12> getNonce() {
-    return nonceRepo.getNonce(this);
-  }
-
-  public void setNonce(Bytes12 nonce) {
-    nonceRepo.put(nonce, this);
   }
 
   public Bytes32 getHomeNodeId() {

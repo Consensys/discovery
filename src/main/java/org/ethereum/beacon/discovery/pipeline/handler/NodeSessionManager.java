@@ -31,7 +31,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
+import org.ethereum.beacon.discovery.type.Bytes12;
 
 /**
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
@@ -44,7 +44,6 @@ public class NodeSessionManager implements EnvelopeHandler {
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
-  private final NonceRepository nonceRepository;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
@@ -55,14 +54,12 @@ public class NodeSessionManager implements EnvelopeHandler {
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeBucketStorage nodeBucketStorage,
-      NonceRepository nonceRepository,
       NodeTable nodeTable,
       Pipeline outgoingPipeline,
       ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
-    this.nonceRepository = nonceRepository;
     this.nodeTable = nodeTable;
     this.outgoingPipeline = outgoingPipeline;
     this.sessionExpirationScheduler =
@@ -117,10 +114,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   private void deleteSession(SessionKey sessionKey) {
-    NodeSession session = recentSessions.remove(sessionKey);
-    if (session != null) {
-      session.cleanup();
-    }
+    recentSessions.remove(sessionKey);
   }
 
   @VisibleForTesting
@@ -130,6 +124,13 @@ public class NodeSessionManager implements EnvelopeHandler {
         .map(Entry::getValue)
         .findFirst();
   }
+
+  public Optional<NodeSession> getNodeSessionByLastOutboundNonce(Bytes12 nonce) {
+    return recentSessions.values().stream()
+        .filter(session -> session.getLastOutboundNonce().map(nonce::equals).orElse(false))
+        .findFirst();
+  }
+
 
   private NodeSession createNodeSession(final SessionKey key) {
     Optional<NodeRecord> nodeRecord = nodeTable.getNode(key.nodeId).map(NodeRecordInfo::getNode);
@@ -142,7 +143,6 @@ public class NodeSessionManager implements EnvelopeHandler {
         staticNodeKey,
         nodeTable,
         nodeBucketStorage,
-        nonceRepository,
         outgoingPipeline::push,
         random,
         requestExpirationScheduler);

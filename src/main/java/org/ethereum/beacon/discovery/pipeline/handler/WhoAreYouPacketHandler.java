@@ -25,6 +25,7 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.web3j.crypto.ECKeyPair;
@@ -60,11 +61,10 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     try {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
-      if (!whoAreYouPacket
-          .getHeader()
-          .getStaticHeader()
-          .getNonce()
-          .equals(session.getNonce().orElseThrow())) {
+      Bytes12 whoAreYouNonce = whoAreYouPacket.getHeader().getStaticHeader().getNonce();
+      boolean nonceMatches = session.getLastOutboundNonce()
+          .map(whoAreYouNonce::equals).orElse(false);
+      if (!nonceMatches) {
         logger.error(
             "Verification not passed for message [{}] from node {} in status {}",
             whoAreYouPacket,

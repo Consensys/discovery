@@ -70,7 +70,6 @@ public class NextTaskHandler implements EnvelopeHandler {
     Bytes12 nonce = session.generateNonce();
 
     if (session.getState().equals(SessionState.INITIAL)) {
-      session.setNonce(nonce);
       session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE));
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {

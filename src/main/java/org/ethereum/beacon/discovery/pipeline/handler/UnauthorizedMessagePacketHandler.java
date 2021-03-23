@@ -45,7 +45,6 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
     try {
       // packet it either random or message packet if session is expired
       Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
-      session.setNonce(msgNonce);
       Bytes16 idNonce = Bytes16.random(Functions.getRandom());
       session.setIdNonce(idNonce);
 
