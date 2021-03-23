@@ -32,6 +32,7 @@ import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthDa
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
@@ -54,6 +55,7 @@ public class NodeSession {
   private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final NodeSessionManager nodeSessionManager;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
@@ -77,6 +79,7 @@ public class NodeSession {
       Bytes nodeId,
       Optional<NodeRecord> nodeRecord,
       InetSocketAddress remoteAddress,
+      NodeSessionManager nodeSessionManager,
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeTable nodeTable,
@@ -88,6 +91,7 @@ public class NodeSession {
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
     this.localNodeRecordStore = localNodeRecordStore;
+    this.nodeSessionManager = nodeSessionManager;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
@@ -228,13 +232,19 @@ public class NodeSession {
   }
 
   /** Generates random nonce */
-  public synchronized Bytes12 generateNonce() {
-    Bytes12 nonceBytes = nonceGenerator.apply(rnd);
-    lastOutboundNonce = Optional.of(nonceBytes);
-    return nonceBytes;
+  public Bytes12 generateNonce() {
+    final Optional<Bytes12> oldNonce;
+    final Bytes12 newNonce;
+    synchronized (this) {
+      newNonce = nonceGenerator.apply(rnd);
+      oldNonce = lastOutboundNonce;
+      lastOutboundNonce = Optional.of(newNonce);
+    }
+    nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
+    return newNonce;
   }
 
-  public Optional<Bytes12> getLastOutboundNonce() {
+  public synchronized Optional<Bytes12> getLastOutboundNonce() {
     return lastOutboundNonce;
   }
 

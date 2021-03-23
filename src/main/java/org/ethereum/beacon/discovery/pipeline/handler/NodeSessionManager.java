@@ -44,6 +44,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   private final Bytes staticNodeKey;
   private final NodeBucketStorage nodeBucketStorage;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
+  private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
   private final ExpirationScheduler<SessionKey> sessionExpirationScheduler;
@@ -113,7 +114,10 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   private void deleteSession(SessionKey sessionKey) {
-    recentSessions.remove(sessionKey);
+    NodeSession removedSession = recentSessions.remove(sessionKey);
+    if (removedSession != null) {
+      removedSession.getLastOutboundNonce().ifPresent(lastNonceToSession::remove);
+    }
   }
 
   @VisibleForTesting
@@ -125,9 +129,13 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   public Optional<NodeSession> getNodeSessionByLastOutboundNonce(Bytes12 nonce) {
-    return recentSessions.values().stream()
-        .filter(session -> session.getLastOutboundNonce().map(nonce::equals).orElse(false))
-        .findFirst();
+    return Optional.ofNullable(lastNonceToSession.get(nonce));
+  }
+
+  public void onSessionLastNonceUpdate(
+      NodeSession session, Optional<Bytes12> previousNonce, Bytes12 newNonce) {
+    previousNonce.ifPresent(lastNonceToSession::remove);
+    lastNonceToSession.put(newNonce, session);
   }
 
   private NodeSession createNodeSession(final SessionKey key) {
@@ -137,6 +145,7 @@ public class NodeSessionManager implements EnvelopeHandler {
         key.nodeId,
         nodeRecord,
         key.remoteSocketAddress,
+        this,
         localNodeRecordStore,
         staticNodeKey,
         nodeTable,

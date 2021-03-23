@@ -121,6 +121,7 @@ public class HandshakeHandlersTest {
             nodeRecord2.getNodeId(),
             Optional.of(nodeRecord2),
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
             nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
@@ -140,6 +141,7 @@ public class HandshakeHandlersTest {
             nodeRecord1.getNodeId(),
             Optional.of(nodeRecord1),
             nodeRecord1.getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
             new LocalNodeRecordStore(
                 nodeRecord2,
                 nodePair2.getPrivateKey(),
