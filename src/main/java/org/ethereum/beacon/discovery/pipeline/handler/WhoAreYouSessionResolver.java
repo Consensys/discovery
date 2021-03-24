@@ -14,7 +14,6 @@ import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 
 /**
  * Resolves session using `nonceRepository` for `WHOAREYOU` packets which should be placed in {@link
@@ -22,10 +21,10 @@ import org.ethereum.beacon.discovery.storage.NonceRepository;
  */
 public class WhoAreYouSessionResolver implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(WhoAreYouSessionResolver.class);
-  private final NonceRepository nonceRepository;
+  private final NodeSessionManager nodeSessionManager;
 
-  public WhoAreYouSessionResolver(NonceRepository nonceRepository) {
-    this.nonceRepository = nonceRepository;
+  public WhoAreYouSessionResolver(NodeSessionManager nodeSessionManager) {
+    this.nodeSessionManager = nodeSessionManager;
   }
 
   @Override
@@ -46,7 +45,8 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
 
     WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) packet;
     Optional<NodeSession> nodeSessionMaybe =
-        nonceRepository.get(whoAreYouPacket.getHeader().getStaticHeader().getNonce());
+        nodeSessionManager.getNodeSessionByLastOutboundNonce(
+            whoAreYouPacket.getHeader().getStaticHeader().getNonce());
 
     nodeSessionMaybe.ifPresentOrElse(
         session -> {

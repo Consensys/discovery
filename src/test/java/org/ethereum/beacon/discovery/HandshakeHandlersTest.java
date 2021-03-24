@@ -67,7 +67,6 @@ import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.junit.jupiter.api.Test;
@@ -107,7 +106,6 @@ public class HandshakeHandlersTest {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
           outgoing1Packets.add(parcel.getPacket());
         };
-    NonceRepository nonceRepository1 = new NonceRepository();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(
             nodeRecord1,
@@ -123,11 +121,11 @@ public class HandshakeHandlersTest {
             nodeRecord2.getNodeId(),
             Optional.of(nodeRecord2),
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
             nodePair1.getPrivateKey(),
             nodeTableStorage1.get(),
             nodeBucketStorage1,
-            nonceRepository1,
             outgoingMessages1to2,
             rnd,
             reqeustExpirationScheduler);
@@ -143,6 +141,7 @@ public class HandshakeHandlersTest {
             nodeRecord1.getNodeId(),
             Optional.of(nodeRecord1),
             nodeRecord1.getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
             new LocalNodeRecordStore(
                 nodeRecord2,
                 nodePair2.getPrivateKey(),
@@ -151,7 +150,6 @@ public class HandshakeHandlersTest {
             nodePair2.getPrivateKey(),
             nodeTableStorage2.get(),
             nodeBucketStorage2,
-            new NonceRepository(),
             outgoingMessages2to1,
             rnd,
             reqeustExpirationScheduler);
@@ -160,13 +158,17 @@ public class HandshakeHandlersTest {
     Pipeline outgoingPipeline = new PipelineImpl().build();
     WhoAreYouPacketHandler whoAreYouPacketHandlerNode1 =
         new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler);
+
+    nodeSessionAt1For2.sendOutgoingRandom(Bytes.random(128));
+    Bytes12 randomMessageNonce = nodeSessionAt1For2.getLastOutboundNonce().orElseThrow();
+    outgoing1Packets.clear();
+
     Envelope envelopeAt1From2 = new Envelope();
     Bytes16 idNonce = Bytes16.random(rnd);
     nodeSessionAt2For1.setIdNonce(idNonce);
-    Bytes12 authTag = nodeSessionAt2For1.generateNonce();
-    nonceRepository1.put(authTag, nodeSessionAt1For2);
     WhoAreYouPacket whoAreYouPacket =
-        WhoAreYouPacket.create(Header.createWhoAreYouHeader(authTag, idNonce, UInt64.ZERO));
+        WhoAreYouPacket.create(
+            Header.createWhoAreYouHeader(randomMessageNonce, idNonce, UInt64.ZERO));
     nodeSessionAt2For1.sendOutgoingWhoAreYou(whoAreYouPacket);
 
     envelopeAt1From2.put(Field.PACKET_WHOAREYOU, whoAreYouPacket);

@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -31,6 +32,7 @@ import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthDa
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
@@ -38,7 +40,6 @@ import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NonceRepository;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -50,12 +51,11 @@ import org.ethereum.beacon.discovery.util.Functions;
 public class NodeSession {
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
 
-  public static final int NONCE_SIZE = 12;
   public static final int REQUEST_ID_SIZE = 8;
   private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final NonceRepository nonceRepo;
+  private final NodeSessionManager nodeSessionManager;
   private final NodeTable nodeTable;
   private final NodeBucketStorage nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
@@ -72,16 +72,18 @@ public class NodeSession {
   private final Bytes staticNodeKey;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
+  private Optional<Bytes12> lastOutboundNonce = Optional.empty();
+  private final Function<Random, Bytes12> nonceGenerator;
 
   public NodeSession(
       Bytes nodeId,
       Optional<NodeRecord> nodeRecord,
       InetSocketAddress remoteAddress,
+      NodeSessionManager nodeSessionManager,
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeTable nodeTable,
       NodeBucketStorage nodeBucketStorage,
-      NonceRepository nonceRepo,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
       ExpirationScheduler<Bytes> requestExpirationScheduler) {
@@ -89,7 +91,7 @@ public class NodeSession {
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
     this.localNodeRecordStore = localNodeRecordStore;
-    this.nonceRepo = nonceRepo;
+    this.nodeSessionManager = nodeSessionManager;
     this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
@@ -97,6 +99,7 @@ public class NodeSession {
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
     this.requestExpirationScheduler = requestExpirationScheduler;
+    this.nonceGenerator = new NonceGenerator();
   }
 
   public Bytes getNodeId() {
@@ -128,7 +131,7 @@ public class NodeSession {
     logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Bytes16 maskingIV = generateMaskingIV();
     Header<OrdinaryAuthData> header =
-        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet =
         OrdinaryMessagePacket.create(maskingIV, header, message, getInitiatorKey());
     sendOutgoing(maskingIV, packet);
@@ -136,7 +139,7 @@ public class NodeSession {
 
   public void sendOutgoingRandom(Bytes randomData) {
     Header<OrdinaryAuthData> header =
-        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(getNonce().get()));
+        Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
     logger.trace(
         () -> String.format("Sending outgoing Random message %s in session %s", packet, this));
@@ -228,29 +231,26 @@ public class NodeSession {
         });
   }
 
-  /** Generates random nonce of {@link #NONCE_SIZE} size */
-  public synchronized Bytes12 generateNonce() {
-    byte[] nonce = new byte[NONCE_SIZE];
-    rnd.nextBytes(nonce);
-    return Bytes12.wrap(nonce);
+  /** Generates random nonce */
+  public Bytes12 generateNonce() {
+    final Optional<Bytes12> oldNonce;
+    final Bytes12 newNonce;
+    synchronized (this) {
+      newNonce = nonceGenerator.apply(rnd);
+      oldNonce = lastOutboundNonce;
+      lastOutboundNonce = Optional.of(newNonce);
+    }
+    nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
+    return newNonce;
+  }
+
+  public synchronized Optional<Bytes12> getLastOutboundNonce() {
+    return lastOutboundNonce;
   }
 
   /** If true indicates that handshake is complete */
   public synchronized boolean isAuthenticated() {
     return SessionState.AUTHENTICATED.equals(state);
-  }
-
-  /** Resets stored authTags for this session making them obsolete */
-  public void cleanup() {
-    nonceRepo.expire(this);
-  }
-
-  public Optional<Bytes12> getNonce() {
-    return nonceRepo.getNonce(this);
-  }
-
-  public void setNonce(Bytes12 nonce) {
-    nonceRepo.put(nonce, this);
   }
 
   public Bytes32 getHomeNodeId() {

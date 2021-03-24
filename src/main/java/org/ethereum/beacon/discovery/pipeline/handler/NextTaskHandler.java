@@ -20,7 +20,6 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskStatus;
-import org.ethereum.beacon.discovery.type.Bytes12;
 
 /** Gets next request task in session and processes it */
 public class NextTaskHandler implements EnvelopeHandler {
@@ -67,10 +66,8 @@ public class NextTaskHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
-    Bytes12 nonce = session.generateNonce();
 
     if (session.getState().equals(SessionState.INITIAL)) {
-      session.setNonce(nonce);
       session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE));
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {

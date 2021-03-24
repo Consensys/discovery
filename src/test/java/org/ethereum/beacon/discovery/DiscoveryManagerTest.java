@@ -6,8 +6,8 @@ package org.ethereum.beacon.discovery;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
@@ -26,9 +26,6 @@ import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 public class DiscoveryManagerTest {
-  public static final String LOCALHOST = "127.0.0.1";
-  public static final Duration RETRY_TIMEOUT = ofSeconds(30);
-  public static final Duration LIVE_CHECK_INTERVAL = ofSeconds(30);
 
   @Test
   public void testRegularHandshake() throws Exception {
@@ -178,5 +175,49 @@ public class DiscoveryManagerTest {
     CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
     m1.exchangeAll(m2_1);
     assertThat(pingRes2).isCompleted();
+  }
+
+  @Test
+  public void testUniqueAesGcmNonceUsed() {
+    TestNetwork network = new TestNetwork();
+    TestManagerWrapper m1 = network.createDiscoveryManager(1);
+    TestManagerWrapper m2 = network.createDiscoveryManager(2);
+
+    CompletableFuture<Void> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+
+    TestMessage out1_1 = m1.nextOutbound();
+    m2.deliver(out1_1); // Random (Ping is pending)
+
+    TestMessage out2_1 = m2.nextOutbound();
+    m1.deliver(out2_1); // WhoAreYou
+
+    // WhoAreYou should have the same nonce as inbound 'random' packet
+    assertThat(((WhoAreYouPacket) out2_1.getPacket()).getHeader().getStaticHeader().getNonce())
+        .isEqualTo(
+            ((OrdinaryMessagePacket) out1_1.getPacket()).getHeader().getStaticHeader().getNonce());
+
+    TestMessage out1_2 = m1.nextOutbound();
+    m2.deliver(out1_2); // Handshake + pending Ping
+
+    TestMessage out2_2 = m2.nextOutbound();
+    m1.deliver(out2_2); // Pong
+
+    assertThat(pingRes1).isCompleted();
+
+    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+
+    TestMessage out1_3 = m1.nextOutbound();
+    m2.deliver(out1_3); // Regular Ping
+
+    TestMessage out2_3 = m2.nextOutbound();
+    m1.deliver(out2_3); // Regular Pong
+
+    assertThat(pingRes2).isCompleted();
+
+    // all message (except WhoAreYou) nonces should be distinct
+    assertThat(
+            Stream.of(out1_1, out1_2, out1_3, out2_2, out2_3)
+                .map(packet -> packet.getPacket().getHeader().getStaticHeader().getNonce()))
+        .doesNotHaveDuplicates();
   }
 }
