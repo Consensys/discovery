@@ -174,8 +174,8 @@ public class NodeRecordTest {
     final NodeRecordFactory nodeRecordFactory =
         new NodeRecordFactory(new IdentitySchemaV4Interpreter());
     final NodeRecord nodeRecord =
-        nodeRecordFactory.fromBase64(
-            "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
+        nodeRecordFactory.fromEnr(
+            "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
     final Bytes nodeId =
         Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
     assertEquals(nodeId, nodeRecord.getNodeId());

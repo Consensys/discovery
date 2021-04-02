@@ -62,6 +62,10 @@ public class NodeRecordFactory {
     return fromBytes(Base64.getUrlDecoder().decode(enrBase64));
   }
 
+  public NodeRecord fromEnr(String enr) {
+    return fromBase64(enr.substring("enr:".length()));
+  }
+
   public NodeRecord fromBytes(Bytes bytes) {
     return fromBytes(bytes.toArray());
   }
