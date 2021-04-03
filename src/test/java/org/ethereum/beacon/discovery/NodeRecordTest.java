@@ -188,6 +188,17 @@ public class NodeRecordTest {
   }
 
   @Test
+  public void shouldDecodeEnr_WithOrWithoutPrefix() {
+    final NodeRecordFactory nodeRecordFactory =
+        new NodeRecordFactory(new IdentitySchemaV4Interpreter());
+    final String base64 =
+        "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8";
+    final NodeRecord nodeRecordWithoutPrefix = nodeRecordFactory.fromEnr(base64);
+    final NodeRecord nodeRecordWithPrefix = nodeRecordFactory.fromEnr("enr:" + base64);
+    assertEquals(nodeRecordWithoutPrefix, nodeRecordWithPrefix);
+  }
+
+  @Test
   public void testEnrWithEthFieldDecodes() {
     final int port = 30303;
     final Bytes ip = Bytes.fromHexString("0x7F000001");

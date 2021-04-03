@@ -63,7 +63,7 @@ public class NodeRecordFactory {
   }
 
   public NodeRecord fromEnr(String enr) {
-    return fromBase64(enr.substring("enr:".length()));
+    return fromBase64(enr.startsWith("enr:") ? enr.substring("enr:".length()) : enr);
   }
 
   public NodeRecord fromBytes(Bytes bytes) {
