@@ -174,8 +174,8 @@ public class NodeRecordTest {
     final NodeRecordFactory nodeRecordFactory =
         new NodeRecordFactory(new IdentitySchemaV4Interpreter());
     final NodeRecord nodeRecord =
-        nodeRecordFactory.fromBase64(
-            "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
+        nodeRecordFactory.fromEnr(
+            "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
     final Bytes nodeId =
         Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
     assertEquals(nodeId, nodeRecord.getNodeId());
@@ -185,6 +185,17 @@ public class NodeRecordTest {
         nodeRecord.get(EnrField.PKEY_SECP256K1));
     assertEquals(Bytes.fromHexString("0x7F000001"), nodeRecord.get(EnrField.IP_V4));
     assertEquals(30303, nodeRecord.get(EnrField.UDP));
+  }
+
+  @Test
+  public void shouldDecodeEnr_WithOrWithoutPrefix() {
+    final NodeRecordFactory nodeRecordFactory =
+        new NodeRecordFactory(new IdentitySchemaV4Interpreter());
+    final String base64 =
+        "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8";
+    final NodeRecord nodeRecordWithoutPrefix = nodeRecordFactory.fromEnr(base64);
+    final NodeRecord nodeRecordWithPrefix = nodeRecordFactory.fromEnr("enr:" + base64);
+    assertEquals(nodeRecordWithoutPrefix, nodeRecordWithPrefix);
   }
 
   @Test
