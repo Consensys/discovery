@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -31,7 +30,6 @@ import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorageImpl;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeSerializerFactory;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactory;
@@ -46,7 +44,6 @@ public class DiscoverySystemBuilder {
   private NodeRecord localNodeRecord;
   private Bytes privateKey;
   private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
-  private Database database;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
   private NewAddressHandler newAddressHandler = NewAddressHandler.NOOP;
@@ -95,11 +92,6 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder database(final Database database) {
-    this.database = database;
-    return this;
-  }
-
   public DiscoverySystemBuilder schedulers(final Schedulers schedulers) {
     this.schedulers = schedulers;
     return this;
@@ -136,8 +128,7 @@ public class DiscoverySystemBuilder {
   }
 
   private void createDefaults() {
-    database = requireNonNullElseGet(database, () -> Database.inMemoryDB());
-    schedulers = requireNonNullElseGet(schedulers, () -> Schedulers.createDefault());
+    schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final InetSocketAddress serverListenAddress =
         listenAddress
             .or(localNodeRecord::getUdpAddress)
@@ -153,14 +144,10 @@ public class DiscoverySystemBuilder {
     nodeTableStorage =
         requireNonNullElseGet(
             nodeTableStorage,
-            () ->
-                nodeTableStorageFactory.createTable(
-                    database, serializerFactory, oldSeq -> localNodeRecord, () -> bootnodes));
+            () -> nodeTableStorageFactory.createTable(oldSeq -> localNodeRecord, () -> bootnodes));
     nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
     nodeBucketStorage =
-        requireNonNullElseGet(
-            nodeBucketStorage,
-            () -> new NodeBucketStorageImpl(database, serializerFactory, localNodeRecord));
+        requireNonNullElseGet(nodeBucketStorage, () -> new NodeBucketStorageImpl(localNodeRecord));
     localNodeRecordStore =
         requireNonNullElseGet(
             localNodeRecordStore,
@@ -179,7 +166,6 @@ public class DiscoverySystemBuilder {
   }
 
   final NodeTableStorageFactory nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-  final NodeSerializerFactory serializerFactory = new NodeSerializerFactory(nodeRecordFactory);
   final int clientNumber = COUNTER.incrementAndGet();
 
   NodeTableStorage nodeTableStorage;

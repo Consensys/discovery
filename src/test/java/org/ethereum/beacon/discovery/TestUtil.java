@@ -7,7 +7,6 @@ package org.ethereum.beacon.discovery;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.format.SerializerFactory;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
@@ -16,7 +15,6 @@ import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.storage.NodeSerializerFactory;
 
 public class TestUtil {
   public static final NodeRecordFactory NODE_RECORD_FACTORY =
@@ -24,8 +22,6 @@ public class TestUtil {
   public static final NodeRecordFactory NODE_RECORD_FACTORY_NO_VERIFICATION =
       new NodeRecordFactory(
           new IdentitySchemaV4InterpreterMock()); // doesn't verify ECDSA signature
-  public static final SerializerFactory TEST_SERIALIZER =
-      new NodeSerializerFactory(NODE_RECORD_FACTORY_NO_VERIFICATION);
   public static final String LOCALHOST = "127.0.0.1";
   static final int SEED = 123456789;
   public static final int TEST_TRAFFIC_READ_LIMIT = 250000;

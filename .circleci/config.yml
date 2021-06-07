@@ -3,9 +3,6 @@ executors:
   medium_executor:
     docker:
       - image: circleci/openjdk:11.0.4-jdk-stretch
-        auth:
-          username: $DOCKER_USER_RO
-          password: $DOCKER_PASSWORD_RO
     resource_class: medium
     working_directory: ~/project
     environment:
@@ -83,4 +80,3 @@ workflows:
             - build
           context:
             - cloudsmith-protocols
-            - dockerhub-quorumengineering-ro
