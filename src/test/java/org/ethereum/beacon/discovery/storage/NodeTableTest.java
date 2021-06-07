@@ -5,7 +5,6 @@
 package org.ethereum.beacon.discovery.storage;
 
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,7 +17,6 @@ import java.util.function.Function;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
@@ -35,11 +33,8 @@ public class NodeTableTest {
   public void testCreate() throws Exception {
     NodeRecord nodeRecord = NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(LOCALHOST_BASE64);
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    Database database = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage =
         nodeTableStorageFactory.createTable(
-            database,
-            TEST_SERIALIZER,
             HOME_NODE_SUPPLIER,
             () -> {
               List<NodeRecord> nodes = new ArrayList<>();
@@ -61,11 +56,8 @@ public class NodeTableTest {
   public void testFind() throws Exception {
     NodeRecord localHostNode = NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(LOCALHOST_BASE64);
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    Database database = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage =
         nodeTableStorageFactory.createTable(
-            database,
-            TEST_SERIALIZER,
             HOME_NODE_SUPPLIER,
             () -> {
               List<NodeRecord> nodes = new ArrayList<>();
