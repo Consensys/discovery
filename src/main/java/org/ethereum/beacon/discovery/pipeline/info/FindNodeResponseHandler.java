@@ -6,7 +6,7 @@ package org.ethereum.beacon.discovery.pipeline.info;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 
 public class FindNodeResponseHandler implements MultiPacketResponseHandler<NodesMessage> {
-  private static final int MAX_TOTAL_PACKETS = 5;
+  private static final int MAX_TOTAL_PACKETS = 16;
   private int totalPackets = -1;
   private int receivedPackets = 0;
 
