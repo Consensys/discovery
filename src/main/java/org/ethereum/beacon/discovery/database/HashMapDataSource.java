@@ -27,13 +27,4 @@ public class HashMapDataSource<K, V> implements DataSource<K, V> {
   public void remove(@Nonnull K key) {
     store.remove(key);
   }
-
-  @Override
-  public void flush() {
-    // nothing to do
-  }
-
-  public Map<K, V> getStore() {
-    return store;
-  }
 }

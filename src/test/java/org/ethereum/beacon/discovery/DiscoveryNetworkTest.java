@@ -6,18 +6,16 @@ package org.ethereum.beacon.discovery;
 
 import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
@@ -46,34 +44,12 @@ public class DiscoveryNetworkTest {
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    Database database1 = Database.inMemoryDB();
-    Database database2 = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage1 =
-        nodeTableStorageFactory.createTable(
-            database1,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord1,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord2);
-                  }
-                });
-    NodeBucketStorage nodeBucketStorage1 =
-        nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
+        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
+    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
     NodeTableStorage nodeTableStorage2 =
-        nodeTableStorageFactory.createTable(
-            database2,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord2,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord1);
-                  }
-                });
-    NodeBucketStorage nodeBucketStorage2 =
-        nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
+        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord2, () -> List.of(nodeRecord1));
+    NodeBucketStorage nodeBucketStorage2 = nodeTableStorageFactory.createBucketStorage(nodeRecord2);
     ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =

@@ -6,7 +6,6 @@ package org.ethereum.beacon.discovery;
 
 import static java.util.Collections.singletonList;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.pipeline.Field.BAD_PACKET;
 import static org.ethereum.beacon.discovery.pipeline.Field.MASKING_IV;
 import static org.ethereum.beacon.discovery.pipeline.Field.MESSAGE;
@@ -30,7 +29,6 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
@@ -86,18 +84,12 @@ public class HandshakeHandlersTest {
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    Database database1 = Database.inMemoryDB();
-    Database database2 = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage1 =
-        nodeTableStorageFactory.createTable(
-            database1, TEST_SERIALIZER, (oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 =
-        nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
+        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
+    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
     NodeTableStorage nodeTableStorage2 =
-        nodeTableStorageFactory.createTable(
-            database2, TEST_SERIALIZER, (oldSeq) -> nodeRecord2, () -> List.of(nodeRecord1));
-    NodeBucketStorage nodeBucketStorage2 =
-        nodeTableStorageFactory.createBucketStorage(database2, TEST_SERIALIZER, nodeRecord2);
+        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord2, () -> List.of(nodeRecord1));
+    NodeBucketStorage nodeBucketStorage2 = nodeTableStorageFactory.createBucketStorage(nodeRecord2);
 
     // Node1 create AuthHeaderPacket
     LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();

@@ -12,6 +12,4 @@ public interface NodeBucketStorage {
   Optional<NodeBucket> get(int index);
 
   void put(NodeRecordInfo nodeRecordInfo);
-
-  void commit();
 }

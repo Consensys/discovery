@@ -38,11 +38,4 @@ public interface DataSource<KeyType, ValueType> extends ReadonlyDataSource<KeyTy
    * @param key Key
    */
   void remove(@Nonnull KeyType key);
-
-  /**
-   * If the implementation class accumulates any updates this method should flush all the updates
-   * into underlying storage If all updates are immediately propagated to the underlying storage
-   * this method should do nothing.
-   */
-  void flush();
 }

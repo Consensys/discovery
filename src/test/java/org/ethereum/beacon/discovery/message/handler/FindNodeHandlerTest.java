@@ -4,7 +4,6 @@
 package org.ethereum.beacon.discovery.message.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -23,7 +22,6 @@ import java.util.stream.IntStream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
@@ -44,8 +42,7 @@ public class FindNodeHandlerTest {
   private NodeInfo homeNodePair = TestUtil.generateUnverifiedNode(30303);
   private NodeRecord homeNodeRecord = homeNodePair.getNodeRecord();
   private NodeBucketStorage nodeBucketStorage =
-      new NodeTableStorageFactoryImpl()
-          .createBucketStorage(Database.inMemoryDB(), TEST_SERIALIZER, homeNodeRecord);
+      new NodeTableStorageFactoryImpl().createBucketStorage(homeNodeRecord);
   private NodeSession session = mock(NodeSession.class);
   private Map<Integer, List<NodeRecord>> tableRecords = new HashMap<>();
 

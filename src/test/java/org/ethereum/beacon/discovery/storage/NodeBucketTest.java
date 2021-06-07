@@ -3,14 +3,12 @@
  */
 package org.ethereum.beacon.discovery.storage;
 
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.IntStream;
 import org.ethereum.beacon.discovery.TestUtil;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
@@ -71,10 +69,9 @@ public class NodeBucketTest {
   @Test
   public void testStorage() {
     NodeRecordInfo initial = generateUniqueRecord(0);
-    Database database = Database.inMemoryDB();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     NodeBucketStorage nodeBucketStorage =
-        nodeTableStorageFactory.createBucketStorage(database, TEST_SERIALIZER, initial.getNode());
+        nodeTableStorageFactory.createBucketStorage(initial.getNode());
 
     int j = 1;
     for (int i = 0; i < 20; ) {

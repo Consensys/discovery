@@ -5,17 +5,15 @@
 package org.ethereum.beacon.discovery;
 
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
-import static org.ethereum.beacon.discovery.TestUtil.TEST_SERIALIZER;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.database.Database;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
@@ -57,20 +55,9 @@ public class DiscoveryInteropTest {
         NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(
             "-IS4QHa5-0-OmPRchyyBf9jHIWnQlZXthveUPp5_DoDnMMB0V9ChlzNq_fhFixvIr8xOQcKrYsWjjeIBoUIS8HSuWbgBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMOLLdCQcDE_I6BZvGnmgXVsN2VgTp0sJRSnzF9XDnSNYN1ZHCCdl8"); // Geth node
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    Database database1 = Database.inMemoryDB();
     NodeTableStorage nodeTableStorage1 =
-        nodeTableStorageFactory.createTable(
-            database1,
-            TEST_SERIALIZER,
-            (oldSeq) -> nodeRecord1,
-            () ->
-                new ArrayList<NodeRecord>() {
-                  {
-                    add(nodeRecord2);
-                  }
-                });
-    NodeBucketStorage nodeBucketStorage1 =
-        nodeTableStorageFactory.createBucketStorage(database1, TEST_SERIALIZER, nodeRecord1);
+        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
+    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
