@@ -12,6 +12,4 @@ public interface NodeTableStorage {
   NodeTable get();
 
   SingleValueSource<NodeRecordInfo> getHomeNodeSource();
-
-  void commit();
 }

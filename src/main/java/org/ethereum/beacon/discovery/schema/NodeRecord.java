@@ -231,6 +231,8 @@ public class NodeRecord {
         + this.asBase64()
         + ", nodeId="
         + this.getNodeId()
+        + ", customFields="
+        + fields
         + '}';
   }
 }
