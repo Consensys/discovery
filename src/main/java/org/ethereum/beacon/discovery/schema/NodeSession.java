@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -37,7 +38,6 @@ import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.type.Bytes12;
@@ -342,8 +342,8 @@ public class NodeSession {
     nodeBucketStorage.put(nodeRecordInfo);
   }
 
-  public Optional<NodeBucket> getBucket(int index) {
-    return nodeBucketStorage.get(index);
+  public Stream<NodeRecordInfo> getNodeRecordsInBucket(int index) {
+    return nodeBucketStorage.getNodeRecords(index);
   }
 
   public synchronized Bytes getIdNonce() {

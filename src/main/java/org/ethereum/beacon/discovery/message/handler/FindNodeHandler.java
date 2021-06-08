@@ -44,8 +44,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
     List<NodeRecord> nodeRecordInfos =
         message.getDistances().stream()
             .distinct()
-            .flatMap(d -> session.getBucket(d).stream())
-            .flatMap(b -> b.getNodeRecords().stream())
+            .flatMap(session::getNodeRecordsInBucket)
             .limit(MAX_TOTAL_NODES_PER_RESPONSE)
             .map(NodeRecordInfo::getNode)
             .collect(Collectors.toList());

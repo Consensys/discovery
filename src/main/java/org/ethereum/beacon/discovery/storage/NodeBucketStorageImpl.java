@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.HoleyList;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -30,9 +31,13 @@ public class NodeBucketStorageImpl implements NodeBucketStorage {
     nodeBucketsTable.put(0, zero);
   }
 
-  @Override
-  public Optional<NodeBucket> get(int index) {
+  private Optional<NodeBucket> get(int index) {
     return nodeBucketsTable.get(index);
+  }
+
+  @Override
+  public Stream<NodeRecordInfo> getNodeRecords(final int index) {
+    return get(index).stream().flatMap(bucket -> bucket.getNodeRecords().stream());
   }
 
   @Override

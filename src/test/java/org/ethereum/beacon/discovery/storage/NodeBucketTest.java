@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery.storage;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,9 +93,9 @@ public class NodeBucketTest {
       }
       ++j;
     }
-    assertEquals(16, nodeBucketStorage.get(255).get().size());
-    assertEquals(3, nodeBucketStorage.get(254).get().size());
-    assertFalse(nodeBucketStorage.get(253).isPresent());
-    assertFalse(nodeBucketStorage.get(256).isPresent());
+    assertThat(nodeBucketStorage.getNodeRecords(255)).hasSize(16);
+    assertThat(nodeBucketStorage.getNodeRecords(254)).hasSize(3);
+    assertThat(nodeBucketStorage.getNodeRecords(253)).isEmpty();
+    assertThat(nodeBucketStorage.getNodeRecords(256)).isEmpty();
   }
 }

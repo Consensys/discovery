@@ -49,8 +49,10 @@ public class FindNodeHandlerTest {
   private FindNodeHandler nodeHandler = new FindNodeHandler();
 
   {
-    when(session.getBucket(anyInt()))
-        .thenAnswer(invocation -> nodeBucketStorage.get(invocation.getArgument(0, Integer.class)));
+    when(session.getNodeRecordsInBucket(anyInt()))
+        .thenAnswer(
+            invocation ->
+                nodeBucketStorage.getNodeRecords(invocation.getArgument(0, Integer.class)));
     for (int i = 0; i < 256; i++) {
       for (int j = 0; j < i % 3; j++) {
         NodeRecord record = generateNodeAtDistance(i);
