@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNullElseGet;
@@ -141,11 +142,6 @@ public class DiscoverySystemBuilder {
             discoveryServer,
             () -> new NettyDiscoveryServerImpl(serverListenAddress, trafficReadLimit));
 
-    nodeTableStorage =
-        requireNonNullElseGet(
-            nodeTableStorage,
-            () -> nodeTableStorageFactory.createTable(oldSeq -> localNodeRecord, () -> bootnodes));
-    nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
     nodeBucketStorage =
         requireNonNullElseGet(nodeBucketStorage, () -> new NodeBucketStorageImpl(localNodeRecord));
     localNodeRecordStore =
@@ -154,6 +150,10 @@ public class DiscoverySystemBuilder {
             () ->
                 new LocalNodeRecordStore(
                     localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
+    nodeTableStorage =
+        requireNonNullElseGet(
+            nodeTableStorage, () -> nodeTableStorageFactory.createTable(bootnodes));
+    nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,
@@ -178,6 +178,10 @@ public class DiscoverySystemBuilder {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(privateKey, "Missing private key");
     createDefaults();
+
+    // Check local node record is valid
+    checkArgument(
+        localNodeRecordStore.getLocalNodeRecord().isValid(), "Local node record is invalid");
 
     final DiscoveryManager discoveryManager = buildDiscoveryManager();
 
