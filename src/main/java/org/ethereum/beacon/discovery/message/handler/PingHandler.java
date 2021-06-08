@@ -14,7 +14,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 public class PingHandler implements MessageHandler<PingMessage> {
   @Override
   public void handle(PingMessage message, NodeSession session) {
-    final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
+    final NodeRecord nodeRecord = session.getHomeNodeRecord();
     final InetSocketAddress remoteAddress = session.getRemoteAddress();
     PongMessage responseMessage =
         new PongMessage(
