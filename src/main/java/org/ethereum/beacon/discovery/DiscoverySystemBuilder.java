@@ -142,14 +142,15 @@ public class DiscoverySystemBuilder {
             discoveryServer,
             () -> new NettyDiscoveryServerImpl(serverListenAddress, trafficReadLimit));
 
-    nodeBucketStorage =
-        requireNonNullElseGet(nodeBucketStorage, () -> new NodeBucketStorageImpl(localNodeRecord));
     localNodeRecordStore =
         requireNonNullElseGet(
             localNodeRecordStore,
             () ->
                 new LocalNodeRecordStore(
                     localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
+    nodeBucketStorage =
+        requireNonNullElseGet(
+            nodeBucketStorage, () -> new NodeBucketStorageImpl(localNodeRecordStore));
     nodeTableStorage =
         requireNonNullElseGet(
             nodeTableStorage, () -> nodeTableStorageFactory.createTable(bootnodes));

@@ -29,7 +29,10 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
+import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
+import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
@@ -42,7 +45,13 @@ public class FindNodeHandlerTest {
   private NodeInfo homeNodePair = TestUtil.generateUnverifiedNode(30303);
   private NodeRecord homeNodeRecord = homeNodePair.getNodeRecord();
   private NodeBucketStorage nodeBucketStorage =
-      new NodeTableStorageFactoryImpl().createBucketStorage(homeNodeRecord);
+      new NodeTableStorageFactoryImpl()
+          .createBucketStorage(
+              new LocalNodeRecordStore(
+                  homeNodeRecord,
+                  Bytes.fromHexString("0x1234"),
+                  NodeRecordListener.NOOP,
+                  NewAddressHandler.NOOP));
   private NodeSession session = mock(NodeSession.class);
   private Map<Integer, List<NodeRecord>> tableRecords = new HashMap<>();
 

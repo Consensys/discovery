@@ -342,7 +342,7 @@ public class NodeSession {
     nodeBucketStorage.put(nodeRecordInfo);
   }
 
-  public Stream<NodeRecordInfo> getNodeRecordsInBucket(int index) {
+  public Stream<NodeRecord> getNodeRecordsInBucket(int index) {
     return nodeBucketStorage.getNodeRecords(index);
   }
 

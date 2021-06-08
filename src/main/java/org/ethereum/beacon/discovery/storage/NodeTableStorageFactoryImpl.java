@@ -35,7 +35,7 @@ public class NodeTableStorageFactoryImpl implements NodeTableStorageFactory {
   }
 
   @Override
-  public NodeBucketStorage createBucketStorage(NodeRecord homeNode) {
-    return new NodeBucketStorageImpl(homeNode);
+  public NodeBucketStorage createBucketStorage(LocalNodeRecordStore localNodeRecordStore) {
+    return new NodeBucketStorageImpl(localNodeRecordStore);
   }
 }

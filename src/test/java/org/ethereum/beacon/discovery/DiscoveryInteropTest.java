@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
@@ -55,7 +56,10 @@ public class DiscoveryInteropTest {
             "-IS4QHa5-0-OmPRchyyBf9jHIWnQlZXthveUPp5_DoDnMMB0V9ChlzNq_fhFixvIr8xOQcKrYsWjjeIBoUIS8HSuWbgBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMOLLdCQcDE_I6BZvGnmgXVsN2VgTp0sJRSnzF9XDnSNYN1ZHCCdl8"); // Geth node
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
+    NodeBucketStorage nodeBucketStorage1 =
+        nodeTableStorageFactory.createBucketStorage(
+            new LocalNodeRecordStore(
+                nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
@@ -109,10 +113,7 @@ public class DiscoveryInteropTest {
     Thread.sleep(1000);
     // 1 sent findnodes to 2, received only (2) in answer
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
-    assertThat(
-            nodeBucketStorage1
-                .getNodeRecords(distance1To2)
-                .map(record -> record.getNode().getNodeId()))
+    assertThat(nodeBucketStorage1.getNodeRecords(distance1To2).map(NodeRecord::getNodeId))
         .containsExactlyInAnyOrder(nodeRecord2.getNodeId());
   }
 }

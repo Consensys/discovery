@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.IntStream;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
@@ -72,7 +73,9 @@ public class NodeBucketTest {
     NodeRecordInfo initial = generateUniqueRecord(0);
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     NodeBucketStorage nodeBucketStorage =
-        nodeTableStorageFactory.createBucketStorage(initial.getNode());
+        nodeTableStorageFactory.createBucketStorage(
+            new LocalNodeRecordStore(
+                initial.getNode(), Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
 
     int j = 1;
     for (int i = 0; i < 20; ) {

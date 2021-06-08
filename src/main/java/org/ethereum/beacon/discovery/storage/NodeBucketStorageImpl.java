@@ -21,14 +21,12 @@ public class NodeBucketStorageImpl implements NodeBucketStorage {
   public static final int MAXIMUM_BUCKET = 256;
   private final HoleyList<NodeBucket> nodeBucketsTable;
   private final Bytes homeNodeId;
+  private final LocalNodeRecordStore localNodeRecordStore;
 
-  public NodeBucketStorageImpl(NodeRecord homeNode) {
+  public NodeBucketStorageImpl(LocalNodeRecordStore localNodeRecordStore) {
+    this.localNodeRecordStore = localNodeRecordStore;
     this.nodeBucketsTable = new HoleyList<>();
-    this.homeNodeId = homeNode.getNodeId();
-    // Save home node
-    NodeBucket zero = new NodeBucket();
-    zero.put(NodeRecordInfo.createDefault(homeNode));
-    nodeBucketsTable.put(0, zero);
+    this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
   }
 
   private Optional<NodeBucket> get(int index) {
@@ -36,8 +34,13 @@ public class NodeBucketStorageImpl implements NodeBucketStorage {
   }
 
   @Override
-  public Stream<NodeRecordInfo> getNodeRecords(final int index) {
-    return get(index).stream().flatMap(bucket -> bucket.getNodeRecords().stream());
+  public Stream<NodeRecord> getNodeRecords(final int index) {
+    if (index == 0) {
+      return Stream.of(localNodeRecordStore.getLocalNodeRecord());
+    }
+    return get(index).stream()
+        .flatMap(bucket -> bucket.getNodeRecords().stream())
+        .map(NodeRecordInfo::getNode);
   }
 
   @Override

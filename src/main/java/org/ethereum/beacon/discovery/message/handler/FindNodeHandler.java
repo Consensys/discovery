@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
@@ -46,7 +45,6 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
             .distinct()
             .flatMap(session::getNodeRecordsInBucket)
             .limit(MAX_TOTAL_NODES_PER_RESPONSE)
-            .map(NodeRecordInfo::getNode)
             .collect(Collectors.toList());
 
     List<List<NodeRecord>> nodeRecordBatches =
