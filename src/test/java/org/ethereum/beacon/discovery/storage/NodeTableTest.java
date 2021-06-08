@@ -8,14 +8,11 @@ import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERI
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -26,44 +23,25 @@ import org.junit.jupiter.api.Test;
 public class NodeTableTest {
   final String LOCALHOST_BASE64 =
       "-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMRo9bfkceoY0W04hSgYU5Q1R_mmq3Qp9pBPMAIduKrAYN1ZHCCdl8=";
-  private Function<UInt64, NodeRecord> HOME_NODE_SUPPLIER =
-      (oldSeq) -> TestUtil.generateUnverifiedNode(30303).getNodeRecord();
 
   @Test
   public void testCreate() throws Exception {
     NodeRecord nodeRecord = NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(LOCALHOST_BASE64);
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    NodeTableStorage nodeTableStorage =
-        nodeTableStorageFactory.createTable(
-            HOME_NODE_SUPPLIER,
-            () -> {
-              List<NodeRecord> nodes = new ArrayList<>();
-              nodes.add(nodeRecord);
-              return nodes;
-            });
+    NodeTableStorage nodeTableStorage = nodeTableStorageFactory.createTable(List.of(nodeRecord));
     Optional<NodeRecordInfo> extendedEnr = nodeTableStorage.get().getNode(nodeRecord.getNodeId());
     assertTrue(extendedEnr.isPresent());
     NodeRecordInfo nodeRecord2 = extendedEnr.get();
     assertEquals(
         nodeRecord.get(EnrField.PKEY_SECP256K1),
         nodeRecord2.getNode().get(EnrField.PKEY_SECP256K1));
-    assertEquals(
-        nodeTableStorage.get().getHomeNode().getNodeId(),
-        HOME_NODE_SUPPLIER.apply(UInt64.ZERO).getNodeId());
   }
 
   @Test
   public void testFind() throws Exception {
     NodeRecord localHostNode = NODE_RECORD_FACTORY_NO_VERIFICATION.fromBase64(LOCALHOST_BASE64);
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    NodeTableStorage nodeTableStorage =
-        nodeTableStorageFactory.createTable(
-            HOME_NODE_SUPPLIER,
-            () -> {
-              List<NodeRecord> nodes = new ArrayList<>();
-              nodes.add(localHostNode);
-              return nodes;
-            });
+    NodeTableStorage nodeTableStorage = nodeTableStorageFactory.createTable(List.of(localHostNode));
 
     // node is adjusted to be close to localhostEnr
     NodeRecord closestNode = TestUtil.generateUnverifiedNode(30267).getNodeRecord();
