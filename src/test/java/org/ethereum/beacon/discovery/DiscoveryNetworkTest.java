@@ -146,7 +146,7 @@ public class DiscoveryNetworkTest {
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
     Stream<NodeRecord> nodesInBucketAt1With2 = nodeBucketStorage1.getNodeRecords(distance1To2);
     assertThat(nodesInBucketAt1With2.map(NodeRecord::getNodeId))
-        .containsExactlyInAnyOrder(nodeRecord2.getNodeId());
+        .containsExactly(nodeRecord2.getNodeId());
   }
 
   // TODO: discovery tasks are emitted from time to time as they should

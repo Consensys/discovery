@@ -114,6 +114,6 @@ public class DiscoveryInteropTest {
     // 1 sent findnodes to 2, received only (2) in answer
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
     assertThat(nodeBucketStorage1.getNodeRecords(distance1To2).map(NodeRecord::getNodeId))
-        .containsExactlyInAnyOrder(nodeRecord2.getNodeId());
+        .containsExactly(nodeRecord2.getNodeId());
   }
 }
