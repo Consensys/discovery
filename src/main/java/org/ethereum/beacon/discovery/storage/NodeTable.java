@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 
 /**
@@ -27,6 +26,4 @@ public interface NodeTable {
 
   /** Returns list of nodes including `nodeId` (if it's found) in logLimit distance from it. */
   List<NodeRecordInfo> findClosestNodes(Bytes nodeId, int logLimit);
-
-  NodeRecord getHomeNode();
 }

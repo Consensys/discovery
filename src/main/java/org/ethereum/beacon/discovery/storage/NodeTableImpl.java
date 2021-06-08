@@ -20,8 +20,6 @@ import java.util.stream.StreamSupport;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.DataSource;
 import org.ethereum.beacon.discovery.database.HoleyList;
-import org.ethereum.beacon.discovery.database.SingleValueSource;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -35,15 +33,11 @@ public class NodeTableImpl implements NodeTable {
   private static final boolean START_FROM_BEGINNING = true;
   private final DataSource<Bytes, NodeRecordInfo> nodeTable;
   private final HoleyList<NodeIndex> indexTable;
-  private final SingleValueSource<NodeRecordInfo> homeNodeSource;
 
   public NodeTableImpl(
-      DataSource<Bytes, NodeRecordInfo> nodeTable,
-      HoleyList<NodeIndex> indexTable,
-      SingleValueSource<NodeRecordInfo> homeNodeSource) {
+      DataSource<Bytes, NodeRecordInfo> nodeTable, HoleyList<NodeIndex> indexTable) {
     this.nodeTable = nodeTable;
     this.indexTable = indexTable;
-    this.homeNodeSource = homeNodeSource;
   }
 
   @VisibleForTesting
@@ -116,11 +110,6 @@ public class NodeTableImpl implements NodeTable {
   @Override
   public List<NodeRecordInfo> findClosestNodes(Bytes nodeId, int logLimit) {
     return streamClosestNodes(nodeId, logLimit).collect(Collectors.toList());
-  }
-
-  @Override
-  public NodeRecord getHomeNode() {
-    return homeNodeSource.get().map(NodeRecordInfo::getNode).orElse(null);
   }
 
   private class ClosestNodeIterator implements Iterator<NodeRecordInfo> {

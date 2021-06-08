@@ -84,11 +84,9 @@ public class HandshakeHandlersTest {
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    NodeTableStorage nodeTableStorage1 =
-        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord1, () -> List.of(nodeRecord2));
+    NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
     NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
-    NodeTableStorage nodeTableStorage2 =
-        nodeTableStorageFactory.createTable((oldSeq) -> nodeRecord2, () -> List.of(nodeRecord1));
+    NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
     NodeBucketStorage nodeBucketStorage2 = nodeTableStorageFactory.createBucketStorage(nodeRecord2);
 
     // Node1 create AuthHeaderPacket
