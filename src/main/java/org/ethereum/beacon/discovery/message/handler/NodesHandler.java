@@ -60,7 +60,7 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
     final NodeTable nodeTable = session.getNodeTable();
     final Bytes nodeId = nodeRecordV5.getNodeId();
     final Optional<NodeRecordInfo> existingRecord = nodeTable.getNode(nodeId);
-    if (isUpdated(nodeRecordV5, existingRecord)) {
+    if (isUpdateRequired(nodeRecordV5, existingRecord)) {
       // Update node table with new node record
       nodeTable.save(nodeRecordInfo);
 
@@ -71,7 +71,7 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
     }
   }
 
-  private boolean isUpdated(
+  private boolean isUpdateRequired(
       final NodeRecord newRecord, final Optional<NodeRecordInfo> existingRecord) {
     return existingRecord.isEmpty()
         || existingRecord.get().getNode().getSeq().compareTo(newRecord.getSeq()) < 0;
