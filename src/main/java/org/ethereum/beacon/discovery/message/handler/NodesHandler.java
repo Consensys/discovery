@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
@@ -14,6 +15,7 @@ import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -50,13 +52,29 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
         .filter(
             record ->
                 hasCorrectDistance(session, (FindNodeMessage) requestInfo.getMessage(), record))
-        .forEach(
-            nodeRecordV5 -> {
-              NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
-              if (session.getNodeTable().getNode(nodeRecordV5.getNodeId()).isEmpty()) {
-                session.getNodeTable().save(nodeRecordInfo);
-              }
-            });
+        .forEach(nodeRecordV5 -> updateNodeRecord(session, nodeRecordV5));
+  }
+
+  private void updateNodeRecord(final NodeSession session, final NodeRecord nodeRecordV5) {
+    NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeRecordV5);
+    final NodeTable nodeTable = session.getNodeTable();
+    final Bytes nodeId = nodeRecordV5.getNodeId();
+    final Optional<NodeRecordInfo> existingRecord = nodeTable.getNode(nodeId);
+    if (isUpdated(nodeRecordV5, existingRecord)) {
+      // Update node table with new node record
+      nodeTable.save(nodeRecordInfo);
+
+      if (session.getNodeId().equals(nodeId)) {
+        // Node sent us a new version of their own ENR, update the session.
+        session.updateNodeRecord(nodeRecordV5);
+      }
+    }
+  }
+
+  private boolean isUpdated(
+      final NodeRecord newRecord, final Optional<NodeRecordInfo> existingRecord) {
+    return existingRecord.isEmpty()
+        || existingRecord.get().getNode().getSeq().compareTo(newRecord.getSeq()) < 0;
   }
 
   private boolean isValid(final NodeRecord record) {
