@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.HoleyList;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -20,19 +21,26 @@ public class NodeBucketStorageImpl implements NodeBucketStorage {
   public static final int MAXIMUM_BUCKET = 256;
   private final HoleyList<NodeBucket> nodeBucketsTable;
   private final Bytes homeNodeId;
+  private final LocalNodeRecordStore localNodeRecordStore;
 
-  public NodeBucketStorageImpl(NodeRecord homeNode) {
+  public NodeBucketStorageImpl(LocalNodeRecordStore localNodeRecordStore) {
+    this.localNodeRecordStore = localNodeRecordStore;
     this.nodeBucketsTable = new HoleyList<>();
-    this.homeNodeId = homeNode.getNodeId();
-    // Save home node
-    NodeBucket zero = new NodeBucket();
-    zero.put(NodeRecordInfo.createDefault(homeNode));
-    nodeBucketsTable.put(0, zero);
+    this.homeNodeId = localNodeRecordStore.getLocalNodeRecord().getNodeId();
+  }
+
+  private Optional<NodeBucket> get(int index) {
+    return nodeBucketsTable.get(index);
   }
 
   @Override
-  public Optional<NodeBucket> get(int index) {
-    return nodeBucketsTable.get(index);
+  public Stream<NodeRecord> getNodeRecords(final int index) {
+    if (index == 0) {
+      return Stream.of(localNodeRecordStore.getLocalNodeRecord());
+    }
+    return get(index).stream()
+        .flatMap(bucket -> bucket.getNodeRecords().stream())
+        .map(NodeRecordInfo::getNode);
   }
 
   @Override

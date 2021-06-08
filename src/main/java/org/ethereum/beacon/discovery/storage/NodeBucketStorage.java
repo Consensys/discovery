@@ -4,12 +4,13 @@
 
 package org.ethereum.beacon.discovery.storage;
 
-import java.util.Optional;
+import java.util.stream.Stream;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 
 /** Stores {@link NodeRecordInfo}'s in {@link NodeBucket}'s */
 public interface NodeBucketStorage {
-  Optional<NodeBucket> get(int index);
+  Stream<NodeRecord> getNodeRecords(int index);
 
   void put(NodeRecordInfo nodeRecordInfo);
 }

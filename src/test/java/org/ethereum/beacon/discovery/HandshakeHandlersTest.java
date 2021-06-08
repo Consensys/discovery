@@ -84,10 +84,20 @@ public class HandshakeHandlersTest {
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
+    final LocalNodeRecordStore localNodeRecordStoreAt1 =
+        new LocalNodeRecordStore(
+            nodeRecord1,
+            nodePair1.getPrivateKey(),
+            NodeRecordListener.NOOP,
+            NewAddressHandler.NOOP);
     NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
+    NodeBucketStorage nodeBucketStorage1 =
+        nodeTableStorageFactory.createBucketStorage(localNodeRecordStoreAt1);
     NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
-    NodeBucketStorage nodeBucketStorage2 = nodeTableStorageFactory.createBucketStorage(nodeRecord2);
+    NodeBucketStorage nodeBucketStorage2 =
+        nodeTableStorageFactory.createBucketStorage(
+            new LocalNodeRecordStore(
+                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
 
     // Node1 create AuthHeaderPacket
     LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();
@@ -96,12 +106,6 @@ public class HandshakeHandlersTest {
           System.out.println("Outgoing packet from 1 to 2: " + parcel.getPacket());
           outgoing1Packets.add(parcel.getPacket());
         };
-    final LocalNodeRecordStore localNodeRecordStoreAt1 =
-        new LocalNodeRecordStore(
-            nodeRecord1,
-            nodePair1.getPrivateKey(),
-            NodeRecordListener.NOOP,
-            NewAddressHandler.NOOP);
     final ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     final ExpirationScheduler<Bytes> reqeustExpirationScheduler =

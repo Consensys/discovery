@@ -19,5 +19,5 @@ public interface NodeTableStorageFactory {
    */
   NodeTableStorage createTable(List<NodeRecord> bootnodes);
 
-  NodeBucketStorage createBucketStorage(NodeRecord homeNode);
+  NodeBucketStorage createBucketStorage(LocalNodeRecordStore localNodeRecordStore);
 }

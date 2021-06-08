@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
@@ -22,13 +24,11 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucket;
 import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.junit.jupiter.api.Assertions;
 import reactor.core.publisher.Flux;
 
 /**
@@ -56,7 +56,10 @@ public class DiscoveryInteropTest {
             "-IS4QHa5-0-OmPRchyyBf9jHIWnQlZXthveUPp5_DoDnMMB0V9ChlzNq_fhFixvIr8xOQcKrYsWjjeIBoUIS8HSuWbgBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQMOLLdCQcDE_I6BZvGnmgXVsN2VgTp0sJRSnzF9XDnSNYN1ZHCCdl8"); // Geth node
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 = nodeTableStorageFactory.createBucketStorage(nodeRecord1);
+    NodeBucketStorage nodeBucketStorage1 =
+        nodeTableStorageFactory.createBucketStorage(
+            new LocalNodeRecordStore(
+                nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
@@ -105,14 +108,12 @@ public class DiscoveryInteropTest {
     assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
     //    assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));
     int distance1To2 = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
-    Assertions.assertFalse(nodeBucketStorage1.get(distance1To2).isPresent());
+    assertThat(nodeBucketStorage1.getNodeRecords(distance1To2)).isEmpty();
     assertTrue(authPacketSent1to2.await(1, TimeUnit.SECONDS));
     Thread.sleep(1000);
     // 1 sent findnodes to 2, received only (2) in answer
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
-    NodeBucket bucketAt1With2 = nodeBucketStorage1.get(distance1To2).get();
-    Assertions.assertEquals(1, bucketAt1With2.size());
-    Assertions.assertEquals(
-        nodeRecord2.getNodeId(), bucketAt1With2.getNodeRecords().get(0).getNode().getNodeId());
+    assertThat(nodeBucketStorage1.getNodeRecords(distance1To2).map(NodeRecord::getNodeId))
+        .containsExactly(nodeRecord2.getNodeId());
   }
 }
