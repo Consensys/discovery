@@ -18,6 +18,7 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -186,6 +187,37 @@ public class DiscoveryIntegrationTest {
     final InetAddress updatedAddress =
         node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
     assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+  }
+
+  @Test
+  public void shouldRetrieveNewEnrFromPeerWhenItChanges() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final DiscoverySystem localNode = createDiscoveryClient();
+
+    final NodeRecord originalLocalNodeRecord = localNode.getLocalNodeRecord();
+    waitFor(localNode.ping(remoteNode.getLocalNodeRecord()));
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+
+    // Remote node should have the current local node record
+    assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+        .contains(originalLocalNodeRecord);
+
+    localNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
+    final NodeRecord updatedLocalNodeRecord = localNode.getLocalNodeRecord();
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+                .contains(updatedLocalNodeRecord));
+  }
+
+  private Optional<NodeRecord> findNodeRecordByNodeId(
+      final DiscoverySystem searchNode, final Bytes nodeId) {
+    return searchNode
+        .streamKnownNodes()
+        .map(NodeRecordInfo::getNode)
+        .filter(node -> node.getNodeId().equals(nodeId))
+        .findAny();
   }
 
   @Test

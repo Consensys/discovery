@@ -20,6 +20,7 @@ import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.message.handler.PongHandler.EnrUpdater;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -34,8 +35,9 @@ class PongHandlerTest {
   private final ExternalAddressSelector externalAddressSelector =
       mock(ExternalAddressSelector.class);
   private final NodeSession session = mock(NodeSession.class);
+  private final EnrUpdater enrUpdater = mock(EnrUpdater.class);
 
-  private final PongHandler handler = new PongHandler(externalAddressSelector);
+  private final PongHandler handler = new PongHandler(externalAddressSelector, enrUpdater);
 
   @Test
   void shouldRequestPeersEnrWhenPongSequenceNumberIsHigher() {

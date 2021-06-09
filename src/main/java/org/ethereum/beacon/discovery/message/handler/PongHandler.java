@@ -8,37 +8,33 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
-import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
-import org.ethereum.beacon.discovery.pipeline.info.Request;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class PongHandler implements MessageHandler<PongMessage> {
   private static final Logger logger = LogManager.getLogger();
   private final ExternalAddressSelector externalAddressSelector;
+  private final EnrUpdater enrUpdater;
 
-  public PongHandler(final ExternalAddressSelector externalAddressSelector) {
+  public PongHandler(
+      final ExternalAddressSelector externalAddressSelector, final EnrUpdater enrUpdater) {
     this.externalAddressSelector = externalAddressSelector;
+    this.enrUpdater = enrUpdater;
   }
 
   @Override
   public void handle(PongMessage message, NodeSession session) {
     final Optional<InetSocketAddress> currentAddress = session.getReportedExternalAddress();
-    if (session.getNodeRecord().map(record -> isUpdateRequired(message, record)).orElse(true)) {
-      // We either don't have an ENR for the peer yet or it is out of date. Request a new one.
-      session.createNextRequest(
-          new Request<>(
-              new CompletableFuture<>(),
-              reqId -> new FindNodeMessage(reqId, List.of(0)),
-              new FindNodeResponseHandler()));
-    }
+    // If we have an outdated ENR, request the latest version.
+    session
+        .getNodeRecord()
+        .filter(currentRecord -> isUpdateRequired(message, currentRecord))
+        .ifPresent(enrUpdater::requestUpdatedEnr);
     if (currentAddress.isEmpty() || addressDiffers(message, currentAddress.orElseThrow())) {
       try {
         final InetSocketAddress reportedAddress =
@@ -64,5 +60,12 @@ public class PongHandler implements MessageHandler<PongMessage> {
       final PongMessage message, final InetSocketAddress currentAddress) {
     return !Bytes.wrap(currentAddress.getAddress().getAddress()).equals(message.getRecipientIp())
         || currentAddress.getPort() != message.getRecipientPort();
+  }
+
+  public interface EnrUpdater {
+
+    EnrUpdater NOOP = currentRecord -> {};
+
+    void requestUpdatedEnr(NodeRecord currentRecord);
   }
 }

@@ -31,6 +31,7 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
+import org.ethereum.beacon.discovery.message.handler.PongHandler.EnrUpdater;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -223,7 +224,8 @@ public class HandshakeHandlersTest {
     assertNull(envelopeAt1From2WithMessage.get(BAD_PACKET));
     assertNotNull(envelopeAt1From2WithMessage.get(MESSAGE));
 
-    MessageHandler messageHandler = new MessageHandler(localNodeRecordStoreAt1, TalkHandler.NOOP);
+    MessageHandler messageHandler =
+        new MessageHandler(localNodeRecordStoreAt1, TalkHandler.NOOP, EnrUpdater.NOOP);
     messageHandler.handle(envelopeAt1From2WithMessage);
 
     // Node 2 handles message from Node 1
