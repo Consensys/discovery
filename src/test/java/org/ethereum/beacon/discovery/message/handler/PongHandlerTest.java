@@ -4,28 +4,21 @@
 
 package org.ethereum.beacon.discovery.message.handler;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.ethereum.beacon.discovery.TestUtil;
-import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
-import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.message.handler.PongHandler.EnrUpdater;
-import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 class PongHandlerTest {
 
@@ -48,24 +41,17 @@ class PongHandlerTest {
             REQUEST_ID, currentNodeRecord.getSeq().add(1), RECIPIENT_IP, RECIPIENT_PORT),
         session);
 
-    final Request<FindNodeMessage> nextRequest = assertNextRequestScheduled();
-    final V5Message nextRequestMessage = nextRequest.getRequestMessageFactory().apply(REQUEST_ID);
-    assertThat(nextRequestMessage)
-        .asInstanceOf(InstanceOfAssertFactories.type(FindNodeMessage.class))
-        .isEqualTo(new FindNodeMessage(REQUEST_ID, List.of(0)));
+    verify(enrUpdater).requestUpdatedEnr(currentNodeRecord);
   }
 
   @Test
-  void shouldRequestPeersEnrWhenCurrentEnrIsUnknown() {
+  void shouldNotRequestPeersEnrWhenCurrentEnrIsUnknown() {
+    // Can't request peers if we don't have an ENR because don't know how to contact the node
     when(session.getNodeRecord()).thenReturn(Optional.empty());
     handler.handle(
         new PongMessage(REQUEST_ID, UInt64.valueOf(0), RECIPIENT_IP, RECIPIENT_PORT), session);
 
-    final Request<FindNodeMessage> nextRequest = assertNextRequestScheduled();
-    final V5Message nextRequestMessage = nextRequest.getRequestMessageFactory().apply(REQUEST_ID);
-    assertThat(nextRequestMessage)
-        .asInstanceOf(InstanceOfAssertFactories.type(FindNodeMessage.class))
-        .isEqualTo(new FindNodeMessage(REQUEST_ID, List.of(0)));
+    verify(enrUpdater, never()).requestUpdatedEnr(any());
   }
 
   @Test
@@ -92,13 +78,5 @@ class PongHandlerTest {
         session);
 
     verify(session, never()).createNextRequest(any());
-  }
-
-  @SuppressWarnings("unchecked")
-  private Request<FindNodeMessage> assertNextRequestScheduled() {
-    final ArgumentCaptor<Request<FindNodeMessage>> requestCaptor =
-        ArgumentCaptor.forClass(Request.class);
-    verify(session).createNextRequest(requestCaptor.capture());
-    return requestCaptor.getValue();
   }
 }
