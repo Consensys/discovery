@@ -8,11 +8,16 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
+import org.ethereum.beacon.discovery.pipeline.info.FindNodeResponseHandler;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class PongHandler implements MessageHandler<PongMessage> {
@@ -26,6 +31,14 @@ public class PongHandler implements MessageHandler<PongMessage> {
   @Override
   public void handle(PongMessage message, NodeSession session) {
     final Optional<InetSocketAddress> currentAddress = session.getReportedExternalAddress();
+    if (session.getNodeRecord().map(record -> isUpdateRequired(message, record)).orElse(true)) {
+      // We either don't have an ENR for the peer yet or it is out of date. Request a new one.
+      session.createNextRequest(
+          new Request<>(
+              new CompletableFuture<>(),
+              reqId -> new FindNodeMessage(reqId, List.of(0)),
+              new FindNodeResponseHandler()));
+    }
     if (currentAddress.isEmpty() || addressDiffers(message, currentAddress.orElseThrow())) {
       try {
         final InetSocketAddress reportedAddress =
@@ -40,6 +53,11 @@ public class PongHandler implements MessageHandler<PongMessage> {
       }
     }
     session.clearRequestInfo(message.getRequestId(), null);
+  }
+
+  private boolean isUpdateRequired(
+      final PongMessage message, final org.ethereum.beacon.discovery.schema.NodeRecord record) {
+    return record.getSeq().compareTo(message.getEnrSeq()) < 0;
   }
 
   private boolean addressDiffers(
