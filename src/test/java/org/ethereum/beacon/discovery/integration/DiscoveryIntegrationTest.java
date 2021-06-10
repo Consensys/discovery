@@ -42,7 +42,6 @@ import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECKeyPair;
 
@@ -192,7 +191,6 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
-  @Disabled
   public void shouldRetrieveNewEnrFromPeerWhenPongReportsItChanged() throws Exception {
     final DiscoverySystem remoteNode = createDiscoveryClient();
     final DiscoverySystem localNode = createDiscoveryClient();
@@ -217,7 +215,6 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
-  @Disabled
   public void shouldRetrieveNewEnrFromPeerWhenPingReportsItChanged() throws Exception {
     final DiscoverySystem remoteNode = createDiscoveryClient();
     final DiscoverySystem localNode = createDiscoveryClient();
