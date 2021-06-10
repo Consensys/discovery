@@ -52,5 +52,4 @@ public class PongHandler implements MessageHandler<PongMessage> {
     return !Bytes.wrap(currentAddress.getAddress().getAddress()).equals(message.getRecipientIp())
         || currentAddress.getPort() != message.getRecipientPort();
   }
-
 }
