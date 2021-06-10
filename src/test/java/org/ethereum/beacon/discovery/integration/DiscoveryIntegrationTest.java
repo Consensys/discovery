@@ -25,6 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
@@ -51,8 +52,8 @@ public class DiscoveryIntegrationTest {
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
   public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
   public static final Consumer<DiscoverySystemBuilder> NO_MODIFY = __ -> {};
-  private int nextPort = 9001;
-  private List<DiscoverySystem> managers = new ArrayList<>();
+  private static final AtomicInteger nextPort = new AtomicInteger(9001);
+  private final List<DiscoverySystem> managers = new ArrayList<>();
 
   @AfterEach
   public void tearDown() {
@@ -320,8 +321,8 @@ public class DiscoveryIntegrationTest {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
-    int maxPort = nextPort + 10;
-    for (int port = nextPort++; port < maxPort; port = nextPort++) {
+    for (int i = 0; i < 10; i++) {
+      int port = nextPort.incrementAndGet();
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
         nodeRecordBuilder.privateKey(privateKey);
