@@ -185,7 +185,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
-            reqId -> new PingMessage(reqId, nodeRecord.getSeq()),
+            reqId -> new PingMessage(reqId, localNodeRecordStore.getLocalNodeRecord().getSeq()),
             MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER);
     return executeTaskImpl(nodeRecord, request);
   }
