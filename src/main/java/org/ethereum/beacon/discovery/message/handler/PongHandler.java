@@ -13,28 +13,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.PongMessage;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class PongHandler implements MessageHandler<PongMessage> {
   private static final Logger logger = LogManager.getLogger();
   private final ExternalAddressSelector externalAddressSelector;
-  private final EnrUpdater enrUpdater;
+  private final EnrUpdateTracker enrUpdateTracker;
 
   public PongHandler(
-      final ExternalAddressSelector externalAddressSelector, final EnrUpdater enrUpdater) {
+      final ExternalAddressSelector externalAddressSelector,
+      final EnrUpdateTracker enrUpdateTracker) {
     this.externalAddressSelector = externalAddressSelector;
-    this.enrUpdater = enrUpdater;
+    this.enrUpdateTracker = enrUpdateTracker;
   }
 
   @Override
   public void handle(PongMessage message, NodeSession session) {
     final Optional<InetSocketAddress> currentAddress = session.getReportedExternalAddress();
-    // If we have an outdated ENR, request the latest version.
-    session
-        .getNodeRecord()
-        .filter(currentRecord -> isUpdateRequired(message, currentRecord))
-        .ifPresent(enrUpdater::requestUpdatedEnr);
+    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
     if (currentAddress.isEmpty() || addressDiffers(message, currentAddress.orElseThrow())) {
       try {
         final InetSocketAddress reportedAddress =
@@ -51,21 +47,10 @@ public class PongHandler implements MessageHandler<PongMessage> {
     session.clearRequestInfo(message.getRequestId(), null);
   }
 
-  private boolean isUpdateRequired(
-      final PongMessage message, final org.ethereum.beacon.discovery.schema.NodeRecord record) {
-    return record.getSeq().compareTo(message.getEnrSeq()) < 0;
-  }
-
   private boolean addressDiffers(
       final PongMessage message, final InetSocketAddress currentAddress) {
     return !Bytes.wrap(currentAddress.getAddress().getAddress()).equals(message.getRecipientIp())
         || currentAddress.getPort() != message.getRecipientPort();
   }
 
-  public interface EnrUpdater {
-
-    EnrUpdater NOOP = currentRecord -> {};
-
-    void requestUpdatedEnr(NodeRecord currentRecord);
-  }
 }

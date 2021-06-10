@@ -190,7 +190,7 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
-  public void shouldRetrieveNewEnrFromPeerWhenItChanges() throws Exception {
+  public void shouldRetrieveNewEnrFromPeerWhenPongReportsItChanged() throws Exception {
     final DiscoverySystem remoteNode = createDiscoveryClient();
     final DiscoverySystem localNode = createDiscoveryClient();
 
@@ -204,11 +204,37 @@ public class DiscoveryIntegrationTest {
 
     localNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
     final NodeRecord updatedLocalNodeRecord = localNode.getLocalNodeRecord();
+
+    // Remote node pings us and we report our new seq via PONG so remote should update
     waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
     waitFor(
         () ->
             assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
                 .contains(updatedLocalNodeRecord));
+  }
+
+  @Test
+  public void shouldRetrieveNewEnrFromPeerWhenPingReportsItChanged() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final DiscoverySystem localNode = createDiscoveryClient();
+
+    final NodeRecord originalLocalNodeRecord = localNode.getLocalNodeRecord();
+    final NodeRecord originalRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    waitFor(localNode.ping(remoteNode.getLocalNodeRecord()));
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+
+    // Remote node should have the current local node record
+    assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+        .contains(originalLocalNodeRecord);
+
+    // Remote node pings us which should trigger us updating it's ENR.
+    remoteNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
+    final NodeRecord updatedRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(localNode, originalRemoteNodeRecord.getNodeId()))
+                .contains(updatedRemoteNodeRecord));
   }
 
   private Optional<NodeRecord> findNodeRecordByNodeId(

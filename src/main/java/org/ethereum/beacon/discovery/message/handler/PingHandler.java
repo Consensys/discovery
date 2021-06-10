@@ -12,10 +12,19 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class PingHandler implements MessageHandler<PingMessage> {
+
+  private final EnrUpdateTracker enrUpdateTracker;
+
+  public PingHandler(final EnrUpdateTracker enrUpdateTracker) {
+    this.enrUpdateTracker = enrUpdateTracker;
+  }
+
   @Override
   public void handle(PingMessage message, NodeSession session) {
     final NodeRecord nodeRecord = session.getHomeNodeRecord();
     final InetSocketAddress remoteAddress = session.getRemoteAddress();
+
+    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
     PongMessage responseMessage =
         new PongMessage(
             message.getRequestId(),

@@ -12,13 +12,14 @@ import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
 import org.ethereum.beacon.discovery.message.MessageCode;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.message.handler.FindNodeHandler;
 import org.ethereum.beacon.discovery.message.handler.MessageHandler;
 import org.ethereum.beacon.discovery.message.handler.NodesHandler;
 import org.ethereum.beacon.discovery.message.handler.PingHandler;
 import org.ethereum.beacon.discovery.message.handler.PongHandler;
-import org.ethereum.beacon.discovery.message.handler.PongHandler.EnrUpdater;
+import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
 import org.ethereum.beacon.discovery.message.handler.TalkReqHandler;
 import org.ethereum.beacon.discovery.message.handler.TalkRespHandler;
 import org.ethereum.beacon.discovery.schema.DiscoveryProtocol;
@@ -37,10 +38,11 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<V5
 
   public DiscoveryV5MessageProcessor(
       LocalNodeRecordStore localNodeRecordStore, TalkHandler talkHandler, EnrUpdater enrUpdater) {
-    messageHandlers.put(MessageCode.PING, new PingHandler());
+    final EnrUpdateTracker enrUpdateTracker = new EnrUpdateTracker(enrUpdater);
+    messageHandlers.put(MessageCode.PING, new PingHandler(enrUpdateTracker));
     messageHandlers.put(
         MessageCode.PONG,
-        new PongHandler(new ExternalAddressSelector(localNodeRecordStore), enrUpdater));
+        new PongHandler(new ExternalAddressSelector(localNodeRecordStore), enrUpdateTracker));
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
     messageHandlers.put(MessageCode.TALKREQ, new TalkReqHandler(talkHandler));
