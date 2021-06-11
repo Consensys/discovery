@@ -30,7 +30,6 @@ public class PongHandler implements MessageHandler<PongMessage> {
   @Override
   public void handle(PongMessage message, NodeSession session) {
     final Optional<InetSocketAddress> currentAddress = session.getReportedExternalAddress();
-    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
     if (currentAddress.isEmpty() || addressDiffers(message, currentAddress.orElseThrow())) {
       try {
         final InetSocketAddress reportedAddress =
@@ -45,6 +44,7 @@ public class PongHandler implements MessageHandler<PongMessage> {
       }
     }
     session.clearRequestInfo(message.getRequestId(), null);
+    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
   }
 
   private boolean addressDiffers(

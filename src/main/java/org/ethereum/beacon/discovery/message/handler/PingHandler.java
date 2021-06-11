@@ -24,7 +24,6 @@ public class PingHandler implements MessageHandler<PingMessage> {
     final NodeRecord nodeRecord = session.getHomeNodeRecord();
     final InetSocketAddress remoteAddress = session.getRemoteAddress();
 
-    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
     PongMessage responseMessage =
         new PongMessage(
             message.getRequestId(),
@@ -33,5 +32,6 @@ public class PingHandler implements MessageHandler<PingMessage> {
             remoteAddress.getPort());
 
     session.sendOutgoingOrdinary(responseMessage);
+    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
   }
 }
