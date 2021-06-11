@@ -17,6 +17,7 @@ import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EnrUpdateTrackerTest {
@@ -24,6 +25,11 @@ class EnrUpdateTrackerTest {
   private final EnrUpdater enrUpdater = mock(EnrUpdater.class);
 
   private final EnrUpdateTracker tracker = new EnrUpdateTracker(enrUpdater);
+
+  @BeforeEach
+  void setUp() {
+    when(session.isAuthenticated()).thenReturn(true);
+  }
 
   @Test
   void shouldRequestPeersEnrWhenPongSequenceNumberIsHigher() {
@@ -62,5 +68,15 @@ class EnrUpdateTrackerTest {
     tracker.updateIfRequired(session, currentNodeRecord.getSeq().subtract(1));
 
     verify(session, never()).createNextRequest(any());
+  }
+
+  @Test
+  void shouldNotRequestPeersEnrWhenPongSequenceNumberIsHigherButSessionIsNotAuthenticated() {
+    when(session.isAuthenticated()).thenReturn(false);
+    final NodeRecord currentNodeRecord = TestUtil.generateNode(8000).getNodeRecord();
+    when(session.getNodeRecord()).thenReturn(Optional.of(currentNodeRecord));
+    tracker.updateIfRequired(session, currentNodeRecord.getSeq().add(1));
+
+    verify(enrUpdater, never()).requestUpdatedEnr(currentNodeRecord);
   }
 }
