@@ -32,6 +32,9 @@ public class EnrUpdateTracker {
 
   private boolean isUpdateRequired(
       final UInt64 reportedSeqNum, final NodeRecord record, final NodeSession session) {
+    // Don't request an update if the session isn't yet authenticated. The request message can
+    // interfere with the handshake process and we should get the latest ENR as part of that
+    // handshake anyway.  If not, the next liveness check will trigger and update anyway.
     return session.isAuthenticated() && record.getSeq().compareTo(reportedSeqNum) < 0;
   }
 
