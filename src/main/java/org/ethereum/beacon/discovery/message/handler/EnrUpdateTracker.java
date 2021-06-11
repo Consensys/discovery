@@ -26,13 +26,13 @@ public class EnrUpdateTracker {
   public void updateIfRequired(final NodeSession session, final UInt64 reportedSeqNum) {
     session
         .getNodeRecord()
-        .filter(currentRecord -> isUpdateRequired(reportedSeqNum, currentRecord))
+        .filter(currentRecord -> isUpdateRequired(reportedSeqNum, currentRecord, session))
         .ifPresent(enrUpdater::requestUpdatedEnr);
   }
 
   private boolean isUpdateRequired(
-      final UInt64 reportedSeqNum, final org.ethereum.beacon.discovery.schema.NodeRecord record) {
-    return record.getSeq().compareTo(reportedSeqNum) < 0;
+      final UInt64 reportedSeqNum, final NodeRecord record, final NodeSession session) {
+    return session.isAuthenticated() && record.getSeq().compareTo(reportedSeqNum) < 0;
   }
 
   public interface EnrUpdater {

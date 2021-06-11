@@ -5,7 +5,6 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -116,16 +115,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   private void requestUpdatedEnr(final NodeRecord record) {
-    taskScheduler.executeWithDelay(
-        Duration.ofSeconds(1),
-        () ->
-            findNodes(record, List.of(0))
-                .exceptionally(
-                    error -> {
-                      error.printStackTrace();
-                      LOG.debug("Failed to request updated enr from {}", record, error);
-                      return null;
-                    }));
+    findNodes(record, List.of(0))
+        .exceptionally(
+            error -> {
+              LOG.debug("Failed to request updated enr from {}", record, error);
+              return null;
+            });
   }
 
   @Override

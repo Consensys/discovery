@@ -178,8 +178,6 @@ public class DiscoveryIntegrationTest {
 
     final DiscoverySystem localNode = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
 
-    assertThat(localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress())
-        .isEqualTo(InetAddress.getByName("0.0.0.0"));
     for (int i = 0, remoteNodeRecordsLength = remoteNodeRecords.length;
         i < remoteNodeRecordsLength;
         i++) {
