@@ -26,13 +26,13 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="org.ethereum.beacon.discovery" level="trace" additivity="false">
+    <Logger name="org.ethereum.beacon.discovery" level="info" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
 
     <Logger name="io.netty.util.internal" level="INFO"/>
 
-    <Root level="trace">
+    <Root level="info">
       <AppenderRef ref="Console"/>
     </Root>
   </Loggers>

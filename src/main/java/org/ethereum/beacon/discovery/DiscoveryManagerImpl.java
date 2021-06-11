@@ -62,7 +62,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final Scheduler taskScheduler;
   private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
@@ -79,7 +78,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       TalkHandler talkHandler) {
     this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
-    this.taskScheduler = taskScheduler;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
     this.discoveryServer = discoveryServer;
