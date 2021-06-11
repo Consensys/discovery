@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -62,6 +63,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final Scheduler taskScheduler;
   private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
@@ -78,6 +80,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       TalkHandler talkHandler) {
     this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
+    this.taskScheduler = taskScheduler;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
     this.discoveryServer = discoveryServer;
@@ -113,13 +116,16 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   private void requestUpdatedEnr(final NodeRecord record) {
-    findNodes(record, List.of(0))
-        .exceptionally(
-            error -> {
-              error.printStackTrace();
-              LOG.debug("Failed to request updated enr from {}", record, error);
-              return null;
-            });
+    taskScheduler.executeWithDelay(
+        Duration.ofSeconds(1),
+        () ->
+            findNodes(record, List.of(0))
+                .exceptionally(
+                    error -> {
+                      error.printStackTrace();
+                      LOG.debug("Failed to request updated enr from {}", record, error);
+                      return null;
+                    }));
   }
 
   @Override
