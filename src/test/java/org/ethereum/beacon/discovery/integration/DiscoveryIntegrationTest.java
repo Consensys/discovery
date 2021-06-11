@@ -248,6 +248,22 @@ public class DiscoveryIntegrationTest {
                 .contains(updatedRemoteNodeRecord));
   }
 
+  @Test
+  public void shouldRetrieveNewEnrFromBootnode() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final NodeRecord originalRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+
+    remoteNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x1234"));
+    final NodeRecord updatedRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    assertThat(updatedRemoteNodeRecord).isNotEqualTo(originalRemoteNodeRecord);
+
+    final DiscoverySystem localNode = createDiscoveryClient(originalRemoteNodeRecord);
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(localNode, originalRemoteNodeRecord.getNodeId()))
+                .contains(updatedRemoteNodeRecord));
+  }
+
   private Optional<NodeRecord> findNodeRecordByNodeId(
       final DiscoverySystem searchNode, final Bytes nodeId) {
     return searchNode
