@@ -12,18 +12,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.BindException;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
@@ -50,8 +53,8 @@ public class DiscoveryIntegrationTest {
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
   public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
   public static final Consumer<DiscoverySystemBuilder> NO_MODIFY = __ -> {};
-  private int nextPort = 9001;
-  private List<DiscoverySystem> managers = new ArrayList<>();
+  private static final AtomicInteger nextPort = new AtomicInteger(9001);
+  private final List<DiscoverySystem> managers = new ArrayList<>();
 
   @AfterEach
   public void tearDown() {
@@ -173,19 +176,101 @@ public class DiscoveryIntegrationTest {
       createDiscoveryClient().getLocalNodeRecord()
     };
 
-    final DiscoverySystem node2 = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
+    final DiscoverySystem localNode = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
 
-    assertThat(node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress())
-        .isEqualTo(InetAddress.getByName("0.0.0.0"));
-    for (NodeRecord remoteNodeRecord : remoteNodeRecords) {
-      waitFor(node2.ping(remoteNodeRecord));
+    for (int i = 0, remoteNodeRecordsLength = remoteNodeRecords.length;
+        i < remoteNodeRecordsLength;
+        i++) {
+      try {
+        waitFor(localNode.ping(remoteNodeRecords[i]));
+      } catch (final Throwable t) {
+        fail(
+            new Exception(
+                "Failed to ping node "
+                    + i
+                    + "  Local node seqNum: "
+                    + localNode.getLocalNodeRecord()));
+      }
     }
 
     // Address should have been updated. Most likely to 127.0.0.1 but it might be something else
     // if the system is configured unusually or uses IPv6 in preference to v4.
     final InetAddress updatedAddress =
-        node2.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
+        localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
     assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+  }
+
+  @Test
+  public void shouldRetrieveNewEnrFromPeerWhenPongReportsItChanged() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final DiscoverySystem localNode = createDiscoveryClient();
+
+    final NodeRecord originalLocalNodeRecord = localNode.getLocalNodeRecord();
+    waitFor(localNode.ping(remoteNode.getLocalNodeRecord()));
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+
+    // Remote node should have the current local node record
+    assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+        .contains(originalLocalNodeRecord);
+
+    localNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
+    final NodeRecord updatedLocalNodeRecord = localNode.getLocalNodeRecord();
+
+    // Remote node pings us and we report our new seq via PONG so remote should update
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+                .contains(updatedLocalNodeRecord));
+  }
+
+  @Test
+  public void shouldRetrieveNewEnrFromPeerWhenPingReportsItChanged() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final DiscoverySystem localNode = createDiscoveryClient();
+
+    final NodeRecord originalLocalNodeRecord = localNode.getLocalNodeRecord();
+    final NodeRecord originalRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    waitFor(localNode.ping(remoteNode.getLocalNodeRecord()));
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+
+    // Remote node should have the current local node record
+    assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
+        .contains(originalLocalNodeRecord);
+
+    // Remote node pings us which should trigger us updating it's ENR.
+    remoteNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
+    final NodeRecord updatedRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(localNode, originalRemoteNodeRecord.getNodeId()))
+                .contains(updatedRemoteNodeRecord));
+  }
+
+  @Test
+  public void shouldRetrieveNewEnrFromBootnode() throws Exception {
+    final DiscoverySystem remoteNode = createDiscoveryClient();
+    final NodeRecord originalRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+
+    remoteNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x1234"));
+    final NodeRecord updatedRemoteNodeRecord = remoteNode.getLocalNodeRecord();
+    assertThat(updatedRemoteNodeRecord).isNotEqualTo(originalRemoteNodeRecord);
+
+    final DiscoverySystem localNode = createDiscoveryClient(originalRemoteNodeRecord);
+    waitFor(
+        () ->
+            assertThat(findNodeRecordByNodeId(localNode, originalRemoteNodeRecord.getNodeId()))
+                .contains(updatedRemoteNodeRecord));
+  }
+
+  private Optional<NodeRecord> findNodeRecordByNodeId(
+      final DiscoverySystem searchNode, final Bytes nodeId) {
+    return searchNode
+        .streamKnownNodes()
+        .map(NodeRecordInfo::getNode)
+        .filter(node -> node.getNodeId().equals(nodeId))
+        .findAny();
   }
 
   @Test
@@ -262,8 +347,8 @@ public class DiscoveryIntegrationTest {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
-    int maxPort = nextPort + 10;
-    for (int port = nextPort++; port < maxPort; port = nextPort++) {
+    for (int i = 0; i < 10; i++) {
+      int port = nextPort.incrementAndGet();
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
         nodeRecordBuilder.privateKey(privateKey);

@@ -26,7 +26,7 @@ public class Request<TResponse> {
     return resultPromise;
   }
 
-  Function<Bytes, V5Message> getRequestMessageFactory() {
+  public Function<Bytes, V5Message> getRequestMessageFactory() {
     return requestMessageFactory;
   }
 

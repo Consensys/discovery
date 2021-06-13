@@ -101,7 +101,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                 outgoingPipeline, taskScheduler, nodeRecordFactory, nodeSessionManager))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
-        .addHandler(new MessageHandler(localNodeRecordStore, talkHandler))
+        .addHandler(new MessageHandler(localNodeRecordStore, talkHandler, this::requestUpdatedEnr))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
@@ -110,6 +110,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(nodeSessionManager)
         .addHandler(new NewTaskHandler())
         .addHandler(new NextTaskHandler(outgoingPipeline, taskScheduler));
+  }
+
+  private void requestUpdatedEnr(final NodeRecord record) {
+    findNodes(record, List.of(0))
+        .exceptionally(
+            error -> {
+              LOG.debug("Failed to request updated enr from {}", record, error);
+              return null;
+            });
   }
 
   @Override
@@ -175,7 +184,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
-            reqId -> new PingMessage(reqId, nodeRecord.getSeq()),
+            reqId -> new PingMessage(reqId, localNodeRecordStore.getLocalNodeRecord().getSeq()),
             MultiPacketResponseHandler.SINGLE_PACKET_RESPONSE_HANDLER);
     return executeTaskImpl(nodeRecord, request);
   }

@@ -20,12 +20,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PingHandlerTest {
-
-  private final PingHandler handler = new PingHandler();
-
   private final InetSocketAddress REMOTE_ADDRESS = new InetSocketAddress("localhost", 25234);
   private final NodeSession session = mock(NodeSession.class);
+  private final EnrUpdateTracker enrUpdateTracker = mock(EnrUpdateTracker.class);
   private final NodeInfo localNode = TestUtil.generateNode(9000);
+
+  private final PingHandler handler = new PingHandler(enrUpdateTracker);
 
   @BeforeEach
   void setUp() {
@@ -46,5 +46,15 @@ class PingHandlerTest {
                 localNode.getNodeRecord().getSeq(),
                 Bytes.wrap(REMOTE_ADDRESS.getAddress().getAddress()),
                 REMOTE_ADDRESS.getPort()));
+  }
+
+  @Test
+  void shouldCheckForUpdatedEnr() {
+    final UInt64 reportedSeqNum = UInt64.valueOf(6);
+    final Bytes requestId = Bytes.fromHexString("0x4678");
+    final PingMessage message = new PingMessage(requestId, reportedSeqNum);
+    handler.handle(message, session);
+
+    verify(enrUpdateTracker).updateIfRequired(session, reportedSeqNum);
   }
 }

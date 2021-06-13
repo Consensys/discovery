@@ -18,9 +18,13 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 public class PongHandler implements MessageHandler<PongMessage> {
   private static final Logger logger = LogManager.getLogger();
   private final ExternalAddressSelector externalAddressSelector;
+  private final EnrUpdateTracker enrUpdateTracker;
 
-  public PongHandler(final ExternalAddressSelector externalAddressSelector) {
+  public PongHandler(
+      final ExternalAddressSelector externalAddressSelector,
+      final EnrUpdateTracker enrUpdateTracker) {
     this.externalAddressSelector = externalAddressSelector;
+    this.enrUpdateTracker = enrUpdateTracker;
   }
 
   @Override
@@ -40,6 +44,7 @@ public class PongHandler implements MessageHandler<PongMessage> {
       }
     }
     session.clearRequestInfo(message.getRequestId(), null);
+    enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
   }
 
   private boolean addressDiffers(
