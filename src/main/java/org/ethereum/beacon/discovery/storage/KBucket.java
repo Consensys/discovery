@@ -18,8 +18,19 @@ public class KBucket {
   private final LivenessChecker livenessChecker;
   private final Clock clock;
 
+  /**
+   * The nodes actually in the bucket, ordered by time they were last confirmed as live.
+   *
+   * <p>Thus the live nodes are at the start of the bucket with not yet confirmed nodes at the end,
+   * and the last node in the list is the node least recently confirmed as live that should be the
+   * next to check.
+   */
   private final List<BucketEntry> nodes = new ArrayList<>();
 
+  /**
+   * Stores a node which could not be added becasue the bucket was full, but is confirmed live and
+   * able to be inserted immediately should any node in the bucket be removed.
+   */
   private Optional<BucketEntry> pendingNode = Optional.empty();
 
   public KBucket(final LivenessChecker livenessChecker, final Clock clock) {
@@ -33,7 +44,7 @@ public class KBucket {
 
   public List<NodeRecord> getLiveNodes() {
     return nodes.stream()
-        .filter(node -> node.isLive())
+        .takeWhile(BucketEntry::isLive)
         .map(BucketEntry::getNode)
         .collect(Collectors.toList());
   }
@@ -73,7 +84,7 @@ public class KBucket {
     }
   }
 
-  public void onNodeContacted(final NodeRecord node) {
+  public void onLivenessConfirmed(final NodeRecord node) {
     getEntry(node)
         .ifPresentOrElse(
             existingEntry -> {
@@ -117,13 +128,12 @@ public class KBucket {
    * when it was last confirmed as live)
    */
   public void performMaintenance() {
+    performPendingNodeMaintenance();
+
     if (nodes.isEmpty()) {
       return;
     }
     final long currentTime = clock.millis();
-
-    performPendingNodeMaintenance(currentTime);
-
     final BucketEntry lastNode = getLastNode();
     if (lastNode.hasFailedLivenessCheck(currentTime)) {
       nodes.remove(lastNode);
@@ -137,9 +147,10 @@ public class KBucket {
     }
   }
 
-  private void performPendingNodeMaintenance(final long currentTime) {
+  private void performPendingNodeMaintenance() {
     pendingNode.ifPresent(
         pendingEntry -> {
+          final long currentTime = clock.millis();
           if (pendingEntry.hasFailedLivenessCheck(currentTime)) {
             pendingNode = Optional.empty();
           } else {

@@ -78,7 +78,7 @@ class KBucketTest {
     final NodeRecord lastRecordInBucket = fillBucketWithLiveNodes();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
 
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
@@ -156,7 +156,7 @@ class KBucketTest {
   void offer_shouldRemovePendingNodeIfTimedOutBeforeConsideringNewNode() {
     fillBucketWithLiveNodes();
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
 
     // Pending node times out
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
@@ -177,13 +177,13 @@ class KBucketTest {
   void offer_shouldReplaceLastNodeIfItAndPendingNodeAreTimedOut() {
     final NodeRecord lastNodeInBucket = fillBucketWithLiveNodes();
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
 
     // Pending node times out
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
     bucket.getAllNodes().stream()
         .filter(node -> !node.equals(lastNodeInBucket))
-        .forEach(bucket::onNodeContacted);
+        .forEach(bucket::onLivenessConfirmed);
     bucket.performMaintenance();
     verify(livenessChecker).checkLiveness(pendingNode);
     verify(livenessChecker, times(2)).checkLiveness(lastNodeInBucket);
@@ -203,7 +203,7 @@ class KBucketTest {
   void onNodeContacted_shouldMoveExistingNodeToFrontOfBucket() {
     final NodeRecord lastNode = fillBucket();
 
-    bucket.onNodeContacted(lastNode);
+    bucket.onLivenessConfirmed(lastNode);
 
     assertThat(bucket.getAllNodes()).startsWith(lastNode);
   }
@@ -213,10 +213,10 @@ class KBucketTest {
     final NodeRecord node1 = createNewNodeRecord();
     final NodeRecord node2 = createNewNodeRecord();
 
-    bucket.onNodeContacted(node1);
+    bucket.onLivenessConfirmed(node1);
     assertThat(bucket.getAllNodes()).containsExactly(node1);
 
-    bucket.onNodeContacted(node2);
+    bucket.onLivenessConfirmed(node2);
     assertThat(bucket.getAllNodes()).containsExactly(node2, node1);
   }
 
@@ -225,11 +225,11 @@ class KBucketTest {
     fillBucket();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
 
     final NodeRecord node2 = createNewNodeRecord();
-    bucket.onNodeContacted(node2);
+    bucket.onLivenessConfirmed(node2);
     assertThat(bucket.getAllNodes()).doesNotContain(node2);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
   }
@@ -242,7 +242,7 @@ class KBucketTest {
     clock.advanceTimeMillis(PING_TIMEOUT_MILLIS);
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
 
     // Timeout pending node
@@ -253,7 +253,7 @@ class KBucketTest {
 
     // New node should replace the timed out pending node
     final NodeRecord newNode = createNewNodeRecord();
-    bucket.onNodeContacted(newNode);
+    bucket.onLivenessConfirmed(newNode);
 
     assertThat(bucket.getPendingNode()).contains(newNode);
     assertThat(bucket.getAllNodes()).doesNotContain(pendingNode);
@@ -266,7 +266,7 @@ class KBucketTest {
     clock.advanceTimeMillis(PING_TIMEOUT_MILLIS);
 
     final NodeRecord newNode = createNewNodeRecord();
-    bucket.onNodeContacted(newNode);
+    bucket.onLivenessConfirmed(newNode);
 
     assertThat(bucket.getAllNodes()).contains(newNode).doesNotContain(lastNode);
     assertThat(bucket.getPendingNode()).isEmpty();
@@ -279,7 +279,7 @@ class KBucketTest {
     clock.advanceTimeMillis(PING_TIMEOUT_MILLIS);
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
 
     // Timeout last node
@@ -290,14 +290,14 @@ class KBucketTest {
     final NodeRecord lastNode = getLastNodeInBucket();
     bucket.getAllNodes().stream()
         .filter(node -> !node.equals(lastNode))
-        .forEach(bucket::onNodeContacted);
-    bucket.onNodeContacted(pendingNode);
+        .forEach(bucket::onLivenessConfirmed);
+    bucket.onLivenessConfirmed(pendingNode);
 
     clock.advanceTimeMillis(PING_TIMEOUT_MILLIS);
 
     // Pending node should replace the timed out last node and new node becomes pending
     final NodeRecord newNode = createNewNodeRecord();
-    bucket.onNodeContacted(newNode);
+    bucket.onLivenessConfirmed(newNode);
 
     assertThat(bucket.getAllNodes()).contains(pendingNode).doesNotContain(lastNode);
     assertThat(bucket.getPendingNode()).contains(newNode);
@@ -309,11 +309,11 @@ class KBucketTest {
     confirmNodesInBucketAsLive();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     verify(livenessChecker, never()).checkLiveness(pendingNode);
 
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     // No need to ping pending node because we know its live
     verify(livenessChecker, never()).checkLiveness(pendingNode);
 
@@ -346,7 +346,7 @@ class KBucketTest {
     final NodeRecord lastRecordInBucket = fillBucket();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
     assertThat(bucket.getPendingNode()).contains(pendingNode);
 
     // First offered node schedules a ping for the last node and the new node
@@ -369,7 +369,7 @@ class KBucketTest {
     fillBucket();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
 
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
 
@@ -382,7 +382,7 @@ class KBucketTest {
     fillBucket();
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
 
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS - 1);
 
@@ -396,7 +396,7 @@ class KBucketTest {
     confirmNodesInBucketAsLive(); // Existing nodes stay live
 
     final NodeRecord pendingNode = createNewNodeRecord();
-    bucket.onNodeContacted(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
 
     clock.advanceTimeMillis(MIN_MILLIS_BETWEEN_PINGS);
     confirmNodesInBucketAsLive(); // Existing nodes stay live
@@ -419,16 +419,16 @@ class KBucketTest {
     final NodeRecord node4 = createNewNodeRecord();
 
     bucket.offer(node1);
-    bucket.onNodeContacted(node2);
+    bucket.onLivenessConfirmed(node2);
     bucket.offer(node3);
-    bucket.onNodeContacted(node4);
+    bucket.onLivenessConfirmed(node4);
 
     assertThat(bucket.getAllNodes()).containsExactly(node4, node2, node1, node3);
     assertThat(bucket.getLiveNodes()).containsExactly(node4, node2);
   }
 
   private void confirmNodesInBucketAsLive() {
-    bucket.getAllNodes().forEach(bucket::onNodeContacted);
+    bucket.getAllNodes().forEach(bucket::onLivenessConfirmed);
   }
 
   private NodeRecord fillBucket() {
