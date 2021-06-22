@@ -422,9 +422,10 @@ class KBucketTest {
     bucket.onLivenessConfirmed(node2);
     bucket.offer(node3);
     bucket.onLivenessConfirmed(node4);
+    bucket.onLivenessConfirmed(node3);
 
-    assertThat(bucket.getAllNodes()).containsExactly(node4, node2, node1, node3);
-    assertThat(bucket.getLiveNodes()).containsExactly(node4, node2);
+    assertThat(bucket.getAllNodes()).containsExactly(node3, node4, node2, node1);
+    assertThat(bucket.getLiveNodes()).containsExactly(node3, node4, node2);
   }
 
   private void confirmNodesInBucketAsLive() {
