@@ -26,7 +26,8 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
             UInt64.ONE,
             new EnrField(EnrField.ID, IdentitySchema.V4),
             new EnrField(EnrField.PKEY_SECP256K1, nodeId),
-            new EnrField(UDP_ADDRESS, udpAddress));
+            new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
+            new EnrField(EnrField.UDP, udpAddress.getPort()));
   }
 
   @Override
