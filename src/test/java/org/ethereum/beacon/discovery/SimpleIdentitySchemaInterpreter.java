@@ -51,6 +51,9 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
     try {
       final Bytes ipBytes = (Bytes) nodeRecord.get(EnrField.IP_V4);
+      if (ipBytes == null) {
+        return Optional.empty();
+      }
       final InetAddress ipAddress = InetAddress.getByAddress(ipBytes.toArrayUnsafe());
       final int port = (int) nodeRecord.get(EnrField.UDP);
       return Optional.of(new InetSocketAddress(ipAddress, port));
