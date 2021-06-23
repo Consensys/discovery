@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -167,6 +166,6 @@ class LivenessCheckerTest {
 
   private NodeRecord createNewNodeRecord() {
     lastNodeId++;
-    return SimpleIdentitySchemaInterpreter.createNodeRecord(Bytes.ofUnsignedInt(lastNodeId));
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(lastNodeId);
   }
 }

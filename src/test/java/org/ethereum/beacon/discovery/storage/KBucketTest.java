@@ -443,7 +443,7 @@ class KBucketTest {
 
   private NodeRecord createNewNodeRecord() {
     lastNodeId++;
-    return SimpleIdentitySchemaInterpreter.createNodeRecord(Bytes.ofUnsignedInt(lastNodeId));
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(lastNodeId);
   }
 
   private NodeRecord getLastNodeInBucket() {

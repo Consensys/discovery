@@ -21,23 +21,24 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 
 public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterpreter {
 
-  public static NodeRecord createNodeRecord(
-      final Bytes nodeId, final InetSocketAddress udpAddress) {
-    return new NodeRecordFactory(new SimpleIdentitySchemaInterpreter())
-        .createFromValues(
-            UInt64.ONE,
-            new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, nodeId),
-            new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
-            new EnrField(EnrField.UDP, udpAddress.getPort()));
+  public static NodeRecord createNodeRecord(final int nodeId) {
+    return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
   }
 
-  public static NodeRecord createNodeRecord(final Bytes nodeId) {
+  public static NodeRecord createNodeRecord(
+      final Bytes nodeId, final InetSocketAddress udpAddress) {
+    return createNodeRecord(
+        nodeId,
+        new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
+        new EnrField(EnrField.UDP, udpAddress.getPort()));
+  }
+
+  public static NodeRecord createNodeRecord(final Bytes nodeId, final EnrField... extraFields) {
+    final List<EnrField> fields = new ArrayList<>(List.of(extraFields));
+    fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
+    fields.add(new EnrField(EnrField.PKEY_SECP256K1, nodeId));
     return new NodeRecordFactory(new SimpleIdentitySchemaInterpreter())
-        .createFromValues(
-            UInt64.ONE,
-            new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, nodeId));
+        .createFromValues(UInt64.ONE, fields);
   }
 
   @Override
