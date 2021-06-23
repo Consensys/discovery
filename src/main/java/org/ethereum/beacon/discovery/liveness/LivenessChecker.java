@@ -46,6 +46,8 @@ public class LivenessChecker {
   }
 
   private void sendPing(final NodeRecord node) {
+    queuedPings.remove(node);
+    activePings.add(node);
     pinger
         .ping(node)
         .whenComplete(
@@ -59,8 +61,6 @@ public class LivenessChecker {
                 queuedPings.stream().findFirst().ifPresent(this::sendPing);
               }
             });
-    queuedPings.remove(node);
-    activePings.add(node);
   }
 
   public interface Pinger {
