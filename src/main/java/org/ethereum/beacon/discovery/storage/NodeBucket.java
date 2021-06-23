@@ -8,15 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
-import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
 
 /**
  * Storage for nodes, K-Bucket. Holds only {@link #K} nodes, replacing nodes with the same nodeId
@@ -33,14 +26,6 @@ public class NodeBucket {
 
   private final TreeSet<NodeRecordInfo> bucket =
       new TreeSet<>((o1, o2) -> o2.getNode().hashCode() - o1.getNode().hashCode());
-
-  public static NodeBucket fromRlpBytes(Bytes bytes, NodeRecordFactory nodeRecordFactory) {
-    NodeBucket nodeBucket = new NodeBucket();
-    RlpUtil.decodeListOfStrings(bytes).stream()
-        .map(bytes1 -> NodeRecordInfo.fromRlpBytes(bytes1, nodeRecordFactory))
-        .forEach(nodeBucket::put);
-    return nodeBucket;
-  }
 
   public synchronized boolean put(NodeRecordInfo nodeRecord) {
     if (FILTER.test(nodeRecord)) {
@@ -75,18 +60,6 @@ public class NodeBucket {
 
   public synchronized boolean contains(NodeRecordInfo nodeRecordInfo) {
     return bucket.contains(nodeRecordInfo);
-  }
-
-  public synchronized Bytes toRlpBytes() {
-    byte[] res =
-        RlpEncoder.encode(
-            new RlpList(
-                bucket.stream()
-                    .map(NodeRecordInfo::toRlpBytes)
-                    .map(Bytes::toArray)
-                    .map(RlpString::create)
-                    .collect(Collectors.toList())));
-    return Bytes.wrap(res);
   }
 
   public int size() {

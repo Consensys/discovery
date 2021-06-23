@@ -4,7 +4,9 @@
 
 package org.ethereum.beacon.discovery;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
@@ -26,7 +28,8 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
             UInt64.ONE,
             new EnrField(EnrField.ID, IdentitySchema.V4),
             new EnrField(EnrField.PKEY_SECP256K1, nodeId),
-            new EnrField(UDP_ADDRESS, udpAddress));
+            new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
+            new EnrField(EnrField.UDP, udpAddress.getPort()));
   }
 
   @Override
@@ -46,7 +49,17 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   @Override
   public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
-    return Optional.ofNullable((InetSocketAddress) nodeRecord.get(UDP_ADDRESS));
+    try {
+      final Bytes ipBytes = (Bytes) nodeRecord.get(EnrField.IP_V4);
+      if (ipBytes == null) {
+        return Optional.empty();
+      }
+      final InetAddress ipAddress = InetAddress.getByAddress(ipBytes.toArrayUnsafe());
+      final int port = (int) nodeRecord.get(EnrField.UDP);
+      return Optional.of(new InetSocketAddress(ipAddress, port));
+    } catch (UnknownHostException e) {
+      return Optional.empty();
+    }
   }
 
   @Override
