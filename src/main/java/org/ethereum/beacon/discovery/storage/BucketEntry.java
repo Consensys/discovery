@@ -7,8 +7,8 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.storage.KBuckets.LivenessChecker;
 
 class BucketEntry {
 

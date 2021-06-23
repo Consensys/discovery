@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -84,15 +85,5 @@ public class KBuckets {
     }
     return Optional.of(
         buckets.computeIfAbsent(distance, __ -> new KBucket(livenessChecker, clock)));
-  }
-
-  public interface LivenessChecker {
-
-    /**
-     * Adds the specified node to the queue of nodes to perform a liveness check on.
-     *
-     * @param node the node to check liveness
-     */
-    void checkLiveness(NodeRecord node);
   }
 }

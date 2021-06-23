@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.storage.KBuckets.LivenessChecker;
 
 public class KBucket {
 
