@@ -7,6 +7,8 @@ package org.ethereum.beacon.discovery;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
@@ -19,17 +21,24 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 
 public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterpreter {
 
-  public static final String UDP_ADDRESS = "udpAddress";
+  public static NodeRecord createNodeRecord(final int nodeId) {
+    return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
+  }
 
   public static NodeRecord createNodeRecord(
       final Bytes nodeId, final InetSocketAddress udpAddress) {
+    return createNodeRecord(
+        nodeId,
+        new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
+        new EnrField(EnrField.UDP, udpAddress.getPort()));
+  }
+
+  public static NodeRecord createNodeRecord(final Bytes nodeId, final EnrField... extraFields) {
+    final List<EnrField> fields = new ArrayList<>(List.of(extraFields));
+    fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
+    fields.add(new EnrField(EnrField.PKEY_SECP256K1, nodeId));
     return new NodeRecordFactory(new SimpleIdentitySchemaInterpreter())
-        .createFromValues(
-            UInt64.ONE,
-            new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, nodeId),
-            new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
-            new EnrField(EnrField.UDP, udpAddress.getPort()));
+        .createFromValues(UInt64.ONE, fields);
   }
 
   @Override
@@ -77,11 +86,17 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      final NodeRecord nodeRecord,
-      final String fieldName,
-      final Bytes value,
-      final Bytes privateKey) {
-    throw new UnsupportedOperationException(
-        "SimpleIdentitySchemaInterpreter does not support updating custom fields.");
+      NodeRecord nodeRecord, String fieldName, Bytes value, Bytes privateKey) {
+    final List<EnrField> fields = new ArrayList<>();
+    nodeRecord.forEachField(
+        (key, existingValue) -> {
+          if (!key.equals(fieldName)) {
+            fields.add(new EnrField(key, existingValue));
+          }
+        });
+    fields.add(new EnrField(fieldName, value));
+    final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
+    sign(newRecord, privateKey);
+    return newRecord;
   }
 }

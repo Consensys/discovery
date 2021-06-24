@@ -10,8 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.ethereum.beacon.discovery.TestUtil;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.storage.KBuckets.LivenessChecker;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

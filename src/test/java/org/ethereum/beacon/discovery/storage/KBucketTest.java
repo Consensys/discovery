@@ -12,10 +12,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
-import org.ethereum.beacon.discovery.TestUtil;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.storage.KBuckets.LivenessChecker;
 import org.junit.jupiter.api.Test;
 
 class KBucketTest {
@@ -25,7 +25,7 @@ class KBucketTest {
   private final StubClock clock = new StubClock();
   private final KBucket bucket = new KBucket(livenessChecker, clock);
 
-  private int lastNodeRecordPort = 0;
+  private int lastNodeId = 0;
 
   @Test
   void offer_shouldAddNodeAndCheckLivenessWhenTheBucketIsEmpty() {
@@ -442,8 +442,8 @@ class KBucketTest {
   }
 
   private NodeRecord createNewNodeRecord() {
-    lastNodeRecordPort++;
-    return TestUtil.generateNode(lastNodeRecordPort).getNodeRecord();
+    lastNodeId++;
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(lastNodeId);
   }
 
   private NodeRecord getLastNodeInBucket() {
