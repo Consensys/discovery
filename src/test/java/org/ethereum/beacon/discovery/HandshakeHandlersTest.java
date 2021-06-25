@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -29,6 +30,7 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker;
@@ -60,9 +62,9 @@ import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
@@ -78,6 +80,7 @@ public class HandshakeHandlersTest {
   @Test
   @SuppressWarnings("rawtypes")
   public void authHandlerWithMessageRoundTripTest() throws Exception {
+    final Clock clock = Clock.systemUTC();
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
@@ -92,13 +95,15 @@ public class HandshakeHandlersTest {
             NodeRecordListener.NOOP,
             NewAddressHandler.NOOP);
     NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 =
-        nodeTableStorageFactory.createBucketStorage(localNodeRecordStoreAt1);
+    KBuckets nodeBucketStorage1 =
+        new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker());
     NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
-    NodeBucketStorage nodeBucketStorage2 =
-        nodeTableStorageFactory.createBucketStorage(
+    KBuckets nodeBucketStorage2 =
+        new KBuckets(
+            clock,
             new LocalNodeRecordStore(
-                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
+                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            new LivenessChecker());
 
     // Node1 create AuthHeaderPacket
     LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();

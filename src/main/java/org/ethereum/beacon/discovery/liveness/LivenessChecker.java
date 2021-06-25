@@ -20,9 +20,9 @@ public class LivenessChecker {
   private final Set<NodeRecord> activePings = new HashSet<>();
   private final Set<NodeRecord> queuedPings = new LinkedHashSet<>();
 
-  private final Pinger pinger;
+  private Pinger pinger = node -> CompletableFuture.completedFuture(null);
 
-  public LivenessChecker(final Pinger pinger) {
+  public synchronized void setPinger(final Pinger pinger) {
     this.pinger = pinger;
   }
 

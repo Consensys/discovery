@@ -10,6 +10,7 @@ import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERI
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
@@ -24,9 +26,9 @@ import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
 import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
@@ -38,6 +40,7 @@ import reactor.core.publisher.Flux;
 public class DiscoveryNetworkTest {
   @Test
   public void test() throws Exception {
+    final Clock clock = Clock.systemUTC();
     // 1) start 2 nodes
     NodeInfo nodePair1 = TestUtil.generateNode(30303);
     NodeInfo nodePair2 = TestUtil.generateNode(30304);
@@ -45,15 +48,21 @@ public class DiscoveryNetworkTest {
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
-    NodeBucketStorage nodeBucketStorage1 =
-        nodeTableStorageFactory.createBucketStorage(
+    LivenessChecker livenessChecker1 = new LivenessChecker();
+    LivenessChecker livenessChecker2 = new LivenessChecker();
+    KBuckets nodeBucketStorage1 =
+        new KBuckets(
+            clock,
             new LocalNodeRecordStore(
-                nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
+                nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            livenessChecker1);
     NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
-    NodeBucketStorage nodeBucketStorage2 =
-        nodeTableStorageFactory.createBucketStorage(
+    KBuckets nodeBucketStorage2 =
+        new KBuckets(
+            clock,
             new LocalNodeRecordStore(
-                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP));
+                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            livenessChecker2);
     ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
@@ -72,6 +81,7 @@ public class DiscoveryNetworkTest {
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
             TalkHandler.NOOP);
+    livenessChecker1.setPinger(discoveryManager1::ping);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
@@ -88,6 +98,7 @@ public class DiscoveryNetworkTest {
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,
             TalkHandler.NOOP);
+    livenessChecker2.setPinger(discoveryManager2::ping);
 
     // 3) Expect standard 1 => 2 dialog
     CountDownLatch randomSent1to2 = new CountDownLatch(1);
@@ -138,13 +149,13 @@ public class DiscoveryNetworkTest {
     assertTrue(randomSent1to2.await(1, TimeUnit.SECONDS));
     assertTrue(whoareyouSent2to1.await(1, TimeUnit.SECONDS));
     int distance1To2 = Functions.logDistance(nodeRecord1.getNodeId(), nodeRecord2.getNodeId());
-    assertThat(nodeBucketStorage1.getNodeRecords(distance1To2)).isEmpty();
+    assertThat(nodeBucketStorage1.getLiveNodeRecords(distance1To2)).isEmpty();
     assertTrue(authPacketSent1to2.await(1, TimeUnit.SECONDS));
     assertTrue(nodesSent2to1.await(1, TimeUnit.SECONDS));
     Thread.sleep(50);
     // 1 sent findnodes to 2, received only (2) in answer, because 3 is not checked
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
-    Stream<NodeRecord> nodesInBucketAt1With2 = nodeBucketStorage1.getNodeRecords(distance1To2);
+    Stream<NodeRecord> nodesInBucketAt1With2 = nodeBucketStorage1.getLiveNodeRecords(distance1To2);
     assertThat(nodesInBucketAt1With2.map(NodeRecord::getNodeId))
         .containsExactly(nodeRecord2.getNodeId());
   }

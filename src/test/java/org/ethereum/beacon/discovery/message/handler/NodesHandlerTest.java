@@ -62,7 +62,6 @@ class NodesHandlerTest {
 
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeInfo.getNodeRecord());
     verify(nodeTable).save(nodeRecordInfo);
-    verify(session, never()).putRecordInBucket(nodeRecordInfo);
     verify(session).clearRequestInfo(REQUEST_ID, null);
   }
 
@@ -91,7 +90,6 @@ class NodesHandlerTest {
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(updatedRecord);
     verify(nodeTable).save(nodeRecordInfo);
     verify(session, never()).updateNodeRecord(any());
-    verify(session, never()).putRecordInBucket(any());
     verify(session).clearRequestInfo(REQUEST_ID, null);
   }
 
@@ -121,7 +119,6 @@ class NodesHandlerTest {
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(updatedRecord);
     verify(nodeTable).save(nodeRecordInfo);
     verify(session).updateNodeRecord(updatedRecord);
-    verify(session, never()).putRecordInBucket(any());
     verify(session).clearRequestInfo(REQUEST_ID, null);
   }
 

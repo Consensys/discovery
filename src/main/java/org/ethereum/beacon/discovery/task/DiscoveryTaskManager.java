@@ -25,7 +25,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeStatus;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -44,7 +44,7 @@ public class DiscoveryTaskManager {
   private final LiveCheckTasks liveCheckTasks;
   private final RecursiveLookupTasks recursiveLookupTasks;
   private final NodeTable nodeTable;
-  private final NodeBucketStorage nodeBucketStorage;
+  private final KBuckets nodeBucketStorage;
   /**
    * Checks whether {@link NodeRecord} is ready for alive status check. Plus, marks records as DEAD
    * if there were a lot of unsuccessful retries to get reply from node.
@@ -124,7 +124,7 @@ public class DiscoveryTaskManager {
   public DiscoveryTaskManager(
       DiscoveryManager discoveryManager,
       NodeTable nodeTable,
-      NodeBucketStorage nodeBucketStorage,
+      KBuckets nodeBucketStorage,
       NodeRecord homeNode,
       Scheduler scheduler,
       boolean resetDead,
@@ -290,6 +290,6 @@ public class DiscoveryTaskManager {
         newNodeRecordInfo.getNode().getNodeId(),
         newNodeRecordInfo.getStatus());
     nodeTable.save(newNodeRecordInfo);
-    nodeBucketStorage.put(newNodeRecordInfo);
+    nodeBucketStorage.offer(newNodeRecordInfo.getNode());
   }
 }

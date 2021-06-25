@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
-public class KBucket {
+class KBucket {
 
   static final int K = 16;
 
