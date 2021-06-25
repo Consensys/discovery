@@ -12,6 +12,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,18 +25,16 @@ import java.util.stream.IntStream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeStatus;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -44,14 +45,15 @@ public class FindNodeHandlerTest {
   private int counter = 1000;
   private NodeInfo homeNodePair = TestUtil.generateUnverifiedNode(30303);
   private NodeRecord homeNodeRecord = homeNodePair.getNodeRecord();
-  private NodeBucketStorage nodeBucketStorage =
-      new NodeTableStorageFactoryImpl()
-          .createBucketStorage(
-              new LocalNodeRecordStore(
-                  homeNodeRecord,
-                  Bytes.fromHexString("0x1234"),
-                  NodeRecordListener.NOOP,
-                  NewAddressHandler.NOOP));
+  private KBuckets nodeBucketStorage =
+      new KBuckets(
+          Clock.fixed(Instant.ofEpochSecond(100000), ZoneId.of("UTC")),
+          new LocalNodeRecordStore(
+              homeNodeRecord,
+              Bytes.fromHexString("0x1234"),
+              NodeRecordListener.NOOP,
+              NewAddressHandler.NOOP),
+          new LivenessChecker());
   private NodeSession session = mock(NodeSession.class);
   private Map<Integer, List<NodeRecord>> tableRecords = new HashMap<>();
 
@@ -61,12 +63,12 @@ public class FindNodeHandlerTest {
     when(session.getNodeRecordsInBucket(anyInt()))
         .thenAnswer(
             invocation ->
-                nodeBucketStorage.getNodeRecords(invocation.getArgument(0, Integer.class)));
+                nodeBucketStorage.getLiveNodeRecords(invocation.getArgument(0, Integer.class)));
     for (int i = 0; i < 256; i++) {
       for (int j = 0; j < i % 3; j++) {
         NodeRecord record = generateNodeAtDistance(i);
         tableRecords.computeIfAbsent(i, __ -> new ArrayList<>()).add(record);
-        nodeBucketStorage.put(new NodeRecordInfo(record, 0L, NodeStatus.ACTIVE, 0));
+        nodeBucketStorage.onNodeContacted(record);
       }
     }
   }
