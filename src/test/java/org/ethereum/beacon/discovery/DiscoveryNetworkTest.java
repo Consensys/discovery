@@ -11,7 +11,6 @@ import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Clock;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -30,8 +29,6 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTableStorage;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -46,8 +43,6 @@ public class DiscoveryNetworkTest {
     NodeInfo nodePair2 = TestUtil.generateNode(30304);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
-    NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
     LivenessChecker livenessChecker1 = new LivenessChecker();
     LivenessChecker livenessChecker2 = new LivenessChecker();
     KBuckets nodeBucketStorage1 =
@@ -56,7 +51,6 @@ public class DiscoveryNetworkTest {
             new LocalNodeRecordStore(
                 nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
             livenessChecker1);
-    NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
@@ -69,7 +63,6 @@ public class DiscoveryNetworkTest {
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
                 nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
-            nodeTableStorage1.get(),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
@@ -86,7 +79,6 @@ public class DiscoveryNetworkTest {
         new DiscoveryManagerImpl(
             new NettyDiscoveryServerImpl(
                 nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
-            nodeTableStorage2.get(),
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,

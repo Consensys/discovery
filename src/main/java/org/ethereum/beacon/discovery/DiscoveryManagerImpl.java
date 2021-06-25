@@ -44,11 +44,9 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -61,14 +59,13 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NettyDiscoveryServer discoveryServer;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
+  private final KBuckets nodeBucketStorage;
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
       NettyDiscoveryServer discoveryServer,
-      NodeTable nodeTable,
       KBuckets nodeBucketStorage,
       LocalNodeRecordStore localNodeRecordStore,
       Bytes homeNodePrivateKey,
@@ -76,7 +73,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
-    this.nodeTable = nodeTable;
+    this.nodeBucketStorage = nodeBucketStorage;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
@@ -86,7 +83,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
-            nodeTable,
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
@@ -162,9 +158,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   private void addNode(NodeRecord nodeRecord) {
-    if (nodeTable.getNode(nodeRecord.getNodeId()).isEmpty()) {
-      nodeTable.save(NodeRecordInfo.createDefault(nodeRecord));
-    }
+    nodeBucketStorage.offer(nodeRecord);
   }
 
   @Override

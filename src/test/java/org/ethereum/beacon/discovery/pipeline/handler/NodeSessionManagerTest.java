@@ -27,7 +27,6 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +39,6 @@ class NodeSessionManagerTest {
   private final KBuckets nodeBucketStorage = mock(KBuckets.class);
   private final ExpirationSchedulerFactory expirationSchedulerFactory =
       new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
-  private final NodeTable nodeTable = mock(NodeTable.class);
   private final Pipeline outgoingPipeline = mock(Pipeline.class);
 
   private final NodeSessionManager handler =
@@ -52,7 +50,6 @@ class NodeSessionManagerTest {
               NewAddressHandler.NOOP),
           STATIC_NODE_KEY,
           nodeBucketStorage,
-          nodeTable,
           outgoingPipeline,
           expirationSchedulerFactory);
 

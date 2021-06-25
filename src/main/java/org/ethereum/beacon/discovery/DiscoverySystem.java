@@ -12,10 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.storage.BucketStats;
 import org.ethereum.beacon.discovery.storage.KBuckets;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystem {
@@ -23,7 +21,6 @@ public class DiscoverySystem {
   private final DiscoveryManager discoveryManager;
   private final DiscoveryTaskManager taskManager;
   private final ExpirationSchedulerFactory expirationSchedulerFactory;
-  private final NodeTable nodeTable;
   private final KBuckets buckets;
   private final List<NodeRecord> bootnodes;
 
@@ -31,13 +28,11 @@ public class DiscoverySystem {
       final DiscoveryManager discoveryManager,
       final DiscoveryTaskManager taskManager,
       final ExpirationSchedulerFactory expirationSchedulerFactory,
-      final NodeTable nodeTable,
       final KBuckets buckets,
       final List<NodeRecord> bootnodes) {
     this.discoveryManager = discoveryManager;
     this.taskManager = taskManager;
     this.expirationSchedulerFactory = expirationSchedulerFactory;
-    this.nodeTable = nodeTable;
     this.buckets = buckets;
     this.bootnodes = bootnodes;
   }
@@ -109,9 +104,8 @@ public class DiscoverySystem {
     return discoveryManager.talk(nodeRecord, protocol, request);
   }
 
-  public Stream<NodeRecordInfo> streamKnownNodes() {
-    // 0 indicates no limit to the number of nodes to return.
-    return nodeTable.streamClosestNodes(Bytes32.ZERO, 0);
+  public Stream<NodeRecord> streamKnownNodes() {
+    return buckets.streamClosestNodes(Bytes32.ZERO);
   }
 
   public CompletableFuture<Void> searchForNewPeers() {

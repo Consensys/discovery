@@ -22,8 +22,6 @@ import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
-import org.ethereum.beacon.discovery.schema.NodeStatus;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.web3j.crypto.ECKeyPair;
@@ -125,8 +123,6 @@ public class DiscoveryTestServer {
       List<NodeRecord> newActiveNodes =
           discoverySystem
               .streamKnownNodes()
-              .filter(r -> r.getStatus() == NodeStatus.ACTIVE)
-              .map(NodeRecordInfo::getNode)
               .filter(r -> !activeKnownNodes.contains(r))
               .collect(Collectors.toList());
 

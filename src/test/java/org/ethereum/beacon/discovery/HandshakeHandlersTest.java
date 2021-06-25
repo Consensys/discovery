@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.time.Clock;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -66,8 +65,6 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTableStorage;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.junit.jupiter.api.Test;
@@ -87,17 +84,14 @@ public class HandshakeHandlersTest {
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    NodeTableStorageFactoryImpl nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(
             nodeRecord1,
             nodePair1.getPrivateKey(),
             NodeRecordListener.NOOP,
             NewAddressHandler.NOOP);
-    NodeTableStorage nodeTableStorage1 = nodeTableStorageFactory.createTable(List.of(nodeRecord2));
     KBuckets nodeBucketStorage1 =
         new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker());
-    NodeTableStorage nodeTableStorage2 = nodeTableStorageFactory.createTable(List.of(nodeRecord1));
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
@@ -124,7 +118,6 @@ public class HandshakeHandlersTest {
             mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
             nodePair1.getPrivateKey(),
-            nodeTableStorage1.get(),
             nodeBucketStorage1,
             outgoingMessages1to2,
             rnd,
@@ -148,7 +141,6 @@ public class HandshakeHandlersTest {
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             nodePair2.getPrivateKey(),
-            nodeTableStorage2.get(),
             nodeBucketStorage2,
             outgoingMessages2to1,
             rnd,
@@ -165,7 +157,6 @@ public class HandshakeHandlersTest {
 
     Envelope envelopeAt1From2 = new Envelope();
     Bytes16 idNonce = Bytes16.random(rnd);
-    nodeSessionAt2For1.setIdNonce(idNonce);
     WhoAreYouPacket whoAreYouPacket =
         WhoAreYouPacket.create(
             Header.createWhoAreYouHeader(randomMessageNonce, idNonce, UInt64.ZERO));

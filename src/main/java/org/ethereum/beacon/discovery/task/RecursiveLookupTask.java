@@ -12,14 +12,14 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
-import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public class RecursiveLookupTask {
   private static final Logger LOG = LogManager.getLogger();
   private static final int MAX_CONCURRENT_QUERIES = 3;
-  private final NodeTable nodeTable;
+  private final KBuckets buckets;
   private final FindNodesAction sendFindNodesRequest;
   private final Bytes targetNodeId;
   private final Set<Bytes> queriedNodeIds = new HashSet<>();
@@ -28,11 +28,11 @@ public class RecursiveLookupTask {
   private final CompletableFuture<Void> future = new CompletableFuture<>();
 
   public RecursiveLookupTask(
-      final NodeTable nodeTable,
+      final KBuckets buckets,
       final FindNodesAction sendFindNodesRequest,
       final int totalQueryLimit,
       final Bytes targetNodeId) {
-    this.nodeTable = nodeTable;
+    this.buckets = buckets;
     this.sendFindNodesRequest = sendFindNodesRequest;
     this.remainingTotalQueryLimit = totalQueryLimit;
     this.targetNodeId = targetNodeId;
@@ -48,14 +48,13 @@ public class RecursiveLookupTask {
     if (availableQuerySlots == 0 || future.isDone()) {
       return;
     }
-    if (nodeTable.getNode(targetNodeId).isPresent()) {
+    if (buckets.containsNode(targetNodeId)) {
       future.complete(null);
       return;
     }
-    nodeTable
-        .streamClosestNodes(targetNodeId, 0)
-        .filter(DiscoveryTaskManager.RECURSIVE_LOOKUP_NODE_RULE)
-        .filter(record -> !queriedNodeIds.contains(record.getNode().getNodeId()))
+    buckets
+        .streamClosestNodes(targetNodeId)
+        .filter(record -> !queriedNodeIds.contains(record.getNodeId()))
         .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit))
         .forEach(this::queryPeer);
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
@@ -65,16 +64,16 @@ public class RecursiveLookupTask {
     }
   }
 
-  private void queryPeer(final NodeRecordInfo peer) {
-    queriedNodeIds.add(peer.getNode().getNodeId());
+  private void queryPeer(final NodeRecord peer) {
+    queriedNodeIds.add(peer.getNodeId());
     availableQuerySlots--;
     remainingTotalQueryLimit--;
     sendFindNodesRequest
-        .findNodes(peer, Functions.logDistance(peer.getNode().getNodeId(), targetNodeId))
+        .findNodes(peer, Functions.logDistance(peer.getNodeId(), targetNodeId))
         .whenComplete(
             (__, error) -> {
               if (error != null) {
-                LOG.debug("Failed to query " + peer.getNode().getNodeId(), error);
+                LOG.debug("Failed to query " + peer.getNodeId(), error);
               }
               synchronized (RecursiveLookupTask.this) {
                 availableQuerySlots++;
@@ -84,6 +83,6 @@ public class RecursiveLookupTask {
   }
 
   public interface FindNodesAction {
-    CompletableFuture<Void> findNodes(NodeRecordInfo sendTo, int distance);
+    CompletableFuture<Void> findNodes(NodeRecord sendTo, int distance);
   }
 }

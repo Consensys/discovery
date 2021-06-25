@@ -32,10 +32,6 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NodeTableStorage;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactory;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystemBuilder {
@@ -154,10 +150,6 @@ public class DiscoverySystemBuilder {
         requireNonNullElseGet(
             nodeBucketStorage,
             () -> new KBuckets(Clock.systemUTC(), localNodeRecordStore, livenessChecker));
-    nodeTableStorage =
-        requireNonNullElseGet(
-            nodeTableStorage, () -> nodeTableStorageFactory.createTable(bootnodes));
-    nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,
@@ -169,11 +161,8 @@ public class DiscoverySystemBuilder {
                             .build())));
   }
 
-  final NodeTableStorageFactory nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
   final int clientNumber = COUNTER.incrementAndGet();
 
-  NodeTableStorage nodeTableStorage;
-  NodeTable nodeTable;
   KBuckets nodeBucketStorage;
   LocalNodeRecordStore localNodeRecordStore;
   ExpirationSchedulerFactory expirationSchedulerFactory;
@@ -193,12 +182,9 @@ public class DiscoverySystemBuilder {
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
             discoveryManager,
-            nodeTable,
             nodeBucketStorage,
             localNodeRecord,
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
-            true,
-            true,
             expirationSchedulerFactory,
             retryTimeout,
             lifeCheckInterval);
@@ -206,7 +192,6 @@ public class DiscoverySystemBuilder {
         discoveryManager,
         discoveryTaskManager,
         expirationSchedulerFactory,
-        nodeTable,
         nodeBucketStorage,
         bootnodes);
   }
@@ -216,7 +201,6 @@ public class DiscoverySystemBuilder {
     createDefaults();
     return new DiscoveryManagerImpl(
         discoveryServer,
-        nodeTable,
         nodeBucketStorage,
         localNodeRecordStore,
         privateKey,

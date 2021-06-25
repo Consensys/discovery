@@ -39,7 +39,6 @@ import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
@@ -142,7 +141,6 @@ public class DiscoveryIntegrationTest {
     final Set<NodeRecord> actual =
         source
             .streamKnownNodes()
-            .map(NodeRecordInfo::getNode)
             .filter(record -> !record.equals(source.getLocalNodeRecord()))
             .collect(toSet());
     final Set<NodeRecord> expected =
@@ -266,11 +264,7 @@ public class DiscoveryIntegrationTest {
 
   private Optional<NodeRecord> findNodeRecordByNodeId(
       final DiscoverySystem searchNode, final Bytes nodeId) {
-    return searchNode
-        .streamKnownNodes()
-        .map(NodeRecordInfo::getNode)
-        .filter(node -> node.getNodeId().equals(nodeId))
-        .findAny();
+    return searchNode.streamKnownNodes().filter(node -> node.getNodeId().equals(nodeId)).findAny();
   }
 
   @Test

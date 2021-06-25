@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
@@ -168,6 +169,14 @@ class KBucket {
   }
 
   private Optional<BucketEntry> getEntry(final NodeRecord nodeRecord) {
-    return nodes.stream().filter(node -> node.getNodeId().equals(nodeRecord.getNodeId())).findAny();
+    return getEntry(nodeRecord.getNodeId());
+  }
+
+  private Optional<BucketEntry> getEntry(final Bytes nodeId) {
+    return nodes.stream().filter(node -> node.getNodeId().equals(nodeId)).findAny();
+  }
+
+  public Optional<NodeRecord> getNode(final Bytes targetNodeId) {
+    return getEntry(targetNodeId).map(BucketEntry::getNode);
   }
 }
