@@ -203,7 +203,12 @@ public class DiscoverySystemBuilder {
             retryTimeout,
             lifeCheckInterval);
     return new DiscoverySystem(
-        discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
+        discoveryManager,
+        discoveryTaskManager,
+        expirationSchedulerFactory,
+        nodeTable,
+        nodeBucketStorage,
+        bootnodes);
   }
 
   @VisibleForTesting

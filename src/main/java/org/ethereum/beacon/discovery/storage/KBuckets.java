@@ -66,6 +66,15 @@ public class KBuckets {
     getOrCreateBucket(distance).ifPresent(bucket -> bucket.offer(node));
   }
 
+  public synchronized BucketStats getStats() {
+    final BucketStats stats = new BucketStats();
+    buckets.forEach(
+        (distance, bucket) ->
+            stats.setBucketStat(
+                distance, bucket.getLiveNodes().size(), bucket.getAllNodes().size()));
+    return stats;
+  }
+
   /**
    * Called when we have confirmed the liveness of a node by sending it a request and receiving a
    * valid response back. Must only be called for requests we initiate, not incoming requests from

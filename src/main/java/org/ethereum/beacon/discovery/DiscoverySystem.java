@@ -13,6 +13,8 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
+import org.ethereum.beacon.discovery.storage.BucketStats;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
@@ -22,6 +24,7 @@ public class DiscoverySystem {
   private final DiscoveryTaskManager taskManager;
   private final ExpirationSchedulerFactory expirationSchedulerFactory;
   private final NodeTable nodeTable;
+  private final KBuckets buckets;
   private final List<NodeRecord> bootnodes;
 
   DiscoverySystem(
@@ -29,11 +32,13 @@ public class DiscoverySystem {
       final DiscoveryTaskManager taskManager,
       final ExpirationSchedulerFactory expirationSchedulerFactory,
       final NodeTable nodeTable,
+      final KBuckets buckets,
       final List<NodeRecord> bootnodes) {
     this.discoveryManager = discoveryManager;
     this.taskManager = taskManager;
     this.expirationSchedulerFactory = expirationSchedulerFactory;
     this.nodeTable = nodeTable;
+    this.buckets = buckets;
     this.bootnodes = bootnodes;
   }
 
@@ -61,6 +66,10 @@ public class DiscoverySystem {
 
   public NodeRecord getLocalNodeRecord() {
     return discoveryManager.getLocalNodeRecord();
+  }
+
+  public BucketStats getBucketStats() {
+    return buckets.getStats();
   }
 
   public void updateCustomFieldValue(final String fieldName, final Bytes value) {
