@@ -86,4 +86,8 @@ public class KBuckets {
     return Optional.of(
         buckets.computeIfAbsent(distance, __ -> new KBucket(livenessChecker, clock)));
   }
+
+  public void performMaintenance(final int distance) {
+    getBucket(distance).ifPresent(KBucket::performMaintenance);
+  }
 }

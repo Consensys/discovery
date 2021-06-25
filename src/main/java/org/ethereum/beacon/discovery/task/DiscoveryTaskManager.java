@@ -8,6 +8,7 @@ import static org.ethereum.beacon.discovery.schema.NodeStatus.DEAD;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -105,6 +106,7 @@ public class DiscoveryTaskManager {
   private boolean removeDead;
   private CompletableFuture<Void> liveCheckSchedule;
   private CompletableFuture<Void> recursiveLookupSchedule;
+  private CompletableFuture<Void> maintenanceSchedule;
 
   /**
    * @param discoveryManager Discovery manager
@@ -156,17 +158,27 @@ public class DiscoveryTaskManager {
             Duration.ZERO,
             Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
             this::performSearchForNewPeers);
+    maintenanceSchedule = scheduler.executeAtFixedRate(
+        Duration.ZERO,
+        liveCheckInterval,
+        this::maintenanceTask);
   }
 
   public synchronized void stop() {
     safeCancel(liveCheckSchedule);
     safeCancel(recursiveLookupSchedule);
+    safeCancel(maintenanceSchedule);
   }
 
   private void safeCancel(final Future<?> future) {
     if (future != null) {
       future.cancel(true);
     }
+  }
+
+  private void maintenanceTask() {
+    final int distance = randomDistance();
+    nodeBucketStorage.performMaintenance(distance);
   }
 
   private void liveCheckTask() {
@@ -237,6 +249,11 @@ public class DiscoveryTaskManager {
     return new RecursiveLookupTask(
             nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
         .execute();
+  }
+
+  private int randomDistance() {
+    int distance = Math.max(1, new Random().nextInt(KBuckets.MAXIMUM_BUCKET));
+    return distance;
   }
 
   private CompletableFuture<Void> findNodes(
