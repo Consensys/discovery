@@ -158,10 +158,8 @@ public class DiscoveryTaskManager {
             Duration.ZERO,
             Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
             this::performSearchForNewPeers);
-    maintenanceSchedule = scheduler.executeAtFixedRate(
-        Duration.ZERO,
-        liveCheckInterval,
-        this::maintenanceTask);
+    maintenanceSchedule =
+        scheduler.executeAtFixedRate(Duration.ZERO, liveCheckInterval, this::maintenanceTask);
   }
 
   public synchronized void stop() {
