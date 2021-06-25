@@ -5,8 +5,10 @@ package org.ethereum.beacon.discovery.liveness;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -31,35 +33,49 @@ public class LivenessChecker {
    *
    * @param node the node to check liveness
    */
-  public synchronized void checkLiveness(NodeRecord node) {
-    if (activePings.contains(node)) {
-      // Already checking node
-      // Note: We don't need to check queuedPings because it's a set so the add just does nothing
-      // and if we have capacity to ping immediately the queue must be empty.
-      return;
+  public void checkLiveness(NodeRecord node) {
+    boolean sendPing = false;
+    synchronized (this) {
+      if (activePings.contains(node)) {
+        // Already checking node
+        // Note: We don't need to check queuedPings because it's a set so the add just does nothing
+        // and if we have capacity to ping immediately the queue must be empty.
+        return;
+      }
+      if (activePings.size() < MAX_CONCURRENT_PINGS) {
+        sendPing = true;
+      } else if (queuedPings.size() < MAX_QUEUE_SIZE) {
+        queuedPings.add(node);
+      }
     }
-    if (activePings.size() < MAX_CONCURRENT_PINGS) {
+
+    if (sendPing) {
       sendPing(node);
-    } else if (queuedPings.size() < MAX_QUEUE_SIZE) {
-      queuedPings.add(node);
     }
   }
 
   private void sendPing(final NodeRecord node) {
-    queuedPings.remove(node);
-    activePings.add(node);
+    synchronized (this) {
+      queuedPings.remove(node);
+      activePings.add(node);
+    }
+
+    // Important to send the ping while outside synchronized blocks
     pinger
         .ping(node)
+        .orTimeout(500, TimeUnit.MILLISECONDS)
         .whenComplete(
             (__, error) -> {
               if (error != null) {
                 LOG.trace("Liveness check failed for node {}", node, error);
               }
+              final Optional<NodeRecord> nextNodeToPing;
               synchronized (this) {
                 activePings.remove(node);
                 // Ping the next node in the queue if any.
-                queuedPings.stream().findFirst().ifPresent(this::sendPing);
+                nextNodeToPing = queuedPings.stream().findFirst();
               }
+              nextNodeToPing.ifPresent(this::sendPing);
             });
   }
 

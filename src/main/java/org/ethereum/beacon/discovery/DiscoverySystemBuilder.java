@@ -183,7 +183,6 @@ public class DiscoverySystemBuilder {
         new DiscoveryTaskManager(
             discoveryManager,
             nodeBucketStorage,
-            localNodeRecord,
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             expirationSchedulerFactory,
             retryTimeout,
