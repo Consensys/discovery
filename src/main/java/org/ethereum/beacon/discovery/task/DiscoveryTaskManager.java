@@ -16,7 +16,6 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.KBuckets;
-import org.ethereum.beacon.discovery.util.Functions;
 
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
@@ -102,12 +101,6 @@ public class DiscoveryTaskManager {
   private CompletableFuture<Void> performSearchForNewPeers() {
     int distance = randomDistance();
     final Bytes targetNodeId = createNodeIdAtDistance(distance);
-    System.out.println(
-        "Searching for peers at distance "
-            + distance
-            + " Actual: "
-            + Functions.logDistance(homeNodeId, targetNodeId));
-
     return new RecursiveLookupTask(
             nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, targetNodeId)
         .execute();
