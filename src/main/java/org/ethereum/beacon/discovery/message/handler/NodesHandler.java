@@ -4,7 +4,9 @@
 
 package org.ethereum.beacon.discovery.message.handler;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
@@ -33,23 +35,26 @@ public class NodesHandler implements MessageHandler<NodesMessage> {
     FindNodeResponseHandler respHandler =
         (FindNodeResponseHandler) requestInfo.getRequest().getResponseHandler();
 
-    if (respHandler.handleResponseMessage(message)) {
-      session.clearRequestInfo(message.getRequestId(), null);
-    } else {
-      requestInfo.setTaskStatus(TaskStatus.IN_PROCESS);
-    }
     // Parse node records
     logger.trace(
         () ->
             String.format(
                 "Received %s node records in session %s. Total buckets expected: %s",
                 message.getNodeRecords().size(), session, message.getTotal()));
-    message.getNodeRecords().stream()
-        .filter(this::isValid)
-        .filter(
-            record ->
-                hasCorrectDistance(session, (FindNodeMessage) requestInfo.getMessage(), record))
-        .forEach(session::onNodeRecordReceived);
+    final List<NodeRecord> validNodes =
+        message.getNodeRecords().stream()
+            .filter(this::isValid)
+            .filter(
+                record ->
+                    hasCorrectDistance(session, (FindNodeMessage) requestInfo.getMessage(), record))
+            .collect(Collectors.toList());
+
+    if (respHandler.handleResponseMessage(message, validNodes)) {
+      session.clearRequestInfo(message.getRequestId(), respHandler.getFoundNodes());
+    } else {
+      requestInfo.setTaskStatus(TaskStatus.IN_PROGRESS);
+    }
+    validNodes.forEach(session::onNodeRecordReceived);
   }
 
   private boolean isValid(final NodeRecord record) {

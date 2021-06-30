@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,31 +41,31 @@ public class RecursiveLookupTasks {
         expirationSchedulerFactory.create(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
-  public CompletableFuture<Void> add(NodeRecord nodeRecord, int distance) {
+  public CompletableFuture<List<NodeRecord>> add(NodeRecord nodeRecord, int distance) {
     if (!currentTasks.add(nodeRecord.getNodeId())) {
       return CompletableFuture.failedFuture(new IllegalStateException("Already querying node"));
     }
 
-    final CompletableFuture<Void> result = new CompletableFuture<>();
+    final CompletableFuture<List<NodeRecord>> result = new CompletableFuture<>();
     scheduler.execute(
         () -> {
-          CompletableFuture<Void> request =
+          CompletableFuture<List<NodeRecord>> request =
               discoveryManager.findNodes(nodeRecord, Collections.singletonList(distance));
           addTimeout(nodeRecord, request);
           request.whenComplete(
-              (aVoid, throwable) -> {
+              (foundNodes, throwable) -> {
                 currentTasks.remove(nodeRecord.getNodeId());
                 if (throwable != null) {
                   result.completeExceptionally(throwable);
                 } else {
-                  result.complete(null);
+                  result.complete(foundNodes);
                 }
               });
         });
     return result;
   }
 
-  private void addTimeout(final NodeRecord nodeRecord, final CompletableFuture<Void> retry) {
+  private void addTimeout(final NodeRecord nodeRecord, final CompletableFuture<?> retry) {
     taskTimeouts.put(
         nodeRecord.getNodeId(),
         () ->

@@ -70,7 +70,7 @@ public class DiscoveryIntegrationTest {
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<List<NodeRecord>> findNodesResult =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
@@ -87,7 +87,7 @@ public class DiscoveryIntegrationTest {
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<List<NodeRecord>> findNodesResult =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
@@ -120,7 +120,7 @@ public class DiscoveryIntegrationTest {
     assertFalse(pingResult.isCompletedExceptionally());
 
     // Find nodes at a distance we know has no node records to return.
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<List<NodeRecord>> findNodesResult =
         client.findNodes(
             bootnode.getLocalNodeRecord(), singletonList(distance == 1 ? 2 : distance - 1));
     waitFor(findNodesResult);

@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.task;
 
 import java.time.Duration;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -83,7 +84,7 @@ public class DiscoveryTaskManager {
     }
   }
 
-  public CompletableFuture<Void> searchForNewPeers() {
+  public CompletableFuture<List<NodeRecord>> searchForNewPeers() {
     // We wind up with a CompletableFuture<CompletableFuture> so unwrap one level.
     return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
   }
@@ -98,11 +99,11 @@ public class DiscoveryTaskManager {
     return Bytes.wrap(targetNodeId).reverse();
   }
 
-  private CompletableFuture<Void> performSearchForNewPeers() {
+  private CompletableFuture<List<NodeRecord>> performSearchForNewPeers() {
     int distance = randomDistance();
     final Bytes targetNodeId = createNodeIdAtDistance(distance);
     return new RecursiveLookupTask(
-            nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, targetNodeId)
+            nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, targetNodeId, homeNodeId)
         .execute();
   }
 
@@ -110,7 +111,7 @@ public class DiscoveryTaskManager {
     return Math.max(1, new Random().nextInt(KBuckets.MAXIMUM_BUCKET));
   }
 
-  private CompletableFuture<Void> findNodes(final NodeRecord nodeRecord, final int distance) {
+  private CompletableFuture<List<NodeRecord>> findNodes(final NodeRecord nodeRecord, final int distance) {
     return recursiveLookupTasks.add(nodeRecord, distance);
   }
 }

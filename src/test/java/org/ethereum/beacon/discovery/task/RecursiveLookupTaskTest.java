@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -58,7 +59,7 @@ class RecursiveLookupTaskTest {
   private final Map<NodeRecord, CompletableFuture<Void>> findNodeRequests = new HashMap<>();
 
   private final RecursiveLookupTask task =
-      new RecursiveLookupTask(buckets, findNodesAction, 4, TARGET);
+      new RecursiveLookupTask(buckets, findNodesAction, 4, TARGET, TARGET);
 
   @BeforeEach
   public void setUp() {
@@ -90,7 +91,7 @@ class RecursiveLookupTaskTest {
     when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4));
 
-    final CompletableFuture<Void> complete = task.execute();
+    final CompletableFuture<List<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
@@ -120,7 +121,7 @@ class RecursiveLookupTaskTest {
   public void shouldStopWhenTargetNodeIsFound() {
     when(buckets.streamClosestNodes(TARGET)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
 
-    final CompletableFuture<Void> complete = task.execute();
+    final CompletableFuture<List<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
@@ -148,7 +149,7 @@ class RecursiveLookupTaskTest {
     when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4, PEER5));
 
-    final CompletableFuture<Void> complete = task.execute();
+    final CompletableFuture<List<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));

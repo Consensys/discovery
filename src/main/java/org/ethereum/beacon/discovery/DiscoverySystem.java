@@ -77,9 +77,10 @@ public class DiscoverySystem {
    * @param nodeRecord Ethereum Node record
    * @param distances Distances to search for
    * @return Future which is fired when reply is received or fails in timeout/not successful
-   *     handshake/bad message exchange.
+   *     handshake/bad message exchange. Contains the list of nodes returned by the request.
    */
-  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
+  public CompletableFuture<List<NodeRecord>> findNodes(
+      NodeRecord nodeRecord, List<Integer> distances) {
     return discoveryManager.findNodes(nodeRecord, distances);
   }
 
@@ -108,7 +109,7 @@ public class DiscoverySystem {
     return buckets.streamClosestNodes(Bytes32.ZERO);
   }
 
-  public CompletableFuture<Void> searchForNewPeers() {
+  public CompletableFuture<List<NodeRecord>> searchForNewPeers() {
     return taskManager.searchForNewPeers();
   }
 }

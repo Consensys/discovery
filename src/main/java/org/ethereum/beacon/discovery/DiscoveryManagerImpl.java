@@ -156,8 +156,9 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
-    Request<Void> request =
+  public CompletableFuture<List<NodeRecord>> findNodes(
+      NodeRecord nodeRecord, List<Integer> distances) {
+    Request<List<NodeRecord>> request =
         new Request<>(
             new CompletableFuture<>(),
             reqId -> new FindNodeMessage(reqId, distances),
