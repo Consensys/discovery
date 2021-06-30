@@ -62,7 +62,7 @@ public class Playground {
 //                  System.out.println("Proposing address: " + proposedRecord);
                   return Optional.of(proposedRecord);
                 })
-            .bootnodes(efBootnode, bootnode1, bootnode2, prsymBootnode)
+            .bootnodes(efBootnode, bootnode1, bootnode2, prsymBootnode, lighthouseBootnode)
             .build();
 
     system.start().join();
