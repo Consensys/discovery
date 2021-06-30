@@ -29,7 +29,6 @@ public class RecursiveLookupTask {
   private final KBuckets buckets;
   private final FindNodesAction sendFindNodesRequest;
   private final Bytes targetNodeId;
-  private final Bytes homeNodeId;
   private final Set<Bytes> queriedNodeIds = new HashSet<>();
   private final Comparator<NodeRecord> distanceComparator;
   private int availableQuerySlots = MAX_CONCURRENT_QUERIES;
@@ -47,7 +46,6 @@ public class RecursiveLookupTask {
     this.sendFindNodesRequest = sendFindNodesRequest;
     this.remainingTotalQueryLimit = totalQueryLimit;
     this.targetNodeId = targetNodeId;
-    this.homeNodeId = homeNodeId;
     this.distanceComparator =
         Comparator.<NodeRecord, BigInteger>comparing(
                 node -> Functions.distance(targetNodeId, node.getNodeId()))
