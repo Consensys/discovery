@@ -21,6 +21,26 @@ public class Playground {
     final Bytes privateKey =
         Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
+    final NodeRecord efBootnode =
+        NodeRecordFactory.DEFAULT.fromEnr(
+            "enr:-Ku4QHqVeJ8PPICcWk1vSn_XcSkjOkNiTg6Fmii5j6vUQgvzMc9L1goFnLKgXqBJspJjIsB91LTOleFmyWWrFVATGngBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpC1MD8qAAAAAP__________gmlkgnY0gmlwhAMRHkWJc2VjcDI1NmsxoQKLVXFOhp2uX6jeT0DvvDpPcU8FWMjQdR4wMuORMhpX24N1ZHCCIyg");
+    final NodeRecord bootnode1 =
+        NodeRecordFactory.DEFAULT.fromEnr(
+            "enr:-KG4QJRlj4pHagfNIm-Fsx9EVjW4rviuZYzle3tyddm2KAWMJBDGAhxfM2g-pDaaiwE8q19uvLSH4jyvWjypLMr3TIcEhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIQDE8KdiXNlY3AyNTZrMaEDhpehBDbZjM_L9ek699Y7vhUJ-eAdMyQW_Fil522Y0fODdGNwgiMog3VkcIIjKA");
+    final NodeRecord bootnode2 =
+        NodeRecordFactory.DEFAULT.fromEnr(
+            "enr:-KG4QL-eqFoHy0cI31THvtZjpYUu_Jdw_MO7skQRJxY1g5HTN1A0epPCU6vi0gLGUgrzpU-ygeMSS8ewVxDpKfYmxMMGhGV0aDKQtTA_KgAAAAD__________4JpZIJ2NIJpcIQ2_DUbiXNlY3AyNTZrMaED8GJ2vzUqgL6-KD1xalo1CsmY4X1HaDnyl6Y_WayCo9GDdGNwgiMog3VkcIIjKA");
+    final NodeRecord prsymBootnode =
+        NodeRecordFactory.DEFAULT.fromEnr(
+            "enr:-Ku4QImhMc1z8yCiNJ1TyUxdcfNucje3BGwEHzodEZUan8PherEo4sF7pPHPSIB1NNuSg5fZy7qFsjmUKs2ea1Whi0EBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpD1pf1CAAAAAP__________gmlkgnY0gmlwhBLf22SJc2VjcDI1NmsxoQOVphkDqal4QzPMksc5wnpuC3gvSC8AfbFOnZY_On34wIN1ZHCCIyg");
+
+    //    final NodeRecord localNode =
+    //        NodeRecordFactory.DEFAULT.fromEnr(
+    //
+    // "enr:-KG4QCnFchDQi4yh3VU52rPXT4CLlxkA5XVVDkXLQiCVVXzhAYHVNMitutrIZvLrL67QKzXf7pV5qarTXaUoBB20784QhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaED5bn8vOI3CAHLJdTzVYkTAl8aQSsMHqSYn7VYPmJlG8yDdGNwgiMtg3VkcIIjLQ");
+    final NodeRecord node = efBootnode;
+
+
     final DiscoverySystem system =
         new DiscoverySystemBuilder()
             .listen("0.0.0.0", 9000)
@@ -36,22 +56,9 @@ public class Playground {
                   System.out.println("Proposing address: " + proposedRecord);
                   return Optional.of(proposedRecord);
                 })
+            .bootnodes(efBootnode, bootnode1, bootnode2, prsymBootnode)
             .build();
-    final NodeRecord efBootnode =
-        NodeRecordFactory.DEFAULT.fromEnr(
-            "enr:-Ku4QHqVeJ8PPICcWk1vSn_XcSkjOkNiTg6Fmii5j6vUQgvzMc9L1goFnLKgXqBJspJjIsB91LTOleFmyWWrFVATGngBh2F0dG5ldHOIAAAAAAAAAACEZXRoMpC1MD8qAAAAAP__________gmlkgnY0gmlwhAMRHkWJc2VjcDI1NmsxoQKLVXFOhp2uX6jeT0DvvDpPcU8FWMjQdR4wMuORMhpX24N1ZHCCIyg");
-    final NodeRecord bootnode1 =
-        NodeRecordFactory.DEFAULT.fromEnr(
-            "enr:-KG4QJRlj4pHagfNIm-Fsx9EVjW4rviuZYzle3tyddm2KAWMJBDGAhxfM2g-pDaaiwE8q19uvLSH4jyvWjypLMr3TIcEhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIQDE8KdiXNlY3AyNTZrMaEDhpehBDbZjM_L9ek699Y7vhUJ-eAdMyQW_Fil522Y0fODdGNwgiMog3VkcIIjKA");
-    final NodeRecord bootnode2 =
-        NodeRecordFactory.DEFAULT.fromEnr(
-            "enr:-KG4QL-eqFoHy0cI31THvtZjpYUu_Jdw_MO7skQRJxY1g5HTN1A0epPCU6vi0gLGUgrzpU-ygeMSS8ewVxDpKfYmxMMGhGV0aDKQtTA_KgAAAAD__________4JpZIJ2NIJpcIQ2_DUbiXNlY3AyNTZrMaED8GJ2vzUqgL6-KD1xalo1CsmY4X1HaDnyl6Y_WayCo9GDdGNwgiMog3VkcIIjKA");
 
-    //    final NodeRecord localNode =
-    //        NodeRecordFactory.DEFAULT.fromEnr(
-    //
-    // "enr:-KG4QCnFchDQi4yh3VU52rPXT4CLlxkA5XVVDkXLQiCVVXzhAYHVNMitutrIZvLrL67QKzXf7pV5qarTXaUoBB20784QhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaED5bn8vOI3CAHLJdTzVYkTAl8aQSsMHqSYn7VYPmJlG8yDdGNwgiMtg3VkcIIjLQ");
-    final NodeRecord node = efBootnode;
     system.start().join();
 
     system.ping(node).join();
