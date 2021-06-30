@@ -78,6 +78,23 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
+  public void shouldSuccessfullyCommunicateWithPreviouslyUnknownNode() throws Exception {
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client = createDiscoveryClient();
+
+    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    waitFor(pingResult);
+    assertTrue(pingResult.isDone());
+    assertFalse(pingResult.isCompletedExceptionally());
+
+    final CompletableFuture<Void> findNodesResult =
+        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
+    waitFor(findNodesResult);
+    assertTrue(findNodesResult.isDone());
+    assertFalse(findNodesResult.isCompletedExceptionally());
+  }
+
+  @Test
   public void shouldSuccessfullyUpdateCustomFieldValue() throws Exception {
     final String CUSTOM_FIELD_NAME = "custom_field_name";
     final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");

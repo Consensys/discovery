@@ -47,9 +47,10 @@ public class Playground {
         NodeRecordFactory.DEFAULT.fromEnr(
             "enr:-KG4QL-eqFoHy0cI31THvtZjpYUu_Jdw_MO7skQRJxY1g5HTN1A0epPCU6vi0gLGUgrzpU-ygeMSS8ewVxDpKfYmxMMGhGV0aDKQtTA_KgAAAAD__________4JpZIJ2NIJpcIQ2_DUbiXNlY3AyNTZrMaED8GJ2vzUqgL6-KD1xalo1CsmY4X1HaDnyl6Y_WayCo9GDdGNwgiMog3VkcIIjKA");
 
-//    final NodeRecord localNode =
-//        NodeRecordFactory.DEFAULT.fromEnr(
-//            "enr:-KG4QCnFchDQi4yh3VU52rPXT4CLlxkA5XVVDkXLQiCVVXzhAYHVNMitutrIZvLrL67QKzXf7pV5qarTXaUoBB20784QhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaED5bn8vOI3CAHLJdTzVYkTAl8aQSsMHqSYn7VYPmJlG8yDdGNwgiMtg3VkcIIjLQ");
+    //    final NodeRecord localNode =
+    //        NodeRecordFactory.DEFAULT.fromEnr(
+    //
+    // "enr:-KG4QCnFchDQi4yh3VU52rPXT4CLlxkA5XVVDkXLQiCVVXzhAYHVNMitutrIZvLrL67QKzXf7pV5qarTXaUoBB20784QhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaED5bn8vOI3CAHLJdTzVYkTAl8aQSsMHqSYn7VYPmJlG8yDdGNwgiMtg3VkcIIjLQ");
     final NodeRecord node = efBootnode;
     system.start().join();
 
@@ -68,14 +69,14 @@ public class Playground {
     //      LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
     //    }
     System.out.println("Pinged node " + node.getNodeId());
-//    final List<Integer> all = new ArrayList<>();
+    //    final List<Integer> all = new ArrayList<>();
     for (int i = 0; i <= 258; i++) {
       System.out.println("------------ Distance " + i);
       //      system.findNodes(node, List.of(i)).join();
-//      all.add(i);
+      //      all.add(i);
     }
     System.out.println("------------ All");
-//    system.findNodes(node, all).join();
+    //    system.findNodes(node, all).join();
 
     //    system.streamKnownNodes().forEach(record -> system.ping(record.getNode()));
 

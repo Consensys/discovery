@@ -5,16 +5,18 @@
 package org.ethereum.beacon.discovery.task;
 
 import java.time.Duration;
+import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.KBuckets;
+import org.ethereum.beacon.discovery.util.Functions;
 
 /** Manages recurrent node check task(s) */
 public class DiscoveryTaskManager {
@@ -23,6 +25,7 @@ public class DiscoveryTaskManager {
   public static final Duration DEFAULT_LIVE_CHECK_INTERVAL = Duration.ofSeconds(1);
   private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
+  private final Bytes homeNodeId;
   private final Scheduler scheduler;
   private final RecursiveLookupTasks recursiveLookupTasks;
   private final KBuckets nodeBucketStorage;
@@ -39,11 +42,13 @@ public class DiscoveryTaskManager {
    */
   public DiscoveryTaskManager(
       DiscoveryManager discoveryManager,
+      Bytes homeNodeId,
       KBuckets nodeBucketStorage,
       Scheduler scheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       Duration retryTimeout,
       Duration liveCheckInterval) {
+    this.homeNodeId = homeNodeId;
     this.scheduler = scheduler;
     this.nodeBucketStorage = nodeBucketStorage;
     this.recursiveLookupTasks =
@@ -74,8 +79,9 @@ public class DiscoveryTaskManager {
   }
 
   private void maintenanceTask() {
-    final int distance = randomDistance();
-    nodeBucketStorage.performMaintenance(distance);
+    for (int distance = 1; distance <= KBuckets.MAXIMUM_BUCKET; distance++) {
+      nodeBucketStorage.performMaintenance(distance);
+    }
   }
 
   public CompletableFuture<Void> searchForNewPeers() {
@@ -83,9 +89,27 @@ public class DiscoveryTaskManager {
     return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
   }
 
+  private Bytes createNodeIdAtDistance(final int distance) {
+    final int idSize = homeNodeId.size();
+    final BitSet bits = BitSet.valueOf(homeNodeId.reverse().toArray());
+    bits.flip(distance - 1);
+    final byte[] targetNodeId = new byte[idSize];
+    final byte[] src = bits.toByteArray();
+    System.arraycopy(src, 0, targetNodeId, 0, src.length);
+    return Bytes.wrap(targetNodeId).reverse();
+  }
+
   private CompletableFuture<Void> performSearchForNewPeers() {
+    int distance = randomDistance();
+    final Bytes targetNodeId = createNodeIdAtDistance(distance);
+    System.out.println(
+        "Searching for peers at distance "
+            + distance
+            + " Actual: "
+            + Functions.logDistance(homeNodeId, targetNodeId));
+
     return new RecursiveLookupTask(
-            nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
+            nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, targetNodeId)
         .execute();
   }
 

@@ -59,7 +59,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NettyDiscoveryServer discoveryServer;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
-  private final KBuckets nodeBucketStorage;
   private final LocalNodeRecordStore localNodeRecordStore;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
@@ -73,7 +72,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
-    this.nodeBucketStorage = nodeBucketStorage;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
@@ -157,13 +155,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return request.getResultPromise();
   }
 
-  private void addNode(NodeRecord nodeRecord) {
-    nodeBucketStorage.offer(nodeRecord);
-  }
-
   @Override
   public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
-    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -174,7 +167,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
-    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -185,7 +177,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
-    addNode(nodeRecord);
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),

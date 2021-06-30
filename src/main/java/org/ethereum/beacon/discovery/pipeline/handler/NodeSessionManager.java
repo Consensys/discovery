@@ -78,7 +78,7 @@ public class NodeSessionManager implements EnvelopeHandler {
     logger.trace(
         "Envelope {}: Session lookup requested for nodeId {}", envelope.getId(), sessionRequest);
 
-    getOrCreateSession(sessionRequest.getNodeId(), envelope)
+    getOrCreateSession(sessionRequest, envelope)
         .ifPresentOrElse(
             nodeSession -> {
               envelope.put(Field.SESSION, nodeSession);
@@ -89,13 +89,17 @@ public class NodeSessionManager implements EnvelopeHandler {
                     "Session could not be resolved or created for {}", sessionRequest.getNodeId()));
   }
 
-  private Optional<NodeSession> getOrCreateSession(Bytes nodeId, Envelope envelope) {
+  private Optional<NodeSession> getOrCreateSession(SessionLookup sessionLookup, Envelope envelope) {
     return getRemoteSocketAddress(envelope)
         .map(
             remoteSocketAddress -> {
-              SessionKey sessionKey = new SessionKey(nodeId, remoteSocketAddress);
+              SessionKey sessionKey =
+                  new SessionKey(sessionLookup.getNodeId(), remoteSocketAddress);
               NodeSession context =
-                  recentSessions.computeIfAbsent(sessionKey, this::createNodeSession);
+                  recentSessions.computeIfAbsent(
+                      sessionKey,
+                      existingSessionKey ->
+                          createNodeSession(existingSessionKey, sessionLookup.getNodeRecord()));
 
               sessionExpirationScheduler.put(sessionKey, () -> deleteSession(sessionKey));
               return context;
@@ -133,8 +137,10 @@ public class NodeSessionManager implements EnvelopeHandler {
     lastNonceToSession.put(newNonce, session);
   }
 
-  private NodeSession createNodeSession(final SessionKey key) {
-    Optional<NodeRecord> nodeRecord = nodeBucketStorage.getNode(key.nodeId);
+  private NodeSession createNodeSession(
+      final SessionKey key, final Optional<NodeRecord> suppliedNodeRecord) {
+    Optional<NodeRecord> nodeRecord =
+        suppliedNodeRecord.or(() -> nodeBucketStorage.getNode(key.nodeId));
     SecureRandom random = new SecureRandom();
     return new NodeSession(
         key.nodeId,

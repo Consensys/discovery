@@ -182,6 +182,7 @@ public class DiscoverySystemBuilder {
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
             discoveryManager,
+            localNodeRecordStore.getLocalNodeRecord().getNodeId(),
             nodeBucketStorage,
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             expirationSchedulerFactory,
