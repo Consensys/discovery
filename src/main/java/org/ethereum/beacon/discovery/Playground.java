@@ -5,15 +5,10 @@ import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
-import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.storage.BucketStats;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -41,11 +36,10 @@ public class Playground {
     final NodeRecord lighthouseBootnode =
         NodeRecordFactory.DEFAULT.fromEnr(
             "enr:-Jq4QFs9If3eUC8mHx6-BLVw0jRMbyEgXNn6sl7c77bBmji_afJ-0_X7Q4vttQ8SO8CYReudHsGVvgSybh1y96yyL-oChGV0aDKQtTA_KgAAAAD__________4JpZIJ2NIJpcIQ2_YtGiXNlY3AyNTZrMaECSHaY_36GdNjF8-CLfMSg-8lB0wce5VRZ96HkT9tSkVeDdWRwgiMo");
-    //    final NodeRecord localNode =
-    //        NodeRecordFactory.DEFAULT.fromEnr(
-    //
-    // "enr:-KG4QCnFchDQi4yh3VU52rPXT4CLlxkA5XVVDkXLQiCVVXzhAYHVNMitutrIZvLrL67QKzXf7pV5qarTXaUoBB20784QhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaED5bn8vOI3CAHLJdTzVYkTAl8aQSsMHqSYn7VYPmJlG8yDdGNwgiMtg3VkcIIjLQ");
-    final NodeRecord node = bootnode1;
+        final NodeRecord localNode =
+            NodeRecordFactory.DEFAULT.fromEnr(
+     "enr:-KG4QII6iJdhSUgi4z1T1ju79WP_glRczbtmkwaBEMg91aE-Mxy2ALRLTwNV8yYCfRJq6RbrJ35pq2MmwJa0MmCu4LAYhGV0aDKQ9aX9QgAAAAD__________4JpZIJ2NIJpcIR_AAABiXNlY3AyNTZrMaECE-B6zVlpDjDPD8jTWmLOFj5rwlskC6wQGvFR1a89VXODdGNwgiMtg3VkcIIjLQ");
+    final NodeRecord node = localNode;
 
     final DiscoverySystem system =
         new DiscoverySystemBuilder()
@@ -85,35 +79,37 @@ public class Playground {
     //    final List<Integer> all = new ArrayList<>();
     for (int i = 200; i <= KBuckets.MAXIMUM_BUCKET; i++) {
       final List<NodeRecord> foundRecords = system.findNodes(node, List.of(i)).join();
-      System.out.println("Found " + foundRecords.size() + " at distance " + i);
+      if (!foundRecords.isEmpty()) {
+        System.out.println("Found " + foundRecords.size() + " at distance " + i);
+      }
       //      all.add(i);
-      LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
+//      LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
     }
     System.out.println("------------ All");
     //    system.findNodes(node, all).join();
 
     //    system.streamKnownNodes().forEach(record -> system.ping(record.getNode()));
 
-    int loopCount = 0;
-    while (true) {
-      final BucketStats stats = system.getBucketStats();
-      System.out.println(stats.format());
-      final int thisLoop = loopCount;
-      final Set<Bytes> knownNodes = system.streamKnownNodes()
-          .map(NodeRecord::getNodeId)
-          .collect(Collectors.toSet());
-      system
-          .searchForNewPeers()
-          .thenAccept(
-              foundNodes -> {
-                final long newNodeCount = foundNodes.stream()
-                    .filter(n -> !knownNodes.contains(n.getNodeId()))
-                    .count();
-                System.out.println(thisLoop + " found " + foundNodes.size() + " nodes (" + newNodeCount + " new)");
-              });
-      LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
-      loopCount++;
-    }
-    //    System.exit(0);
+//    int loopCount = 0;
+//    while (true) {
+//      final BucketStats stats = system.getBucketStats();
+//      System.out.println(stats.format());
+//      final int thisLoop = loopCount;
+//      final Set<Bytes> knownNodes = system.streamKnownNodes()
+//          .map(NodeRecord::getNodeId)
+//          .collect(Collectors.toSet());
+//      system
+//          .searchForNewPeers()
+//          .thenAccept(
+//              foundNodes -> {
+//                final long newNodeCount = foundNodes.stream()
+//                    .filter(n -> !knownNodes.contains(n.getNodeId()))
+//                    .count();
+//                System.out.println(thisLoop + " found " + foundNodes.size() + " nodes (" + newNodeCount + " new)");
+//              });
+//      LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
+//      loopCount++;
+//    }
+        System.exit(0);
   }
 }
