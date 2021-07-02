@@ -114,26 +114,6 @@ public class DiscoveryIntegrationTest {
   }
 
   @Test
-  public void shouldReturnNodesFoundByFindNodesRequest() throws Exception {
-    final DiscoverySystem bootnode = createDiscoveryClient();
-    final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
-    final DiscoverySystem otherNode = createDiscoveryClient(bootnode.getLocalNodeRecord());
-    final Bytes clientNodeId = client.getLocalNodeRecord().getNodeId();
-    final int distance =
-        Functions.logDistance(clientNodeId, otherNode.getLocalNodeRecord().getNodeId());
-    waitFor(otherNode.ping(bootnode.getLocalNodeRecord()));
-    waitFor(client.ping(bootnode.getLocalNodeRecord()));
-    waitFor(bootnode.ping(otherNode.getLocalNodeRecord()));
-
-    // Find nodes at a distance we know has a node record to return.
-    final CompletableFuture<Collection<NodeRecord>> findNodesResult =
-        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(distance));
-    final Collection<NodeRecord> foundNodes = waitFor(findNodesResult);
-    assertTrue(findNodesResult.isDone());
-    assertThat(foundNodes).contains(otherNode.getLocalNodeRecord());
-  }
-
-  @Test
   public void shouldNotSuccessfullyPingBootnodeWhenNodeRecordIsNotSigned() throws Exception {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(false, bootnode.getLocalNodeRecord());
