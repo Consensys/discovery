@@ -390,12 +390,12 @@ public class DiscoveryIntegrationTest {
     throw new IllegalStateException("Could not find a free port after multiple attempts");
   }
 
-  private <T> T waitFor(final CompletableFuture<T> future) throws Exception {
-    return waitFor(future, 30);
+  private void waitFor(final CompletableFuture<?> future) throws Exception {
+    waitFor(future, 30);
   }
 
-  private <T> T waitFor(final CompletableFuture<T> future, final int timeout) throws Exception {
-    return future.get(timeout, TimeUnit.SECONDS);
+  private void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
+    future.get(timeout, TimeUnit.SECONDS);
   }
 
   private void waitFor(final ThrowingRunnable assertion) throws Exception {
