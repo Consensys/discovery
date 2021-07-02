@@ -53,7 +53,7 @@ class NodesHandlerTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(distance)));
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
@@ -77,7 +77,7 @@ class NodesHandlerTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(distance)));
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
 
@@ -105,7 +105,7 @@ class NodesHandlerTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(0)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(0)));
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     // Requesting from the node itself
@@ -133,7 +133,7 @@ class NodesHandlerTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(distance)));
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
@@ -151,7 +151,7 @@ class NodesHandlerTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(distance - 1)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(distance)));
     final RequestInfo requestInfo = RequestInfo.create(REQUEST_ID, request);
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());

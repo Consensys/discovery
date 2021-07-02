@@ -6,12 +6,14 @@ package org.ethereum.beacon.discovery.task;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -25,7 +27,8 @@ public class RecursiveLookupTask {
   private final Set<Bytes> queriedNodeIds = new HashSet<>();
   private int availableQuerySlots = MAX_CONCURRENT_QUERIES;
   private int remainingTotalQueryLimit;
-  private final CompletableFuture<Void> future = new CompletableFuture<>();
+  private final CompletableFuture<Collection<NodeRecord>> future = new CompletableFuture<>();
+  private final Set<NodeRecord> foundNodes = new HashSet<>();
 
   public RecursiveLookupTask(
       final NodeTable nodeTable,
@@ -38,7 +41,7 @@ public class RecursiveLookupTask {
     this.targetNodeId = targetNodeId;
   }
 
-  public CompletableFuture<Void> execute() {
+  public CompletableFuture<Collection<NodeRecord>> execute() {
     sendRequests();
     return future;
   }
@@ -49,7 +52,7 @@ public class RecursiveLookupTask {
       return;
     }
     if (nodeTable.getNode(targetNodeId).isPresent()) {
-      future.complete(null);
+      future.complete(foundNodes);
       return;
     }
     nodeTable
@@ -61,7 +64,7 @@ public class RecursiveLookupTask {
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
       // There are no in-progress queries even after we looked for more to send so must have run out
       // of possible nodes to query or reached the query limit.
-      future.complete(null);
+      future.complete(foundNodes);
     }
   }
 
@@ -84,6 +87,6 @@ public class RecursiveLookupTask {
   }
 
   public interface FindNodesAction {
-    CompletableFuture<Void> findNodes(NodeRecordInfo sendTo, int distance);
+    CompletableFuture<Collection<NodeRecord>> findNodes(NodeRecordInfo sendTo, int distance);
   }
 }

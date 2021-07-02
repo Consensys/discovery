@@ -18,6 +18,7 @@ import java.net.BindException;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class DiscoveryIntegrationTest {
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
@@ -104,12 +105,32 @@ public class DiscoveryIntegrationTest {
     assertFalse(pingResult.isCompletedExceptionally());
 
     // Find nodes at a distance we know has no node records to return.
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult =
         client.findNodes(
             bootnode.getLocalNodeRecord(), singletonList(distance == 1 ? 2 : distance - 1));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
     assertFalse(findNodesResult.isCompletedExceptionally());
+  }
+
+  @Test
+  public void shouldReturnNodesFoundByFindNodesRequest() throws Exception {
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
+    final DiscoverySystem otherNode = createDiscoveryClient(bootnode.getLocalNodeRecord());
+    final Bytes clientNodeId = client.getLocalNodeRecord().getNodeId();
+    final int distance =
+        Functions.logDistance(clientNodeId, otherNode.getLocalNodeRecord().getNodeId());
+    waitFor(otherNode.ping(bootnode.getLocalNodeRecord()));
+    waitFor(client.ping(bootnode.getLocalNodeRecord()));
+    waitFor(bootnode.ping(otherNode.getLocalNodeRecord()));
+
+    // Find nodes at a distance we know has a node record to return.
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult =
+        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(distance));
+    final Collection<NodeRecord> foundNodes = waitFor(findNodesResult);
+    assertTrue(findNodesResult.isDone());
+    assertThat(foundNodes).contains(otherNode.getLocalNodeRecord());
   }
 
   @Test
@@ -389,12 +410,12 @@ public class DiscoveryIntegrationTest {
     throw new IllegalStateException("Could not find a free port after multiple attempts");
   }
 
-  private void waitFor(final CompletableFuture<?> future) throws Exception {
-    waitFor(future, 30);
+  private <T> T waitFor(final CompletableFuture<T> future) throws Exception {
+    return waitFor(future, 30);
   }
 
-  private void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
-    future.get(timeout, TimeUnit.SECONDS);
+  private <T> T waitFor(final CompletableFuture<T> future, final int timeout) throws Exception {
+    return future.get(timeout, TimeUnit.SECONDS);
   }
 
   private void waitFor(final ThrowingRunnable assertion) throws Exception {
