@@ -37,8 +37,8 @@ import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
@@ -57,7 +57,7 @@ public class NodeSession {
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
   private final NodeTable nodeTable;
-  private final NodeBucketStorage nodeBucketStorage;
+  private final KBuckets nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
   private final Consumer<NetworkParcel> outgoingPipeline;
   private final Random rnd;
@@ -83,7 +83,7 @@ public class NodeSession {
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       NodeTable nodeTable,
-      NodeBucketStorage nodeBucketStorage,
+      KBuckets nodeBucketStorage,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
       ExpirationScheduler<Bytes> requestExpirationScheduler) {
@@ -303,7 +303,7 @@ public class NodeSession {
           NodeRecordInfo nodeRecordInfo =
               new NodeRecordInfo(record, Functions.getTime(), NodeStatus.ACTIVE, 0);
           nodeTable.save(nodeRecordInfo);
-          nodeBucketStorage.put(nodeRecordInfo);
+          nodeBucketStorage.onNodeContacted(record);
         });
   }
 
@@ -338,12 +338,8 @@ public class NodeSession {
     return nodeTable;
   }
 
-  public void putRecordInBucket(NodeRecordInfo nodeRecordInfo) {
-    nodeBucketStorage.put(nodeRecordInfo);
-  }
-
-  public Stream<NodeRecord> getNodeRecordsInBucket(int index) {
-    return nodeBucketStorage.getNodeRecords(index);
+  public Stream<NodeRecord> getNodeRecordsInBucket(int distance) {
+    return nodeBucketStorage.getLiveNodeRecords(distance);
   }
 
   public synchronized Bytes getIdNonce() {

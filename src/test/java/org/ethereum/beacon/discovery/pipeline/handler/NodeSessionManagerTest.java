@@ -23,9 +23,9 @@ import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +37,7 @@ class NodeSessionManagerTest {
   public static final Bytes NODE_ID = Bytes.fromHexString("0x888888");
   private final NodeInfo homeNodeInfo = TestUtil.generateNode(9000);
   private final NodeRecord homeNodeRecord = homeNodeInfo.getNodeRecord();
-  private final NodeBucketStorage nodeBucketStorage = mock(NodeBucketStorage.class);
+  private final KBuckets nodeBucketStorage = mock(KBuckets.class);
   private final ExpirationSchedulerFactory expirationSchedulerFactory =
       new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
   private final NodeTable nodeTable = mock(NodeTable.class);

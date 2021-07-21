@@ -50,7 +50,6 @@ class FindNodeResponseHandlerTest {
 
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(nodeInfo.getNodeRecord());
     verify(nodeTable).save(nodeRecordInfo);
-    verify(session, never()).putRecordInBucket(nodeRecordInfo);
   }
 
   @Test
@@ -72,7 +71,6 @@ class FindNodeResponseHandlerTest {
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(updatedRecord);
     verify(nodeTable).save(nodeRecordInfo);
     verify(session, never()).updateNodeRecord(any());
-    verify(session, never()).putRecordInBucket(any());
   }
 
   @Test
@@ -95,7 +93,6 @@ class FindNodeResponseHandlerTest {
     final NodeRecordInfo nodeRecordInfo = NodeRecordInfo.createDefault(updatedRecord);
     verify(nodeTable).save(nodeRecordInfo);
     verify(session).updateNodeRecord(updatedRecord);
-    verify(session, never()).putRecordInBucket(any());
   }
 
   @Test

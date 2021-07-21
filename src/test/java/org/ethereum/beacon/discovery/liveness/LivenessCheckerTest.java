@@ -29,10 +29,11 @@ class LivenessCheckerTest {
   private final Pinger pinger = mock(Pinger.class);
   private final Map<NodeRecord, CompletableFuture<Void>> pingResults = new HashMap<>();
 
-  private final LivenessChecker livenessChecker = new LivenessChecker(pinger);
+  private final LivenessChecker livenessChecker = new LivenessChecker();
 
   @BeforeEach
   void setUp() {
+    livenessChecker.setPinger(pinger);
     when(pinger.ping(any()))
         .thenAnswer(
             invocation -> {

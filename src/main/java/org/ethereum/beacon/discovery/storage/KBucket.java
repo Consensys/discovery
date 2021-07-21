@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
-public class KBucket {
+class KBucket {
 
   static final int K = 16;
 
@@ -32,6 +32,8 @@ public class KBucket {
    * able to be inserted immediately should any node in the bucket be removed.
    */
   private Optional<BucketEntry> pendingNode = Optional.empty();
+
+  private long lastMaintenanceTime = 0;
 
   public KBucket(final LivenessChecker livenessChecker, final Clock clock) {
     this.livenessChecker = livenessChecker;
@@ -128,12 +130,13 @@ public class KBucket {
    * when it was last confirmed as live)
    */
   public void performMaintenance() {
+    final long currentTime = clock.millis();
+    lastMaintenanceTime = currentTime;
     performPendingNodeMaintenance();
 
     if (nodes.isEmpty()) {
       return;
     }
-    final long currentTime = clock.millis();
     final BucketEntry lastNode = getLastNode();
     if (lastNode.hasFailedLivenessCheck(currentTime)) {
       nodes.remove(lastNode);
@@ -145,6 +148,10 @@ public class KBucket {
     } else {
       lastNode.checkLiveness(currentTime);
     }
+  }
+
+  public long getLastMaintenanceTime() {
+    return lastMaintenanceTime;
   }
 
   private void performPendingNodeMaintenance() {
@@ -169,5 +176,9 @@ public class KBucket {
 
   private Optional<BucketEntry> getEntry(final NodeRecord nodeRecord) {
     return nodes.stream().filter(node -> node.getNodeId().equals(nodeRecord.getNodeId())).findAny();
+  }
+
+  public boolean isEmpty() {
+    return nodes.isEmpty();
   }
 }

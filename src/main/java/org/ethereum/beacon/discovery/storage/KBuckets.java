@@ -4,6 +4,7 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.time.Clock;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -76,6 +77,14 @@ public class KBuckets {
   public synchronized void onNodeContacted(NodeRecord node) {
     final int distance = Functions.logDistance(homeNodeId, node.getNodeId());
     getOrCreateBucket(distance).ifPresent(bucket -> bucket.onLivenessConfirmed(node));
+  }
+
+  /** Performs maintenance on the least recently touch bucket (excluding any empty buckets). */
+  public synchronized void performMaintenance() {
+    buckets.values().stream()
+        .filter(bucket -> !bucket.isEmpty())
+        .min(Comparator.comparing(KBucket::getLastMaintenanceTime))
+        .ifPresent(KBucket::performMaintenance);
   }
 
   private Optional<KBucket> getOrCreateBucket(final int distance) {

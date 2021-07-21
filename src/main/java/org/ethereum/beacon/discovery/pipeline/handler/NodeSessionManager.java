@@ -27,8 +27,8 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
@@ -42,7 +42,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(NodeSessionManager.class);
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Bytes staticNodeKey;
-  private final NodeBucketStorage nodeBucketStorage;
+  private final KBuckets nodeBucketStorage;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
   private final NodeTable nodeTable;
@@ -53,7 +53,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   public NodeSessionManager(
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
-      NodeBucketStorage nodeBucketStorage,
+      KBuckets nodeBucketStorage,
       NodeTable nodeTable,
       Pipeline outgoingPipeline,
       ExpirationSchedulerFactory expirationSchedulerFactory) {

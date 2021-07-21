@@ -205,7 +205,7 @@ class KBucketTest {
 
     bucket.onLivenessConfirmed(lastNode);
 
-    assertThat(bucket.getAllNodes()).startsWith(lastNode);
+    assertThat(bucket.getAllNodes()).startsWith(lastNode).containsOnlyOnce(lastNode);
   }
 
   @Test

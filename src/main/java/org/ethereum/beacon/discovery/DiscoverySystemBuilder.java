@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNullElseGet;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -20,16 +21,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Schedulers;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorage;
-import org.ethereum.beacon.discovery.storage.NodeBucketStorageImpl;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.storage.NodeTableStorage;
@@ -53,6 +54,7 @@ public class DiscoverySystemBuilder {
   private int trafficReadLimit = 250000; // bytes per sec
   private TalkHandler talkHandler = TalkHandler.NOOP;
   private NettyDiscoveryServer discoveryServer = null;
+  private final LivenessChecker livenessChecker = new LivenessChecker();
 
   public DiscoverySystemBuilder trafficReadLimit(final int trafficReadLimit) {
     this.trafficReadLimit = trafficReadLimit;
@@ -150,7 +152,8 @@ public class DiscoverySystemBuilder {
                     localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
     nodeBucketStorage =
         requireNonNullElseGet(
-            nodeBucketStorage, () -> new NodeBucketStorageImpl(localNodeRecordStore));
+            nodeBucketStorage,
+            () -> new KBuckets(Clock.systemUTC(), localNodeRecordStore, livenessChecker));
     nodeTableStorage =
         requireNonNullElseGet(
             nodeTableStorage, () -> nodeTableStorageFactory.createTable(bootnodes));
@@ -171,7 +174,7 @@ public class DiscoverySystemBuilder {
 
   NodeTableStorage nodeTableStorage;
   NodeTable nodeTable;
-  NodeBucketStorage nodeBucketStorage;
+  KBuckets nodeBucketStorage;
   LocalNodeRecordStore localNodeRecordStore;
   ExpirationSchedulerFactory expirationSchedulerFactory;
 
@@ -185,6 +188,7 @@ public class DiscoverySystemBuilder {
         localNodeRecordStore.getLocalNodeRecord().isValid(), "Local node record is invalid");
 
     final DiscoveryManager discoveryManager = buildDiscoveryManager();
+    livenessChecker.setPinger(discoveryManager::ping);
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(

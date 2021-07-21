@@ -18,6 +18,4 @@ public interface NodeTableStorageFactory {
    *     Uses `serializerFactory` for node records serialization.
    */
   NodeTableStorage createTable(List<NodeRecord> bootnodes);
-
-  NodeBucketStorage createBucketStorage(LocalNodeRecordStore localNodeRecordStore);
 }
