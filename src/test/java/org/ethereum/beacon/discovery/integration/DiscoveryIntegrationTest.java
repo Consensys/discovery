@@ -89,7 +89,7 @@ public class DiscoveryIntegrationTest {
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
-    final CompletableFuture<Void> findNodesResult =
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
     waitFor(findNodesResult);
     assertTrue(findNodesResult.isDone());
