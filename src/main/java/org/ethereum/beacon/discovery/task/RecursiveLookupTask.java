@@ -7,11 +7,9 @@ package org.ethereum.beacon.discovery.task;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -20,7 +18,6 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -90,13 +87,13 @@ public class RecursiveLookupTask {
 
   private void queryPeer(final NodeRecord peer) {
     queriedNodeIds.add(peer.getNodeId());
-//    System.out.println(
-//        "Find from peer at distance "
-//            + Functions.logDistance(homeNodeId, peer.getNodeId())
-//            + " Distance from target: "
-//            + Functions.logDistance(targetNodeId, peer.getNodeId())
-//            + " Target distance from home: "
-//            + Functions.logDistance(homeNodeId, targetNodeId));
+    //    System.out.println(
+    //        "Find from peer at distance "
+    //            + Functions.logDistance(homeNodeId, peer.getNodeId())
+    //            + " Distance from target: "
+    //            + Functions.logDistance(targetNodeId, peer.getNodeId())
+    //            + " Target distance from home: "
+    //            + Functions.logDistance(homeNodeId, targetNodeId));
     availableQuerySlots--;
     remainingTotalQueryLimit--;
     sendFindNodesRequest

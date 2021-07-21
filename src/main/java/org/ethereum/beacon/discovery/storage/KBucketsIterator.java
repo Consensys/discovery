@@ -37,8 +37,7 @@ public class KBucketsIterator implements Iterator<NodeRecord> {
           Stream.concat(
                   buckets.getLiveNodeRecords(lowDistance), buckets.getLiveNodeRecords(highDistance))
               .sorted(
-                  Comparator.comparing(
-                      node -> Functions.distance(targetNodeId, node.getNodeId())))
+                  Comparator.comparing(node -> Functions.distance(targetNodeId, node.getNodeId())))
               .collect(Collectors.toList())
               .iterator();
     }

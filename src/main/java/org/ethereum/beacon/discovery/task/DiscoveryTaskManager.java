@@ -5,9 +5,8 @@
 package org.ethereum.beacon.discovery.task;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.BitSet;
-import java.util.List;
+import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -65,7 +64,8 @@ public class DiscoveryTaskManager {
             Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
             this::performSearchForNewPeers);
     maintenanceSchedule =
-        scheduler.executeAtFixedRate(Duration.ZERO, liveCheckInterval, this::maintenanceTask);
+        scheduler.executeAtFixedRate(
+            Duration.ZERO, liveCheckInterval, nodeBucketStorage::performMaintenance);
   }
 
   public synchronized void stop() {
@@ -76,12 +76,6 @@ public class DiscoveryTaskManager {
   private void safeCancel(final Future<?> future) {
     if (future != null) {
       future.cancel(true);
-    }
-  }
-
-  private void maintenanceTask() {
-    for (int distance = 1; distance <= KBuckets.MAXIMUM_BUCKET; distance++) {
-      nodeBucketStorage.performMaintenance(distance);
     }
   }
 
@@ -104,7 +98,11 @@ public class DiscoveryTaskManager {
     int distance = randomDistance();
     final Bytes targetNodeId = createNodeIdAtDistance(distance);
     return new RecursiveLookupTask(
-            nodeBucketStorage, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, targetNodeId, homeNodeId)
+            nodeBucketStorage,
+            this::findNodes,
+            RECURSIVE_SEARCH_QUERY_LIMIT,
+            targetNodeId,
+            homeNodeId)
         .execute();
   }
 
@@ -112,7 +110,8 @@ public class DiscoveryTaskManager {
     return Math.max(1, new Random().nextInt(KBuckets.MAXIMUM_BUCKET));
   }
 
-  private CompletableFuture<Collection<NodeRecord>> findNodes(final NodeRecord nodeRecord, final int distance) {
+  private CompletableFuture<Collection<NodeRecord>> findNodes(
+      final NodeRecord nodeRecord, final int distance) {
     return recursiveLookupTasks.add(nodeRecord, distance);
   }
 }

@@ -34,6 +34,8 @@ class KBucket {
    */
   private Optional<BucketEntry> pendingNode = Optional.empty();
 
+  private long lastMaintenanceTime = 0;
+
   public KBucket(final LivenessChecker livenessChecker, final Clock clock) {
     this.livenessChecker = livenessChecker;
     this.clock = clock;
@@ -129,12 +131,13 @@ class KBucket {
    * when it was last confirmed as live)
    */
   public void performMaintenance() {
+    final long currentTime = clock.millis();
+    lastMaintenanceTime = currentTime;
     performPendingNodeMaintenance();
 
     if (nodes.isEmpty()) {
       return;
     }
-    final long currentTime = clock.millis();
     final BucketEntry lastNode = getLastNode();
     if (lastNode.hasFailedLivenessCheck(currentTime)) {
       nodes.remove(lastNode);
@@ -146,6 +149,10 @@ class KBucket {
     } else {
       lastNode.checkLiveness(currentTime);
     }
+  }
+
+  public long getLastMaintenanceTime() {
+    return lastMaintenanceTime;
   }
 
   private void performPendingNodeMaintenance() {
@@ -178,5 +185,9 @@ class KBucket {
 
   public Optional<NodeRecord> getNode(final Bytes targetNodeId) {
     return getEntry(targetNodeId).map(BucketEntry::getNode);
+  }
+
+  public boolean isEmpty() {
+    return nodes.isEmpty();
   }
 }
