@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.task;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,8 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -56,7 +57,8 @@ class RecursiveLookupTaskTest {
   private final KBuckets buckets = mock(KBuckets.class);
   private final FindNodesAction findNodesAction = mock(FindNodesAction.class);
 
-  private final Map<NodeRecord, CompletableFuture<Void>> findNodeRequests = new HashMap<>();
+  private final Map<NodeRecord, CompletableFuture<Collection<NodeRecord>>> findNodeRequests =
+      new HashMap<>();
 
   private final RecursiveLookupTask task =
       new RecursiveLookupTask(buckets, findNodesAction, 4, TARGET, TARGET);
@@ -67,7 +69,7 @@ class RecursiveLookupTaskTest {
         .then(
             invocation -> {
               final NodeRecord queriedPeer = invocation.getArgument(0);
-              final CompletableFuture<Void> result = new CompletableFuture<>();
+              final CompletableFuture<Collection<NodeRecord>> result = new CompletableFuture<>();
               findNodeRequests.put(queriedPeer, result);
               return result;
             });
@@ -91,7 +93,7 @@ class RecursiveLookupTaskTest {
     when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4));
 
-    final CompletableFuture<List<NodeRecord>> complete = task.execute();
+    final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
@@ -100,7 +102,7 @@ class RecursiveLookupTaskTest {
     assertFalse(complete.isDone());
 
     // Request to first peer completes.
-    findNodeRequests.get(PEER1).complete(null);
+    findNodeRequests.get(PEER1).complete(emptyList());
 
     // We should now query the next closest peer we haven't already queried (peer4).
     verify(findNodesAction).findNodes(PEER4, Functions.logDistance(TARGET, PEER4_ID));
@@ -108,9 +110,9 @@ class RecursiveLookupTaskTest {
     assertFalse(complete.isDone());
 
     // Complete remaining requests
-    findNodeRequests.get(PEER2).complete(null);
-    findNodeRequests.get(PEER3).complete(null);
-    findNodeRequests.get(PEER4).complete(null);
+    findNodeRequests.get(PEER2).complete(emptyList());
+    findNodeRequests.get(PEER3).complete(emptyList());
+    findNodeRequests.get(PEER4).complete(emptyList());
 
     verifyNoMoreInteractions(findNodesAction);
     // Should now be done because all nodes have been queried
@@ -121,7 +123,7 @@ class RecursiveLookupTaskTest {
   public void shouldStopWhenTargetNodeIsFound() {
     when(buckets.streamClosestNodes(TARGET)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
 
-    final CompletableFuture<List<NodeRecord>> complete = task.execute();
+    final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
@@ -131,15 +133,15 @@ class RecursiveLookupTaskTest {
 
     // Request to first peer completes. Target peer has now been found.
     when(buckets.containsNode(TARGET)).thenReturn(true);
-    findNodeRequests.get(PEER1).complete(null);
+    findNodeRequests.get(PEER1).complete(emptyList());
 
     // No more requests are made
     verifyNoMoreInteractions(findNodesAction);
     assertTrue(complete.isDone());
 
     // Complete remaining requests
-    findNodeRequests.get(PEER2).complete(null);
-    findNodeRequests.get(PEER3).complete(null);
+    findNodeRequests.get(PEER2).complete(emptyList());
+    findNodeRequests.get(PEER3).complete(emptyList());
 
     verifyNoMoreInteractions(findNodesAction);
   }
@@ -149,7 +151,7 @@ class RecursiveLookupTaskTest {
     when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4, PEER5));
 
-    final CompletableFuture<List<NodeRecord>> complete = task.execute();
+    final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
 
     verify(findNodesAction).findNodes(PEER1, Functions.logDistance(TARGET, PEER1_ID));
     verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
@@ -158,9 +160,9 @@ class RecursiveLookupTaskTest {
     assertFalse(complete.isDone());
 
     // Requests complete
-    findNodeRequests.get(PEER1).complete(null);
-    findNodeRequests.get(PEER2).complete(null);
-    findNodeRequests.get(PEER3).complete(null);
+    findNodeRequests.get(PEER1).complete(emptyList());
+    findNodeRequests.get(PEER2).complete(emptyList());
+    findNodeRequests.get(PEER3).complete(emptyList());
 
     // There are two peers remaining but only 1 request before we hit the total request limit
     verify(findNodesAction).findNodes(PEER4, Functions.logDistance(TARGET, PEER4_ID));
@@ -168,7 +170,7 @@ class RecursiveLookupTaskTest {
     assertFalse(complete.isDone());
 
     // And when that last request completes, we're done.
-    findNodeRequests.get(PEER4).complete(null);
+    findNodeRequests.get(PEER4).complete(emptyList());
     verifyNoMoreInteractions(findNodesAction);
     assertTrue(complete.isDone());
   }

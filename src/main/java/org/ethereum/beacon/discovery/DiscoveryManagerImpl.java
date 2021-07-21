@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -156,13 +157,13 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<List<NodeRecord>> findNodes(
+  public CompletableFuture<Collection<NodeRecord>> findNodes(
       NodeRecord nodeRecord, List<Integer> distances) {
-    Request<List<NodeRecord>> request =
+    Request<Collection<NodeRecord>> request =
         new Request<>(
             new CompletableFuture<>(),
             reqId -> new FindNodeMessage(reqId, distances),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(distances));
     return executeTaskImpl(nodeRecord, request);
   }
 

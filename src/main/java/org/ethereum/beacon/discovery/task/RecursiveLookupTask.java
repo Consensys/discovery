@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableSet;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -33,7 +35,7 @@ public class RecursiveLookupTask {
   private final Comparator<NodeRecord> distanceComparator;
   private int availableQuerySlots = MAX_CONCURRENT_QUERIES;
   private int remainingTotalQueryLimit;
-  private final CompletableFuture<List<NodeRecord>> future = new CompletableFuture<>();
+  private final CompletableFuture<Collection<NodeRecord>> future = new CompletableFuture<>();
   private final NavigableSet<NodeRecord> foundNodes;
 
   public RecursiveLookupTask(
@@ -56,7 +58,7 @@ public class RecursiveLookupTask {
     this.queriedNodeIds.add(homeNodeId);
   }
 
-  public CompletableFuture<List<NodeRecord>> execute() {
+  public CompletableFuture<Collection<NodeRecord>> execute() {
     sendRequests();
     return future;
   }
@@ -67,7 +69,7 @@ public class RecursiveLookupTask {
       return;
     }
     if (buckets.containsNode(targetNodeId)) {
-      future.complete(new ArrayList<>(foundNodes));
+      future.complete(foundNodes);
       return;
     }
     final Stream<NodeRecord> closedNodesFromBuckets =
@@ -82,7 +84,7 @@ public class RecursiveLookupTask {
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
       // There are no in-progress queries even after we looked for more to send so must have run out
       // of possible nodes to query or reached the query limit.
-      future.complete(new ArrayList<>(foundNodes));
+      future.complete(foundNodes);
     }
   }
 
@@ -113,6 +115,6 @@ public class RecursiveLookupTask {
   }
 
   public interface FindNodesAction {
-    CompletableFuture<List<NodeRecord>> findNodes(NodeRecord sendTo, int distance);
+    CompletableFuture<Collection<NodeRecord>> findNodes(NodeRecord sendTo, int distance);
   }
 }

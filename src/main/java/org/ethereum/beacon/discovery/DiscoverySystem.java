@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -77,9 +78,9 @@ public class DiscoverySystem {
    * @param nodeRecord Ethereum Node record
    * @param distances Distances to search for
    * @return Future which is fired when reply is received or fails in timeout/not successful
-   *     handshake/bad message exchange. Contains the list of nodes returned by the request.
+   *     handshake/bad message exchange. Contains the collection of nodes returned by the peer.
    */
-  public CompletableFuture<List<NodeRecord>> findNodes(
+  public CompletableFuture<Collection<NodeRecord>> findNodes(
       NodeRecord nodeRecord, List<Integer> distances) {
     return discoveryManager.findNodes(nodeRecord, distances);
   }
@@ -109,7 +110,7 @@ public class DiscoverySystem {
     return buckets.streamClosestNodes(Bytes32.ZERO);
   }
 
-  public CompletableFuture<List<NodeRecord>> searchForNewPeers() {
+  public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {
     return taskManager.searchForNewPeers();
   }
 }

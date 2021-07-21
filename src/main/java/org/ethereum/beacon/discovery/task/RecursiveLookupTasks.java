@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.task;
 import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -41,15 +42,15 @@ public class RecursiveLookupTasks {
         expirationSchedulerFactory.create(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
-  public CompletableFuture<List<NodeRecord>> add(NodeRecord nodeRecord, int distance) {
+  public CompletableFuture<Collection<NodeRecord>> add(NodeRecord nodeRecord, int distance) {
     if (!currentTasks.add(nodeRecord.getNodeId())) {
       return CompletableFuture.failedFuture(new IllegalStateException("Already querying node"));
     }
 
-    final CompletableFuture<List<NodeRecord>> result = new CompletableFuture<>();
+    final CompletableFuture<Collection<NodeRecord>> result = new CompletableFuture<>();
     scheduler.execute(
         () -> {
-          CompletableFuture<List<NodeRecord>> request =
+          CompletableFuture<Collection<NodeRecord>> request =
               discoveryManager.findNodes(nodeRecord, Collections.singletonList(distance));
           addTimeout(nodeRecord, request);
           request.whenComplete(
