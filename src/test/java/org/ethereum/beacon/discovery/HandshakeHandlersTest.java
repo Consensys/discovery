@@ -177,7 +177,7 @@ public class HandshakeHandlersTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(1)),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(singletonList(1)));
     nodeSessionAt1For2.createNextRequest(request);
 
     RawPacket whoAreYouRawPacket = outgoing2Packets.poll(1, TimeUnit.SECONDS);

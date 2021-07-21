@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.tuweni.bytes.Bytes;
@@ -31,7 +32,8 @@ public interface DiscoveryManager {
    * @return Future which is fired when reply is received or fails in timeout/not successful
    *     handshake/bad message exchange.
    */
-  CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances);
+  CompletableFuture<Collection<NodeRecord>> findNodes(
+      NodeRecord nodeRecord, List<Integer> distances);
 
   /**
    * Initiates PING with node `nodeRecord`

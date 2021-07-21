@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +45,6 @@ import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
@@ -62,7 +62,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final NodeTable nodeTable;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
 
@@ -76,7 +75,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
       TalkHandler talkHandler) {
-    this.nodeTable = nodeTable;
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
@@ -161,26 +159,19 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     return request.getResultPromise();
   }
 
-  private void addNode(NodeRecord nodeRecord) {
-    if (nodeTable.getNode(nodeRecord.getNodeId()).isEmpty()) {
-      nodeTable.save(NodeRecordInfo.createDefault(nodeRecord));
-    }
-  }
-
   @Override
-  public CompletableFuture<Void> findNodes(NodeRecord nodeRecord, List<Integer> distances) {
-    addNode(nodeRecord);
-    Request<Void> request =
+  public CompletableFuture<Collection<NodeRecord>> findNodes(
+      NodeRecord nodeRecord, List<Integer> distances) {
+    Request<Collection<NodeRecord>> request =
         new Request<>(
             new CompletableFuture<>(),
             reqId -> new FindNodeMessage(reqId, distances),
-            new FindNodeResponseHandler());
+            new FindNodeResponseHandler(distances));
     return executeTaskImpl(nodeRecord, request);
   }
 
   @Override
   public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
-    addNode(nodeRecord);
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -191,7 +182,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
-    addNode(nodeRecord);
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),

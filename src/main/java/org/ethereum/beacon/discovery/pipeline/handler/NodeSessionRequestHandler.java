@@ -29,6 +29,6 @@ public class NodeSessionRequestHandler implements EnvelopeHandler {
                 "Envelope %s in NodeSessionRequestHandler, requirements are satisfied!",
                 envelope.getId()));
 
-    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(envelope.get(Field.NODE).getNodeId()));
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(envelope.get(Field.NODE)));
   }
 }

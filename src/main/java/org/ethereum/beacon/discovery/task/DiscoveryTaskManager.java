@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.task;
 import static org.ethereum.beacon.discovery.schema.NodeStatus.DEAD;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -238,12 +239,12 @@ public class DiscoveryTaskManager {
                                 (nodeRecord.getRetry() + 1)))));
   }
 
-  public CompletableFuture<Void> searchForNewPeers() {
+  public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {
     // We wind up with a CompletableFuture<CompletableFuture> so unwrap one level.
     return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
   }
 
-  private CompletableFuture<Void> performSearchForNewPeers() {
+  private CompletableFuture<Collection<NodeRecord>> performSearchForNewPeers() {
     return new RecursiveLookupTask(
             nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
         .execute();
@@ -254,9 +255,9 @@ public class DiscoveryTaskManager {
     return distance;
   }
 
-  private CompletableFuture<Void> findNodes(
+  private CompletableFuture<Collection<NodeRecord>> findNodes(
       final NodeRecordInfo nodeRecordInfo, final int distance) {
-    final CompletableFuture<Void> searchResult =
+    final CompletableFuture<Collection<NodeRecord>> searchResult =
         recursiveLookupTasks.add(nodeRecordInfo.getNode(), distance);
     searchResult.handle(
         (__, error) -> {
