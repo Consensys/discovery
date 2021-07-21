@@ -5,6 +5,8 @@ package org.ethereum.beacon.discovery.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
@@ -66,6 +68,37 @@ class KBucketsTest {
       assertThat(Functions.logDistance(localNode.getNodeId(), node.getNodeId()))
           .isEqualTo(distance);
     }
+  }
+
+  @Test
+  void performMaintenance_shouldPerformMaintenanceOnLeastRecentlyTouchedBucket() {
+    final NodeRecord bucket1Node = createNodeAtDistance(1);
+    final NodeRecord bucket2Node = createNodeAtDistance(2);
+    final NodeRecord bucket3Node = createNodeAtDistance(3);
+    clock.advanceTimeMillis(100);
+    buckets.onNodeContacted(bucket3Node);
+    clock.advanceTimeMillis(100);
+    buckets.onNodeContacted(bucket1Node);
+    clock.advanceTimeMillis(100);
+    buckets.onNodeContacted(bucket2Node);
+
+    // Ensure every node is due to be pinged
+    clock.advanceTimeMillis(BucketEntry.MIN_MILLIS_BETWEEN_PINGS * 2);
+
+    // Should update bucket 3 first as it was least recently touched
+    buckets.performMaintenance();
+    verify(livenessChecker).checkLiveness(bucket3Node);
+    verifyNoMoreInteractions(livenessChecker);
+
+    // Then bucket 1
+    buckets.performMaintenance();
+    verify(livenessChecker).checkLiveness(bucket1Node);
+    verifyNoMoreInteractions(livenessChecker);
+
+    // And finally bucket 2
+    buckets.performMaintenance();
+    verify(livenessChecker).checkLiveness(bucket2Node);
+    verifyNoMoreInteractions(livenessChecker);
   }
 
   private NodeRecord createNodeAtDistance(final int distance) {
