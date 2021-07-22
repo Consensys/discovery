@@ -69,12 +69,12 @@ public class RecursiveLookupTask {
       future.complete(foundNodes);
       return;
     }
-    final Stream<NodeRecord> closedNodesFromBuckets =
+    final Stream<NodeRecord> closestNodesFromBuckets =
         buckets
             .streamClosestNodes(targetNodeId)
             .filter(record -> !queriedNodeIds.contains(record.getNodeId()))
             .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit));
-    Stream.concat(closedNodesFromBuckets, foundNodes.stream())
+    Stream.concat(closestNodesFromBuckets, foundNodes.stream())
         .sorted(distanceComparator)
         .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit))
         .forEach(this::queryPeer);

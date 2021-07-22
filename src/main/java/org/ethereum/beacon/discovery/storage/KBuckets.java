@@ -115,16 +115,12 @@ public class KBuckets {
         buckets.computeIfAbsent(distance, __ -> new KBucket(livenessChecker, clock)));
   }
 
-  public void performMaintenance(final int distance) {
-    getBucket(distance).ifPresent(KBucket::performMaintenance);
+  public synchronized Optional<NodeRecord> getNode(final Bytes nodeId) {
+    return getBucket(Functions.logDistance(homeNodeId, nodeId))
+        .flatMap(bucket -> bucket.getNode(nodeId));
   }
 
-  public synchronized Optional<NodeRecord> getNode(final Bytes targetNodeId) {
-    return getBucket(Functions.logDistance(homeNodeId, targetNodeId))
-        .flatMap(bucket -> bucket.getNode(targetNodeId));
-  }
-
-  public synchronized boolean containsNode(final Bytes targetNodeId) {
-    return getNode(targetNodeId).isPresent();
+  public synchronized boolean containsNode(final Bytes nodeId) {
+    return getNode(nodeId).isPresent();
   }
 }

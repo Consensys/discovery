@@ -86,12 +86,11 @@ public class DiscoveryTaskManager {
   }
 
   private CompletableFuture<Collection<NodeRecord>> performSearchForNewPeers() {
-    final Bytes targetNodeId = Bytes32.random();
     return new RecursiveLookupTask(
             nodeBucketStorage,
             this::findNodes,
             RECURSIVE_SEARCH_QUERY_LIMIT,
-            targetNodeId,
+            Bytes32.random(),
             homeNodeId)
         .execute();
   }
