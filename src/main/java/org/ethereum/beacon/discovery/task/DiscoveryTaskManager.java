@@ -241,7 +241,7 @@ public class DiscoveryTaskManager {
 
   private CompletableFuture<Collection<NodeRecord>> performSearchForNewPeers() {
     return new RecursiveLookupTask(
-            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random())
+            nodeTable, this::findNodes, RECURSIVE_SEARCH_QUERY_LIMIT, Bytes32.random(), homeNodeId)
         .execute();
   }
 

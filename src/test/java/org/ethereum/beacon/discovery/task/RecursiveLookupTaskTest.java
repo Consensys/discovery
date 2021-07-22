@@ -64,7 +64,7 @@ class RecursiveLookupTaskTest {
       new HashMap<>();
 
   private final RecursiveLookupTask task =
-      new RecursiveLookupTask(nodeTable, findNodesAction, 4, TARGET);
+      new RecursiveLookupTask(nodeTable, findNodesAction, 4, TARGET, Bytes.fromHexString("0xABCD"));
 
   @BeforeEach
   public void setUp() {
