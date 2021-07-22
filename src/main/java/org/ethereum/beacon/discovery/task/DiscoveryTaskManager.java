@@ -99,12 +99,10 @@ public class DiscoveryTaskManager {
   private CompletableFuture<Collection<NodeRecord>> findNodes(
       final NodeRecord nodeRecord, final int targetDistance) {
     final List<Integer> distances = new ArrayList<>();
-    distances.add(targetDistance);
-    if (targetDistance > 1) {
-      distances.add(targetDistance - 1);
-    }
-    if (targetDistance < KBuckets.MAXIMUM_BUCKET) {
-      distances.add(targetDistance + 1);
+    for (int distance = targetDistance;
+        distance <= Math.min(KBuckets.MAXIMUM_BUCKET, targetDistance + 3);
+        distance++) {
+      distances.add(distance);
     }
     return recursiveLookupTasks.add(nodeRecord, distances);
   }
