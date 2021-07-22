@@ -87,13 +87,6 @@ public class RecursiveLookupTask {
 
   private void queryPeer(final NodeRecord peer) {
     queriedNodeIds.add(peer.getNodeId());
-    //    System.out.println(
-    //        "Find from peer at distance "
-    //            + Functions.logDistance(homeNodeId, peer.getNodeId())
-    //            + " Distance from target: "
-    //            + Functions.logDistance(targetNodeId, peer.getNodeId())
-    //            + " Target distance from home: "
-    //            + Functions.logDistance(homeNodeId, targetNodeId));
     availableQuerySlots--;
     remainingTotalQueryLimit--;
     sendFindNodesRequest
@@ -112,6 +105,6 @@ public class RecursiveLookupTask {
   }
 
   public interface FindNodesAction {
-    CompletableFuture<Collection<NodeRecord>> findNodes(NodeRecord sendTo, int distance);
+    CompletableFuture<Collection<NodeRecord>> findNodes(NodeRecord sendTo, int targetDistance);
   }
 }

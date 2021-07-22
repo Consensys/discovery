@@ -5,13 +5,14 @@
 package org.ethereum.beacon.discovery.task;
 
 import java.time.Duration;
-import java.util.BitSet;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Random;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
@@ -84,19 +85,8 @@ public class DiscoveryTaskManager {
     return scheduler.execute(this::performSearchForNewPeers).thenCompose(Function.identity());
   }
 
-  private Bytes createNodeIdAtDistance(final int distance) {
-    final int idSize = homeNodeId.size();
-    final BitSet bits = BitSet.valueOf(homeNodeId.reverse().toArray());
-    bits.flip(distance - 1);
-    final byte[] targetNodeId = new byte[idSize];
-    final byte[] src = bits.toByteArray();
-    System.arraycopy(src, 0, targetNodeId, 0, src.length);
-    return Bytes.wrap(targetNodeId).reverse();
-  }
-
   private CompletableFuture<Collection<NodeRecord>> performSearchForNewPeers() {
-    int distance = randomDistance();
-    final Bytes targetNodeId = createNodeIdAtDistance(distance);
+    final Bytes targetNodeId = Bytes32.random();
     return new RecursiveLookupTask(
             nodeBucketStorage,
             this::findNodes,
@@ -106,12 +96,16 @@ public class DiscoveryTaskManager {
         .execute();
   }
 
-  private int randomDistance() {
-    return Math.max(1, new Random().nextInt(KBuckets.MAXIMUM_BUCKET));
-  }
-
   private CompletableFuture<Collection<NodeRecord>> findNodes(
-      final NodeRecord nodeRecord, final int distance) {
-    return recursiveLookupTasks.add(nodeRecord, distance);
+      final NodeRecord nodeRecord, final int targetDistance) {
+    final List<Integer> distances = new ArrayList<>();
+    distances.add(targetDistance);
+    if (targetDistance > 1) {
+      distances.add(targetDistance - 1);
+    }
+    if (targetDistance < KBuckets.MAXIMUM_BUCKET) {
+      distances.add(targetDistance + 1);
+    }
+    return recursiveLookupTasks.add(nodeRecord, distances);
   }
 }
