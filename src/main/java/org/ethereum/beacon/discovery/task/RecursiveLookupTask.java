@@ -52,7 +52,7 @@ public class RecursiveLookupTask {
             .reversed()
             .thenComparing(NodeRecord::getNodeId);
     this.foundNodes = new TreeSet<>(distanceComparator);
-    // Don't query ourselves
+    // Don't query ourselves, even if our record is returned by one of the queries
     this.queriedNodeIds.add(homeNodeId);
   }
 
