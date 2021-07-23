@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.TestUtil.waitFor;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -387,35 +387,5 @@ public class DiscoveryIntegrationTest {
       }
     }
     throw new IllegalStateException("Could not find a free port after multiple attempts");
-  }
-
-  private void waitFor(final CompletableFuture<?> future) throws Exception {
-    waitFor(future, 30);
-  }
-
-  private void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
-    future.get(timeout, TimeUnit.SECONDS);
-  }
-
-  private void waitFor(final ThrowingRunnable assertion) throws Exception {
-    int attempts = 0;
-    while (true) {
-      try {
-        assertion.run();
-        return;
-      } catch (Throwable t) {
-        if (attempts < 60) {
-          attempts++;
-          Thread.sleep(1000);
-        } else {
-          throw t;
-        }
-      }
-    }
-  }
-
-  private interface ThrowingRunnable {
-
-    void run() throws Exception;
   }
 }

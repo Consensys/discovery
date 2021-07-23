@@ -50,7 +50,6 @@ public class NodeSession {
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
 
   public static final int REQUEST_ID_SIZE = 8;
-  private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
@@ -171,16 +170,16 @@ public class NodeSession {
     byte[] requestId = new byte[REQUEST_ID_SIZE];
     rnd.nextBytes(requestId);
     Bytes wrappedId = Bytes.wrap(requestId);
-    if (IS_LIVENESS_UPDATE) {
-      request
-          .getResultPromise()
-          .whenComplete(
-              (aVoid, throwable) -> {
-                if (throwable == null) {
-                  updateLiveness();
-                }
-              });
-    }
+    request
+        .getResultPromise()
+        .whenComplete(
+            (aVoid, throwable) -> {
+              if (throwable == null) {
+                updateLiveness();
+              } else {
+                throwable.printStackTrace();
+              }
+            });
     RequestInfo requestInfo = RequestInfo.create(wrappedId, request);
     requestIdStatuses.put(wrappedId, requestInfo);
     requestExpirationScheduler.put(

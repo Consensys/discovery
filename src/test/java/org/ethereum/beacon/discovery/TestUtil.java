@@ -5,6 +5,8 @@
 package org.ethereum.beacon.discovery;
 
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
@@ -124,5 +126,35 @@ public class TestUtil {
         && that.getEphemeralPubKey().equals(other.getEphemeralPubKey())
         && that.getIdSignature().equals(other.getIdSignature())
         && that.getNodeRecord(nodeRecordFactory).equals(other.getNodeRecord(nodeRecordFactory));
+  }
+
+  public static void waitFor(final CompletableFuture<?> future) throws Exception {
+    waitFor(future, 30);
+  }
+
+  public static void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
+    future.get(timeout, TimeUnit.SECONDS);
+  }
+
+  public static void waitFor(final ThrowingRunnable assertion) throws Exception {
+    int attempts = 0;
+    while (true) {
+      try {
+        assertion.run();
+        return;
+      } catch (Throwable t) {
+        if (attempts < 60) {
+          attempts++;
+          Thread.sleep(1000);
+        } else {
+          throw t;
+        }
+      }
+    }
+  }
+
+  public interface ThrowingRunnable {
+
+    void run() throws Exception;
   }
 }

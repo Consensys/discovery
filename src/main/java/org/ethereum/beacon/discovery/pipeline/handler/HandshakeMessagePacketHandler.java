@@ -129,10 +129,10 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
           packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
-      enr.ifPresent(session::onNodeRecordReceived);
 
       session.setState(AUTHENTICATED);
       envelope.remove(Field.PACKET_HANDSHAKE);
+      enr.ifPresent(session::onNodeRecordReceived);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(

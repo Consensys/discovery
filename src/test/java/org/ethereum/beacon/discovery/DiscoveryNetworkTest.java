@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
+import static org.ethereum.beacon.discovery.TestUtil.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Clock;
@@ -33,7 +34,6 @@ import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
-@SuppressWarnings({"DoubleBraceInitialization"})
 public class DiscoveryNetworkTest {
   @Test
   public void test() throws Exception {
@@ -144,13 +144,14 @@ public class DiscoveryNetworkTest {
     assertThat(nodeBucketStorage1.getLiveNodeRecords(distance1To2)).isEmpty();
     assertTrue(authPacketSent1to2.await(1, TimeUnit.SECONDS));
     assertTrue(nodesSent2to1.await(1, TimeUnit.SECONDS));
-    Thread.sleep(50);
     // 1 sent findnodes to 2, received only (2) in answer, because 3 is not checked
     // 1 added 2 to its nodeBuckets, because its now checked, but not before
-    Stream<NodeRecord> nodesInBucketAt1With2 = nodeBucketStorage1.getLiveNodeRecords(distance1To2);
-    assertThat(nodesInBucketAt1With2.map(NodeRecord::getNodeId))
-        .containsExactly(nodeRecord2.getNodeId());
+    waitFor(
+        () -> {
+          Stream<NodeRecord> nodesInBucketAt1With2 =
+              nodeBucketStorage1.getLiveNodeRecords(distance1To2);
+          assertThat(nodesInBucketAt1With2.map(NodeRecord::getNodeId))
+              .containsExactly(nodeRecord2.getNodeId());
+        });
   }
-
-  // TODO: discovery tasks are emitted from time to time as they should
 }
