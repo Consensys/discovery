@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.BindException;
 import java.net.InetAddress;
@@ -194,26 +193,15 @@ public class DiscoveryIntegrationTest {
 
     final DiscoverySystem localNode = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
 
-    for (int i = 0, remoteNodeRecordsLength = remoteNodeRecords.length;
-        i < remoteNodeRecordsLength;
-        i++) {
-      try {
-        waitFor(localNode.ping(remoteNodeRecords[i]));
-      } catch (final Throwable t) {
-        fail(
-            new Exception(
-                "Failed to ping node "
-                    + i
-                    + "  Local node seqNum: "
-                    + localNode.getLocalNodeRecord()));
-      }
-    }
-
-    // Address should have been updated. Most likely to 127.0.0.1 but it might be something else
-    // if the system is configured unusually or uses IPv6 in preference to v4.
-    final InetAddress updatedAddress =
-        localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
-    assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+    // Address should have been updated by automatically pinging the bootnodes.
+    // Most likely to 127.0.0.1 but it might be something else if the system is configured unusually
+    // or uses IPv6 in preference to v4.
+    waitFor(
+        () -> {
+          final InetAddress updatedAddress =
+              localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
+          assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+        });
   }
 
   @Test
