@@ -203,11 +203,8 @@ public class DiscoveryIntegrationTest {
         waitFor(localNode.ping(remoteNodeRecords[i]));
       } catch (final Throwable t) {
         fail(
-            new Exception(
-                "Failed to ping node "
-                    + i
-                    + "  Local node seqNum: "
-                    + localNode.getLocalNodeRecord()));
+            "Failed to ping node " + i + "  Local node seqNum: " + localNode.getLocalNodeRecord(),
+            t);
       }
     }
 
