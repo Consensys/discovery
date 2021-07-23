@@ -145,8 +145,8 @@ public class DiscoveryIntegrationTest {
 
     waitFor(
         () -> {
-          waitFor(node1.searchForNewPeers());
-          waitFor(node2.searchForNewPeers());
+          waitFor(node1.searchForNewPeers(), 5);
+          waitFor(node2.searchForNewPeers(), 5);
           assertKnownNodes(bootnode, node1, node2);
           assertKnownNodes(node2, bootnode, node1);
           assertKnownNodes(node1, bootnode, node2);
