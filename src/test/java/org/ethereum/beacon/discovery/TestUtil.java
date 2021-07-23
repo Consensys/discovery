@@ -132,7 +132,8 @@ public class TestUtil {
     waitFor(future, 30);
   }
 
-  public static void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
+  public static void waitFor(final CompletableFuture<?> future, final int timeout)
+      throws Exception {
     future.get(timeout, TimeUnit.SECONDS);
   }
 
