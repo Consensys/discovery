@@ -38,7 +38,7 @@ public class KBucketsIterator implements Iterator<NodeRecord> {
   public boolean hasNext() {
     while (!currentBatch.hasNext() && hasMoreBucketsToScan()) {
       updateCurrentBatch();
-      // Prepare to the next buckets
+      // Prepare for the next buckets
       lowDistance--;
       highDistance++;
     }
