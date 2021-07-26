@@ -162,11 +162,8 @@ public class DiscoveryIntegrationTest {
             .collect(toSet());
     final Set<NodeRecord> expected =
         Stream.of(expectedNodes).map(DiscoverySystem::getLocalNodeRecord).collect(toSet());
-    assertThat(source.getAllKnownNodes())
-        .describedAs("All nodes")
-        .containsExactlyInAnyOrderElementsOf(expected);
 
-    assertThat(actual).describedAs("Iterated nodes").containsExactlyInAnyOrderElementsOf(expected);
+    assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
 
   @Test

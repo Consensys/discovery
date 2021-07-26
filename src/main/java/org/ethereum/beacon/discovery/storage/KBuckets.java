@@ -4,14 +4,12 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.time.Clock;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.apache.tuweni.bytes.Bytes;
@@ -98,12 +96,6 @@ public class KBuckets {
   public synchronized void onNodeContacted(NodeRecord node) {
     final int distance = Functions.logDistance(homeNodeId, node.getNodeId());
     getOrCreateBucket(distance).ifPresent(bucket -> bucket.onLivenessConfirmed(node));
-  }
-
-  public Collection<NodeRecord> getAllKnownNodes() {
-    return buckets.values().stream()
-        .flatMap(bucket -> bucket.getAllNodes().stream())
-        .collect(Collectors.toList());
   }
 
   /** Performs maintenance on the least recently touch bucket (excluding any empty buckets). */

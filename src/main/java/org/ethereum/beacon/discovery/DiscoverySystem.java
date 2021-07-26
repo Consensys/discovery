@@ -110,10 +110,6 @@ public class DiscoverySystem {
     return buckets.streamClosestNodes(Bytes32.ZERO);
   }
 
-  public Collection<NodeRecord> getAllKnownNodes() {
-    return buckets.getAllKnownNodes();
-  }
-
   public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {
     return taskManager.searchForNewPeers();
   }
