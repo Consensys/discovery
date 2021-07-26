@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNullElseGet;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -16,12 +17,15 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -177,7 +181,7 @@ public class DiscoverySystemBuilder {
         localNodeRecordStore.getLocalNodeRecord().isValid(), "Local node record is invalid");
 
     final DiscoveryManager discoveryManager = buildDiscoveryManager();
-    livenessChecker.setPinger(discoveryManager::ping);
+    livenessChecker.setPinger(new AsyncPinger(discoveryManager::ping));
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
@@ -208,5 +212,30 @@ public class DiscoverySystemBuilder {
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,
         talkHandler);
+  }
+
+  /**
+   * A {@link Pinger} wrapper implementation that ensures that the ping is triggered from a separate
+   * thread, with no locks held. This ensures that locks are always acquired "outside to in".
+   * Without this the {@link LivenessChecker} may be in a synchronized block when it triggers a ping
+   * which then needs to access {@link KBuckets} and take its lock out of the usual order. By
+   * releasing the {@link LivenessChecker} lock first, this ensures a consistent order is always
+   * used.
+   *
+   * <p>It also means that pings are consistently triggered in the same way that external code
+   * calling {@link DiscoveryManager#ping(NodeRecord)} would.
+   */
+  private static final class AsyncPinger implements Pinger {
+    private final Pinger delegate;
+
+    private AsyncPinger(final Pinger delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public CompletableFuture<Void> ping(final NodeRecord node) {
+      return CompletableFuture.supplyAsync(() -> delegate.ping(node).orTimeout(500, MILLISECONDS))
+          .thenCompose(Function.identity());
+    }
   }
 }
