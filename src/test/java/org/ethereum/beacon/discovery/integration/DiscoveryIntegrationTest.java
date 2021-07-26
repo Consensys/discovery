@@ -145,11 +145,11 @@ public class DiscoveryIntegrationTest {
 
     waitFor(
         () -> {
-          waitFor(node1.searchForNewPeers(), 5);
-          waitFor(node2.searchForNewPeers(), 5);
-          assertKnownNodes(bootnode, node1, node2);
+          waitFor(node1.searchForNewPeers(), 10);
+          waitFor(node2.searchForNewPeers(), 10);
           assertKnownNodes(node2, bootnode, node1);
           assertKnownNodes(node1, bootnode, node2);
+          assertKnownNodes(bootnode, node1, node2);
         });
   }
 
@@ -157,12 +157,16 @@ public class DiscoveryIntegrationTest {
       final DiscoverySystem source, final DiscoverySystem... expectedNodes) {
     final Set<NodeRecord> actual =
         source
-            .streamKnownNodes()
+            .streamLiveNodes()
             .filter(record -> !record.equals(source.getLocalNodeRecord()))
             .collect(toSet());
     final Set<NodeRecord> expected =
         Stream.of(expectedNodes).map(DiscoverySystem::getLocalNodeRecord).collect(toSet());
-    assertEquals(expected, actual);
+    assertThat(source.getAllKnownNodes())
+        .describedAs("All nodes")
+        .containsExactlyInAnyOrderElementsOf(expected);
+
+    assertThat(actual).describedAs("Iterated nodes").containsExactlyInAnyOrderElementsOf(expected);
   }
 
   @Test
@@ -270,7 +274,7 @@ public class DiscoveryIntegrationTest {
 
   private Optional<NodeRecord> findNodeRecordByNodeId(
       final DiscoverySystem searchNode, final Bytes nodeId) {
-    return searchNode.streamKnownNodes().filter(node -> node.getNodeId().equals(nodeId)).findAny();
+    return searchNode.streamLiveNodes().filter(node -> node.getNodeId().equals(nodeId)).findAny();
   }
 
   @Test

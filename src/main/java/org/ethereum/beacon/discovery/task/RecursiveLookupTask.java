@@ -41,6 +41,7 @@ public class RecursiveLookupTask {
       final int totalQueryLimit,
       final Bytes targetNodeId,
       final Bytes homeNodeId) {
+    checkArgument(totalQueryLimit > 0, "Must allow positive number of queries");
     this.buckets = buckets;
     this.sendFindNodesRequest = sendFindNodesRequest;
     this.remainingTotalQueryLimit = totalQueryLimit;
@@ -62,6 +63,8 @@ public class RecursiveLookupTask {
 
   private synchronized void sendRequests() {
     checkArgument(availableQuerySlots >= 0, "Available query slots should never be negative");
+    checkArgument(
+        remainingTotalQueryLimit >= 0, "Remaining total query limit should never be negative");
     if (availableQuerySlots == 0 || future.isDone()) {
       return;
     }
@@ -69,14 +72,17 @@ public class RecursiveLookupTask {
       future.complete(foundNodes);
       return;
     }
+    final int maxNodesToQuery = Math.min(availableQuerySlots, remainingTotalQueryLimit);
     final Stream<NodeRecord> closestNodesFromBuckets =
         buckets
             .streamClosestNodes(targetNodeId)
             .filter(record -> !queriedNodeIds.contains(record.getNodeId()))
-            .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit));
-    Stream.concat(closestNodesFromBuckets, foundNodes.stream())
+            .limit(maxNodesToQuery);
+    Stream.concat(
+            closestNodesFromBuckets,
+            foundNodes.stream().filter(record -> !queriedNodeIds.contains(record.getNodeId())))
         .sorted(distanceComparator)
-        .limit(Math.min(availableQuerySlots, remainingTotalQueryLimit))
+        .limit(maxNodesToQuery)
         .forEach(this::queryPeer);
     if (availableQuerySlots == MAX_CONCURRENT_QUERIES) {
       // There are no in-progress queries even after we looked for more to send so must have run out
@@ -91,17 +97,20 @@ public class RecursiveLookupTask {
     remainingTotalQueryLimit--;
     sendFindNodesRequest
         .findNodes(peer, Functions.logDistance(peer.getNodeId(), targetNodeId))
-        .whenComplete(
-            (nodes, error) -> {
-              if (error != null) {
-                LOG.debug("Failed to query " + peer.getNodeId(), error);
-              }
-              synchronized (RecursiveLookupTask.this) {
-                availableQuerySlots++;
-                foundNodes.addAll(nodes);
-                sendRequests();
-              }
-            });
+        // Complete async to ensure all queries are sent before any responses are handled
+        // Otherwise we can wind up sending too many queries
+        .whenCompleteAsync(this::onQueryComplete);
+  }
+
+  private synchronized void onQueryComplete(
+      final Collection<NodeRecord> nodes, final Throwable error) {
+    availableQuerySlots++;
+    if (error != null) {
+      LOG.debug("Find nodes query failed", error);
+    } else {
+      foundNodes.addAll(nodes);
+    }
+    sendRequests();
   }
 
   public interface FindNodesAction {

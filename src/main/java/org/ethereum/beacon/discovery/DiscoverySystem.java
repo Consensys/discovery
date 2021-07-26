@@ -106,8 +106,12 @@ public class DiscoverySystem {
     return discoveryManager.talk(nodeRecord, protocol, request);
   }
 
-  public Stream<NodeRecord> streamKnownNodes() {
+  public Stream<NodeRecord> streamLiveNodes() {
     return buckets.streamClosestNodes(Bytes32.ZERO);
+  }
+
+  public Collection<NodeRecord> getAllKnownNodes() {
+    return buckets.getAllKnownNodes();
   }
 
   public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {

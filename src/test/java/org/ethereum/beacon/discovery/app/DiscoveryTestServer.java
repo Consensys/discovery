@@ -122,7 +122,7 @@ public class DiscoveryTestServer {
     while (true) {
       List<NodeRecord> newActiveNodes =
           discoverySystem
-              .streamKnownNodes()
+              .streamLiveNodes()
               .filter(r -> !activeKnownNodes.contains(r))
               .collect(Collectors.toList());
 

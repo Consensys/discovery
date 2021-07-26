@@ -29,6 +29,7 @@ public class KBucketsIterator implements Iterator<NodeRecord> {
     final int initialDistance = Functions.logDistance(homeNodeId, targetNodeId);
     lowDistance = initialDistance;
     highDistance = initialDistance;
+    updateCurrentBatch();
   }
 
   @Override
@@ -37,15 +38,19 @@ public class KBucketsIterator implements Iterator<NodeRecord> {
       // Move to the next buckets
       lowDistance--;
       highDistance++;
-      currentBatch =
-          Stream.concat(
-                  buckets.getLiveNodeRecords(lowDistance), buckets.getLiveNodeRecords(highDistance))
-              .sorted(
-                  Comparator.comparing(node -> Functions.distance(targetNodeId, node.getNodeId())))
-              .collect(Collectors.toList())
-              .iterator();
+      updateCurrentBatch();
     }
     return currentBatch.hasNext();
+  }
+
+  private void updateCurrentBatch() {
+    currentBatch =
+        Stream.concat(
+                buckets.getLiveNodeRecords(lowDistance), buckets.getLiveNodeRecords(highDistance))
+            .sorted(
+                Comparator.comparing(node -> Functions.distance(targetNodeId, node.getNodeId())))
+            .collect(Collectors.toList())
+            .iterator();
   }
 
   @Override
