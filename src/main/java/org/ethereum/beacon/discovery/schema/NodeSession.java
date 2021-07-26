@@ -176,8 +176,6 @@ public class NodeSession {
             (aVoid, throwable) -> {
               if (throwable == null) {
                 updateLiveness();
-              } else {
-                throwable.printStackTrace();
               }
             });
     RequestInfo requestInfo = RequestInfo.create(wrappedId, request);
