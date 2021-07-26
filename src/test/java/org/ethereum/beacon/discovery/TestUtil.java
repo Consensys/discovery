@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery;
 
+import java.net.InetSocketAddress;
+import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -152,6 +154,17 @@ public class TestUtil {
         }
       }
     }
+  }
+
+  public static NodeRecord createNodeAtDistance(final Bytes sourceNode, final int distance) {
+    final BitSet bits = BitSet.valueOf(sourceNode.reverse().toArray());
+    bits.flip(distance - 1);
+    final byte[] targetNodeId = new byte[sourceNode.size()];
+    final byte[] src = bits.toByteArray();
+    System.arraycopy(src, 0, targetNodeId, 0, src.length);
+    final Bytes nodeId = Bytes.wrap(targetNodeId).reverse();
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(
+        nodeId, new InetSocketAddress("127.0.0.1", 2));
   }
 
   public interface ThrowingRunnable {

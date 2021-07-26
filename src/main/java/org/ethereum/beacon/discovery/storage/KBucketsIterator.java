@@ -4,10 +4,12 @@
 
 package org.ethereum.beacon.discovery.storage;
 
+import static java.util.stream.Collectors.toCollection;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.stream.Collectors;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -16,7 +18,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 public class KBucketsIterator implements Iterator<NodeRecord> {
 
   private final KBuckets buckets;
-  private final Bytes targetNodeId;
+  private final Comparator<NodeRecord> distanceComparator;
   private int lowDistance;
   private int highDistance;
 
@@ -25,31 +27,38 @@ public class KBucketsIterator implements Iterator<NodeRecord> {
   public KBucketsIterator(
       final KBuckets buckets, final Bytes homeNodeId, final Bytes targetNodeId) {
     this.buckets = buckets;
-    this.targetNodeId = targetNodeId;
+    this.distanceComparator =
+        Comparator.comparing(node -> Functions.distance(targetNodeId, node.getNodeId()));
     final int initialDistance = Functions.logDistance(homeNodeId, targetNodeId);
     lowDistance = initialDistance;
     highDistance = initialDistance;
-    updateCurrentBatch();
   }
 
   @Override
   public boolean hasNext() {
-    while (!currentBatch.hasNext() && (lowDistance > 1 || highDistance < KBuckets.MAXIMUM_BUCKET)) {
-      // Move to the next buckets
+    while (!currentBatch.hasNext() && hasMoreBucketsToScan()) {
+      updateCurrentBatch();
+      // Prepare to the next buckets
       lowDistance--;
       highDistance++;
-      updateCurrentBatch();
     }
     return currentBatch.hasNext();
   }
 
+  private boolean hasMoreBucketsToScan() {
+    return lowDistance > 0 || highDistance <= KBuckets.MAXIMUM_BUCKET;
+  }
+
   private void updateCurrentBatch() {
+    final Stream<NodeRecord> lowNodes =
+        lowDistance > 0 ? buckets.getLiveNodeRecords(lowDistance) : Stream.empty();
+    final Stream<NodeRecord> highNodes =
+        highDistance > lowDistance && highDistance <= KBuckets.MAXIMUM_BUCKET
+            ? buckets.getLiveNodeRecords(highDistance)
+            : Stream.empty();
     currentBatch =
-        Stream.concat(
-                buckets.getLiveNodeRecords(lowDistance), buckets.getLiveNodeRecords(highDistance))
-            .sorted(
-                Comparator.comparing(node -> Functions.distance(targetNodeId, node.getNodeId())))
-            .collect(Collectors.toList())
+        Stream.concat(lowNodes, highNodes)
+            .collect(toCollection(() -> new TreeSet<>(distanceComparator)))
             .iterator();
   }
 
