@@ -21,7 +21,6 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -130,14 +129,9 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
           packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
-      enr.ifPresent(
-          r -> {
-            session.updateNodeRecord(r);
-            session.getNodeTable().save(NodeRecordInfo.createDefault(r));
-          });
-
       session.setState(AUTHENTICATED);
       envelope.remove(Field.PACKET_HANDSHAKE);
+      enr.ifPresent(session::onNodeRecordReceived);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       logger.debug(

@@ -8,7 +8,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -54,6 +57,13 @@ public class KBuckets {
     return getBucket(distance).stream().flatMap(bucket -> bucket.getAllNodes().stream());
   }
 
+  public Stream<NodeRecord> streamClosestNodes(Bytes nodeId) {
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(
+            new KBucketsIterator(this, homeNodeId, nodeId), Spliterator.ORDERED),
+        false);
+  }
+
   private Optional<KBucket> getBucket(final int distance) {
     return Optional.ofNullable(buckets.get(distance));
   }
@@ -65,6 +75,15 @@ public class KBuckets {
       return;
     }
     getOrCreateBucket(distance).ifPresent(bucket -> bucket.offer(node));
+  }
+
+  public synchronized BucketStats getStats() {
+    final BucketStats stats = new BucketStats();
+    buckets.forEach(
+        (distance, bucket) ->
+            stats.setBucketStat(
+                distance, bucket.getLiveNodes().size(), bucket.getAllNodes().size()));
+    return stats;
   }
 
   /**
@@ -94,5 +113,14 @@ public class KBuckets {
     }
     return Optional.of(
         buckets.computeIfAbsent(distance, __ -> new KBucket(livenessChecker, clock)));
+  }
+
+  public synchronized Optional<NodeRecord> getNode(final Bytes nodeId) {
+    return getBucket(Functions.logDistance(homeNodeId, nodeId))
+        .flatMap(bucket -> bucket.getNode(nodeId));
+  }
+
+  public synchronized boolean containsNode(final Bytes nodeId) {
+    return getNode(nodeId).isPresent();
   }
 }

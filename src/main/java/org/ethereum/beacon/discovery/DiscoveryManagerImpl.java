@@ -48,7 +48,6 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -67,7 +66,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   public DiscoveryManagerImpl(
       NettyDiscoveryServer discoveryServer,
-      NodeTable nodeTable,
       KBuckets nodeBucketStorage,
       LocalNodeRecordStore localNodeRecordStore,
       Bytes homeNodePrivateKey,
@@ -84,7 +82,6 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             localNodeRecordStore,
             homeNodePrivateKey,
             nodeBucketStorage,
-            nodeTable,
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline

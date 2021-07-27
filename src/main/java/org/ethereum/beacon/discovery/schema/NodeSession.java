@@ -39,10 +39,8 @@ import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.util.Functions;
 
 /**
  * Stores session status and all keys for discovery message exchange between us, `homeNode` and the
@@ -52,11 +50,9 @@ public class NodeSession {
   private static final Logger logger = LogManager.getLogger(NodeSession.class);
 
   public static final int REQUEST_ID_SIZE = 8;
-  private static final boolean IS_LIVENESS_UPDATE = true;
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
-  private final NodeTable nodeTable;
   private final KBuckets nodeBucketStorage;
   private final InetSocketAddress remoteAddress;
   private final Consumer<NetworkParcel> outgoingPipeline;
@@ -64,7 +60,6 @@ public class NodeSession {
   private final Bytes nodeId;
   private Optional<NodeRecord> nodeRecord;
   private SessionState state = SessionState.INITIAL;
-  private Bytes idNonce;
   private Bytes initiatorKey;
   private Bytes recipientKey;
   private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
@@ -82,7 +77,6 @@ public class NodeSession {
       NodeSessionManager nodeSessionManager,
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
-      NodeTable nodeTable,
       KBuckets nodeBucketStorage,
       Consumer<NetworkParcel> outgoingPipeline,
       Random rnd,
@@ -92,7 +86,6 @@ public class NodeSession {
     this.remoteAddress = remoteAddress;
     this.localNodeRecordStore = localNodeRecordStore;
     this.nodeSessionManager = nodeSessionManager;
-    this.nodeTable = nodeTable;
     this.nodeBucketStorage = nodeBucketStorage;
     this.staticNodeKey = staticNodeKey;
     this.homeNodeId = Bytes32.wrap(localNodeRecordStore.getLocalNodeRecord().getNodeId());
@@ -116,15 +109,6 @@ public class NodeSession {
 
   public Optional<Bytes> getWhoAreYouChallenge() {
     return whoAreYouChallenge;
-  }
-
-  public synchronized void updateNodeRecord(NodeRecord nodeRecord) {
-    logger.trace(
-        () ->
-            String.format(
-                "NodeRecord updated from %s to %s in session %s",
-                this.nodeRecord, nodeRecord, this));
-    this.nodeRecord = Optional.of(nodeRecord);
   }
 
   public void sendOutgoingOrdinary(V5Message message) {
@@ -186,16 +170,14 @@ public class NodeSession {
     byte[] requestId = new byte[REQUEST_ID_SIZE];
     rnd.nextBytes(requestId);
     Bytes wrappedId = Bytes.wrap(requestId);
-    if (IS_LIVENESS_UPDATE) {
-      request
-          .getResultPromise()
-          .whenComplete(
-              (aVoid, throwable) -> {
-                if (throwable == null) {
-                  updateLiveness();
-                }
-              });
-    }
+    request
+        .getResultPromise()
+        .whenComplete(
+            (aVoid, throwable) -> {
+              if (throwable == null) {
+                updateLiveness();
+              }
+            });
     RequestInfo requestInfo = RequestInfo.create(wrappedId, request);
     requestIdStatuses.put(wrappedId, requestInfo);
     requestExpirationScheduler.put(
@@ -298,13 +280,7 @@ public class NodeSession {
 
   /** Updates nodeRecord {@link NodeStatus} to ACTIVE of the node associated with this session */
   public synchronized void updateLiveness() {
-    nodeRecord.ifPresent(
-        record -> {
-          NodeRecordInfo nodeRecordInfo =
-              new NodeRecordInfo(record, Functions.getTime(), NodeStatus.ACTIVE, 0);
-          nodeTable.save(nodeRecordInfo);
-          nodeBucketStorage.onNodeContacted(record);
-        });
+    nodeRecord.ifPresent(nodeBucketStorage::onNodeContacted);
   }
 
   private synchronized RequestInfo clearRequestInfo(Bytes requestId) {
@@ -334,24 +310,29 @@ public class NodeSession {
         .findFirst();
   }
 
-  public NodeTable getNodeTable() {
-    return nodeTable;
-  }
-
   public Stream<NodeRecord> getNodeRecordsInBucket(int distance) {
     return nodeBucketStorage.getLiveNodeRecords(distance);
   }
 
-  public synchronized Bytes getIdNonce() {
-    return idNonce;
-  }
-
-  public synchronized void setIdNonce(Bytes idNonce) {
-    this.idNonce = idNonce;
-  }
-
   public NodeRecord getHomeNodeRecord() {
     return localNodeRecordStore.getLocalNodeRecord();
+  }
+
+  public synchronized void onNodeRecordReceived(final NodeRecord node) {
+    if (node.getNodeId().equals(nodeId) && isUpdateRequired(node, nodeRecord)) {
+      logger.trace(
+          () ->
+              String.format(
+                  "NodeRecord updated from %s to %s in session %s", nodeRecord, node, this));
+      nodeRecord = Optional.of(node);
+    }
+    nodeBucketStorage.offer(node);
+  }
+
+  private boolean isUpdateRequired(
+      final NodeRecord newRecord, final Optional<NodeRecord> existingRecord) {
+    return existingRecord.isEmpty()
+        || existingRecord.get().getSeq().compareTo(newRecord.getSeq()) < 0;
   }
 
   @Override

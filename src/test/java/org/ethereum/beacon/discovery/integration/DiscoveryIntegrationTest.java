@@ -7,12 +7,12 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.TestUtil.waitFor;
 import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.BindException;
 import java.net.InetAddress;
@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -40,7 +39,6 @@ import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
@@ -147,11 +145,11 @@ public class DiscoveryIntegrationTest {
 
     waitFor(
         () -> {
-          waitFor(node1.searchForNewPeers());
-          waitFor(node2.searchForNewPeers());
-          assertKnownNodes(bootnode, node1, node2);
+          waitFor(node1.searchForNewPeers(), 10);
+          waitFor(node2.searchForNewPeers(), 10);
           assertKnownNodes(node2, bootnode, node1);
           assertKnownNodes(node1, bootnode, node2);
+          assertKnownNodes(bootnode, node1, node2);
         });
   }
 
@@ -159,13 +157,13 @@ public class DiscoveryIntegrationTest {
       final DiscoverySystem source, final DiscoverySystem... expectedNodes) {
     final Set<NodeRecord> actual =
         source
-            .streamKnownNodes()
-            .map(NodeRecordInfo::getNode)
+            .streamLiveNodes()
             .filter(record -> !record.equals(source.getLocalNodeRecord()))
             .collect(toSet());
     final Set<NodeRecord> expected =
         Stream.of(expectedNodes).map(DiscoverySystem::getLocalNodeRecord).collect(toSet());
-    assertEquals(expected, actual);
+
+    assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
 
   @Test
@@ -196,26 +194,15 @@ public class DiscoveryIntegrationTest {
 
     final DiscoverySystem localNode = createDiscoveryClient("0.0.0.0", remoteNodeRecords);
 
-    for (int i = 0, remoteNodeRecordsLength = remoteNodeRecords.length;
-        i < remoteNodeRecordsLength;
-        i++) {
-      try {
-        waitFor(localNode.ping(remoteNodeRecords[i]));
-      } catch (final Throwable t) {
-        fail(
-            new Exception(
-                "Failed to ping node "
-                    + i
-                    + "  Local node seqNum: "
-                    + localNode.getLocalNodeRecord()));
-      }
-    }
-
-    // Address should have been updated. Most likely to 127.0.0.1 but it might be something else
-    // if the system is configured unusually or uses IPv6 in preference to v4.
-    final InetAddress updatedAddress =
-        localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
-    assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+    // Address should have been updated by automatically pinging the bootnodes.
+    // Most likely to 127.0.0.1 but it might be something else if the system is configured unusually
+    // or uses IPv6 in preference to v4.
+    waitFor(
+        () -> {
+          final InetAddress updatedAddress =
+              localNode.getLocalNodeRecord().getUdpAddress().orElseThrow().getAddress();
+          assertThat(updatedAddress).isNotEqualTo(InetAddress.getByName("0.0.0.0"));
+        });
   }
 
   @Test
@@ -284,11 +271,7 @@ public class DiscoveryIntegrationTest {
 
   private Optional<NodeRecord> findNodeRecordByNodeId(
       final DiscoverySystem searchNode, final Bytes nodeId) {
-    return searchNode
-        .streamKnownNodes()
-        .map(NodeRecordInfo::getNode)
-        .filter(node -> node.getNodeId().equals(nodeId))
-        .findAny();
+    return searchNode.streamLiveNodes().filter(node -> node.getNodeId().equals(nodeId)).findAny();
   }
 
   @Test
@@ -405,35 +388,5 @@ public class DiscoveryIntegrationTest {
       }
     }
     throw new IllegalStateException("Could not find a free port after multiple attempts");
-  }
-
-  private void waitFor(final CompletableFuture<?> future) throws Exception {
-    waitFor(future, 30);
-  }
-
-  private void waitFor(final CompletableFuture<?> future, final int timeout) throws Exception {
-    future.get(timeout, TimeUnit.SECONDS);
-  }
-
-  private void waitFor(final ThrowingRunnable assertion) throws Exception {
-    int attempts = 0;
-    while (true) {
-      try {
-        assertion.run();
-        return;
-      } catch (Throwable t) {
-        if (attempts < 60) {
-          attempts++;
-          Thread.sleep(1000);
-        } else {
-          throw t;
-        }
-      }
-    }
-  }
-
-  private interface ThrowingRunnable {
-
-    void run() throws Exception;
   }
 }

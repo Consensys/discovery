@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +21,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
- * Sends FindNode to closest NodeRecords added via {@link #add(NodeRecord, int)}. Tasks is called
+ * Sends FindNode to closest NodeRecords added via {@link #add(NodeRecord, List)}. Tasks is called
  * failed if timeout is reached and reply from node is not received.
  */
 public class RecursiveLookupTasks {
@@ -41,7 +41,8 @@ public class RecursiveLookupTasks {
         expirationSchedulerFactory.create(timeout.get(ChronoUnit.SECONDS), TimeUnit.SECONDS);
   }
 
-  public CompletableFuture<Collection<NodeRecord>> add(NodeRecord nodeRecord, int distance) {
+  public CompletableFuture<Collection<NodeRecord>> add(
+      NodeRecord nodeRecord, List<Integer> distances) {
     if (!currentTasks.add(nodeRecord.getNodeId())) {
       return CompletableFuture.failedFuture(new IllegalStateException("Already querying node"));
     }
@@ -50,7 +51,7 @@ public class RecursiveLookupTasks {
     scheduler.execute(
         () -> {
           CompletableFuture<Collection<NodeRecord>> request =
-              discoveryManager.findNodes(nodeRecord, Collections.singletonList(distance));
+              discoveryManager.findNodes(nodeRecord, distances);
           addTimeout(nodeRecord, request);
           request.whenComplete(
               (foundNodes, throwable) -> {

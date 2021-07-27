@@ -4,7 +4,11 @@
 
 package org.ethereum.beacon.discovery;
 
+import java.net.InetSocketAddress;
+import java.util.BitSet;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
@@ -124,5 +128,47 @@ public class TestUtil {
         && that.getEphemeralPubKey().equals(other.getEphemeralPubKey())
         && that.getIdSignature().equals(other.getIdSignature())
         && that.getNodeRecord(nodeRecordFactory).equals(other.getNodeRecord(nodeRecordFactory));
+  }
+
+  public static void waitFor(final CompletableFuture<?> future) throws Exception {
+    waitFor(future, 30);
+  }
+
+  public static void waitFor(final CompletableFuture<?> future, final int timeout)
+      throws Exception {
+    future.get(timeout, TimeUnit.SECONDS);
+  }
+
+  public static void waitFor(final ThrowingRunnable assertion) throws Exception {
+    int attempts = 0;
+    while (true) {
+      try {
+        assertion.run();
+        return;
+      } catch (Throwable t) {
+        if (attempts < 60) {
+          attempts++;
+          Thread.sleep(1000);
+        } else {
+          throw t;
+        }
+      }
+    }
+  }
+
+  public static NodeRecord createNodeAtDistance(final Bytes sourceNode, final int distance) {
+    final BitSet bits = BitSet.valueOf(sourceNode.reverse().toArray());
+    bits.flip(distance - 1);
+    final byte[] targetNodeId = new byte[sourceNode.size()];
+    final byte[] src = bits.toByteArray();
+    System.arraycopy(src, 0, targetNodeId, 0, src.length);
+    final Bytes nodeId = Bytes.wrap(targetNodeId).reverse();
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(
+        nodeId, new InetSocketAddress("127.0.0.1", 2));
+  }
+
+  public interface ThrowingRunnable {
+
+    void run() throws Exception;
   }
 }

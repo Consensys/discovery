@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import java.math.BigInteger;
+import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.Random;
 import org.apache.logging.log4j.LogManager;
@@ -230,6 +231,10 @@ public class Functions {
       }
     }
     return logDistance;
+  }
+
+  public static BigInteger distance(Bytes nodeId1, Bytes nodeId2) {
+    return nodeId1.xor(nodeId2).toUnsignedBigInteger(ByteOrder.LITTLE_ENDIAN);
   }
 
   /**

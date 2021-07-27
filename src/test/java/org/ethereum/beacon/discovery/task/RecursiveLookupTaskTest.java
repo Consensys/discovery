@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
@@ -27,9 +26,7 @@ import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
-import org.ethereum.beacon.discovery.schema.NodeStatus;
-import org.ethereum.beacon.discovery.storage.NodeTable;
+import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.task.RecursiveLookupTask.FindNodesAction;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,29 +46,29 @@ class RecursiveLookupTaskTest {
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDAAAA");
   public static final Bytes PEER5_ID =
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD9999");
-  public static final NodeRecordInfo PEER1 = createPeer(PEER1_ID);
-  public static final NodeRecordInfo PEER2 = createPeer(PEER2_ID);
-  public static final NodeRecordInfo PEER3 = createPeer(PEER3_ID);
-  public static final NodeRecordInfo PEER4 = createPeer(PEER4_ID);
-  public static final NodeRecordInfo PEER5 = createPeer(PEER5_ID);
+  public static final NodeRecord PEER1 = createPeer(PEER1_ID);
+  public static final NodeRecord PEER2 = createPeer(PEER2_ID);
+  public static final NodeRecord PEER3 = createPeer(PEER3_ID);
+  public static final NodeRecord PEER4 = createPeer(PEER4_ID);
+  public static final NodeRecord PEER5 = createPeer(PEER5_ID);
 
   private final Bytes TARGET =
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
-  private final NodeTable nodeTable = mock(NodeTable.class);
+  private final KBuckets buckets = mock(KBuckets.class);
   private final FindNodesAction findNodesAction = mock(FindNodesAction.class);
 
-  private final Map<NodeRecordInfo, CompletableFuture<Collection<NodeRecord>>> findNodeRequests =
+  private final Map<NodeRecord, CompletableFuture<Collection<NodeRecord>>> findNodeRequests =
       new HashMap<>();
 
   private final RecursiveLookupTask task =
-      new RecursiveLookupTask(nodeTable, findNodesAction, 4, TARGET);
+      new RecursiveLookupTask(buckets, findNodesAction, 4, TARGET, TARGET);
 
   @BeforeEach
   public void setUp() {
     when(findNodesAction.findNodes(any(), anyInt()))
         .then(
             invocation -> {
-              final NodeRecordInfo queriedPeer = invocation.getArgument(0);
+              final NodeRecord queriedPeer = invocation.getArgument(0);
               final CompletableFuture<Collection<NodeRecord>> result = new CompletableFuture<>();
               findNodeRequests.put(queriedPeer, result);
               return result;
@@ -80,7 +77,7 @@ class RecursiveLookupTaskTest {
 
   @Test
   public void shouldQueryThreeClosestNodesToTarget() {
-    when(nodeTable.streamClosestNodes(TARGET, 0)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
+    when(buckets.streamClosestNodes(TARGET)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
 
     task.execute();
 
@@ -91,41 +88,9 @@ class RecursiveLookupTaskTest {
   }
 
   @Test
-  public void shouldNotQueryNodesThatAreNotActive() {
-    final NodeRecordInfo nonActivePeer = createPeer(PEER1_ID, NodeStatus.SLEEP);
-    when(nodeTable.streamClosestNodes(TARGET, 0))
-        .thenReturn(Stream.of(nonActivePeer, PEER2, PEER3, PEER4));
-
-    task.execute();
-
-    // Skips PEER1_ID because it's non-active
-    verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
-    verify(findNodesAction).findNodes(PEER3, Functions.logDistance(TARGET, PEER3_ID));
-    verify(findNodesAction).findNodes(PEER4, Functions.logDistance(TARGET, PEER4_ID));
-    verifyNoMoreInteractions(findNodesAction);
-  }
-
-  @Test
-  public void shouldNotQueryNodesThatHaveNotCheckedLivenessRecently() {
-    final NodeRecordInfo nonActivePeer =
-        createPeer(
-            PEER1_ID, Functions.getTime() - DiscoveryTaskManager.STATUS_EXPIRATION_SECONDS - 1);
-    when(nodeTable.streamClosestNodes(TARGET, 0))
-        .thenReturn(Stream.of(nonActivePeer, PEER2, PEER3, PEER4));
-
-    task.execute();
-
-    // Skips PEER1_ID because it's non-active
-    verify(findNodesAction).findNodes(PEER2, Functions.logDistance(TARGET, PEER2_ID));
-    verify(findNodesAction).findNodes(PEER3, Functions.logDistance(TARGET, PEER3_ID));
-    verify(findNodesAction).findNodes(PEER4, Functions.logDistance(TARGET, PEER4_ID));
-    verifyNoMoreInteractions(findNodesAction);
-  }
-
-  @Test
   public void shouldQueryNextClosestPeerWhenRequestCompletes() {
     // thenAnswer so a fresh stream is returned on each invocation
-    when(nodeTable.streamClosestNodes(TARGET, 0))
+    when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4));
 
     final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
@@ -156,8 +121,7 @@ class RecursiveLookupTaskTest {
 
   @Test
   public void shouldStopWhenTargetNodeIsFound() {
-    final NodeRecordInfo targetPeer = createPeer(TARGET);
-    when(nodeTable.streamClosestNodes(TARGET, 0)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
+    when(buckets.streamClosestNodes(TARGET)).thenReturn(Stream.of(PEER1, PEER2, PEER3, PEER4));
 
     final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
 
@@ -168,7 +132,7 @@ class RecursiveLookupTaskTest {
     assertFalse(complete.isDone());
 
     // Request to first peer completes. Target peer has now been found.
-    when(nodeTable.getNode(TARGET)).thenReturn(Optional.of(targetPeer));
+    when(buckets.containsNode(TARGET)).thenReturn(true);
     findNodeRequests.get(PEER1).complete(emptyList());
 
     // No more requests are made
@@ -184,7 +148,7 @@ class RecursiveLookupTaskTest {
 
   @Test
   public void shouldStopWhenTotalQueryLimitIsReached() {
-    when(nodeTable.streamClosestNodes(TARGET, 0))
+    when(buckets.streamClosestNodes(TARGET))
         .thenAnswer(invocation -> Stream.of(PEER1, PEER2, PEER3, PEER4, PEER5));
 
     final CompletableFuture<Collection<NodeRecord>> complete = task.execute();
@@ -211,27 +175,10 @@ class RecursiveLookupTaskTest {
     assertTrue(complete.isDone());
   }
 
-  private static NodeRecordInfo createPeer(final Bytes nodeId) {
-    return createPeer(nodeId, NodeStatus.ACTIVE);
-  }
-
-  private static NodeRecordInfo createPeer(final Bytes nodeId, final long lastRetry) {
-    return createPeer(nodeId, NodeStatus.ACTIVE, lastRetry);
-  }
-
-  private static NodeRecordInfo createPeer(final Bytes nodeId, final NodeStatus status) {
-    return createPeer(nodeId, status, Functions.getTime() + 100000000L);
-  }
-
-  private static NodeRecordInfo createPeer(
-      final Bytes nodeId, final NodeStatus status, final long lastRetry) {
-    return new NodeRecordInfo(
-        NODE_RECORD_FACTORY.createFromValues(
-            UInt64.ONE,
-            new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, nodeId)),
-        lastRetry, // Long way in the future
-        status,
-        0);
+  private static NodeRecord createPeer(final Bytes nodeId) {
+    return NODE_RECORD_FACTORY.createFromValues(
+        UInt64.ONE,
+        new EnrField(EnrField.ID, IdentitySchema.V4),
+        new EnrField(EnrField.PKEY_SECP256K1, nodeId));
   }
 }

@@ -25,7 +25,6 @@ import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ class NodesHandlerTest {
   private static final Bytes PEER_ID = Bytes.fromHexString("0x1234567890ABCDEF");
   private static final Bytes REQUEST_ID = Bytes.fromHexString("0x1234");
   private final NodeSession session = mock(NodeSession.class);
-  private final NodeTable nodeTable = mock(NodeTable.class);
   private final FindNodeResponseHandler responseHandler = mock(FindNodeResponseHandler.class);
   private final Request<Void> request =
       new Request<>(
@@ -48,7 +46,6 @@ class NodesHandlerTest {
 
   @BeforeEach
   public void setUp() {
-    when(session.getNodeTable()).thenReturn(nodeTable);
     when(session.getNodeId()).thenReturn(PEER_ID);
 
     when(session.getRequestInfo(REQUEST_ID)).thenReturn(Optional.of(requestInfo));

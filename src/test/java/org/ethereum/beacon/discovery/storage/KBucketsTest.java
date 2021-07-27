@@ -10,10 +10,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.util.BitSet;
-import org.apache.tuweni.bytes.Bytes;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
+import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -22,13 +24,12 @@ import org.junit.jupiter.api.Test;
 
 class KBucketsTest {
 
-  private static final int ID_SIZE = 32;
   private final LocalNodeRecordStore localNodeRecordStore = mock(LocalNodeRecordStore.class);
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
   private final StubClock clock = new StubClock();
   private final NodeRecord localNode =
       SimpleIdentitySchemaInterpreter.createNodeRecord(
-          Bytes.wrap(new byte[ID_SIZE]), new InetSocketAddress("127.0.0.1", 1));
+          Bytes32.ZERO, new InetSocketAddress("127.0.0.1", 1));
 
   private KBuckets buckets;
 
@@ -101,14 +102,43 @@ class KBucketsTest {
     verifyNoMoreInteractions(livenessChecker);
   }
 
+  @Test
+  void streamClosestNodes_shouldIncludeAllNodesInBucket() {
+    final List<NodeRecord> nodes = new ArrayList<>();
+    for (int distance = 1; distance <= KBuckets.MAXIMUM_BUCKET; distance++) {
+      final NodeRecord node = createNodeAtDistance(distance);
+      nodes.add(node);
+      buckets.onNodeContacted(node);
+    }
+
+    assertThat(buckets.streamClosestNodes(Bytes32.ZERO)).containsExactlyElementsOf(nodes);
+  }
+
+  @Test
+  void streamClosestNodes_shouldIncludeNodesInInitialBucket() {
+    final NodeRecord node = createNodeAtDistance(5);
+    buckets.onNodeContacted(node);
+
+    assertThat(buckets.streamClosestNodes(node.getNodeId())).contains(node);
+  }
+
+  @Test
+  void streamClosestNodes_shouldIncludeNodesInMinimumAndMaximumBucket() {
+    final NodeRecord closestNode = createNodeAtDistance(1);
+    final NodeRecord furthestNode = createNodeAtDistance(KBuckets.MAXIMUM_BUCKET);
+    buckets.onNodeContacted(closestNode);
+    buckets.onNodeContacted(furthestNode);
+
+    assertThat(buckets.streamClosestNodes(createNodeAtDistance(10).getNodeId()))
+        .contains(closestNode, furthestNode);
+  }
+
+  @Test
+  void streamClosestNodes_shouldNotIncludeLocalNode() {
+    assertThat(buckets.streamClosestNodes(localNode.getNodeId())).isEmpty();
+  }
+
   private NodeRecord createNodeAtDistance(final int distance) {
-    final BitSet bits = new BitSet(ID_SIZE * Byte.SIZE);
-    bits.set(distance - 1);
-    final byte[] targetNodeId = new byte[ID_SIZE];
-    final byte[] src = bits.toByteArray();
-    System.arraycopy(src, 0, targetNodeId, 0, src.length);
-    final Bytes nodeId = Bytes.wrap(targetNodeId).reverse();
-    return SimpleIdentitySchemaInterpreter.createNodeRecord(
-        nodeId, new InetSocketAddress("127.0.0.1", 2));
+    return TestUtil.createNodeAtDistance(localNode.getNodeId(), distance);
   }
 }

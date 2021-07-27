@@ -25,11 +25,9 @@ import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-import org.ethereum.beacon.discovery.schema.NodeRecordInfo;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NodeTable;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 /**
@@ -45,7 +43,6 @@ public class NodeSessionManager implements EnvelopeHandler {
   private final KBuckets nodeBucketStorage;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
-  private final NodeTable nodeTable;
   private final Pipeline outgoingPipeline;
   private final ExpirationScheduler<SessionKey> sessionExpirationScheduler;
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
@@ -54,13 +51,11 @@ public class NodeSessionManager implements EnvelopeHandler {
       LocalNodeRecordStore localNodeRecordStore,
       Bytes staticNodeKey,
       KBuckets nodeBucketStorage,
-      NodeTable nodeTable,
       Pipeline outgoingPipeline,
       ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
-    this.nodeTable = nodeTable;
     this.outgoingPipeline = outgoingPipeline;
     this.sessionExpirationScheduler =
         expirationSchedulerFactory.create(SESSION_CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
@@ -145,7 +140,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   private NodeSession createNodeSession(
       final SessionKey key, final Optional<NodeRecord> suppliedNodeRecord) {
     Optional<NodeRecord> nodeRecord =
-        suppliedNodeRecord.or(() -> nodeTable.getNode(key.nodeId).map(NodeRecordInfo::getNode));
+        suppliedNodeRecord.or(() -> nodeBucketStorage.getNode(key.nodeId));
     SecureRandom random = new SecureRandom();
     return new NodeSession(
         key.nodeId,
@@ -154,7 +149,6 @@ public class NodeSessionManager implements EnvelopeHandler {
         this,
         localNodeRecordStore,
         staticNodeKey,
-        nodeTable,
         nodeBucketStorage,
         outgoingPipeline::push,
         random,

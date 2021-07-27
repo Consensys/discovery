@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNullElseGet;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -16,12 +17,15 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
+import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -32,10 +36,6 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
-import org.ethereum.beacon.discovery.storage.NodeTable;
-import org.ethereum.beacon.discovery.storage.NodeTableStorage;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactory;
-import org.ethereum.beacon.discovery.storage.NodeTableStorageFactoryImpl;
 import org.ethereum.beacon.discovery.task.DiscoveryTaskManager;
 
 public class DiscoverySystemBuilder {
@@ -154,10 +154,6 @@ public class DiscoverySystemBuilder {
         requireNonNullElseGet(
             nodeBucketStorage,
             () -> new KBuckets(Clock.systemUTC(), localNodeRecordStore, livenessChecker));
-    nodeTableStorage =
-        requireNonNullElseGet(
-            nodeTableStorage, () -> nodeTableStorageFactory.createTable(bootnodes));
-    nodeTable = requireNonNullElseGet(nodeTable, () -> nodeTableStorage.get());
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,
@@ -169,11 +165,8 @@ public class DiscoverySystemBuilder {
                             .build())));
   }
 
-  final NodeTableStorageFactory nodeTableStorageFactory = new NodeTableStorageFactoryImpl();
   final int clientNumber = COUNTER.incrementAndGet();
 
-  NodeTableStorage nodeTableStorage;
-  NodeTable nodeTable;
   KBuckets nodeBucketStorage;
   LocalNodeRecordStore localNodeRecordStore;
   ExpirationSchedulerFactory expirationSchedulerFactory;
@@ -188,22 +181,23 @@ public class DiscoverySystemBuilder {
         localNodeRecordStore.getLocalNodeRecord().isValid(), "Local node record is invalid");
 
     final DiscoveryManager discoveryManager = buildDiscoveryManager();
-    livenessChecker.setPinger(discoveryManager::ping);
+    livenessChecker.setPinger(new AsyncPinger(discoveryManager::ping));
 
     final DiscoveryTaskManager discoveryTaskManager =
         new DiscoveryTaskManager(
             discoveryManager,
-            nodeTable,
+            localNodeRecordStore.getLocalNodeRecord().getNodeId(),
             nodeBucketStorage,
-            localNodeRecord,
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
-            true,
-            true,
             expirationSchedulerFactory,
             retryTimeout,
             lifeCheckInterval);
     return new DiscoverySystem(
-        discoveryManager, discoveryTaskManager, expirationSchedulerFactory, nodeTable, bootnodes);
+        discoveryManager,
+        discoveryTaskManager,
+        expirationSchedulerFactory,
+        nodeBucketStorage,
+        bootnodes);
   }
 
   @VisibleForTesting
@@ -211,7 +205,6 @@ public class DiscoverySystemBuilder {
     createDefaults();
     return new DiscoveryManagerImpl(
         discoveryServer,
-        nodeTable,
         nodeBucketStorage,
         localNodeRecordStore,
         privateKey,
@@ -219,5 +212,30 @@ public class DiscoverySystemBuilder {
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,
         talkHandler);
+  }
+
+  /**
+   * A {@link Pinger} wrapper implementation that ensures that the ping is triggered from a separate
+   * thread, with no locks held. This ensures that locks are always acquired "outside to in".
+   * Without this the {@link LivenessChecker} may be in a synchronized block when it triggers a ping
+   * which then needs to access {@link KBuckets} and take its lock out of the usual order. By
+   * releasing the {@link LivenessChecker} lock first, this ensures a consistent order is always
+   * used.
+   *
+   * <p>It also means that pings are consistently triggered in the same way that external code
+   * calling {@link DiscoveryManager#ping(NodeRecord)} would.
+   */
+  private static final class AsyncPinger implements Pinger {
+    private final Pinger delegate;
+
+    private AsyncPinger(final Pinger delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public CompletableFuture<Void> ping(final NodeRecord node) {
+      return CompletableFuture.supplyAsync(() -> delegate.ping(node).orTimeout(500, MILLISECONDS))
+          .thenCompose(Function.identity());
+    }
   }
 }
