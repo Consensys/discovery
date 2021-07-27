@@ -318,7 +318,6 @@ public class NodeSession {
     return localNodeRecordStore.getLocalNodeRecord();
   }
 
-  // TODO: Add tests that this updates internal record only when matching and seq higher
   public synchronized void onNodeRecordReceived(final NodeRecord node) {
     if (node.getNodeId().equals(nodeId) && isUpdateRequired(node, nodeRecord)) {
       logger.trace(
