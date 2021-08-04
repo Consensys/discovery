@@ -18,8 +18,13 @@ import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 
 public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterpreter {
+
+  public static final NewAddressHandler ADDRESS_UPDATER =
+      (oldRecord, newAddress) ->
+          Optional.of(oldRecord.withNewAddress(newAddress, Optional.empty(), null));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
