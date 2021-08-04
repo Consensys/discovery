@@ -78,7 +78,10 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   @Override
   public NodeRecord createWithNewAddress(
-      final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
+      final NodeRecord nodeRecord,
+      final InetSocketAddress newAddress,
+      final Optional<Integer> newTcpPort,
+      final Bytes privateKey) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
     sign(newRecord, privateKey);
     return newRecord;

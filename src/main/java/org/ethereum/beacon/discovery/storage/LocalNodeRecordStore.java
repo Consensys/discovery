@@ -32,9 +32,8 @@ public class LocalNodeRecordStore {
 
   public void onSocketAddressChanged(final InetSocketAddress newAddress) {
     NodeRecord oldRecord = this.latestRecord;
-    NodeRecord proposedNewRecord = oldRecord.withNewAddress(newAddress, privateKey);
     newAddressHandler
-        .newAddress(oldRecord, proposedNewRecord)
+        .newAddress(oldRecord, newAddress)
         .ifPresent(
             record -> {
               this.latestRecord = record;

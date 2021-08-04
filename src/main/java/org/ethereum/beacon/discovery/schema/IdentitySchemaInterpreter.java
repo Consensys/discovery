@@ -40,7 +40,10 @@ public interface IdentitySchemaInterpreter {
   Optional<InetSocketAddress> getTcpAddress(NodeRecord nodeRecord);
 
   NodeRecord createWithNewAddress(
-      NodeRecord nodeRecord, InetSocketAddress newAddress, Bytes privateKey);
+      NodeRecord nodeRecord,
+      InetSocketAddress newAddress,
+      Optional<Integer> newTcpPort,
+      Bytes privateKey);
 
   NodeRecord createWithUpdatedCustomField(
       NodeRecord nodeRecord, String newAddress, Bytes value, Bytes privateKey);

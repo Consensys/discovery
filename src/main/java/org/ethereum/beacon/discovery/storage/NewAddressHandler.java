@@ -4,13 +4,14 @@
 
 package org.ethereum.beacon.discovery.storage;
 
+import java.net.InetSocketAddress;
 import java.util.Optional;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /** Listens for a node record updates */
 public interface NewAddressHandler {
 
-  NewAddressHandler NOOP = (oldVal, newVal) -> Optional.of(newVal);
+  NewAddressHandler NOOP = (oldRecord, newAddress) -> Optional.empty();
 
-  Optional<NodeRecord> newAddress(NodeRecord oldRecord, NodeRecord proposedRecord);
+  Optional<NodeRecord> newAddress(NodeRecord oldRecord, InetSocketAddress newAddress);
 }
