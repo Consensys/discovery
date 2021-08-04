@@ -160,9 +160,12 @@ class IdentitySchemaV4InterpreterTest {
             new EnrField(EnrField.UDP, 3030));
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
-        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+        interpreter.createWithNewAddress(
+            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.getTcpAddress())
+        .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V4))
         .isEqualTo(Bytes.wrap(newSocketAddress.getAddress().getAddress()));
   }
@@ -196,9 +199,12 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress =
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
-        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+        interpreter.createWithNewAddress(
+            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.getTcpAddress())
+        .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
 
@@ -211,9 +217,12 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress =
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
-        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+        interpreter.createWithNewAddress(
+            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.getTcpAddress())
+        .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
 
@@ -224,9 +233,12 @@ class IdentitySchemaV4InterpreterTest {
             new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.UDP_V6, 3030));
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
-        interpreter.createWithNewAddress(initialRecord, newSocketAddress, PRIV_KEY);
+        interpreter.createWithNewAddress(
+            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.getTcpAddress())
+        .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(Bytes.wrap(new byte[] {127, 0, 0, 1}));
   }
 

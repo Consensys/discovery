@@ -89,11 +89,15 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public NodeRecord createWithNewAddress(
-      final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
+      final NodeRecord nodeRecord,
+      final InetSocketAddress newAddress,
+      final Optional<Integer> newTcpPort,
+      final Bytes privateKey) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !ADDRESS_FIELD_NAMES.contains(field.getName()));
 
-    NodeRecordBuilder.addFieldsForUdpAddress(fields, newAddress.getAddress(), newAddress.getPort());
+    NodeRecordBuilder.addFieldsForAddress(
+        fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, privateKey);
     return newRecord;

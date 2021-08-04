@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery.message.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter.ADDRESS_UPDATER;
 import static org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector.MIN_CONFIRMATIONS;
 
 import java.net.InetSocketAddress;
@@ -14,7 +15,6 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
-import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -28,9 +28,10 @@ class ExternalAddressSelectorTest {
   private final Bytes nodeId = Bytes.fromHexString("0x1234567890");
   private final NodeRecord originalNodeRecord =
       SimpleIdentitySchemaInterpreter.createNodeRecord(nodeId, ADDRESS1);
+
   private final LocalNodeRecordStore localNodeRecordStore =
       new LocalNodeRecordStore(
-          originalNodeRecord, nodeId, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
+          originalNodeRecord, nodeId, NodeRecordListener.NOOP, ADDRESS_UPDATER);
 
   private final ExternalAddressSelector selector =
       new ExternalAddressSelector(localNodeRecordStore);

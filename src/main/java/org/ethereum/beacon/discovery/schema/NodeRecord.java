@@ -206,8 +206,12 @@ public class NodeRecord {
     return identitySchemaInterpreter.getUdpAddress(this);
   }
 
-  public NodeRecord withNewAddress(final InetSocketAddress newAddress, final Bytes privateKey) {
-    return identitySchemaInterpreter.createWithNewAddress(this, newAddress, privateKey);
+  public NodeRecord withNewAddress(
+      final InetSocketAddress newUdpAddress,
+      final Optional<Integer> newTcpPort,
+      final Bytes privateKey) {
+    return identitySchemaInterpreter.createWithNewAddress(
+        this, newUdpAddress, newTcpPort, privateKey);
   }
 
   public NodeRecord withUpdatedCustomField(

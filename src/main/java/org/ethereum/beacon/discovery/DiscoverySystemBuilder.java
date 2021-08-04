@@ -48,7 +48,7 @@ public class DiscoverySystemBuilder {
   private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
-  private NewAddressHandler newAddressHandler = NewAddressHandler.NOOP;
+  private NewAddressHandler newAddressHandler;
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private int trafficReadLimit = 250000; // bytes per sec
@@ -131,6 +131,16 @@ public class DiscoverySystemBuilder {
   }
 
   private void createDefaults() {
+    newAddressHandler =
+        requireNonNullElseGet(
+            newAddressHandler,
+            () ->
+                (oldRecord, newAddress) ->
+                    Optional.of(
+                        oldRecord.withNewAddress(
+                            newAddress,
+                            oldRecord.getTcpAddress().map(InetSocketAddress::getPort),
+                            privateKey)));
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final InetSocketAddress serverListenAddress =
         listenAddress

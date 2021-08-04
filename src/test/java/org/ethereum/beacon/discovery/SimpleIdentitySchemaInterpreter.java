@@ -18,8 +18,13 @@ import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 
 public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterpreter {
+
+  public static final NewAddressHandler ADDRESS_UPDATER =
+      (oldRecord, newAddress) ->
+          Optional.of(oldRecord.withNewAddress(newAddress, Optional.empty(), null));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
@@ -78,7 +83,10 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   @Override
   public NodeRecord createWithNewAddress(
-      final NodeRecord nodeRecord, final InetSocketAddress newAddress, final Bytes privateKey) {
+      final NodeRecord nodeRecord,
+      final InetSocketAddress newAddress,
+      final Optional<Integer> newTcpPort,
+      final Bytes privateKey) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
     sign(newRecord, privateKey);
     return newRecord;
