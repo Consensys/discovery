@@ -107,7 +107,8 @@ public class DiscoverySystem {
   }
 
   public Stream<NodeRecord> streamLiveNodes() {
-    return buckets.streamClosestNodes(Bytes32.ZERO);
+    return Stream.concat(
+        buckets.streamClosestNodes(Bytes32.ZERO), discoveryManager.streamActiveSessions());
   }
 
   public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {

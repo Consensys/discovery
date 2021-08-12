@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -205,5 +206,10 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   @VisibleForTesting
   public Optional<NodeSession> getNodeSession(Bytes remoteNodeId) {
     return nodeSessionManager.getNodeSession(remoteNodeId);
+  }
+
+  @Override
+  public Stream<NodeRecord> streamActiveSessions() {
+    return nodeSessionManager.streamActiveSessions();
   }
 }

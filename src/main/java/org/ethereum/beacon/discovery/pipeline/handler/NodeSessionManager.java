@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -158,6 +159,12 @@ public class NodeSessionManager implements EnvelopeHandler {
   private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
     return Optional.ofNullable(envelope.get(Field.REMOTE_SENDER))
         .or(() -> envelope.get(Field.NODE).getUdpAddress());
+  }
+
+  public Stream<NodeRecord> streamActiveSessions() {
+    return recentSessions.values().stream()
+        .filter(NodeSession::isAuthenticated)
+        .flatMap(session -> session.getNodeRecord().stream());
   }
 
   private static class SessionKey {

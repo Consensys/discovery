@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
@@ -46,4 +47,6 @@ public interface DiscoveryManager {
 
   /** Sends the TALKREQ so the specified {@code node} and returns the TALKRESP promise */
   CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes request);
+
+  Stream<NodeRecord> streamActiveSessions();
 }
