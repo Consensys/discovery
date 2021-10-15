@@ -5,23 +5,34 @@
 package org.ethereum.beacon.discovery.schema;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
+import org.ethereum.beacon.discovery.pipeline.info.Request;
+import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
+import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
+import org.mockito.ArgumentCaptor;
 
 public class NodeSessionTest {
   private final NodeSessionManager nodeSessionManager = mock(NodeSessionManager.class);
@@ -107,5 +118,42 @@ public class NodeSessionTest {
         nodeRecord.withUpdatedCustomField("eth2", Bytes.fromHexString("0x9999"), Bytes.EMPTY);
     session.onNodeRecordReceived(updatedRecord1b);
     assertThat(session.getNodeRecord()).contains(updatedRecord1a);
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SessionState.class,
+      names = {"WHOAREYOU_SENT", "RANDOM_PACKET_SENT"},
+      mode = Mode.INCLUDE)
+  void createNextRequest_shouldResetPartialHandshakeStatesWhenRequestTimesOut(
+      final SessionState state) {
+    final Request<?> request = mock(Request.class);
+    when(request.getResultPromise()).thenReturn(new CompletableFuture<>());
+    final RequestInfo requestInfo = session.createNextRequest(request);
+
+    final ArgumentCaptor<Runnable> timeoutHandlerCaptor = ArgumentCaptor.forClass(Runnable.class);
+    verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
+
+    final Runnable timeoutHandler = timeoutHandlerCaptor.getValue();
+    session.setState(state);
+
+    timeoutHandler.run();
+    assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
+  }
+
+  @Test
+  void createNextRequest_shouldNotResetAuthenticatedStatesWhenRequestTimesOut() {
+    final Request<?> request = mock(Request.class);
+    when(request.getResultPromise()).thenReturn(new CompletableFuture<>());
+    final RequestInfo requestInfo = session.createNextRequest(request);
+
+    final ArgumentCaptor<Runnable> timeoutHandlerCaptor = ArgumentCaptor.forClass(Runnable.class);
+    verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
+
+    final Runnable timeoutHandler = timeoutHandlerCaptor.getValue();
+    session.setState(SessionState.AUTHENTICATED);
+
+    timeoutHandler.run();
+    assertThat(session.getState()).isEqualTo(SessionState.AUTHENTICATED);
   }
 }
