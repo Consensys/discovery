@@ -352,7 +352,6 @@ public class NodeSession {
     logger.debug(
         () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
     this.state = newStatus;
-    // TODO: Set short timeout on session if newStatus is WHOAREYOU_SENT or RANDOM_PACKET_SENT?
   }
 
   public Bytes getStaticNodeKey() {
