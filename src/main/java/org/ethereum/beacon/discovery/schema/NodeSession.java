@@ -182,18 +182,22 @@ public class NodeSession {
     requestIdStatuses.put(wrappedId, requestInfo);
     requestExpirationScheduler.put(
         wrappedId,
-        new Runnable() {
-          @Override
-          public void run() {
-            logger.debug(
-                () ->
-                    String.format(
-                        "Request %s expired for id %s in session %s: no reply",
-                        requestInfo, wrappedId, this));
-            requestIdStatuses.remove(wrappedId);
-          }
+        () -> {
+          logger.debug(
+              () ->
+                  String.format(
+                      "Request %s expired for id %s in session %s: no reply",
+                      requestInfo, wrappedId, this));
+          requestIdStatuses.remove(wrappedId);
+          resetHandshakeState();
         });
     return requestInfo;
+  }
+
+  private synchronized void resetHandshakeState() {
+    if (state == SessionState.WHOAREYOU_SENT || state == SessionState.RANDOM_PACKET_SENT) {
+      setState(SessionState.INITIAL);
+    }
   }
 
   /** Updates request info. Thread-safe. */
