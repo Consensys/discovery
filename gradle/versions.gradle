@@ -12,8 +12,8 @@ dependencyManagement {
     dependency 'io.projectreactor:reactor-core:3.2.5.RELEASE'
     dependency 'io.vertx:vertx-core:3.8.0'
 
-    dependency 'org.apache.logging.log4j:log4j-api:2.11.1'
-    dependency 'org.apache.logging.log4j:log4j-core:2.11.1'
+    dependency 'org.apache.logging.log4j:log4j-api:2.15.0'
+    dependency 'org.apache.logging.log4j:log4j-core:2.15.0'
     dependency 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
 
     dependency 'org.bouncycastle:bcprov-jdk15on:1.60'
