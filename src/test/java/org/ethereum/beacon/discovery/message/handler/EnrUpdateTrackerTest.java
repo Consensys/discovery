@@ -63,7 +63,7 @@ class EnrUpdateTrackerTest {
     final NodeRecord currentNodeRecord =
         TestUtil.generateNode(8000)
             .getNodeRecord()
-            .withUpdatedCustomField("test", Bytes.EMPTY, Bytes.EMPTY);
+            .withUpdatedCustomField("test", Bytes.EMPTY, Bytes.of(1));
     when(session.getNodeRecord()).thenReturn(Optional.of(currentNodeRecord));
     tracker.updateIfRequired(session, currentNodeRecord.getSeq().subtract(1));
 
