@@ -87,7 +87,7 @@ public class PongMessage implements V5Message {
     return Objects.equal(requestId, that.requestId)
         && Objects.equal(enrSeq, that.enrSeq)
         && Objects.equal(recipientIp, that.recipientIp)
-        && Objects.equal(recipientPort, that.recipientPort);
+        && recipientPort == that.recipientPort;
   }
 
   @Override
