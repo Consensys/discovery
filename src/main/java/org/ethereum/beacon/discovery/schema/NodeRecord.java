@@ -5,8 +5,6 @@
 package org.ethereum.beacon.discovery.schema;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -46,7 +44,6 @@ public class NodeRecord {
   // optional fields
   private final Map<String, Object> fields = new HashMap<>();
   private final IdentitySchemaInterpreter identitySchemaInterpreter;
-  private final Supplier<Bytes> nodeIdCache = Suppliers.memoize(this::calcNodeId);
 
   private NodeRecord(
       IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, Bytes signature) {
@@ -198,10 +195,6 @@ public class NodeRecord {
   }
 
   public Bytes getNodeId() {
-    return nodeIdCache.get();
-  }
-
-  private Bytes calcNodeId() {
     return identitySchemaInterpreter.getNodeId(this);
   }
 
