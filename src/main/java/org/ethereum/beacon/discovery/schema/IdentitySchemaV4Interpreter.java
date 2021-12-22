@@ -7,6 +7,9 @@ package org.ethereum.beacon.discovery.schema;
 import static org.ethereum.beacon.discovery.schema.NodeRecordBuilder.addCustomField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -26,6 +29,11 @@ import org.ethereum.beacon.discovery.util.Utils;
 
 public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   private static final Logger logger = LogManager.getLogger();
+
+  private final LoadingCache<Bytes, Bytes> nodeIdCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(4000)
+          .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeId));
 
   private static final ImmutableSet<String> ADDRESS_FIELD_NAMES =
       ImmutableSet.of(EnrField.IP_V4, EnrField.IP_V6, EnrField.UDP, EnrField.UDP_V6);
@@ -56,6 +64,10 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   public Bytes getNodeId(NodeRecord nodeRecord) {
     Bytes pkey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
     Preconditions.checkNotNull(pkey, "Missing PKEY_SECP256K1 field");
+    return nodeIdCache.getUnchecked(pkey);
+  }
+
+  private static Bytes calculateNodeId(final Bytes pkey) {
     ECPoint pudDestPoint = Functions.publicKeyToPoint(pkey);
     Bytes xPart =
         Bytes.wrap(
