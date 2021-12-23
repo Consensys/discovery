@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.apache.tuweni.bytes.Bytes;
@@ -47,14 +48,36 @@ public class KBuckets {
     if (distance == 0) {
       return Stream.of(localNodeRecordStore.getLocalNodeRecord());
     }
-    return getBucket(distance).stream().flatMap(bucket -> bucket.getLiveNodes().stream());
+    return streamFromBucket(distance, bucket -> bucket.getLiveNodes().stream());
   }
 
   public synchronized Stream<NodeRecord> getAllNodeRecords(int distance) {
     if (distance == 0) {
       return Stream.of(localNodeRecordStore.getLocalNodeRecord());
     }
-    return getBucket(distance).stream().flatMap(bucket -> bucket.getAllNodes().stream());
+    return streamFromBucket(distance, bucket -> bucket.getAllNodes().stream());
+  }
+
+  /**
+   * Extracts a {@link Stream} from a {@link KBucket} at a given distance, ensuring that all
+   * accesses to the KBucket are completed prior to the method returning.
+   *
+   * <p>Specifically this method avoids using {@code getBucket(distance).stream().flatMap(mapper)}
+   * as the mapper is then called after the method returns. That leads to thread safety issues.
+   *
+   * @param distance the bucket distance
+   * @param mapper the function to convert the KBucket to a Stream of objects
+   * @param <T> the type of object in the returned Stream
+   * @return the result of applying mapper to the bucket at the requested distance, or an empty
+   *     stream if there is no bucket at that distance.
+   */
+  private <T> Stream<T> streamFromBucket(int distance, final Function<KBucket, Stream<T>> mapper) {
+    final Optional<KBucket> bucket = getBucket(distance);
+    if (bucket.isPresent()) {
+      return mapper.apply(bucket.get());
+    } else {
+      return Stream.empty();
+    }
   }
 
   public Stream<NodeRecord> streamClosestNodes(Bytes nodeId) {
