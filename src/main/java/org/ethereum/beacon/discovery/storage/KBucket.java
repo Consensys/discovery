@@ -41,22 +41,22 @@ class KBucket {
     this.clock = clock;
   }
 
-  public List<NodeRecord> getAllNodes() {
+  public synchronized List<NodeRecord> getAllNodes() {
     return nodes.stream().map(BucketEntry::getNode).collect(Collectors.toList());
   }
 
-  public List<NodeRecord> getLiveNodes() {
+  public synchronized List<NodeRecord> getLiveNodes() {
     return nodes.stream()
         .takeWhile(BucketEntry::isLive)
         .map(BucketEntry::getNode)
         .collect(Collectors.toList());
   }
 
-  public Optional<NodeRecord> getPendingNode() {
+  public synchronized Optional<NodeRecord> getPendingNode() {
     return pendingNode.map(BucketEntry::getNode);
   }
 
-  public void offer(final NodeRecord node) {
+  public synchronized void offer(final NodeRecord node) {
     performMaintenance();
     getEntry(node)
         .ifPresentOrElse(
@@ -87,7 +87,7 @@ class KBucket {
     }
   }
 
-  public void onLivenessConfirmed(final NodeRecord node) {
+  public synchronized void onLivenessConfirmed(final NodeRecord node) {
     getEntry(node)
         .ifPresentOrElse(
             existingEntry -> {
@@ -130,7 +130,7 @@ class KBucket {
    * <p>b. if there is a pending node, insert it into the bucket (at appropriate position based on
    * when it was last confirmed as live)
    */
-  public void performMaintenance() {
+  public synchronized void performMaintenance() {
     final long currentTime = clock.millis();
     lastMaintenanceTime = currentTime;
     performPendingNodeMaintenance();
@@ -151,7 +151,7 @@ class KBucket {
     }
   }
 
-  public long getLastMaintenanceTime() {
+  public synchronized long getLastMaintenanceTime() {
     return lastMaintenanceTime;
   }
 
@@ -183,11 +183,11 @@ class KBucket {
     return nodes.stream().filter(node -> node.getNodeId().equals(nodeId)).findAny();
   }
 
-  public Optional<NodeRecord> getNode(final Bytes targetNodeId) {
+  public synchronized Optional<NodeRecord> getNode(final Bytes targetNodeId) {
     return getEntry(targetNodeId).map(BucketEntry::getNode);
   }
 
-  public boolean isEmpty() {
+  public synchronized boolean isEmpty() {
     return nodes.isEmpty();
   }
 }
