@@ -47,7 +47,6 @@ public class Functions {
 
   private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
-
   /** SHA2 (SHA256) */
   public static Bytes hash(Bytes value) {
     return Hashes.sha256(value);
