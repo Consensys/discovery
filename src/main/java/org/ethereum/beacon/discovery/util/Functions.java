@@ -10,6 +10,8 @@ import static org.web3j.crypto.Sign.CURVE_PARAMS;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
@@ -42,6 +44,8 @@ public class Functions {
   private static final int INITIATOR_KEY_LENGTH = 16;
   private static final int AUTH_RESP_KEY_LENGTH = 16;
   private static final int MS_IN_SECOND = 1000;
+
+  private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
   /** SHA2 (SHA256) */
   public static Bytes hash(Bytes value) {
@@ -207,7 +211,7 @@ public class Functions {
 
   /** Random provider */
   public static Random getRandom() {
-    return new SecureRandom();
+    return SECURE_RANDOM.get();
   }
 
   /**
