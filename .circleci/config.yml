@@ -17,9 +17,9 @@ commands:
       - restore_cache:
           name: Restore cached gradle dependencies
           keys:
-            - deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
-            - deps-{{ checksum "build.gradle" }}
-            - deps-
+            - deps2-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
+            - deps2-{{ checksum "build.gradle" }}
+            - deps2-
   capture_test_results:
     description: "Capture test results"
     steps:
@@ -37,7 +37,7 @@ jobs:
             ./gradlew --no-daemon --parallel build sourcesJar
       - save_cache:
           name: Caching gradle dependencies
-          key: deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
+          key: deps2-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
           paths:
             - .gradle
             - ~/.gradle

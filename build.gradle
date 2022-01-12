@@ -2,8 +2,8 @@
 
 plugins {
   id 'java-library'
-  id 'com.diffplug.spotless' version '6.0.4'
-  id 'com.github.ben-manes.versions' version '0.39.0'
+  id 'com.diffplug.spotless' version '6.1.2'
+  id 'com.github.ben-manes.versions' version '0.41.0'
   id 'com.github.hierynomus.license' version '0.16.1'
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
   id 'net.ltgt.errorprone' version '2.0.2'
@@ -22,7 +22,6 @@ sourceCompatibility = '11'
 targetCompatibility = '11'
 
 repositories {
-  jcenter()
   mavenCentral()
 }
 
