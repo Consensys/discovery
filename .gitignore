@@ -20,7 +20,6 @@
 .recommenders/
 .settings
 .springBeans
-.vertx
 bin/
 local.properties
 target/

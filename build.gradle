@@ -26,15 +26,14 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.apache.tuweni:bytes'
-  implementation 'org.apache.tuweni:units'
-  implementation 'org.apache.tuweni:crypto'
+  implementation 'org.apache.tuweni:tuweni-bytes'
+  implementation 'org.apache.tuweni:tuweni-units'
+  implementation 'org.apache.tuweni:tuweni-crypto'
   implementation 'org.bouncycastle:bcprov-jdk15on'
 
   implementation 'com.google.guava:guava'
   implementation 'io.projectreactor:reactor-core'
   implementation 'io.netty:netty-all'
-  implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
   implementation 'org.apache.logging.log4j:log4j-core'
   implementation 'org.web3j:core'
