@@ -3,10 +3,13 @@
  */
 package org.ethereum.beacon.discovery.type;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.DelegatingBytes;
 
-public class Bytes12 extends DelegateBytes {
+public class Bytes12 extends DelegatingBytes {
 
   public static Bytes12 fromHexString(String hex) {
     return new Bytes12(Bytes.fromHexString(hex));
@@ -29,6 +32,7 @@ public class Bytes12 extends DelegateBytes {
   }
 
   private Bytes12(Bytes delegate) {
-    super(delegate, 12);
+    super(delegate);
+    checkArgument(delegate.size() == 12, "Expected Bytes of size 12");
   }
 }
