@@ -4,7 +4,6 @@
 package org.ethereum.beacon.discovery.type;
 
 import com.google.common.base.Preconditions;
-import io.vertx.core.buffer.Buffer;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -243,11 +242,6 @@ class DelegateBytes implements Bytes {
   @Override
   public void appendTo(ByteBuffer byteBuffer) {
     delegate.appendTo(byteBuffer);
-  }
-
-  @Override
-  public void appendTo(Buffer buffer) {
-    delegate.appendTo(buffer);
   }
 
   @Override
