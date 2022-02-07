@@ -118,7 +118,7 @@ public class RecursiveLookupTask {
               synchronized (this) {
                 availableQuerySlots++;
                 if (error != null) {
-                  LOG.debug("Failed to query node {}", peer.getNodeId(), error);
+                  LOG.debug("Failed to query node {}: {}", peer.getNodeId(), error.toString());
                 } else {
                   foundNodes.addAll(nodes);
                 }
