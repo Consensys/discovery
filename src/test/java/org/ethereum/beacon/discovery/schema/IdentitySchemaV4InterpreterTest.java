@@ -5,15 +5,20 @@
 package org.ethereum.beacon.discovery.schema;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.junit.jupiter.api.Test;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpType;
 
 class IdentitySchemaV4InterpreterTest {
 
@@ -240,6 +245,34 @@ class IdentitySchemaV4InterpreterTest {
     assertThat(newRecord.getTcpAddress())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(Bytes.wrap(new byte[] {127, 0, 0, 1}));
+  }
+
+  @Test
+  public void enrDeserializationWithDuplicateFieldKeyShouldFail() {
+    NodeRecord nodeRecord = createNodeRecord(new EnrField(EnrField.TCP, 1234));
+    List<RlpType> rlpEntries = nodeRecord.asRlp().getValues();
+    rlpEntries.add(rlpEntries.get(rlpEntries.size() - 2));
+    rlpEntries.add(rlpEntries.get(rlpEntries.size() - 1));
+    RlpList rlpList = new RlpList(rlpEntries);
+    byte[] duplicateEntryBytes = RlpEncoder.encode(rlpList);
+    assertThatThrownBy(() -> NodeRecordFactory.DEFAULT.fromBytes(duplicateEntryBytes))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void enrDeserializationWithWrongKeyOrderShouldFail() {
+    NodeRecord nodeRecord =
+        createNodeRecord(new EnrField(EnrField.TCP, 1234), new EnrField(EnrField.UDP, 5678));
+    List<RlpType> rlpEntries = nodeRecord.asRlp().getValues();
+    int tcpEntryIdx = rlpEntries.size() - 4;
+    int udpEntryIdx = tcpEntryIdx + 2;
+    ArrayList<RlpType> wrongOrderList = new ArrayList<>(rlpEntries.subList(0, tcpEntryIdx));
+    wrongOrderList.addAll(rlpEntries.subList(udpEntryIdx, udpEntryIdx + 2));
+    wrongOrderList.addAll(rlpEntries.subList(tcpEntryIdx, tcpEntryIdx + 2));
+    RlpList rlpList = new RlpList(wrongOrderList);
+    byte[] invalidEnrBytes = RlpEncoder.encode(rlpList);
+    assertThatThrownBy(() -> NodeRecordFactory.DEFAULT.fromBytes(invalidEnrBytes))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   private Optional<InetSocketAddress> getTcpAddressForNodeRecordWithFields(

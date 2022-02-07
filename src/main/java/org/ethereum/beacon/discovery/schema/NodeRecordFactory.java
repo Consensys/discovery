@@ -108,7 +108,7 @@ public class NodeRecordFactory {
               "No Ethereum record interpreter found for identity scheme %s", nodeIdentity));
     }
 
-    return NodeRecord.fromRawFields(
+    return NodeRecord.fromRawFieldsStrict(
         identitySchemaInterpreter,
         UInt64.fromBytes(RlpUtil.asString(rlpList.get(1), RlpUtil.CONS_UINT64)),
         RlpUtil.asString(rlpList.get(0), RlpUtil.CONS_ANY),

@@ -4,10 +4,15 @@
 
 package org.ethereum.beacon.discovery.schema;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Comparators;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,26 +64,46 @@ public class NodeRecord {
   }
 
   public static NodeRecord fromValues(
-      IdentitySchemaInterpreter identitySchemaInterpreter,
-      UInt64 seq,
-      List<EnrField> fieldKeyPairs) {
-    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
-    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getName(), objects.getValue()));
-    return nodeRecord;
+      IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, List<EnrField> enrFields) {
+    return fromValues(identitySchemaInterpreter, seq, Optional.empty(), enrFields);
   }
 
-  @SuppressWarnings({"unchecked", "DefaultCharset"})
-  public static NodeRecord fromRawFields(
+  public static NodeRecord fromRawFieldsStrict(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
       Bytes signature,
       List<RlpType> rawFields) {
-    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
+
+    checkArgument(rawFields.size() % 2 == 0, "Non even rawFields list size");
+    List<EnrField> enrFields = new ArrayList<>(rawFields.size() / 2);
     for (int i = 0; i < rawFields.size(); i += 2) {
-      String key = new String(((RlpString) rawFields.get(i)).getBytes());
-      nodeRecord.set(key, enrFieldInterpreter.decode(key, rawFields.get(i + 1)));
+      String key = new String(((RlpString) rawFields.get(i)).getBytes(), StandardCharsets.UTF_8);
+      EnrField enrField = new EnrField(key, enrFieldInterpreter.decode(key, rawFields.get(i + 1)));
+      enrFields.add(enrField);
     }
+    validateEnrFields(enrFields);
+    return fromValues(identitySchemaInterpreter, seq, Optional.of(signature), enrFields);
+  }
+
+  private static NodeRecord fromValues(
+      IdentitySchemaInterpreter identitySchemaInterpreter,
+      UInt64 seq,
+      Optional<Bytes> maybeSignature,
+      List<EnrField> enrFields) {
+
+    NodeRecord nodeRecord =
+        maybeSignature
+            .map(signature -> new NodeRecord(identitySchemaInterpreter, seq, signature))
+            .orElseGet(() -> new NodeRecord(identitySchemaInterpreter, seq));
+    enrFields.forEach(enrField -> nodeRecord.set(enrField.getName(), enrField.getValue()));
     return nodeRecord;
+  }
+
+  private static void validateEnrFields(List<EnrField> enrFields) {
+    List<String> enrKeys = enrFields.stream().map(EnrField::getName).collect(Collectors.toList());
+    if (!Comparators.isInStrictOrder(enrKeys, Comparator.naturalOrder())) {
+      throw new IllegalArgumentException("ENR record keys are not in strict order");
+    }
   }
 
   public String asBase64() {
@@ -189,8 +214,7 @@ public class NodeRecord {
   private Bytes serializeImpl(boolean withSignature) {
     RlpType rlpRecord = withSignature ? asRlp() : asRlpNoSignature();
     byte[] bytes = RlpEncoder.encode(rlpRecord);
-    Preconditions.checkArgument(
-        bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
+    checkArgument(bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
     return Bytes.wrap(bytes);
   }
 
