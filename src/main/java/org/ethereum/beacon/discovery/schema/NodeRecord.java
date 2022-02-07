@@ -64,9 +64,7 @@ public class NodeRecord {
   }
 
   public static NodeRecord fromValues(
-      IdentitySchemaInterpreter identitySchemaInterpreter,
-      UInt64 seq,
-      List<EnrField> enrFields) {
+      IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, List<EnrField> enrFields) {
     return fromValues(identitySchemaInterpreter, seq, Optional.empty(), enrFields);
   }
 
@@ -93,17 +91,16 @@ public class NodeRecord {
       Optional<Bytes> maybeSignature,
       List<EnrField> enrFields) {
 
-    NodeRecord nodeRecord = maybeSignature
-        .map(signature -> new NodeRecord(identitySchemaInterpreter, seq, signature))
-        .orElseGet(() -> new NodeRecord(identitySchemaInterpreter, seq));
+    NodeRecord nodeRecord =
+        maybeSignature
+            .map(signature -> new NodeRecord(identitySchemaInterpreter, seq, signature))
+            .orElseGet(() -> new NodeRecord(identitySchemaInterpreter, seq));
     enrFields.forEach(enrField -> nodeRecord.set(enrField.getName(), enrField.getValue()));
     return nodeRecord;
   }
 
   private static void validateEnrFields(List<EnrField> enrFields) {
-    List<String> enrKeys = enrFields.stream()
-        .map(EnrField::getName)
-        .collect(Collectors.toList());
+    List<String> enrKeys = enrFields.stream().map(EnrField::getName).collect(Collectors.toList());
     if (!Comparators.isInStrictOrder(enrKeys, Comparator.naturalOrder())) {
       throw new IllegalArgumentException("ENR record keys are not in strict order");
     }
@@ -217,8 +214,7 @@ public class NodeRecord {
   private Bytes serializeImpl(boolean withSignature) {
     RlpType rlpRecord = withSignature ? asRlp() : asRlpNoSignature();
     byte[] bytes = RlpEncoder.encode(rlpRecord);
-    checkArgument(
-        bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
+    checkArgument(bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
     return Bytes.wrap(bytes);
   }
 

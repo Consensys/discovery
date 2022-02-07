@@ -261,9 +261,8 @@ class IdentitySchemaV4InterpreterTest {
 
   @Test
   public void enrDeserializationWithWrongKeyOrderShouldFail() {
-    NodeRecord nodeRecord = createNodeRecord(
-        new EnrField(EnrField.TCP, 1234),
-        new EnrField(EnrField.UDP, 5678));
+    NodeRecord nodeRecord =
+        createNodeRecord(new EnrField(EnrField.TCP, 1234), new EnrField(EnrField.UDP, 5678));
     List<RlpType> rlpEntries = nodeRecord.asRlp().getValues();
     int tcpEntryIdx = rlpEntries.size() - 4;
     int udpEntryIdx = tcpEntryIdx + 2;
