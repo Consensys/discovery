@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -68,7 +69,7 @@ public class NextTaskHandler implements EnvelopeHandler {
                 "Envelope %s: processing awaiting request %s", envelope.getId(), requestInfo));
 
     if (session.getState().equals(SessionState.INITIAL)) {
-      session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE));
+      session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE, ThreadLocalRandom.current()));
       session.setState(SessionState.RANDOM_PACKET_SENT);
     } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
       V5Message message = requestInfo.getMessage();
