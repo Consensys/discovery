@@ -26,6 +26,8 @@ import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
+import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -54,6 +56,7 @@ public class DiscoverySystemBuilder {
   private int trafficReadLimit = 250000; // bytes per sec
   private TalkHandler talkHandler = TalkHandler.NOOP;
   private NettyDiscoveryServer discoveryServer = null;
+  private ExternalAddressSelector externalAddressSelector = null;
   private final LivenessChecker livenessChecker = new LivenessChecker();
 
   public DiscoverySystemBuilder trafficReadLimit(final int trafficReadLimit) {
@@ -130,6 +133,12 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
+  public DiscoverySystemBuilder externalAddressSelector(
+      ExternalAddressSelector externalAddressSelector) {
+    this.externalAddressSelector = externalAddressSelector;
+    return this;
+  }
+
   private void createDefaults() {
     newAddressHandler =
         requireNonNullElseGet(
@@ -173,6 +182,10 @@ public class DiscoverySystemBuilder {
                         new ThreadFactoryBuilder()
                             .setNameFormat("discovery-expiration-%d")
                             .build())));
+    externalAddressSelector =
+        requireNonNullElseGet(
+            externalAddressSelector,
+            () -> new DefaultExternalAddressSelector(localNodeRecordStore));
   }
 
   final int clientNumber = COUNTER.incrementAndGet();
@@ -221,7 +234,8 @@ public class DiscoverySystemBuilder {
         nodeRecordFactory,
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,
-        talkHandler);
+        talkHandler,
+        externalAddressSelector);
   }
 
   /**

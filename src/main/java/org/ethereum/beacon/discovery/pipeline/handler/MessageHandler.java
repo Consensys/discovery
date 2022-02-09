@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -23,10 +24,15 @@ public class MessageHandler implements EnvelopeHandler {
   private final MessageProcessor messageProcessor;
 
   public MessageHandler(
-      LocalNodeRecordStore localNodeRecordStore, TalkHandler talkHandler, EnrUpdater enrUpdater) {
+      LocalNodeRecordStore localNodeRecordStore,
+      TalkHandler talkHandler,
+      EnrUpdater enrUpdater,
+      ExternalAddressSelector externalAddressSelector) {
+
     this.messageProcessor =
         new MessageProcessor(
-            new DiscoveryV5MessageProcessor(localNodeRecordStore, talkHandler, enrUpdater));
+            new DiscoveryV5MessageProcessor(
+                localNodeRecordStore, talkHandler, enrUpdater, externalAddressSelector));
   }
 
   @Override

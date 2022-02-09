@@ -6,7 +6,8 @@ package org.ethereum.beacon.discovery.message.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter.ADDRESS_UPDATER;
-import static org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector.MIN_CONFIRMATIONS;
+import static org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector.MAX_EXTERNAL_ADDRESS_COUNT;
+import static org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector.MIN_CONFIRMATIONS;
 
 import java.net.InetSocketAddress;
 import java.time.Instant;
@@ -19,7 +20,7 @@ import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-class ExternalAddressSelectorTest {
+class DefaultExternalAddressSelectorTest {
 
   private static final InetSocketAddress ADDRESS1 = new InetSocketAddress("127.0.0.1", 2000);
   private static final InetSocketAddress ADDRESS2 = new InetSocketAddress("127.0.0.2", 2002);
@@ -33,8 +34,8 @@ class ExternalAddressSelectorTest {
       new LocalNodeRecordStore(
           originalNodeRecord, nodeId, NodeRecordListener.NOOP, ADDRESS_UPDATER);
 
-  private final ExternalAddressSelector selector =
-      new ExternalAddressSelector(localNodeRecordStore);
+  private final DefaultExternalAddressSelector selector =
+      new DefaultExternalAddressSelector(localNodeRecordStore);
 
   @AfterEach
   void tearDown() {
@@ -102,7 +103,7 @@ class ExternalAddressSelectorTest {
     }
 
     // Report a lot of different address to overflow the cache
-    for (int i = 0; i < ExternalAddressSelector.MAX_EXTERNAL_ADDRESS_COUNT; i++) {
+    for (int i = 0; i < MAX_EXTERNAL_ADDRESS_COUNT; i++) {
       selector.onExternalAddressReport(
           Optional.empty(), new InetSocketAddress(3000 + i), START_TIME);
     }
@@ -131,7 +132,7 @@ class ExternalAddressSelectorTest {
     selector.onExternalAddressReport(
         Optional.empty(),
         new InetSocketAddress("127.0.0.6", 2004),
-        START_TIME.plus(ExternalAddressSelector.TTL).plusMillis(1));
+        START_TIME.plus(DefaultExternalAddressSelector.TTL).plusMillis(1));
     assertSelectedAddress(ADDRESS3);
   }
 

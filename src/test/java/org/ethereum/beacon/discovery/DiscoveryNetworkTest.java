@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
@@ -73,7 +74,8 @@ public class DiscoveryNetworkTest {
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
-            TalkHandler.NOOP);
+            TalkHandler.NOOP,
+            ExternalAddressSelector.NOOP);
     livenessChecker1.setPinger(discoveryManager1::ping);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
@@ -89,7 +91,8 @@ public class DiscoveryNetworkTest {
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,
-            TalkHandler.NOOP);
+            TalkHandler.NOOP,
+            ExternalAddressSelector.NOOP);
     livenessChecker2.setPinger(discoveryManager2::ping);
 
     // 3) Expect standard 1 => 2 dialog
