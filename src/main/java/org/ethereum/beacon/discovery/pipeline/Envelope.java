@@ -6,15 +6,19 @@ package org.ethereum.beacon.discovery.pipeline;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** Container for any kind of objects used in packet-messages-tasks flow */
 public class Envelope {
+
   private final UUID id;
   private final Map<Field<?>, Object> data = new HashMap<>();
 
   public Envelope() {
-    this.id = UUID.randomUUID();
+    Random random = ThreadLocalRandom.current();
+    this.id = new UUID(random.nextLong(), random.nextLong());
   }
 
   public synchronized <T> void put(Field<T> key, T value) {
