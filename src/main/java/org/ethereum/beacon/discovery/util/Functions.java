@@ -47,6 +47,8 @@ public class Functions {
 
   private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
+  private static boolean SKIP_SIGNATURE_VERIFY = false;
+
   /** SHA2 (SHA256) */
   public static Bytes hash(Bytes value) {
     return Hashes.sha256(value);
@@ -72,6 +74,10 @@ public class Functions {
     return Bytes.concatenate(r, s);
   }
 
+  public static void setSkipSignatureVerify(boolean skipSignatureVerify) {
+    SKIP_SIGNATURE_VERIFY = skipSignatureVerify;
+  }
+
   /**
    * Verifies that signature is made by signer
    *
@@ -82,6 +88,10 @@ public class Functions {
    */
   public static boolean verifyECDSASignature(Bytes signature, Bytes x, Bytes pubKey) {
     Preconditions.checkArgument(pubKey.size() == 33, "Invalid public key size");
+
+    if (SKIP_SIGNATURE_VERIFY) {
+      return true;
+    }
     ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
     Bytes pubKeyUncompressed = Bytes.wrap(ecPoint.getEncoded(false)).slice(1);
     ECDSASignature ecdsaSignature =
