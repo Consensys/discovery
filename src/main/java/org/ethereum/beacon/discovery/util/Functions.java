@@ -220,7 +220,7 @@ public class Functions {
   }
 
   /** Random provider */
-  public static Random getRandom() {
+  public static SecureRandom getRandom() {
     return SECURE_RANDOM.get();
   }
 

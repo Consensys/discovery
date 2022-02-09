@@ -30,6 +30,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.type.Bytes12;
+import org.ethereum.beacon.discovery.util.Functions;
 
 /**
  * Performs {@link Field#SESSION_LOOKUP} request. Looks up for Node session based on NodeId, which
@@ -142,7 +143,7 @@ public class NodeSessionManager implements EnvelopeHandler {
       final SessionKey key, final Optional<NodeRecord> suppliedNodeRecord) {
     Optional<NodeRecord> nodeRecord =
         suppliedNodeRecord.or(() -> nodeBucketStorage.getNode(key.nodeId));
-    SecureRandom random = new SecureRandom();
+    SecureRandom random = Functions.getRandom();
     return new NodeSession(
         key.nodeId,
         nodeRecord,
