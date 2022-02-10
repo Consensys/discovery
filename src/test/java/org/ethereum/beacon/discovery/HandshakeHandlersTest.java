@@ -33,6 +33,7 @@ import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -222,7 +223,10 @@ public class HandshakeHandlersTest {
 
     MessageHandler messageHandler =
         new MessageHandler(
-            localNodeRecordStoreAt1, TalkHandler.NOOP, EnrUpdateTracker.EnrUpdater.NOOP);
+            localNodeRecordStoreAt1,
+            TalkHandler.NOOP,
+            EnrUpdateTracker.EnrUpdater.NOOP,
+            ExternalAddressSelector.NOOP);
     messageHandler.handle(envelopeAt1From2WithMessage);
 
     // Node 2 handles message from Node 1

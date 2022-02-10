@@ -16,6 +16,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.TalkReqMessage;
+import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryClientImpl;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
@@ -73,7 +74,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       NodeRecordFactory nodeRecordFactory,
       Scheduler taskScheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
-      TalkHandler talkHandler) {
+      TalkHandler talkHandler,
+      ExternalAddressSelector externalAddressSelector) {
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
@@ -97,7 +99,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                 outgoingPipeline, taskScheduler, nodeRecordFactory, nodeSessionManager))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
-        .addHandler(new MessageHandler(localNodeRecordStore, talkHandler, this::requestUpdatedEnr))
+        .addHandler(
+            new MessageHandler(
+                localNodeRecordStore,
+                talkHandler,
+                this::requestUpdatedEnr,
+                externalAddressSelector))
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
