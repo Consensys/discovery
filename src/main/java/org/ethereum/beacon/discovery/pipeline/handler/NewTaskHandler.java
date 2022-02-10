@@ -29,7 +29,7 @@ public class NewTaskHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s in NewTaskHandler, requirements are satisfied!", envelope.getId()));
+                "Envelope %s in NewTaskHandler, requirements are satisfied!", envelope.getIdString()));
 
     Request request = envelope.get(Field.REQUEST);
     NodeSession session = envelope.get(Field.SESSION);

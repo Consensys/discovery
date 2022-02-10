@@ -36,7 +36,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in UnknownPacketTagToSender, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     Packet<?> packet = envelope.get(Field.PACKET);
     Bytes32 nodeId;

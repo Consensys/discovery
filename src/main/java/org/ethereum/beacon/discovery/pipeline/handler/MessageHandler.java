@@ -46,7 +46,7 @@ public class MessageHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s in MessageHandler, requirements are satisfied!", envelope.getId()));
+                "Envelope %s in MessageHandler, requirements are satisfied!", envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
     V5Message message = envelope.get(Field.MESSAGE);
@@ -56,7 +56,7 @@ public class MessageHandler implements EnvelopeHandler {
       logger.trace(
           () ->
               String.format(
-                  "Failed to handle message %s in envelope #%s", message, envelope.getId()),
+                  "Failed to handle message %s in envelope #%s", message, envelope.getIdString()),
           ex);
       envelope.put(Field.BAD_EXCEPTION, ex);
       envelope.remove(Field.MESSAGE);

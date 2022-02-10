@@ -54,7 +54,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in WhoAreYouPacketHandler, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     WhoAreYouPacket whoAreYouPacket = envelope.get(Field.PACKET_WHOAREYOU);
     NodeSession session = envelope.get(Field.SESSION);
@@ -113,7 +113,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                       new RuntimeException(
                           String.format(
                               "Received WHOAREYOU in envelope #%s but no requests await in %s session",
-                              envelope.getId(), session)));
+                              envelope.getIdString(), session)));
 
       Bytes ephemeralPubKey = Functions.getCompressedPublicKey(ephemeralKey);
 

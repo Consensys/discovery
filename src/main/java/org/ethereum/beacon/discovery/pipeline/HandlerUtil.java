@@ -19,7 +19,7 @@ public class HandlerUtil {
           () ->
               String.format(
                   "Requirement not satisfied: field %s not exists in envelope %s",
-                  field, envelope.getId()));
+                  field, envelope.getIdString()));
       return false;
     }
   }
@@ -33,7 +33,7 @@ public class HandlerUtil {
           () ->
               String.format(
                   "Requirement not satisfied: node record unknown in envelope %s",
-                  envelope.getId()));
+                  envelope.getIdString()));
       return false;
     }
     return true;
@@ -48,7 +48,7 @@ public class HandlerUtil {
           () ->
               String.format(
                   "Requirement not satisfied: condition %s not met for envelope %s",
-                  conditionFunction, envelope.getId()));
+                  conditionFunction, envelope.getIdString()));
       return false;
     }
   }

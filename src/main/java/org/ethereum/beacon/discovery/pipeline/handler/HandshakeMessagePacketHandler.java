@@ -59,7 +59,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in AuthHeaderMessagePacketHandler, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     HandshakeMessagePacket packet = envelope.get(Field.PACKET_HANDSHAKE);
     NodeSession session = envelope.get(Field.SESSION);

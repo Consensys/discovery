@@ -36,7 +36,7 @@ public class IncomingDataPacker implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in IncomingDataPacker, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     Bytes rawPacketBytes = (Bytes) envelope.get(Field.INCOMING);
     try {
@@ -54,14 +54,14 @@ public class IncomingDataPacker implements EnvelopeHandler {
       envelope.put(Field.PACKET, packet);
       envelope.put(Field.MASKING_IV, rawPacket.getMaskingIV());
       logger.trace(
-          () -> String.format("Incoming packet %s in envelope #%s", packet, envelope.getId()));
+          () -> String.format("Incoming packet %s in envelope #%s", packet, envelope.getIdString()));
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
       logger.trace(
           () ->
               String.format(
-                  "Bad incoming packet %s in envelope #%s", rawPacketBytes, envelope.getId()));
+                  "Bad incoming packet %s in envelope #%s", rawPacketBytes, envelope.getIdString()));
     }
     envelope.remove(Field.INCOMING);
   }
