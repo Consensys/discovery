@@ -35,7 +35,7 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in UnknownPacketTypeByStatus, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     Packet<?> packet = envelope.get(Field.PACKET);
     NodeSession session = envelope.get(Field.SESSION);

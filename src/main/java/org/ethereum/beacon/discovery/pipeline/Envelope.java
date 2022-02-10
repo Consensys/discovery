@@ -6,15 +6,20 @@ package org.ethereum.beacon.discovery.pipeline;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Container for any kind of objects used in packet-messages-tasks flow */
 public class Envelope {
-  private final UUID id;
+
+  private static final AtomicLong ID_GENERATOR =
+      new AtomicLong(ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE) << 32);
+
+  private final long id;
   private final Map<Field<?>, Object> data = new HashMap<>();
 
   public Envelope() {
-    this.id = UUID.randomUUID();
+    id = ID_GENERATOR.incrementAndGet();
   }
 
   public synchronized <T> void put(Field<T> key, T value) {
@@ -34,7 +39,11 @@ public class Envelope {
     return data.containsKey(key);
   }
 
-  public UUID getId() {
+  public long getId() {
     return id;
+  }
+
+  public String getIdString() {
+    return Long.toHexString(id);
   }
 }

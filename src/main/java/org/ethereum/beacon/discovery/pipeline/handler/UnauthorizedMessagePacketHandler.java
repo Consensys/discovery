@@ -38,7 +38,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in NotExpectedIncomingPacketHandler, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
     OrdinaryMessagePacket unknownPacket = envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);

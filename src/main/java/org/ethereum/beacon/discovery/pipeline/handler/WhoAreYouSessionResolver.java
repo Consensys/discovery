@@ -41,7 +41,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in WhoAreYouSessionResolver, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     WhoAreYouPacket whoAreYouPacket = (WhoAreYouPacket) packet;
     Optional<NodeSession> nodeSessionMaybe =

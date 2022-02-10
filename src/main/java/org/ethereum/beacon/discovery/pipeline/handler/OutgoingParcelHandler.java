@@ -36,7 +36,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in OutgoingParcelHandler, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     if (envelope.get(Field.INCOMING) instanceof NetworkParcel) {
       NetworkParcel parcel = (NetworkParcel) envelope.get(Field.INCOMING);

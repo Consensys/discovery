@@ -23,13 +23,16 @@ public class BadPacketHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s in BadPacketLogger, requirements are satisfied!", envelope.getId()));
+                "Envelope %s in BadPacketLogger, requirements are satisfied!",
+                envelope.getIdString()));
 
     logger.debug(
         () ->
             String.format(
-                "Bad packet: %s in envelope #%s", envelope.get(Field.BAD_PACKET), envelope.getId()),
-        envelope.get(Field.BAD_EXCEPTION));
+                "Bad packet: %s in envelope #%s: %s",
+                envelope.get(Field.BAD_PACKET),
+                envelope.getIdString(),
+                envelope.get(Field.BAD_EXCEPTION).toString()));
     // TODO: Reputation penalty etc
   }
 }

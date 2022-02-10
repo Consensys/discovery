@@ -42,7 +42,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
         () ->
             String.format(
                 "Envelope %s in MessagePacketHandler, requirements are satisfied!",
-                envelope.getId()));
+                envelope.getIdString()));
 
     MessagePacket<?> packet = envelope.get(Field.PACKET_MESSAGE);
     NodeSession session = envelope.get(Field.SESSION);
