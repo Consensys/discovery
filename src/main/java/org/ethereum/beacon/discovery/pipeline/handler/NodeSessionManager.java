@@ -73,18 +73,22 @@ public class NodeSessionManager implements EnvelopeHandler {
     if (envelope.contains(Field.SESSION)) {
       return;
     }
-    logger.trace("Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getIdString());
+    logger.trace(
+        "Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getIdString());
 
     SessionLookup sessionRequest = envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
     logger.trace(
-        "Envelope {}: Session lookup requested for nodeId {}", envelope.getIdString(), sessionRequest);
+        "Envelope {}: Session lookup requested for nodeId {}",
+        envelope.getIdString(),
+        sessionRequest);
 
     getOrCreateSession(sessionRequest, envelope)
         .ifPresentOrElse(
             nodeSession -> {
               envelope.put(Field.SESSION, nodeSession);
-              logger.trace("Session resolved: {} in envelope #{}", nodeSession, envelope.getIdString());
+              logger.trace(
+                  "Session resolved: {} in envelope #{}", nodeSession, envelope.getIdString());
             },
             () ->
                 logger.trace(

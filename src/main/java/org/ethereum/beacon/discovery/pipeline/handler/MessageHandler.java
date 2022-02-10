@@ -46,7 +46,8 @@ public class MessageHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s in MessageHandler, requirements are satisfied!", envelope.getIdString()));
+                "Envelope %s in MessageHandler, requirements are satisfied!",
+                envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
     V5Message message = envelope.get(Field.MESSAGE);

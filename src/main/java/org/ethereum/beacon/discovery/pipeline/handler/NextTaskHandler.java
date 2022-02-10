@@ -53,12 +53,14 @@ public class NextTaskHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s in NextTaskHandler, requirements are satisfied!", envelope.getIdString()));
+                "Envelope %s in NextTaskHandler, requirements are satisfied!",
+                envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
     Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
     if (requestInfoOpt.isEmpty()) {
-      logger.trace(() -> String.format("Envelope %s: no awaiting requests", envelope.getIdString()));
+      logger.trace(
+          () -> String.format("Envelope %s: no awaiting requests", envelope.getIdString()));
       return;
     }
 
@@ -66,7 +68,8 @@ public class NextTaskHandler implements EnvelopeHandler {
     logger.trace(
         () ->
             String.format(
-                "Envelope %s: processing awaiting request %s", envelope.getIdString(), requestInfo));
+                "Envelope %s: processing awaiting request %s",
+                envelope.getIdString(), requestInfo));
 
     if (session.getState().equals(SessionState.INITIAL)) {
       session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE, ThreadLocalRandom.current()));
