@@ -37,12 +37,15 @@ public class DiscoveryV5MessageProcessor implements DiscoveryMessageProcessor<V5
   private final Map<MessageCode, MessageHandler> messageHandlers = new HashMap<>();
 
   public DiscoveryV5MessageProcessor(
-      LocalNodeRecordStore localNodeRecordStore, TalkHandler talkHandler, EnrUpdater enrUpdater) {
+      LocalNodeRecordStore localNodeRecordStore,
+      TalkHandler talkHandler,
+      EnrUpdater enrUpdater,
+      ExternalAddressSelector externalAddressSelector) {
+
     final EnrUpdateTracker enrUpdateTracker = new EnrUpdateTracker(enrUpdater);
     messageHandlers.put(MessageCode.PING, new PingHandler(enrUpdateTracker));
     messageHandlers.put(
-        MessageCode.PONG,
-        new PongHandler(new ExternalAddressSelector(localNodeRecordStore), enrUpdateTracker));
+        MessageCode.PONG, new PongHandler(externalAddressSelector, enrUpdateTracker));
     messageHandlers.put(MessageCode.FINDNODE, new FindNodeHandler());
     messageHandlers.put(MessageCode.NODES, new NodesHandler());
     messageHandlers.put(MessageCode.TALKREQ, new TalkReqHandler(talkHandler));
