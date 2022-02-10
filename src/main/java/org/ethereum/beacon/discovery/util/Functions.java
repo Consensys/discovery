@@ -44,8 +44,14 @@ public class Functions {
 
   private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
+  private static boolean skipSignatureVerify = false;
+
   static {
     SecurityInitializer.init();
+  }
+
+  public static void setSkipSignatureVerify(boolean skipSignatureVerify) {
+    Functions.skipSignatureVerify = skipSignatureVerify;
   }
 
   /** SHA2 (SHA256) */
@@ -82,6 +88,9 @@ public class Functions {
    */
   public static boolean verifyECDSASignature(
       final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
+    if (skipSignatureVerify) {
+      return true;
+    }
     if (signature.size() != SIGNATURE_SIZE) {
       LOG.trace("Invalid signature size, should be {} bytes", SIGNATURE_SIZE);
       return false;
