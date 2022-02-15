@@ -52,6 +52,8 @@ public class DiscoverySystemBuilder {
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
   private NewAddressHandler newAddressHandler;
   private Duration retryTimeout = DiscoveryTaskManager.DEFAULT_RETRY_TIMEOUT;
+  private Duration recursiveLookupIntervalSeconds =
+      DiscoveryTaskManager.DEFAULT_RECURSIVE_LOOKUP_INTERVAL_SECONDS;
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private int trafficReadLimit = 250000; // bytes per sec
   private TalkHandler talkHandler = TalkHandler.NOOP;
@@ -116,6 +118,12 @@ public class DiscoverySystemBuilder {
 
   public DiscoverySystemBuilder newAddressHandler(final NewAddressHandler handler) {
     this.newAddressHandler = handler;
+    return this;
+  }
+
+  public DiscoverySystemBuilder recursiveLookupIntervalSeconds(
+      Duration recursiveLookupIntervalSeconds) {
+    this.recursiveLookupIntervalSeconds = recursiveLookupIntervalSeconds;
     return this;
   }
 
@@ -218,6 +226,7 @@ public class DiscoverySystemBuilder {
             nodeBucketStorage,
             schedulers.newSingleThreadDaemon("discovery-tasks-" + clientNumber),
             expirationSchedulerFactory,
+            recursiveLookupIntervalSeconds,
             retryTimeout,
             lifeCheckInterval);
     return new DiscoverySystem(

@@ -24,13 +24,14 @@ public class DiscoveryTaskManager {
 
   public static final Duration DEFAULT_RETRY_TIMEOUT = Duration.ofSeconds(10);
   public static final Duration DEFAULT_LIVE_CHECK_INTERVAL = Duration.ofSeconds(1);
-  private static final int RECURSIVE_LOOKUP_INTERVAL_SECONDS = 10;
+  public static final Duration DEFAULT_RECURSIVE_LOOKUP_INTERVAL_SECONDS = Duration.ofSeconds(10);
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
   private final Bytes homeNodeId;
   private final Scheduler scheduler;
   private final RecursiveLookupTasks recursiveLookupTasks;
   private final KBuckets nodeBucketStorage;
 
+  private final Duration recursiveLookupIntervalSeconds;
   private final Duration liveCheckInterval;
   private CompletableFuture<Void> recursiveLookupSchedule;
   private CompletableFuture<Void> maintenanceSchedule;
@@ -47,6 +48,7 @@ public class DiscoveryTaskManager {
       KBuckets nodeBucketStorage,
       Scheduler scheduler,
       ExpirationSchedulerFactory expirationSchedulerFactory,
+      Duration recursiveLookupIntervalSeconds,
       Duration retryTimeout,
       Duration liveCheckInterval) {
     this.homeNodeId = homeNodeId;
@@ -55,15 +57,14 @@ public class DiscoveryTaskManager {
     this.recursiveLookupTasks =
         new RecursiveLookupTasks(
             discoveryManager, scheduler, expirationSchedulerFactory, retryTimeout);
+    this.recursiveLookupIntervalSeconds = recursiveLookupIntervalSeconds;
     this.liveCheckInterval = liveCheckInterval;
   }
 
   public synchronized void start() {
     recursiveLookupSchedule =
         scheduler.executeAtFixedRate(
-            Duration.ZERO,
-            Duration.ofSeconds(RECURSIVE_LOOKUP_INTERVAL_SECONDS),
-            this::performSearchForNewPeers);
+            Duration.ZERO, recursiveLookupIntervalSeconds, this::performSearchForNewPeers);
     maintenanceSchedule =
         scheduler.executeAtFixedRate(
             Duration.ZERO, liveCheckInterval, nodeBucketStorage::performMaintenance);
