@@ -30,4 +30,9 @@ public class IncomingMessageSink extends SimpleChannelInboundHandler<Envelope> {
     logger.trace(() -> String.format("Incoming packet %s in session %s", msg, ctx));
     messageSink.next(msg);
   }
+
+  @Override
+  public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
+    logger.error("Unexpected exception caught", cause);
+  }
 }

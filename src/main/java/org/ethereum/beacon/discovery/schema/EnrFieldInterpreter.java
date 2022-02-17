@@ -4,11 +4,11 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import org.web3j.rlp.RlpType;
+import org.apache.tuweni.rlp.RLPWriter;
 
 /** Encoder/decoder for fields of ethereum node record */
 public interface EnrFieldInterpreter {
-  Object decode(String key, RlpType rlpType);
+  Object decode(String key, Object rlpType);
 
-  RlpType encode(String key, Object object);
+  void encode(RLPWriter writer, String key, Object object);
 }

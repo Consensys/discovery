@@ -4,6 +4,8 @@
 
 package org.ethereum.beacon.discovery;
 
+import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDICATE;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.List;
@@ -129,8 +131,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     incomingPipeline.build();
     outgoingPipeline.build();
     Flux.from(discoveryServer.getIncomingPackets())
-        .onErrorContinue((err, msg) -> LOG.debug("Error while processing message: " + err))
-        .subscribe(incomingPipeline::push);
+        .doOnNext(incomingPipeline::push)
+        .onErrorContinue(
+            RECOVERABLE_ERRORS_PREDICATE,
+            (err, msg) -> LOG.debug("Error while processing message: " + err))
+        .subscribe();
     return discoveryServer
         .start()
         .thenAccept(

@@ -4,16 +4,12 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_ANY;
-import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 
-import java.util.List;
 import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
 
 /**
  * TALKREQ sends an application-level request. The purpose of this message is pre-negotiating
@@ -35,8 +31,14 @@ public class TalkReqMessage implements V5Message {
   }
 
   public static TalkReqMessage fromBytes(Bytes bytes) {
-    List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_ANY, CONS_ANY);
-    return new TalkReqMessage(list.get(0), list.get(1), list.get(2));
+    return RlpUtil.readRlpList(
+        bytes,
+        reader -> {
+          final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
+          final Bytes protocol = reader.readValue();
+          final Bytes request = reader.readValue();
+          return new TalkReqMessage(requestId, protocol, request);
+        });
   }
 
   @Override
@@ -56,12 +58,12 @@ public class TalkReqMessage implements V5Message {
   public Bytes getBytes() {
     return Bytes.concatenate(
         Bytes.of(getCode().byteCode()),
-        Bytes.wrap(
-            RlpEncoder.encode(
-                new RlpList(
-                    RlpString.create(requestId.toArrayUnsafe()),
-                    RlpString.create(protocol.toArrayUnsafe()),
-                    RlpString.create(request.toArrayUnsafe())))));
+        RLP.encodeList(
+            writer -> {
+              writer.writeValue(requestId);
+              writer.writeValue(protocol);
+              writer.writeValue(request);
+            }));
   }
 
   @Override

@@ -47,7 +47,7 @@ public class DiscoverySystemBuilder {
   private Optional<InetSocketAddress> listenAddress = Optional.empty();
   private NodeRecord localNodeRecord;
   private Bytes privateKey;
-  private final NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
+  private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
   private NewAddressHandler newAddressHandler;
@@ -76,6 +76,11 @@ public class DiscoverySystemBuilder {
 
   public DiscoverySystemBuilder privateKey(final Bytes privateKey) {
     this.privateKey = privateKey;
+    return this;
+  }
+
+  public DiscoverySystemBuilder nodeRecordFactory(NodeRecordFactory nodeRecordFactory) {
+    this.nodeRecordFactory = nodeRecordFactory;
     return this;
   }
 

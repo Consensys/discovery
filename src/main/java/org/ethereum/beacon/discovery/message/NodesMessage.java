@@ -4,18 +4,15 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
+
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * NODES is the response to a FINDNODE or TOPICQUERY message. Multiple NODES messages may be sent as
@@ -35,21 +32,15 @@ public class NodesMessage implements V5Message {
     this.nodeRecords = nodeRecords;
   }
 
-  private static NodesMessage fromRlp(List<RlpType> rlpList, NodeRecordFactory nodeRecordFactory) {
-    if (rlpList.size() != 3) {
-      throw new RlpDecodeException("Invalid RLP list size for Nodes message-data: " + rlpList);
-    }
-    List<RlpType> nodeRecords = RlpUtil.asList(rlpList.get(2));
-    return new NodesMessage(
-        RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE)),
-        RlpUtil.asInteger(rlpList.get(1)),
-        nodeRecords.stream()
-            .map(rl -> nodeRecordFactory.fromRlpList(RlpUtil.asList(rl)))
-            .collect(Collectors.toList()));
-  }
-
   public static NodesMessage fromBytes(Bytes messageBytes, NodeRecordFactory nodeRecordFactory) {
-    return fromRlp(RlpUtil.decodeSingleList(messageBytes), nodeRecordFactory);
+    return RlpUtil.readRlpList(
+        messageBytes,
+        reader -> {
+          final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
+          final int total = reader.readInt();
+          final List<NodeRecord> nodeRecords = reader.readListContents(nodeRecordFactory::fromRlp);
+          return new NodesMessage(requestId, total, nodeRecords);
+        });
   }
 
   @Override
@@ -69,15 +60,16 @@ public class NodesMessage implements V5Message {
   public Bytes getBytes() {
     return Bytes.concatenate(
         Bytes.of(getCode().byteCode()),
-        Bytes.wrap(
-            RlpEncoder.encode(
-                new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    RlpString.create(total),
-                    new RlpList(
-                        getNodeRecords().stream()
-                            .map(NodeRecord::asRlp)
-                            .collect(Collectors.toList()))))));
+        RLP.encodeList(
+            writer -> {
+              writer.writeValue(requestId);
+              writer.writeInt(total);
+              writer.writeList(
+                  getNodeRecords(),
+                  (itemWriter, nodeRecord) -> {
+                    nodeRecord.writeRlp(itemWriter);
+                  });
+            }));
   }
 
   @Override

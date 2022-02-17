@@ -5,18 +5,16 @@
 package org.ethereum.beacon.discovery.message;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 
 import com.google.common.base.Objects;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
+import org.apache.tuweni.rlp.RLPReader;
+import org.apache.tuweni.rlp.RLPWriter;
 import org.ethereum.beacon.discovery.util.DecodeException;
-import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * FINDNODE queries for nodes at the given logarithmic distance from the recipient's node ID. The
@@ -36,20 +34,15 @@ public class FindNodeMessage implements V5Message {
     this.distances = distances;
   }
 
-  private static FindNodeMessage fromRlp(List<RlpType> rlpList) throws DecodeException {
-    if (rlpList.size() != 2) {
-      throw new RlpDecodeException("Invalid RLP list size for FindNode message-data: " + rlpList);
-    }
-    Bytes requestId = RlpUtil.asString(rlpList.get(0), RlpUtil.maxSize(MAX_REQUEST_ID_SIZE));
-    List<RlpType> rlpDistances = RlpUtil.asList(rlpList.get(1));
-    List<Integer> distances =
-        rlpDistances.stream().map(RlpUtil::asInteger).collect(Collectors.toList());
-
-    return new FindNodeMessage(requestId, distances);
-  }
-
   public static FindNodeMessage fromBytes(Bytes bytes) throws DecodeException {
-    return fromRlp(RlpUtil.decodeSingleList(bytes));
+    return RlpUtil.readRlpList(
+        bytes,
+        listReader -> {
+          final Bytes requestId1 = checkMaxSize(listReader.readValue(), MAX_REQUEST_ID_SIZE);
+          List<Integer> distances1 = listReader.readListContents(RLPReader::readInt);
+          RlpUtil.checkComplete(listReader);
+          return new FindNodeMessage(requestId1, distances1);
+        });
   }
 
   @Override
@@ -65,14 +58,11 @@ public class FindNodeMessage implements V5Message {
   public Bytes getBytes() {
     return Bytes.concatenate(
         Bytes.of(getCode().byteCode()),
-        Bytes.wrap(
-            RlpEncoder.encode(
-                new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    new RlpList(
-                        getDistances().stream()
-                            .map(RlpString::create)
-                            .collect(Collectors.toList()))))));
+        RLP.encodeList(
+            writer -> {
+              writer.writeValue(requestId);
+              writer.writeList(getDistances(), RLPWriter::writeInt);
+            }));
   }
 
   @Override

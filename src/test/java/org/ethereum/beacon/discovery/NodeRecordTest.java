@@ -202,18 +202,18 @@ public class NodeRecordTest {
   public void testEnrWithEthFieldDecodes() {
     final int port = 30303;
     final Bytes ip = Bytes.fromHexString("0x7F000001");
-    final Bytes nodeId =
-        Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
     final Bytes privateKey =
         Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+
     final List<Bytes> forkIdList = new ArrayList<>();
     forkIdList.add(Bytes.fromHexString("0x7a739ef1"));
     forkIdList.add(Bytes.fromHexString("0x"));
+
     final NodeRecord record =
         NODE_RECORD_FACTORY.createFromValues(
             UInt64.ONE,
             new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, nodeId),
+            new EnrField(EnrField.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)),
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("eth", Collections.singletonList(forkIdList)));
@@ -224,8 +224,20 @@ public class NodeRecordTest {
     assertThat(result).isEqualTo(record);
     assertThat(result.asEnr())
         .isEqualTo(
-            "enr:-I-4QN2E5eqaGOEaXAOdceWIep5oUHalCBvzWSH108iKhF6gAdoeBhp4V6nr71xSEaWrs_2Of6ZRhoxQh2"
-                + "2TAGE3H1gBg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoKRI8kxtGOV1RT2xMXFWK3"
-                + "GZmHPbWyht-VevGZ7JRhf3g3RjcIJ2Xw");
+            "enr:-JC4QBF-k6ezIoeB4BTMx9sLpFmcTZT4nBGUZLJ0JeYlT_rtfpVIa02sdfJwjUcXCb1h_HwGUtgPwwz2cbJiyAP4wT4Bg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN0Y3CCdl8");
+    final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(result.asEnr());
+    assertThat(nodeRecord.isValid()).isTrue();
+    assertThat(nodeRecord.get("eth")).isEqualTo(Collections.singletonList(forkIdList));
+    assertThat(nodeRecord).isEqualTo(result);
+  }
+
+  @Test
+  void testEnrWithValidEthFieldDecodes() {
+    final String enr =
+        "enr:-KK4QH0RsNJmIG0EX9LSnVxMvg-CAOr3ZFF92hunU63uE7wcYBjG1cFbUTvEa5G_4nDJkRhUq9q2ck9xY-VX1RtBsruBtIRldGgykIL0pysBABAg__________-CaWSCdjSCaXCEEnXQ0YlzZWNwMjU2azGhA1grTzOdMgBvjNrk-vqWtTZsYQIi0QawrhoZrsn5Hd56g3RjcIIjKIN1ZHCCIyg";
+    final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(enr);
+    assertThat(nodeRecord.asEnr()).isEqualTo(enr);
+    assertThat(nodeRecord.get("eth2"))
+        .isEqualTo(Bytes.fromHexString("0x82f4a72b01001020ffffffffffffffff"));
   }
 }

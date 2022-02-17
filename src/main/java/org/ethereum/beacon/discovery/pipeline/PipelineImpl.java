@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery.pipeline;
 
 import static org.ethereum.beacon.discovery.pipeline.Field.INCOMING;
+import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDICATE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,9 @@ public class PipelineImpl implements Pipeline {
       pipeline = pipeline.doOnNext(handler::handle);
     }
     Flux.from(pipeline)
-        .onErrorContinue((err, msg) -> LOG.debug("Error while processing message: " + err))
+        .onErrorContinue(
+            RECOVERABLE_ERRORS_PREDICATE,
+            (err, msg) -> LOG.debug("Error while processing message: " + err))
         .subscribe();
     return this;
   }

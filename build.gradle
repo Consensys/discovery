@@ -27,8 +27,9 @@ repositories {
 
 dependencies {
   implementation 'org.apache.tuweni:tuweni-bytes'
-  implementation 'org.apache.tuweni:tuweni-units'
   implementation 'org.apache.tuweni:tuweni-crypto'
+  implementation 'org.apache.tuweni:tuweni-rlp'
+  implementation 'org.apache.tuweni:tuweni-units'
   implementation 'org.bouncycastle:bcprov-jdk15on'
 
   implementation 'com.google.guava:guava'

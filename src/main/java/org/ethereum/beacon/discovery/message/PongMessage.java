@@ -4,19 +4,14 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
-import static org.ethereum.beacon.discovery.util.RlpUtil.enumSizes;
-import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
-import static org.ethereum.beacon.discovery.util.RlpUtil.strictSize;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkSizeEither;
 
 import com.google.common.base.Objects;
-import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
 
 /** PONG is the reply to PING {@link PingMessage} */
 public class PongMessage implements V5Message {
@@ -37,11 +32,15 @@ public class PongMessage implements V5Message {
   }
 
   public static PongMessage fromBytes(Bytes bytes) {
-    List<Bytes> list =
-        RlpUtil.decodeListOfStrings(
-            bytes, maxSize(8), CONS_UINT64, enumSizes(4, 16), strictSize(2));
-    return new PongMessage(
-        list.get(0), UInt64.fromBytes(list.get(1)), list.get(2), list.get(3).toInt());
+    return RlpUtil.readRlpList(
+        bytes,
+        reader -> {
+          final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
+          final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
+          final Bytes recipientIp = checkSizeEither(reader.readValue(), 4, 16);
+          final int recipientPort = reader.readInt();
+          return new PongMessage(requestId, enrSeq, recipientIp, recipientPort);
+        });
   }
 
   @Override
@@ -65,13 +64,13 @@ public class PongMessage implements V5Message {
   public Bytes getBytes() {
     return Bytes.concatenate(
         Bytes.of(getCode().byteCode()),
-        Bytes.wrap(
-            RlpEncoder.encode(
-                new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    RlpString.create(enrSeq.toBigInteger()),
-                    RlpString.create(recipientIp.toArray()),
-                    RlpString.create(recipientPort)))));
+        RLP.encodeList(
+            writer -> {
+              writer.writeValue(requestId);
+              writer.writeBigInteger(enrSeq.toBigInteger());
+              writer.writeValue(recipientIp);
+              writer.writeInt(recipientPort);
+            }));
   }
 
   @Override
