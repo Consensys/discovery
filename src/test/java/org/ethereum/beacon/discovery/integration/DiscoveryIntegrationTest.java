@@ -5,6 +5,7 @@ package org.ethereum.beacon.discovery.integration;
 
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.waitFor;
@@ -23,19 +24,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLPReader;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
+import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -315,6 +320,74 @@ public class DiscoveryIntegrationTest {
     assertThat(testTalkHandler.protocol).isEqualTo(Bytes.fromHexString("0xaabbcc"));
     assertThat(testTalkHandler.srcNode.getNodeId())
         .isEqualTo(client.getLocalNodeRecord().getNodeId());
+  }
+
+  @Test
+  public void shouldRecoverAfterErrorWhileDecodingInboundMessage() throws Exception {
+    class BuggyNodeRecordFactory extends NodeRecordFactory {
+      public final AtomicBoolean throwError = new AtomicBoolean();
+
+      public BuggyNodeRecordFactory() {
+        super(new IdentitySchemaV4Interpreter());
+      }
+
+      @Override
+      public NodeRecord fromRlp(RLPReader reader) {
+        if (throwError.get()) {
+          throw new StackOverflowError("test error");
+        } else {
+          return super.fromRlp(reader);
+        }
+      }
+    }
+    BuggyNodeRecordFactory buggyNodeRecordFactory = new BuggyNodeRecordFactory();
+
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem client =
+        createDiscoveryClient(
+            true,
+            LOCALHOST,
+            Functions.generateECKeyPair(),
+            discoverySystemBuilder ->
+                discoverySystemBuilder.nodeRecordFactory(buggyNodeRecordFactory),
+            bootnode.getLocalNodeRecord());
+    final DiscoverySystem otherClient = createDiscoveryClient(client.getLocalNodeRecord());
+
+    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    waitFor(pingResult);
+    assertTrue(pingResult.isDone());
+    assertFalse(pingResult.isCompletedExceptionally());
+
+    buggyNodeRecordFactory.throwError.set(true);
+
+    final CompletableFuture<Collection<NodeRecord>> findNodesErrorResult =
+        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0)).orTimeout(3, SECONDS);
+    assertThrows(ExecutionException.class, findNodesErrorResult::get);
+
+    buggyNodeRecordFactory.throwError.set(false);
+
+    final CompletableFuture<Void> otherClientPingResult =
+        otherClient.ping(client.getLocalNodeRecord());
+    waitFor(otherClientPingResult);
+    assertTrue(otherClientPingResult.isDone());
+    assertFalse(otherClientPingResult.isCompletedExceptionally());
+
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult1 =
+        otherClient.findNodes(client.getLocalNodeRecord(), singletonList(0));
+    waitFor(findNodesResult1);
+    assertTrue(findNodesResult1.isDone());
+    assertFalse(findNodesResult1.isCompletedExceptionally());
+
+    final CompletableFuture<Collection<NodeRecord>> findNodesResult2 =
+        client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
+    waitFor(findNodesResult2);
+    assertTrue(findNodesResult2.isDone());
+    assertFalse(findNodesResult2.isCompletedExceptionally());
+
+    final CompletableFuture<Void> bootnodePingResult = bootnode.ping(client.getLocalNodeRecord());
+    waitFor(bootnodePingResult);
+    assertTrue(bootnodePingResult.isDone());
+    assertFalse(bootnodePingResult.isCompletedExceptionally());
   }
 
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {

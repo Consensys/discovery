@@ -4,18 +4,21 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkComplete;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
+
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
+import org.apache.tuweni.rlp.RLPReader;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.DecodeException;
-import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpType;
 
 public class NodeRecordFactory {
   public static final NodeRecordFactory DEFAULT =
@@ -70,53 +73,67 @@ public class NodeRecordFactory {
     return fromBytes(bytes.toArray());
   }
 
-  @SuppressWarnings({"DefaultCharset"})
-  public NodeRecord fromRlpList(List<RlpType> rlpList) {
-    if (rlpList.size() < 4) {
-      throw new RlpDecodeException(
-          String.format("Unable to deserialize ENR with less than 4 fields, [%s]", rlpList));
-    }
+  public NodeRecord fromRlp(final RLPReader reader) {
+    return reader.readList(
+        listReader -> {
+          final Bytes signature = listReader.readValue();
+          final UInt64 seq =
+              UInt64.fromBytes(checkMaxSize(listReader.readValue(), RlpUtil.UINT64_MAX_SIZE));
 
-    // TODO: repair as id is not first now
-    IdentitySchema nodeIdentity = null;
-    boolean idFound = false;
-    for (int i = 2; i < rlpList.size() - 1; i += 2) {
-      Bytes id = RlpUtil.asString(rlpList.get(i), RlpUtil.maxSize(MAX_FIELD_KEY_SIZE));
-      if (!"id".equals(new String(id.toArrayUnsafe(), StandardCharsets.UTF_8))) {
-        continue;
-      }
+          final Map<String, Object> rawFields = new HashMap<>();
+          IdentitySchema nodeIdentity = null;
+          String previousKey = null;
+          while (!listReader.isComplete()) {
+            String key =
+                new String(
+                    checkMaxSize(listReader.readValue(), MAX_FIELD_KEY_SIZE).toArrayUnsafe(),
+                    UTF_8);
+            if (previousKey != null && key.compareTo(previousKey) <= 0) {
+              throw new DecodeException("ENR fields are not in strict order");
+            }
+            previousKey = key;
 
-      Bytes idVersion = RlpUtil.asString(rlpList.get(i + 1), RlpUtil.maxSize(MAX_ENR_RLP_SIZE));
-      String verString = new String(idVersion.toArrayUnsafe(), StandardCharsets.UTF_8);
-      nodeIdentity = IdentitySchema.fromString(verString);
-      if (nodeIdentity == null) { // no interpreter for such id
-        throw new DecodeException(
-            String.format(
-                "Unknown node identity scheme '%s', couldn't create node record.", verString));
-      }
-      idFound = true;
-      break;
-    }
-    if (!idFound) { // no `id` key-values
-      throw new DecodeException("Unknown node identity scheme, not defined in record ");
-    }
+            if ("id".equals(key)) {
+              Bytes idVersion = checkMaxSize(listReader.readValue(), MAX_ENR_RLP_SIZE);
+              String verString = new String(idVersion.toArrayUnsafe(), UTF_8);
+              nodeIdentity = IdentitySchema.fromString(verString);
+              if (nodeIdentity == null) { // no interpreter for such id
+                throw new DecodeException(
+                    String.format(
+                        "Unknown node identity scheme '%s', couldn't create node record.",
+                        verString));
+              }
+              rawFields.put(key, idVersion);
+            } else {
+              rawFields.put(key, readKeyValue(listReader, RlpUtil.MAX_NESTED_LIST_LEVELS));
+            }
+          }
+          if (nodeIdentity == null) { // no `id` key-values
+            throw new DecodeException("Unknown node identity scheme, not defined in record ");
+          }
 
-    IdentitySchemaInterpreter identitySchemaInterpreter = interpreters.get(nodeIdentity);
-    if (identitySchemaInterpreter == null) {
-      throw new DecodeException(
-          String.format(
-              "No Ethereum record interpreter found for identity scheme %s", nodeIdentity));
-    }
+          IdentitySchemaInterpreter identitySchemaInterpreter = interpreters.get(nodeIdentity);
+          if (identitySchemaInterpreter == null) {
+            throw new DecodeException(
+                String.format(
+                    "No Ethereum record interpreter found for identity scheme %s", nodeIdentity));
+          }
 
-    return NodeRecord.fromRawFieldsStrict(
-        identitySchemaInterpreter,
-        UInt64.fromBytes(RlpUtil.asString(rlpList.get(1), RlpUtil.CONS_UINT64)),
-        RlpUtil.asString(rlpList.get(0), RlpUtil.CONS_ANY),
-        rlpList.subList(2, rlpList.size()));
+          checkComplete(listReader);
+          return NodeRecord.fromRawFields(identitySchemaInterpreter, seq, signature, rawFields);
+        });
+  }
+
+  private Object readKeyValue(final RLPReader reader, final int remainingListLevels) {
+    if (reader.nextIsList() && remainingListLevels > 0) {
+      return reader.readListContents(
+          listReader -> readKeyValue(listReader, remainingListLevels - 1));
+    }
+    return reader.readValue();
   }
 
   public NodeRecord fromBytes(byte[] bytes) {
     // record    = [signature, seq, k, v, ...]
-    return fromRlpList(RlpUtil.decodeSingleList(Bytes.wrap(bytes)));
+    return RLP.decode(Bytes.wrap(bytes), this::fromRlp);
   }
 }

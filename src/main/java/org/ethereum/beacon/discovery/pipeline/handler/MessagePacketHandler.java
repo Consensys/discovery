@@ -72,6 +72,14 @@ public class MessagePacketHandler implements EnvelopeHandler {
       logger.debug(error, ex);
       envelope.remove(Field.PACKET_MESSAGE);
       envelope.put(Field.BAD_PACKET, packet);
+    } catch (Throwable t) {
+      logger.warn(
+          "Unexpected error while reading message [{}] from node {}",
+          packet,
+          session.getNodeRecord(),
+          t);
+      envelope.remove(Field.PACKET_MESSAGE);
+      envelope.put(Field.BAD_PACKET, packet);
     }
   }
 }

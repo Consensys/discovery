@@ -4,17 +4,13 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.ethereum.beacon.discovery.util.RlpUtil.CONS_UINT64;
-import static org.ethereum.beacon.discovery.util.RlpUtil.maxSize;
+import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 
 import com.google.common.base.Objects;
-import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.RlpUtil;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
 
 /**
  * PING checks whether the recipient is alive and informs it about the sender's ENR sequence number.
@@ -31,8 +27,13 @@ public class PingMessage implements V5Message {
   }
 
   public static PingMessage fromBytes(Bytes bytes) {
-    List<Bytes> list = RlpUtil.decodeListOfStrings(bytes, maxSize(8), CONS_UINT64);
-    return new PingMessage(list.get(0), UInt64.fromBytes(list.get(1)));
+    return RlpUtil.readRlpList(
+        bytes,
+        reader -> {
+          final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
+          final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
+          return new PingMessage(requestId, enrSeq);
+        });
   }
 
   @Override
@@ -48,11 +49,11 @@ public class PingMessage implements V5Message {
   public Bytes getBytes() {
     return Bytes.concatenate(
         Bytes.of(getCode().byteCode()),
-        Bytes.wrap(
-            RlpEncoder.encode(
-                new RlpList(
-                    RlpString.create(requestId.toArray()),
-                    RlpString.create(enrSeq.toBigInteger())))));
+        RLP.encodeList(
+            writer -> {
+              writer.writeValue(requestId);
+              writer.writeBigInteger(enrSeq.toBigInteger());
+            }));
   }
 
   @Override

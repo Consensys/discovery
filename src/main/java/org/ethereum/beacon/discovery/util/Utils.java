@@ -11,13 +11,34 @@ import java.math.BigInteger;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import reactor.core.Exceptions;
 
 public class Utils {
+
+  /**
+   * Reactor treats a number of Throwable as 'fatal' by default including StackOverflowError and
+   * OutOfMemoryError However the latter two errors could be pretty recoverable. This predicate
+   * excludes the above two errors from the Reactor default fatal set
+   */
+  public static final Predicate<Throwable> RECOVERABLE_ERRORS_PREDICATE =
+      t -> {
+        if (t instanceof StackOverflowError || t instanceof OutOfMemoryError) {
+          return true;
+        } else {
+          try {
+            Exceptions.throwIfFatal(t);
+            return true;
+          } catch (Throwable e) {
+            return false;
+          }
+        }
+      };
 
   public static <A, B> Function<Optional<A>, Stream<B>> optionalFlatMap(Function<A, B> func) {
     return opt -> opt.map(a -> Stream.of(func.apply(a))).orElseGet(Stream::empty);

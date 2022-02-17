@@ -6,13 +6,10 @@ package org.ethereum.beacon.discovery.schema;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Comparators;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +19,9 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
+import org.apache.tuweni.rlp.RLP;
+import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.web3j.rlp.RlpEncoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
-import org.web3j.rlp.RlpType;
 
 /**
  * Ethereum Node Record V4
@@ -64,46 +59,22 @@ public class NodeRecord {
   }
 
   public static NodeRecord fromValues(
-      IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, List<EnrField> enrFields) {
-    return fromValues(identitySchemaInterpreter, seq, Optional.empty(), enrFields);
-  }
-
-  public static NodeRecord fromRawFieldsStrict(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
-      Bytes signature,
-      List<RlpType> rawFields) {
-
-    checkArgument(rawFields.size() % 2 == 0, "Non even rawFields list size");
-    List<EnrField> enrFields = new ArrayList<>(rawFields.size() / 2);
-    for (int i = 0; i < rawFields.size(); i += 2) {
-      String key = new String(((RlpString) rawFields.get(i)).getBytes(), StandardCharsets.UTF_8);
-      EnrField enrField = new EnrField(key, enrFieldInterpreter.decode(key, rawFields.get(i + 1)));
-      enrFields.add(enrField);
-    }
-    validateEnrFields(enrFields);
-    return fromValues(identitySchemaInterpreter, seq, Optional.of(signature), enrFields);
-  }
-
-  private static NodeRecord fromValues(
-      IdentitySchemaInterpreter identitySchemaInterpreter,
-      UInt64 seq,
-      Optional<Bytes> maybeSignature,
-      List<EnrField> enrFields) {
-
-    NodeRecord nodeRecord =
-        maybeSignature
-            .map(signature -> new NodeRecord(identitySchemaInterpreter, seq, signature))
-            .orElseGet(() -> new NodeRecord(identitySchemaInterpreter, seq));
-    enrFields.forEach(enrField -> nodeRecord.set(enrField.getName(), enrField.getValue()));
+      List<EnrField> fieldKeyPairs) {
+    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
+    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getName(), objects.getValue()));
     return nodeRecord;
   }
 
-  private static void validateEnrFields(List<EnrField> enrFields) {
-    List<String> enrKeys = enrFields.stream().map(EnrField::getName).collect(Collectors.toList());
-    if (!Comparators.isInStrictOrder(enrKeys, Comparator.naturalOrder())) {
-      throw new IllegalArgumentException("ENR record keys are not in strict order");
-    }
+  public static NodeRecord fromRawFields(
+      IdentitySchemaInterpreter identitySchemaInterpreter,
+      UInt64 seq,
+      Bytes signature,
+      Map<String, Object> rawFields) {
+    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
+    rawFields.forEach((key, value) -> nodeRecord.set(key, enrFieldInterpreter.decode(key, value)));
+    return nodeRecord;
   }
 
   public String asBase64() {
@@ -173,34 +144,49 @@ public class NodeRecord {
     identitySchemaInterpreter.sign(this, privateKey);
   }
 
-  public RlpList asRlp() {
-    return asRlpImpl(true);
+  public void writeRlp(final RLPWriter writer) {
+    writeRlp(writer, true);
   }
 
-  public RlpList asRlpNoSignature() {
-    return asRlpImpl(false);
-  }
-
-  private RlpList asRlpImpl(boolean withSignature) {
+  public void writeRlp(final RLPWriter writer, final boolean includeSignature) {
     Preconditions.checkNotNull(getSeq(), "Missing sequence number");
     // content   = [seq, k, v, ...]
     // signature = sign(content)
     // record    = [signature, seq, k, v, ...]
-    List<RlpType> values = new ArrayList<>();
-    if (withSignature) {
-      values.add(RlpString.create(getSignature().toArray()));
-    }
-    values.add(RlpString.create(getSeq().toBigInteger()));
     List<String> keySortedList = fields.keySet().stream().sorted().collect(Collectors.toList());
-    for (String key : keySortedList) {
-      if (fields.get(key) == null) {
-        continue;
-      }
-      values.add(RlpString.create(key));
-      values.add(enrFieldInterpreter.encode(key, fields.get(key)));
-    }
+    writeRlp(writer, includeSignature, keySortedList);
+  }
 
-    return new RlpList(values);
+  @VisibleForTesting
+  void writeRlp(
+      final RLPWriter writer, final boolean includeSignature, final List<String> keySortedList) {
+    writer.writeList(
+        listWriter -> {
+          if (includeSignature) {
+            listWriter.writeValue(getSignature());
+          }
+          listWriter.writeBigInteger(getSeq().toBigInteger());
+
+          for (String key : keySortedList) {
+            if (fields.get(key) == null) {
+              continue;
+            }
+            listWriter.writeString(key);
+            enrFieldInterpreter.encode(listWriter, key, fields.get(key));
+          }
+        });
+  }
+
+  public Bytes asRlp() {
+    return asRlpImpl(true);
+  }
+
+  public Bytes asRlpNoSignature() {
+    return asRlpImpl(false);
+  }
+
+  private Bytes asRlpImpl(boolean withSignature) {
+    return RLP.encode(writer -> writeRlp(writer, withSignature));
   }
 
   public Bytes serialize() {
@@ -212,10 +198,9 @@ public class NodeRecord {
   }
 
   private Bytes serializeImpl(boolean withSignature) {
-    RlpType rlpRecord = withSignature ? asRlp() : asRlpNoSignature();
-    byte[] bytes = RlpEncoder.encode(rlpRecord);
-    checkArgument(bytes.length <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
-    return Bytes.wrap(bytes);
+    Bytes bytes = withSignature ? asRlp() : asRlpNoSignature();
+    checkArgument(bytes.size() <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
+    return bytes;
   }
 
   public Bytes getNodeId() {
