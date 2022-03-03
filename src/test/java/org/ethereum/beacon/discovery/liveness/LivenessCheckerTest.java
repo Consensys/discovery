@@ -8,10 +8,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +30,8 @@ class LivenessCheckerTest {
 
   private final Pinger pinger = mock(Pinger.class);
   private final Map<NodeRecord, CompletableFuture<Void>> pingResults = new HashMap<>();
-
-  private final LivenessChecker livenessChecker = new LivenessChecker();
+  private final Clock clock = Clock.systemUTC();
+  private final LivenessChecker livenessChecker = new LivenessChecker(clock);
 
   @BeforeEach
   void setUp() {
@@ -150,8 +152,44 @@ class LivenessCheckerTest {
     verify(pinger, never()).ping(ignoredNode);
   }
 
+  @Test
+  void shouldNotPingFailedNodeUntilIgnoreExpire() {
+    final Clock mockClock = mock(Clock.class);
+    final LivenessChecker livenessCheckerCustom = new LivenessChecker(mockClock);
+    livenessCheckerCustom.setPinger(pinger);
+    when(mockClock.millis()).thenReturn(12345L);
+    final NodeRecord node1 = createNewNodeRecord();
+    final NodeRecord node2 = createNewNodeRecord();
+    final NodeRecord node3 = createNewNodeRecord();
+    livenessCheckerCustom.checkLiveness(node1);
+    livenessCheckerCustom.checkLiveness(node2);
+    livenessCheckerCustom.checkLiveness(node3);
+    verify(pinger).ping(node1);
+    verify(pinger).ping(node2);
+    verify(pinger).ping(node3);
+    verifyNoMoreInteractions(pinger);
+
+    pingCompleted(node1);
+    pingCompleted(node2);
+    pingCompletedFailed(node3);
+
+    when(mockClock.millis()).thenReturn(13345L);
+    livenessCheckerCustom.checkLiveness(node3);
+    // there was 1 already above, but no second ping
+    verify(pinger, times(1)).ping(node3);
+
+    when(mockClock.millis()).thenReturn(13345L + LivenessChecker.ignoreDuration.toMillis());
+    livenessCheckerCustom.checkLiveness(node3);
+    verify(pinger, times(2)).ping(node3);
+  }
+
   private void pingCompleted(final NodeRecord node) {
     pingResults.get(node).complete(null);
+    pingResults.remove(node);
+  }
+
+  private void pingCompletedFailed(final NodeRecord node) {
+    pingResults.get(node).completeExceptionally(new Error());
     pingResults.remove(node);
   }
 

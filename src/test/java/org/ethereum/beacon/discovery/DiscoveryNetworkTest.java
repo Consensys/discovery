@@ -44,8 +44,8 @@ public class DiscoveryNetworkTest {
     NodeInfo nodePair2 = TestUtil.generateNode(30304);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    LivenessChecker livenessChecker1 = new LivenessChecker();
-    LivenessChecker livenessChecker2 = new LivenessChecker();
+    LivenessChecker livenessChecker1 = new LivenessChecker(clock);
+    LivenessChecker livenessChecker2 = new LivenessChecker(clock);
     KBuckets nodeBucketStorage1 =
         new KBuckets(
             clock,

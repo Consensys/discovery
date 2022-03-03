@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
@@ -43,9 +44,10 @@ import org.mockito.Mockito;
 public class FindNodeHandlerTest {
 
   private int counter = 1000;
-  private NodeInfo homeNodePair = TestUtil.generateUnverifiedNode(30303);
-  private NodeRecord homeNodeRecord = homeNodePair.getNodeRecord();
-  private KBuckets nodeBucketStorage =
+  private final NodeInfo homeNodePair = TestUtil.generateUnverifiedNode(30303);
+  private final NodeRecord homeNodeRecord = homeNodePair.getNodeRecord();
+  private final Clock clock = Clock.systemUTC();
+  private final KBuckets nodeBucketStorage =
       new KBuckets(
           Clock.fixed(Instant.ofEpochSecond(100000), ZoneId.of("UTC")),
           new LocalNodeRecordStore(
@@ -53,11 +55,11 @@ public class FindNodeHandlerTest {
               Bytes.fromHexString("0x1234"),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
-          new LivenessChecker());
-  private NodeSession session = mock(NodeSession.class);
-  private Map<Integer, List<NodeRecord>> tableRecords = new HashMap<>();
+          new LivenessChecker(clock));
+  private final NodeSession session = mock(NodeSession.class);
+  private final Map<Integer, List<NodeRecord>> tableRecords = new HashMap<>();
 
-  private FindNodeHandler nodeHandler = new FindNodeHandler();
+  private final FindNodeHandler nodeHandler = new FindNodeHandler();
 
   {
     when(session.getNodeRecordsInBucket(anyInt()))
@@ -88,7 +90,7 @@ public class FindNodeHandlerTest {
     assertThat(msg.getTotal()).isEqualTo(1);
 
     List<NodeRecord> expectedRecords =
-        List.of(255, 254, 253).stream()
+        Stream.of(255, 254, 253)
             .flatMap(i -> tableRecords.getOrDefault(i, Collections.emptyList()).stream())
             .collect(Collectors.toList());
     List<NodeRecord> actualRecords = msg.getNodeRecords();

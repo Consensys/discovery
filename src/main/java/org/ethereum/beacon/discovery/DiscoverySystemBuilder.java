@@ -57,7 +57,8 @@ public class DiscoverySystemBuilder {
   private TalkHandler talkHandler = TalkHandler.NOOP;
   private NettyDiscoveryServer discoveryServer = null;
   private ExternalAddressSelector externalAddressSelector = null;
-  private final LivenessChecker livenessChecker = new LivenessChecker();
+  private final Clock clock = Clock.systemUTC();
+  private final LivenessChecker livenessChecker = new LivenessChecker(clock);
 
   public DiscoverySystemBuilder trafficReadLimit(final int trafficReadLimit) {
     this.trafficReadLimit = trafficReadLimit;
@@ -176,8 +177,7 @@ public class DiscoverySystemBuilder {
                     localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
     nodeBucketStorage =
         requireNonNullElseGet(
-            nodeBucketStorage,
-            () -> new KBuckets(Clock.systemUTC(), localNodeRecordStore, livenessChecker));
+            nodeBucketStorage, () -> new KBuckets(clock, localNodeRecordStore, livenessChecker));
     expirationSchedulerFactory =
         requireNonNullElseGet(
             expirationSchedulerFactory,
