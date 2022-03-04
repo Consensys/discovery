@@ -7,34 +7,30 @@ package org.ethereum.beacon.discovery.database;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Set with data expiring in configured time
+ * Set-alike collection with data expiring in configured time. This structure is not thread safe,
+ * please, synchronize usage
  *
- * @param <V> data type
+ * @param <V> data type should extend Comparable<V> to avoid collisions
  */
-public class ExpirationSet<V> implements Set<V> {
+public class ExpirationSet<V extends Comparable<V>> {
 
   private final long expirationDelayMillis;
   private final Clock clock;
   private final long size;
-
-  TreeSet<Pair<Long, V>> dataExpiration =
+  private final TreeSet<Pair<Long, V>> dataExpiration =
       new TreeSet<>(
-          (o1, o2) -> {
-            int expirationDeltaSignum = Long.signum(o1.getFirst() - o2.getFirst());
-            if (expirationDeltaSignum != 0) {
-              return expirationDeltaSignum;
-            }
-            return Integer.compare(o1.getSecond().hashCode(), o2.getSecond().hashCode());
-          });
-  Set<V> data = new HashSet<>();
+          Comparator.comparingLong(Pair<Long, V>::getFirst)
+              .reversed()
+              .thenComparing(Pair::getSecond));
+  private final Set<V> data = new HashSet<>();
 
   /**
    * Creates new set with records expiring in configured timeline after insertion
@@ -63,7 +59,7 @@ public class ExpirationSet<V> implements Set<V> {
     this(expirationDelay.toMillis(), clock, size);
   }
 
-  private synchronized void clearExpired() {
+  private void clearExpired() {
     final long currentTime = clock.millis();
     boolean next = true;
     while (next && !dataExpiration.isEmpty()) {
@@ -77,46 +73,22 @@ public class ExpirationSet<V> implements Set<V> {
     }
   }
 
-  @Override
   public int size() {
     clearExpired();
     return data.size();
   }
 
-  @Override
   public boolean isEmpty() {
     clearExpired();
     return data.isEmpty();
   }
 
-  @Override
-  public boolean contains(Object o) {
+  public boolean contains(V o) {
     clearExpired();
     return data.contains(o);
   }
 
-  @NotNull
-  @Override
-  public Iterator<V> iterator() {
-    clearExpired();
-    return data.iterator();
-  }
-
-  @NotNull
-  @Override
-  public Object[] toArray() {
-    clearExpired();
-    return data.toArray();
-  }
-
-  @NotNull
-  @Override
-  public <T> T[] toArray(@NotNull T[] a) {
-    throw new RuntimeException("Not implemented yet");
-  }
-
-  @Override
-  public synchronized boolean add(V v) {
+  public boolean add(V v) {
     clearExpired();
     // no renewal
     if (contains(v)) {
@@ -132,35 +104,13 @@ public class ExpirationSet<V> implements Set<V> {
     return true;
   }
 
-  @Override
-  public synchronized boolean remove(Object o) {
-    throw new RuntimeException("Not implemented yet");
-  }
-
-  @Override
-  public boolean containsAll(@NotNull Collection<?> c) {
-    return data.containsAll(c);
-  }
-
-  @Override
   public boolean addAll(@NotNull Collection<? extends V> c) {
     clearExpired();
     c.forEach(this::add);
     return true;
   }
 
-  @Override
-  public boolean retainAll(@NotNull Collection<?> c) {
-    throw new RuntimeException("Not implemented yet");
-  }
-
-  @Override
-  public boolean removeAll(@NotNull Collection<?> c) {
-    throw new RuntimeException("Not implemented yet");
-  }
-
-  @Override
-  public synchronized void clear() {
+  public void clear() {
     data.clear();
     dataExpiration.clear();
   }

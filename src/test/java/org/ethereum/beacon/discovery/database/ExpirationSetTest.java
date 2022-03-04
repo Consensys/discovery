@@ -32,8 +32,10 @@ public class ExpirationSetTest {
     ExpirationSet<String> expirationSet = new ExpirationSet<>(5, clock, 3);
     expirationSet.add("a");
     expirationSet.add("b");
+    assertThat(expirationSet.size()).isEqualTo(2);
     when(clock.millis()).thenReturn(12352L);
     expirationSet.add("c");
+    assertThat(expirationSet.size()).isEqualTo(1);
     when(clock.millis()).thenReturn(12355L);
     expirationSet.add("d");
     assertThat(expirationSet.size()).isEqualTo(2);
@@ -42,7 +44,7 @@ public class ExpirationSetTest {
   }
 
   @Test
-  public void addingExistingElementShouldBeIgnore() {
+  public void addingExistingElementShouldBeIgnored() {
     when(clock.millis()).thenReturn(12345L);
     ExpirationSet<String> expirationSet = new ExpirationSet<>(5, clock, 3);
     expirationSet.add("a");

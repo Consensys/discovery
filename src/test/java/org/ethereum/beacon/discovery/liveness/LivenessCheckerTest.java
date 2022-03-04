@@ -178,7 +178,7 @@ class LivenessCheckerTest {
     // there was 1 already above, but no second ping
     verify(pinger, times(1)).ping(node3);
 
-    when(mockClock.millis()).thenReturn(13345L + LivenessChecker.ignoreDuration.toMillis());
+    when(mockClock.millis()).thenReturn(13345L + LivenessChecker.IGNORE_DURATION.toMillis());
     livenessCheckerCustom.checkLiveness(node3);
     verify(pinger, times(2)).ping(node3);
   }
