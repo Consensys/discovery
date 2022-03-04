@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import kotlin.Pair;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Set-alike collection with data expiring in configured time. This structure is not thread safe,
@@ -104,7 +103,7 @@ public class ExpirationSet<V extends Comparable<V>> {
     return true;
   }
 
-  public boolean addAll(@NotNull Collection<? extends V> c) {
+  public boolean addAll(Collection<? extends V> c) {
     clearExpired();
     c.forEach(this::add);
     return true;
