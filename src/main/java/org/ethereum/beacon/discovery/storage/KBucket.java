@@ -75,6 +75,9 @@ class KBucket {
   }
 
   private void offerNewNode(final NodeRecord node) {
+    if (livenessChecker.isABadPeer(node)) {
+      return;
+    }
     if (isFull()) {
       getLastNode().checkLiveness(clock.millis());
       if (pendingNode.isEmpty()) {

@@ -72,13 +72,12 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
 public class HandshakeHandlersTest {
-
-  Random rnd = new Random(1);
+  private final Random rnd = new Random(1);
+  private final Clock clock = Clock.systemUTC();
 
   @Test
   @SuppressWarnings("rawtypes")
   public void authHandlerWithMessageRoundTripTest() throws Exception {
-    final Clock clock = Clock.systemUTC();
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
@@ -92,13 +91,13 @@ public class HandshakeHandlersTest {
             NodeRecordListener.NOOP,
             NewAddressHandler.NOOP);
     KBuckets nodeBucketStorage1 =
-        new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker());
+        new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker(clock));
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
             new LocalNodeRecordStore(
                 nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
-            new LivenessChecker());
+            new LivenessChecker(clock));
 
     // Node1 create AuthHeaderPacket
     LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();
