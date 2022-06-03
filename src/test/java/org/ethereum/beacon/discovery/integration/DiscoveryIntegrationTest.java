@@ -9,7 +9,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.waitFor;
-import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,6 +34,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.rlp.RLPReader;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
@@ -45,10 +45,8 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryIntegrationTest {
 
@@ -174,7 +172,7 @@ public class DiscoveryIntegrationTest {
   @Test
   public void shouldHandleNodeChangingSourceAddress() throws Exception {
     final DiscoverySystem node1 = createDiscoveryClient();
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
+    final KeyPair keyPair = Functions.randomKeyPair();
     final DiscoverySystem node2 = createDiscoveryClient(keyPair, node1.getLocalNodeRecord());
 
     // Communicate on the first port
@@ -302,7 +300,7 @@ public class DiscoveryIntegrationTest {
 
     final DiscoverySystem bootnode =
         createDiscoveryClient(
-            true, LOCALHOST, Functions.generateECKeyPair(), b -> b.talkHandler(testTalkHandler));
+            true, LOCALHOST, Functions.randomKeyPair(), b -> b.talkHandler(testTalkHandler));
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
 
     List<CompletableFuture<Bytes>> responses = new ArrayList<>();
@@ -347,7 +345,7 @@ public class DiscoveryIntegrationTest {
         createDiscoveryClient(
             true,
             LOCALHOST,
-            Functions.generateECKeyPair(),
+            Functions.randomKeyPair(),
             discoverySystemBuilder ->
                 discoverySystemBuilder.nodeRecordFactory(buggyNodeRecordFactory),
             bootnode.getLocalNodeRecord());
@@ -395,37 +393,34 @@ public class DiscoveryIntegrationTest {
   }
 
   private DiscoverySystem createDiscoveryClient(
-      final ECKeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
+      final KeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, LOCALHOST, keyPair, NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(
-        signNodeRecord, LOCALHOST, Functions.generateECKeyPair(), NO_MODIFY, bootnodes);
+        signNodeRecord, LOCALHOST, Functions.randomKeyPair(), NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final String ipAddress, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(
-        true, ipAddress, Functions.generateECKeyPair(), NO_MODIFY, bootnodes);
+    return createDiscoveryClient(true, ipAddress, Functions.randomKeyPair(), NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord,
       final String ipAddress,
-      final ECKeyPair keyPair,
+      final KeyPair keyPair,
       final Consumer<DiscoverySystemBuilder> discModifier,
       final NodeRecord... bootnodes)
       throws Exception {
-    final Bytes privateKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
 
     for (int i = 0; i < 10; i++) {
       int port = nextPort.incrementAndGet();
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
-        nodeRecordBuilder.privateKey(privateKey);
+        nodeRecordBuilder.secretKey(keyPair.secretKey());
       } else {
         // We're not signing the record so use an identity schema that won't check the
         // signature locally. The other side should still validate it.
@@ -435,13 +430,13 @@ public class DiscoveryIntegrationTest {
       final NodeRecord nodeRecord =
           nodeRecordBuilder
               .address(ipAddress, port)
-              .publicKey(Functions.derivePublicKeyFromPrivate(privateKey))
+              .publicKey(Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey()))
               .build();
       DiscoverySystemBuilder discoverySystemBuilder =
           new DiscoverySystemBuilder()
               .listen("0.0.0.0", port)
               .localNodeRecord(nodeRecord)
-              .privateKey(privateKey)
+              .secretKey(keyPair.secretKey())
               .retryTimeout(RETRY_TIMEOUT)
               .lifeCheckInterval(LIVE_CHECK_INTERVAL)
               .bootnodes(bootnodes);

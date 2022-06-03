@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.TestUtil;
@@ -27,12 +28,13 @@ import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class NodeSessionManagerTest {
 
-  private static final Bytes STATIC_NODE_KEY = Bytes.fromHexString("0x1234");
+  private static final SecretKey STATIC_NODE_SECRET = Functions.randomKeyPair().secretKey();
   public static final Bytes NODE_ID = Bytes.fromHexString("0x888888");
   private final NodeInfo homeNodeInfo = TestUtil.generateNode(9000);
   private final NodeRecord homeNodeRecord = homeNodeInfo.getNodeRecord();
@@ -45,10 +47,10 @@ class NodeSessionManagerTest {
       new NodeSessionManager(
           new LocalNodeRecordStore(
               homeNodeRecord,
-              homeNodeInfo.getPrivateKey(),
+              homeNodeInfo.getSecretKey(),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
-          STATIC_NODE_KEY,
+          STATIC_NODE_SECRET,
           nodeBucketStorage,
           outgoingPipeline,
           expirationSchedulerFactory);

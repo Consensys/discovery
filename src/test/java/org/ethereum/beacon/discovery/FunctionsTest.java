@@ -4,28 +4,30 @@
 
 package org.ethereum.beacon.discovery;
 
-import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
-import static org.ethereum.beacon.discovery.util.Functions.PUBKEY_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.web3j.crypto.ECKeyPair;
 
 public class FunctionsTest {
-  private final Bytes testKey1 =
-      Bytes.fromHexString("3332ca2b7003810449b6e596c3d284e914a1a51c9f76e4d9d7d43ef84adf6ed6");
-  private final Bytes testKey2 =
-      Bytes.fromHexString("66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628");
-  private Bytes nodeId1;
-  private Bytes nodeId2;
+  private final KeyPair testKey1 =
+      Functions.createKeyPairFromSecretBytes(
+          Bytes32.fromHexString(
+              "3332ca2b7003810449b6e596c3d284e914a1a51c9f76e4d9d7d43ef84adf6ed6"));
+  private final KeyPair testKey2 =
+      Functions.createKeyPairFromSecretBytes(
+          Bytes32.fromHexString(
+              "66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
+  private final Bytes nodeId1;
+  private final Bytes nodeId2;
 
   public FunctionsTest() {
     byte[] homeNodeIdBytes = new byte[32];
@@ -68,18 +70,10 @@ public class FunctionsTest {
         Bytes.fromHexString("68b02a985ecb99cc2d10cf188879d93ae7684c4f4707770017b078c6497c5a5d");
     Functions.HKDFKeys keys1 =
         Functions.hkdf_expand(
-            nodeId1,
-            nodeId2,
-            testKey1,
-            Bytes.wrap(ECKeyPair.create(testKey2.toArray()).getPublicKey().toByteArray()),
-            idNonce);
+            nodeId1, nodeId2, testKey1.secretKey(), testKey2.publicKey().bytes(), idNonce);
     Functions.HKDFKeys keys2 =
         Functions.hkdf_expand(
-            nodeId1,
-            nodeId2,
-            testKey2,
-            Bytes.wrap(ECKeyPair.create(testKey1.toArray()).getPublicKey().toByteArray()),
-            idNonce);
+            nodeId1, nodeId2, testKey2.secretKey(), testKey1.publicKey().bytes(), idNonce);
     assertEquals(keys1, keys2);
   }
 
@@ -88,9 +82,11 @@ public class FunctionsTest {
     final Bytes publicKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
-    final Bytes secretKey =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
-    final Bytes result = Functions.deriveECDHKeyAgreement(secretKey, publicKey);
+    final Bytes32 secretKey =
+        Bytes32.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
+    final Bytes result =
+        Functions.deriveECDHKeyAgreement(
+            Functions.createKeyPairFromSecretBytes(secretKey).secretKey(), publicKey);
     assertEquals(
         Bytes.fromHexString("0x033b11a2a1f214567e1537ce5e509ffd9b21373247f2a3ff6841f4976f53165e7e"),
         result);
@@ -132,7 +128,7 @@ public class FunctionsTest {
 
   @Test
   @SuppressWarnings({"DefaultCharset"})
-  public void testRecoverFromSignature() throws Exception {
+  public void testRecoverFromSignature() {
     Bytes idNonceSig =
         Bytes.fromHexString(
             "0xcf2bf743fc2273709bbc5117fd72775b0661ce1b6e9dffa01f45e2307fb138b90da16364ee7ae1705b938f6648d7725d35fe7e3f200e0ea022c1360b9b2e7385");
@@ -141,13 +137,11 @@ public class FunctionsTest {
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
     Bytes nonce =
         Bytes.fromHexString("0x02a77e3aa0c144ae7c0a3af73692b7d6e5b7a2fdc0eda16e8d5e6cb0d08e88dd04");
-    Bytes privKey =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
-    Bytes pubKeyUncompressed =
-        Bytes.wrap(
-            Utils.extractBytesFromUnsignedBigInt(
-                ECKeyPair.create(privKey.toArray()).getPublicKey(), PUBKEY_SIZE));
-    Bytes pubKey = Bytes.wrap(Functions.publicKeyToPoint(pubKeyUncompressed).getEncoded(true));
+    KeyPair keyPair =
+        Functions.createKeyPairFromSecretBytes(
+            Bytes32.fromHexString(
+                "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
+    Bytes pubKey = Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
 
     Bytes message =
         Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
@@ -156,16 +150,24 @@ public class FunctionsTest {
 
   @Test
   public void shouldConvertBetweenPublicKeyForms() {
-    final ECKeyPair keyPair = Functions.generateECKeyPair();
-
-    final Bytes privateKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
-    final Bytes fullPublicKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPublicKey(), PUBKEY_SIZE));
-    final Bytes derivedPublicKey = Functions.derivePublicKeyFromPrivate(privateKey);
+    final KeyPair keyPair = Functions.randomKeyPair();
+    final Bytes fullPublicKey = keyPair.publicKey().bytes();
+    final Bytes derivedPublicKey =
+        Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
 
     final ECPoint fullPoint = Functions.publicKeyToPoint(fullPublicKey);
     final ECPoint derivedPoint = Functions.publicKeyToPoint(derivedPublicKey);
     Assertions.assertEquals(fullPoint, derivedPoint);
+  }
+
+  @Test
+  public void shouldDecompressCompressedPublicKey() {
+    final KeyPair keyPair = Functions.randomKeyPair();
+    final Bytes expectedPublicKey = keyPair.publicKey().bytes();
+    final Bytes derivedPublicKey =
+        Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
+    final Bytes decompressedPublicKey =
+        Functions.derivePublicKeyFromCompressed(derivedPublicKey).bytes();
+    assertEquals(expectedPublicKey, decompressedPublicKey);
   }
 }

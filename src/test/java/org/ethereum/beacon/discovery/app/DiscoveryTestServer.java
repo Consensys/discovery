@@ -3,8 +3,6 @@
  */
 package org.ethereum.beacon.discovery.app;
 
-import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -16,15 +14,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.Utils;
-import org.web3j.crypto.ECKeyPair;
 
 public class DiscoveryTestServer {
 
@@ -90,13 +86,12 @@ public class DiscoveryTestServer {
     }
 
     System.out.println("Starting discovery...");
-    ECKeyPair keyPair = Functions.generateECKeyPair(new Random(pkSeed));
-    final Bytes privateKey =
-        Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
+    final Random rnd = new Random(pkSeed);
+    final KeyPair keyPair = Functions.randomKeyPair(rnd);
 
     final NodeRecord nodeRecord =
         new NodeRecordBuilder()
-            .privateKey(privateKey)
+            .secretKey(keyPair.secretKey())
             .address(address.getHostAddress(), port)
             .build();
 
@@ -104,7 +99,7 @@ public class DiscoveryTestServer {
         new DiscoverySystemBuilder()
             .listen("0.0.0.0", port)
             .localNodeRecord(nodeRecord)
-            .privateKey(privateKey)
+            .secretKey(keyPair.secretKey())
             .bootnodes(bootnodes);
     final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
     discoverySystem.start().get(5, TimeUnit.SECONDS);

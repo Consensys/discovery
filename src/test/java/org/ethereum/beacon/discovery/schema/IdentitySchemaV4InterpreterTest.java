@@ -15,17 +15,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.DecodeException;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 class IdentitySchemaV4InterpreterTest {
 
   private static final Bytes PUB_KEY =
       Bytes.fromHexString("0x02197B9014C6C0500CF168BD1F17A3B4A1307251849A5ECEEE0B5EBC76A7EBDB37");
-  private static final Bytes PRIV_KEY =
-      Bytes.fromHexString("0x2E953344686E18C99CDE5292D822D4427BDC5B473F3A6D69D6D0D897D9595110");
+  private static final Bytes32 PRIV_KEY =
+      Bytes32.fromHexString("0x2E953344686E18C99CDE5292D822D4427BDC5B473F3A6D69D6D0D897D9595110");
+  private static final SecretKey SECRET_KEY = Functions.createSecretKey(PRIV_KEY);
   private static final Bytes IPV6_LOCALHOST =
       Bytes.fromHexString("0x00000000000000000000000000000001");
 
@@ -166,7 +170,7 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress())
@@ -190,7 +194,7 @@ class IdentitySchemaV4InterpreterTest {
 
     final NodeRecord newRecord =
         interpreter.createWithUpdatedCustomField(
-            initialRecord, CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE2, PRIV_KEY);
+            initialRecord, CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE2, SECRET_KEY);
 
     assertThat(newRecord.get(CUSTOM_FIELD_NAME)).isEqualTo(CUSTOM_FIELD_VALUE2);
   }
@@ -205,7 +209,7 @@ class IdentitySchemaV4InterpreterTest {
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress())
@@ -223,7 +227,7 @@ class IdentitySchemaV4InterpreterTest {
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress())
@@ -239,7 +243,7 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), PRIV_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress())

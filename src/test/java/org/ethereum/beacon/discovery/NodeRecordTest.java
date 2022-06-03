@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
@@ -83,8 +85,10 @@ public class NodeRecordTest {
     final Bytes ip = Bytes.fromHexString("0x7F000001");
     final Bytes nodeId =
         Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
-    final Bytes privateKey =
-        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final KeyPair keyPair =
+        Functions.createKeyPairFromSecretBytes(
+            Bytes32.fromHexString(
+                "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
     final NodeRecord record =
         NODE_RECORD_FACTORY.createFromValues(
             UInt64.ONE,
@@ -93,7 +97,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("foo", Bytes.fromHexString("0x1234")));
-    record.sign(privateKey);
+    record.sign(keyPair.secretKey());
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
@@ -101,22 +105,21 @@ public class NodeRecordTest {
   }
 
   @Test
-  public void testSignature() throws Exception {
+  public void testSignature() {
     Random rnd = new Random(SEED);
-    byte[] privKey = new byte[32];
-    rnd.nextBytes(privKey);
+    KeyPair keyPair = Functions.randomKeyPair(rnd);
     NodeRecord nodeRecord0 =
         new NodeRecordBuilder()
             .seq(0)
             .address("127.0.0.1", 30303)
-            .privateKey(Bytes.wrap(privKey))
+            .secretKey(keyPair.secretKey())
             .build();
     assertTrue(nodeRecord0.isValid());
     NodeRecord nodeRecord1 =
         new NodeRecordBuilder()
             .seq(1)
             .address("127.0.0.1", 30303)
-            .privateKey(Bytes.wrap(privKey))
+            .secretKey(keyPair.secretKey())
             .build();
     assertTrue(nodeRecord1.isValid());
     assertNotEquals(nodeRecord0.serialize(), nodeRecord1.serialize());
@@ -128,15 +131,14 @@ public class NodeRecordTest {
   @Test
   public void testCustomField() {
     Random rnd = new Random(SEED);
-    byte[] privKey = new byte[32];
-    rnd.nextBytes(privKey);
+    KeyPair keyPair = Functions.randomKeyPair(rnd);
     final String CUSTOM_FIELD_NAME = "custom_field_name";
     final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");
     NodeRecord nodeRecord =
         new NodeRecordBuilder()
             .seq(0)
             .address("127.0.0.1", 30303)
-            .privateKey(Bytes.wrap(privKey))
+            .secretKey(keyPair.secretKey())
             .customField(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE)
             .build();
     assertTrue(nodeRecord.isValid());
@@ -149,8 +151,10 @@ public class NodeRecordTest {
     final Bytes ip = Bytes.fromHexString("0x7F000001");
     final Bytes nodeId =
         Bytes.fromHexString("a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f7");
-    final Bytes privateKey =
-        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final KeyPair keyPair =
+        Functions.createKeyPairFromSecretBytes(
+            Bytes32.fromHexString(
+                "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
     final int seq = 1;
 
     NodeRecord nodeRecord =
@@ -161,8 +165,9 @@ public class NodeRecordTest {
                 new EnrField(EnrField.IP_V4, ip),
                 new EnrField(EnrField.UDP, port),
                 new EnrField(
-                    EnrField.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)));
-    nodeRecord.sign(privateKey);
+                    EnrField.PKEY_SECP256K1,
+                    Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey())));
+    nodeRecord.sign(keyPair.secretKey());
     assertEquals(nodeId, nodeRecord.getNodeId());
     assertEquals(
         "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8",
@@ -202,8 +207,10 @@ public class NodeRecordTest {
   public void testEnrWithEthFieldDecodes() {
     final int port = 30303;
     final Bytes ip = Bytes.fromHexString("0x7F000001");
-    final Bytes privateKey =
-        Bytes.fromHexString("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
+    final KeyPair keyPair =
+        Functions.createKeyPairFromSecretBytes(
+            Bytes32.fromHexString(
+                "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
 
     final List<Bytes> forkIdList = new ArrayList<>();
     forkIdList.add(Bytes.fromHexString("0x7a739ef1"));
@@ -213,11 +220,13 @@ public class NodeRecordTest {
         NODE_RECORD_FACTORY.createFromValues(
             UInt64.ONE,
             new EnrField(EnrField.ID, IdentitySchema.V4),
-            new EnrField(EnrField.PKEY_SECP256K1, Functions.derivePublicKeyFromPrivate(privateKey)),
+            new EnrField(
+                EnrField.PKEY_SECP256K1,
+                Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey())),
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("eth", Collections.singletonList(forkIdList)));
-    record.sign(privateKey);
+    record.sign(keyPair.secretKey());
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);

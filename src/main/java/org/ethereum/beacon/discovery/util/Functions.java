@@ -4,9 +4,6 @@
 
 package org.ethereum.beacon.discovery.util;
 
-import static org.ethereum.beacon.discovery.util.Utils.extractBytesFromUnsignedBigInt;
-import static org.web3j.crypto.Sign.CURVE_PARAMS;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -15,31 +12,34 @@ import com.google.common.base.Suppliers;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.util.Random;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.Hash;
+import org.apache.tuweni.crypto.SECP256K1;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.crypto.SECP256K1.Parameters;
+import org.apache.tuweni.crypto.SECP256K1.PublicKey;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.crypto.SECP256K1.Signature;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
-import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.HKDFParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.Arrays;
 import org.ethereum.beacon.discovery.type.Hashes;
-import org.web3j.crypto.ECDSASignature;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.Hash;
-import org.web3j.crypto.Sign;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
   private static final Logger logger = LogManager.getLogger();
-  public static final ECDomainParameters SECP256K1_CURVE =
-      new ECDomainParameters(
-          CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(), CURVE_PARAMS.getH());
+  private static final BouncyCastleProvider PROVIDER;
   public static final int PRIVKEY_SIZE = 32;
   public static final int PUBKEY_SIZE = 64;
+  public static final int COMPRESSED_PUBKEY_SIZE = 33;
   private static final int RECIPIENT_KEY_LENGTH = 16;
   private static final int INITIATOR_KEY_LENGTH = 16;
   private static final int AUTH_RESP_KEY_LENGTH = 16;
@@ -47,89 +47,83 @@ public class Functions {
 
   private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
-  private static boolean SKIP_SIGNATURE_VERIFY = false;
+  static {
+    Security.addProvider(PROVIDER = new BouncyCastleProvider());
+  }
 
   /** SHA2 (SHA256) */
-  public static Bytes hash(Bytes value) {
-    return Hashes.sha256(value);
+  public static Bytes32 hash(final Bytes value) {
+    return Bytes32.wrap(Hashes.sha256(value));
   }
 
   /** SHA3 (Keccak256) */
-  public static Bytes hashKeccak(Bytes value) {
-    return Bytes.wrap(Hash.sha3(value.toArray()));
+  public static Bytes32 hashKeccak(final Bytes value) {
+    return Bytes32.wrap(Hash.keccak256(value.toArray()));
   }
 
   /**
    * Creates a signature of message `x` using the given key.
    *
-   * @param key private key
-   * @param x message, hashed
+   * @param secretKey private key
+   * @param messageHash message, hashed
    * @return ECDSA signature with properties merged together: r || s
    */
-  public static Bytes sign(Bytes key, Bytes x) {
-    Sign.SignatureData signatureData =
-        Sign.signMessage(x.toArray(), ECKeyPair.create(key.toArray()), false);
-    Bytes r = Bytes.wrap(signatureData.getR());
-    Bytes s = Bytes.wrap(signatureData.getS());
-    return Bytes.concatenate(r, s);
-  }
-
-  public static void setSkipSignatureVerify(boolean skipSignatureVerify) {
-    SKIP_SIGNATURE_VERIFY = skipSignatureVerify;
+  public static Bytes sign(final SecretKey secretKey, final Bytes32 messageHash) {
+    final KeyPair keyPair = KeyPair.fromSecretKey(secretKey);
+    final Signature signature = SECP256K1.signHashed(messageHash, keyPair);
+    // cutting v
+    return signature.bytes().slice(0, 64);
   }
 
   /**
    * Verifies that signature is made by signer
    *
-   * @param signature Signature, ECDSA
-   * @param x message, hashed
+   * @param signature Signature, ECDSA (r || s parts only, without v, 64 bytes)
+   * @param hashedMessage message, hashed
    * @param pubKey Public key of supposed signer, compressed, 33 bytes
    * @return whether `signature` reflects message `x` signed with `pubkey`
    */
-  public static boolean verifyECDSASignature(Bytes signature, Bytes x, Bytes pubKey) {
-    Preconditions.checkArgument(pubKey.size() == 33, "Invalid public key size");
-
-    if (SKIP_SIGNATURE_VERIFY) {
-      return true;
-    }
-    ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
-    Bytes pubKeyUncompressed = Bytes.wrap(ecPoint.getEncoded(false)).slice(1);
-    ECDSASignature ecdsaSignature =
-        new ECDSASignature(
-            new BigInteger(1, signature.slice(0, 32).toArray()),
-            new BigInteger(1, signature.slice(32).toArray()));
+  public static boolean verifyECDSASignature(
+      final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
+    final PublicKey publicKey = derivePublicKeyFromCompressed(pubKey);
     try {
-      for (int recId = 0; recId < 4; ++recId) {
-        BigInteger calculatedPubKey = Sign.recoverFromSignature(recId, ecdsaSignature, x.toArray());
-        if (calculatedPubKey == null) {
-          continue;
-        }
-        if (Arrays.areEqual(
-            pubKeyUncompressed.toArray(),
-            extractBytesFromUnsignedBigInt(calculatedPubKey, PUBKEY_SIZE))) {
-          return true;
-        }
+      final boolean verifyV1 =
+          SECP256K1.verifyHashed(
+              hashedMessage,
+              Signature.create(
+                  (byte) 1,
+                  signature.slice(0, 32).toUnsignedBigInteger(),
+                  signature.slice(32).toUnsignedBigInteger()),
+              publicKey);
+      if (verifyV1) {
+        return true;
       }
-    } catch (final IllegalArgumentException e) {
+      return SECP256K1.verifyHashed(
+          hashedMessage,
+          Signature.create(
+              (byte) 0,
+              signature.slice(0, 32).toUnsignedBigInteger(),
+              signature.slice(32).toUnsignedBigInteger()),
+          publicKey);
+    } catch (IllegalArgumentException e) {
       logger.trace("Failed to verify ECDSA signature", e);
       return false;
     }
-    return false;
   }
 
-  public static ECKeyPair generateECKeyPair() {
-    return generateECKeyPair(Functions.getRandom());
+  public static SECP256K1.KeyPair randomKeyPair() {
+    return KeyPair.random();
   }
 
-  public static ECKeyPair generateECKeyPair(Random rnd) {
-    byte[] keyBytes = new byte[PRIVKEY_SIZE];
-    rnd.nextBytes(keyBytes);
-    return ECKeyPair.create(keyBytes);
+  public static SECP256K1.KeyPair randomKeyPair(final Random rnd) {
+    final byte[] privKeyBytes = new byte[PRIVKEY_SIZE];
+    rnd.nextBytes(privKeyBytes);
+    return createKeyPairFromSecretBytes(Bytes32.wrap(privKeyBytes));
   }
 
-  /** Maps public key to point on {@link #SECP256K1_CURVE} */
-  public static ECPoint publicKeyToPoint(Bytes pkey) {
-    byte[] destPubPointBytes;
+  /** Maps public key to point on {@link org.apache.tuweni.crypto.SECP256K1.Parameters#CURVE} */
+  public static ECPoint publicKeyToPoint(final Bytes pkey) {
+    final byte[] destPubPointBytes;
     if (pkey.size() == 64) { // uncompressed
       destPubPointBytes = new byte[pkey.size() + 1];
       destPubPointBytes[0] = 0x04; // default prefix
@@ -137,31 +131,35 @@ public class Functions {
     } else {
       destPubPointBytes = pkey.toArray();
     }
-    return SECP256K1_CURVE.getCurve().decodePoint(destPubPointBytes);
+    return Parameters.CURVE.getCurve().decodePoint(destPubPointBytes);
+  }
+
+  public static PublicKey derivePublicKeyFromCompressed(final Bytes pubKey) {
+    Preconditions.checkArgument(pubKey.size() == COMPRESSED_PUBKEY_SIZE, "Invalid public key size");
+    final ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
+    final Bytes pubKeyUncompressed = Bytes.wrap(ecPoint.getEncoded(false)).slice(1);
+    return PublicKey.fromBytes(pubKeyUncompressed);
   }
 
   /** Derives public key in SECP256K1, compressed */
-  public static Bytes derivePublicKeyFromPrivate(Bytes privateKey) {
-    ECKeyPair ecKeyPair = ECKeyPair.create(privateKey.toArray());
-    return getCompressedPublicKey(ecKeyPair);
-  }
-
-  public static Bytes getCompressedPublicKey(ECKeyPair ecKeyPair) {
-    final Bytes pubKey =
-        Bytes.wrap(extractBytesFromUnsignedBigInt(ecKeyPair.getPublicKey(), PUBKEY_SIZE));
-    return compressPublicKey(pubKey);
-  }
-
-  public static Bytes compressPublicKey(Bytes uncompressedPublicKey) {
-    ECPoint ecPoint = Functions.publicKeyToPoint(uncompressedPublicKey);
-    return Bytes.wrap(ecPoint.getEncoded(true));
+  public static Bytes deriveCompressedPublicKeyFromPrivate(final SecretKey secretKey) {
+    final PublicKey publicKey = PublicKey.fromSecretKey(secretKey);
+    return Bytes.wrap(publicKey.asEcPoint().getEncoded(true));
   }
 
   /** Derives key agreement ECDH by multiplying private key by public */
-  public static Bytes deriveECDHKeyAgreement(Bytes srcPrivKey, Bytes destPubKey) {
-    ECPoint pudDestPoint = publicKeyToPoint(destPubKey);
-    ECPoint mult = pudDestPoint.multiply(new BigInteger(1, srcPrivKey.toArray()));
+  public static Bytes deriveECDHKeyAgreement(final SecretKey srcSecretKey, final Bytes destPubKey) {
+    final ECPoint pudDestPoint = publicKeyToPoint(destPubKey);
+    final ECPoint mult = pudDestPoint.multiply(new BigInteger(1, srcSecretKey.bytes().toArray()));
     return Bytes.wrap(mult.getEncoded(true));
+  }
+
+  public static KeyPair createKeyPairFromSecretBytes(final Bytes32 privateKey) {
+    return KeyPair.fromSecretKey(createSecretKey(privateKey));
+  }
+
+  public static SecretKey createSecretKey(final Bytes32 privateKey) {
+    return SecretKey.fromBytes(privateKey);
   }
 
   /**
@@ -178,18 +176,25 @@ public class Functions {
    * initiator-key, recipient-key, auth-resp-key = HKDF-Expand(prk, info)</code>
    */
   public static HKDFKeys hkdf_expand(
-      Bytes srcNodeId, Bytes destNodeId, Bytes srcPrivKey, Bytes destPubKey, Bytes idNonce) {
-    Bytes keyAgreement = deriveECDHKeyAgreement(srcPrivKey, destPubKey);
+      final Bytes srcNodeId,
+      final Bytes destNodeId,
+      final SecretKey srcSecretKey,
+      final Bytes destPubKey,
+      final Bytes idNonce) {
+    final Bytes keyAgreement = deriveECDHKeyAgreement(srcSecretKey, destPubKey);
     return hkdf_expand(srcNodeId, destNodeId, keyAgreement, idNonce);
   }
 
   /**
-   * {@link #hkdf_expand(Bytes, Bytes, Bytes, Bytes, Bytes)} but with keyAgreement already derived
-   * by {@link #deriveECDHKeyAgreement(Bytes, Bytes)}
+   * {@link #hkdf_expand(Bytes, Bytes, SecretKey, Bytes, Bytes)} but with keyAgreement already
+   * derived by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
    */
   @SuppressWarnings({"DefaultCharset"})
   public static HKDFKeys hkdf_expand(
-      Bytes srcNodeId, Bytes destNodeId, Bytes keyAgreement, Bytes idNonce) {
+      final Bytes srcNodeId,
+      final Bytes destNodeId,
+      final Bytes keyAgreement,
+      final Bytes idNonce) {
     try {
       Bytes info =
           Bytes.concatenate(
@@ -232,7 +237,7 @@ public class Functions {
    * <p>LogDistance is reverse of length of common prefix in bits (length - number of leftmost zeros
    * in XOR)
    */
-  public static int logDistance(Bytes nodeId1, Bytes nodeId2) {
+  public static int logDistance(final Bytes nodeId1, final Bytes nodeId2) {
     Bytes distance = nodeId1.xor(nodeId2);
     int logDistance = Byte.SIZE * distance.size(); // 256
     final int maxLogDistance = logDistance;
@@ -247,7 +252,7 @@ public class Functions {
     return logDistance;
   }
 
-  public static BigInteger distance(Bytes nodeId1, Bytes nodeId2) {
+  public static BigInteger distance(final Bytes nodeId1, final Bytes nodeId2) {
     return nodeId1.xor(nodeId2).toUnsignedBigInteger(ByteOrder.LITTLE_ENDIAN);
   }
 
@@ -260,7 +265,8 @@ public class Functions {
     private final Bytes recipientKey;
     private final Bytes authResponseKey;
 
-    public HKDFKeys(Bytes initiatorKey, Bytes recipientKey, Bytes authResponseKey) {
+    public HKDFKeys(
+        final Bytes initiatorKey, final Bytes recipientKey, final Bytes authResponseKey) {
       this.initiatorKey = initiatorKey;
       this.recipientKey = recipientKey;
       this.authResponseKey = authResponseKey;
@@ -279,7 +285,7 @@ public class Functions {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       HKDFKeys hkdfKeys = (HKDFKeys) o;

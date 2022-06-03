@@ -5,23 +5,15 @@
 package org.ethereum.beacon.discovery.type;
 
 import java.security.MessageDigest;
-import java.security.Security;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /** Utility methods to calculate message hashes */
 public abstract class Hashes {
 
   private Hashes() {}
 
-  private static final BouncyCastleProvider PROVIDER;
-
   private static final String SHA256 = "SHA-256";
-
-  static {
-    Security.addProvider(PROVIDER = new BouncyCastleProvider());
-  }
 
   /**
    * A low level method that calculates hash using give algorithm.

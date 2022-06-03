@@ -3,8 +3,6 @@
  */
 package org.ethereum.beacon.discovery;
 
-import static org.ethereum.beacon.discovery.util.Functions.PRIVKEY_SIZE;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +11,8 @@ import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
@@ -24,9 +23,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.ethereum.beacon.discovery.util.Utils;
 import org.mockito.Mockito;
-import org.web3j.crypto.ECKeyPair;
 import reactor.core.publisher.Flux;
 
 public class TestManagerWrapper {
@@ -65,16 +62,17 @@ public class TestManagerWrapper {
 
   private final TestNetwork testNetwork;
   private final DiscoveryManagerImpl discoveryManager;
-  private final ECKeyPair keyPair;
+  private final KeyPair keyPair;
   private final BlockingQueue<NetworkParcel> outbound = new LinkedBlockingQueue<>();
 
   public static TestManagerWrapper create(TestNetwork testNetwork, int seed) {
-    ECKeyPair keyPair = Functions.generateECKeyPair(new Random(seed));
-    return new TestManagerWrapper(testNetwork, createTestManager(keyPair, 9000 + seed), keyPair);
+    final KeyPair keyPair = Functions.randomKeyPair(new Random(seed));
+    final DiscoveryManagerImpl testManager = createTestManager(keyPair, 9000 + seed);
+    return new TestManagerWrapper(testNetwork, testManager, keyPair);
   }
 
   private TestManagerWrapper(
-      TestNetwork testNetwork, DiscoveryManagerImpl discoveryManager, ECKeyPair keyPair) {
+      TestNetwork testNetwork, DiscoveryManagerImpl discoveryManager, KeyPair keyPair) {
     this.testNetwork = testNetwork;
     this.discoveryManager = discoveryManager;
     this.keyPair = keyPair;
@@ -137,8 +135,8 @@ public class TestManagerWrapper {
     return ret;
   }
 
-  public Bytes getPrivateKey() {
-    return toPrivateKey(keyPair);
+  public SecretKey getSecretKey() {
+    return keyPair.secretKey();
   }
 
   public TestMessage createOutbound(RawPacket packet, TestManagerWrapper to) {
@@ -146,19 +144,14 @@ public class TestManagerWrapper {
         getNodeRecord(), new NetworkParcelV5(packet, to.getNodeRecord().getUdpAddress().get()));
   }
 
-  private static Bytes toPrivateKey(ECKeyPair keyPair) {
-    return Bytes.wrap(Utils.extractBytesFromUnsignedBigInt(keyPair.getPrivateKey(), PRIVKEY_SIZE));
-  }
-
-  private static DiscoveryManagerImpl createTestManager(ECKeyPair keyPair, int port) {
-    final Bytes privateKey = toPrivateKey(keyPair);
+  private static DiscoveryManagerImpl createTestManager(KeyPair keyPair, int port) {
     final NodeRecord nodeRecord =
-        new NodeRecordBuilder().privateKey(privateKey).address(LOCALHOST, port).build();
+        new NodeRecordBuilder().secretKey(keyPair.secretKey()).address(LOCALHOST, port).build();
     DiscoverySystemBuilder builder = new DiscoverySystemBuilder();
     builder
         .discoveryServer(Mockito.mock(NettyDiscoveryServer.class))
         .localNodeRecord(nodeRecord)
-        .privateKey(privateKey)
+        .secretKey(keyPair.secretKey())
         .retryTimeout(RETRY_TIMEOUT)
         .lifeCheckInterval(LIVE_CHECK_INTERVAL);
     DiscoveryManagerImpl mgr = builder.buildDiscoveryManager();

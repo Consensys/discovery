@@ -17,16 +17,17 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class CryptoUtil {
 
   private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
 
-  public static Bytes sha256(final Bytes indexBytes) {
+  public static Bytes32 sha256(final Bytes indexBytes) {
     final MessageDigest sha256Digest = getSha256Digest();
     indexBytes.update(sha256Digest);
-    return Bytes.wrap(sha256Digest.digest());
+    return Bytes32.wrap(sha256Digest.digest());
   }
 
   private static MessageDigest getSha256Digest() {

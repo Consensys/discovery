@@ -11,6 +11,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
@@ -19,6 +21,7 @@ import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.Functions;
 
 public class TestUtil {
   public static final NodeRecordFactory NODE_RECORD_FACTORY =
@@ -73,35 +76,34 @@ public class TestUtil {
     for (int i = 0; i < port; ++i) {
       rnd.nextBoolean(); // skip according to input
     }
-    byte[] privateKey = new byte[32];
-    rnd.nextBytes(privateKey);
+    KeyPair keyPair = Functions.randomKeyPair();
 
     NodeRecord nodeRecord =
         new NodeRecordBuilder()
             .seq(1)
             .nodeRecordFactory(
                 verification ? NODE_RECORD_FACTORY : NODE_RECORD_FACTORY_NO_VERIFICATION)
-            .privateKey(Bytes.wrap(privateKey))
+            .secretKey(keyPair.secretKey())
             .address(LOCALHOST, port)
             .build();
 
     if (!sign) {
       nodeRecord.setSignature(Bytes32.ZERO);
     }
-    return new NodeInfo(Bytes.wrap(privateKey), nodeRecord);
+    return new NodeInfo(keyPair.secretKey(), nodeRecord);
   }
 
   public static class NodeInfo {
-    private final Bytes privateKey;
+    private final SecretKey secretKey;
     private final NodeRecord nodeRecord;
 
-    public NodeInfo(final Bytes privateKey, final NodeRecord nodeRecord) {
-      this.privateKey = privateKey;
+    public NodeInfo(final SecretKey secretKey, final NodeRecord nodeRecord) {
+      this.secretKey = secretKey;
       this.nodeRecord = nodeRecord;
     }
 
-    public Bytes getPrivateKey() {
-      return privateKey;
+    public SecretKey getSecretKey() {
+      return secretKey;
     }
 
     public NodeRecord getNodeRecord() {

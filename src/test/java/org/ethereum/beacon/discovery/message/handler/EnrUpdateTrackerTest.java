@@ -12,15 +12,18 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EnrUpdateTrackerTest {
+  private static final SecretKey SECRET_KEY = Functions.randomKeyPair().secretKey();
   private final NodeSession session = mock(NodeSession.class);
   private final EnrUpdater enrUpdater = mock(EnrUpdater.class);
 
@@ -63,7 +66,7 @@ class EnrUpdateTrackerTest {
     final NodeRecord currentNodeRecord =
         TestUtil.generateNode(8000)
             .getNodeRecord()
-            .withUpdatedCustomField("test", Bytes.EMPTY, Bytes.of(1));
+            .withUpdatedCustomField("test", Bytes.EMPTY, SECRET_KEY);
     when(session.getNodeRecord()).thenReturn(Optional.of(currentNodeRecord));
     tracker.updateIfRequired(session, currentNodeRecord.getSeq().subtract(1));
 

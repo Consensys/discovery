@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
@@ -46,7 +46,7 @@ public class DiscoverySystemBuilder {
   private List<NodeRecord> bootnodes = Collections.emptyList();
   private Optional<InetSocketAddress> listenAddress = Optional.empty();
   private NodeRecord localNodeRecord;
-  private Bytes privateKey;
+  private SecretKey secretKey;
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
@@ -76,8 +76,8 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder privateKey(final Bytes privateKey) {
-    this.privateKey = privateKey;
+  public DiscoverySystemBuilder secretKey(final SecretKey secretKey) {
+    this.secretKey = secretKey;
     return this;
   }
 
@@ -120,33 +120,33 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder recursiveLookupInterval(Duration recursiveLookupInterval) {
+  public DiscoverySystemBuilder recursiveLookupInterval(final Duration recursiveLookupInterval) {
     this.recursiveLookupInterval = recursiveLookupInterval;
     return this;
   }
 
-  public DiscoverySystemBuilder retryTimeout(Duration retryTimeout) {
+  public DiscoverySystemBuilder retryTimeout(final Duration retryTimeout) {
     this.retryTimeout = retryTimeout;
     return this;
   }
 
-  public DiscoverySystemBuilder lifeCheckInterval(Duration lifeCheckInterval) {
+  public DiscoverySystemBuilder lifeCheckInterval(final Duration lifeCheckInterval) {
     this.lifeCheckInterval = lifeCheckInterval;
     return this;
   }
 
-  public DiscoverySystemBuilder talkHandler(TalkHandler talkHandler) {
+  public DiscoverySystemBuilder talkHandler(final TalkHandler talkHandler) {
     this.talkHandler = talkHandler;
     return this;
   }
 
-  public DiscoverySystemBuilder discoveryServer(NettyDiscoveryServer discoveryServer) {
+  public DiscoverySystemBuilder discoveryServer(final NettyDiscoveryServer discoveryServer) {
     this.discoveryServer = discoveryServer;
     return this;
   }
 
   public DiscoverySystemBuilder externalAddressSelector(
-      ExternalAddressSelector externalAddressSelector) {
+      final ExternalAddressSelector externalAddressSelector) {
     this.externalAddressSelector = externalAddressSelector;
     return this;
   }
@@ -161,7 +161,7 @@ public class DiscoverySystemBuilder {
                         oldRecord.withNewAddress(
                             newAddress,
                             oldRecord.getTcpAddress().map(InetSocketAddress::getPort),
-                            privateKey)));
+                            secretKey)));
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final InetSocketAddress serverListenAddress =
         listenAddress
@@ -180,7 +180,7 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             () ->
                 new LocalNodeRecordStore(
-                    localNodeRecord, privateKey, localNodeRecordListener, newAddressHandler));
+                    localNodeRecord, secretKey, localNodeRecordListener, newAddressHandler));
     nodeBucketStorage =
         requireNonNullElseGet(
             nodeBucketStorage, () -> new KBuckets(clock, localNodeRecordStore, livenessChecker));
@@ -207,7 +207,7 @@ public class DiscoverySystemBuilder {
 
   public DiscoverySystem build() {
     checkNotNull(localNodeRecord, "Missing local node record");
-    checkNotNull(privateKey, "Missing private key");
+    checkNotNull(secretKey, "Missing secret key");
     createDefaults();
 
     // Check local node record is valid
@@ -242,7 +242,7 @@ public class DiscoverySystemBuilder {
         discoveryServer,
         nodeBucketStorage,
         localNodeRecordStore,
-        privateKey,
+        secretKey,
         nodeRecordFactory,
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,

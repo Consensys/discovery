@@ -19,7 +19,6 @@ dependencyManagement {
     dependency 'org.bouncycastle:bcprov-jdk15on:1.70'
 
     dependency 'org.assertj:assertj-core:3.22.0'
-    dependency 'org.web3j:core:4.9.0'
     dependency 'org.mockito:mockito-core:4.3.1'
 
     dependencySet(group: 'org.apache.tuweni', version: '2.1.0') {

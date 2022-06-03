@@ -12,13 +12,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 class KBucketTest {
+  private static final KeyPair KEY_PAIR = Functions.randomKeyPair();
 
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
 
@@ -100,7 +103,8 @@ class KBucketTest {
   void offer_shouldUpdateExistingEntryInBucket() {
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), Bytes.EMPTY);
+        nodeSeq1.withUpdatedCustomField(
+            "hello", Bytes.fromHexString("0x1234"), KEY_PAIR.secretKey());
 
     bucket.offer(nodeSeq1);
     bucket.offer(nodeSeq2);
@@ -114,7 +118,8 @@ class KBucketTest {
   void offer_shouldNotUpdateExistingEntryWhenNewRecordIsOlder() {
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("record", Bytes.fromHexString("0x1234"), Bytes.EMPTY);
+        nodeSeq1.withUpdatedCustomField(
+            "record", Bytes.fromHexString("0x1234"), KEY_PAIR.secretKey());
 
     bucket.offer(nodeSeq2);
     bucket.offer(nodeSeq1);
@@ -141,7 +146,8 @@ class KBucketTest {
     final NodeRecord otherNode = createNewNodeRecord();
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), Bytes.EMPTY);
+        nodeSeq1.withUpdatedCustomField(
+            "hello", Bytes.fromHexString("0x1234"), KEY_PAIR.secretKey());
 
     bucket.offer(nodeSeq1);
     bucket.offer(otherNode);
