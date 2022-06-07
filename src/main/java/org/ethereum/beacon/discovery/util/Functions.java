@@ -39,6 +39,7 @@ public class Functions {
   private static final BouncyCastleProvider PROVIDER;
   public static final int PRIVKEY_SIZE = 32;
   public static final int PUBKEY_SIZE = 64;
+  public static final int SIGNATURE_SIZE = 64;
   public static final int COMPRESSED_PUBKEY_SIZE = 33;
   private static final int RECIPIENT_KEY_LENGTH = 16;
   private static final int INITIATOR_KEY_LENGTH = 16;
@@ -85,6 +86,10 @@ public class Functions {
    */
   public static boolean verifyECDSASignature(
       final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
+    Preconditions.checkArgument(
+        signature.size() == SIGNATURE_SIZE,
+        "Invalid signature size, should be %s bytes",
+        SIGNATURE_SIZE);
     final PublicKey publicKey = derivePublicKeyFromCompressed(pubKey);
     try {
       final boolean verifyV1 =
@@ -135,7 +140,10 @@ public class Functions {
   }
 
   public static PublicKey derivePublicKeyFromCompressed(final Bytes pubKey) {
-    Preconditions.checkArgument(pubKey.size() == COMPRESSED_PUBKEY_SIZE, "Invalid public key size");
+    Preconditions.checkArgument(
+        pubKey.size() == COMPRESSED_PUBKEY_SIZE,
+        "Invalid compressed public key size, should be %s bytes",
+        COMPRESSED_PUBKEY_SIZE);
     final ECPoint ecPoint = Functions.publicKeyToPoint(pubKey);
     final Bytes pubKeyUncompressed = Bytes.wrap(ecPoint.getEncoded(false)).slice(1);
     return PublicKey.fromBytes(pubKeyUncompressed);
