@@ -82,10 +82,10 @@ public class Functions {
    */
   public static boolean verifyECDSASignature(
       final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
-    Preconditions.checkArgument(
-        signature.size() == SIGNATURE_SIZE,
-        "Invalid signature size, should be %s bytes",
-        SIGNATURE_SIZE);
+    if (signature.size() != SIGNATURE_SIZE) {
+      logger.trace("Invalid signature size, should be {} bytes", SIGNATURE_SIZE);
+      return false;
+    }
     final PublicKey publicKey = derivePublicKeyFromCompressed(pubKey);
     try {
       for (byte v = 0; v <= 1; v++) {
