@@ -162,7 +162,7 @@ public class NodeSessionTest {
   private Request<?> createRequestMock() {
     final Request<?> request = mock(Request.class);
     when(request.getResultPromise()).thenReturn(new CompletableFuture<>());
-    // avoid falling when logging is on
+    // avoid failing when logging is on
     when(request.getRequestMessageFactory())
         .thenReturn(
             bytes -> {
