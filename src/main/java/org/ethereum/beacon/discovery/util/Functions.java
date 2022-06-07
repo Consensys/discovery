@@ -53,7 +53,7 @@ public class Functions {
 
   /** SHA2 (SHA256) */
   public static Bytes32 hash(final Bytes value) {
-    return Bytes32.wrap(Hashes.sha256(value));
+    return Hashes.sha256(value);
   }
 
   /** SHA3 (Keccak256) */

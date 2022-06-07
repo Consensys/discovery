@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.type;
 
 import java.security.MessageDigest;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
 
 /** Utility methods to calculate message hashes */
@@ -42,8 +43,8 @@ public abstract class Hashes {
    * @param input input message.
    * @return the hash.
    */
-  public static Bytes sha256(Bytes input) {
+  public static Bytes32 sha256(Bytes input) {
     byte[] output = digestUsingAlgorithm(input, SHA256);
-    return Bytes.wrap(Bytes.wrap(output));
+    return Bytes32.wrap(output);
   }
 }
