@@ -58,7 +58,7 @@ public class Functions {
 
   /** SHA3 (Keccak256) */
   public static Bytes32 hashKeccak(final Bytes value) {
-    return Bytes32.wrap(Hash.keccak256(value.toArray()));
+    return Hash.keccak256(value);
   }
 
   /**
