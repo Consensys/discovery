@@ -12,7 +12,6 @@ import com.google.common.base.Suppliers;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.util.Random;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,14 +28,11 @@ import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.type.Hashes;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
   private static final Logger logger = LogManager.getLogger();
-  private static final BouncyCastleProvider PROVIDER;
   public static final int PRIVKEY_SIZE = 32;
   public static final int PUBKEY_SIZE = 64;
   public static final int SIGNATURE_SIZE = 64;
@@ -49,7 +45,7 @@ public class Functions {
   private static final Supplier<SecureRandom> SECURE_RANDOM = Suppliers.memoize(SecureRandom::new);
 
   static {
-    Security.addProvider(PROVIDER = new BouncyCastleProvider());
+    SecurityInitializer.init();
   }
 
   /** SHA2 (SHA256) */

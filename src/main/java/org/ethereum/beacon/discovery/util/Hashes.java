@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.ethereum.beacon.discovery.type;
+package org.ethereum.beacon.discovery.util;
 
 import java.security.MessageDigest;
 import org.apache.tuweni.bytes.Bytes;
@@ -12,7 +12,9 @@ import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
 /** Utility methods to calculate message hashes */
 public abstract class Hashes {
 
-  private Hashes() {}
+  static {
+    SecurityInitializer.init();
+  }
 
   private static final String SHA256 = "SHA-256";
 
