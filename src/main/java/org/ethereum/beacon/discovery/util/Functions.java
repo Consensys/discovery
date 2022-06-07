@@ -92,28 +92,23 @@ public class Functions {
         SIGNATURE_SIZE);
     final PublicKey publicKey = derivePublicKeyFromCompressed(pubKey);
     try {
-      final boolean verifyV1 =
-          SECP256K1.verifyHashed(
-              hashedMessage,
-              Signature.create(
-                  (byte) 1,
-                  signature.slice(0, 32).toUnsignedBigInteger(),
-                  signature.slice(32).toUnsignedBigInteger()),
-              publicKey);
-      if (verifyV1) {
-        return true;
+      for (byte v = 0; v <= 1; v++) {
+        final boolean verified =
+            SECP256K1.verifyHashed(
+                hashedMessage,
+                Signature.create(
+                    v,
+                    signature.slice(0, 32).toUnsignedBigInteger(),
+                    signature.slice(32).toUnsignedBigInteger()),
+                publicKey);
+        if (verified) {
+          return true;
+        }
       }
-      return SECP256K1.verifyHashed(
-          hashedMessage,
-          Signature.create(
-              (byte) 0,
-              signature.slice(0, 32).toUnsignedBigInteger(),
-              signature.slice(32).toUnsignedBigInteger()),
-          publicKey);
     } catch (IllegalArgumentException e) {
       logger.trace("Failed to verify ECDSA signature", e);
-      return false;
     }
+    return false;
   }
 
   public static SECP256K1.KeyPair randomKeyPair() {
