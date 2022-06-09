@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -14,25 +15,24 @@ import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
 import org.junit.jupiter.api.Test;
 
 public class CryptoTests {
+  private static final SecretKey LOCAL_SECRET =
+      Functions.createSecretKey(
+          Bytes32.fromHexString(
+              "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
 
   @Test
   void testECDH() {
     Bytes publicKeyBytes =
         Bytes.fromHexString("0x039961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231");
-    Bytes secretKeyBytes =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
-
     Bytes expectedSharedSecretBytes =
         Bytes.fromHexString("0x033b11a2a1f214567e1537ce5e509ffd9b21373247f2a3ff6841f4976f53165e7e");
 
-    Bytes keyAgreement = Functions.deriveECDHKeyAgreement(secretKeyBytes, publicKeyBytes);
+    Bytes keyAgreement = Functions.deriveECDHKeyAgreement(LOCAL_SECRET, publicKeyBytes);
     assertThat(keyAgreement).isEqualTo(expectedSharedSecretBytes);
   }
 
   @Test
   void testKeyDerivation() {
-    Bytes ephemeralKeyBytes =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
     Bytes destPubkeyBytes =
         Bytes.fromHexString("0x0317931e6e0840220642f230037d285d122bc59063221ef3226b1f403ddc69ca91");
     Bytes nodeIdABytes =
@@ -48,15 +48,13 @@ public class CryptoTests {
 
     HKDFKeys hkdfKeys =
         Functions.hkdf_expand(
-            nodeIdABytes, nodeIdBBytes, ephemeralKeyBytes, destPubkeyBytes, challengeDataBytes);
+            nodeIdABytes, nodeIdBBytes, LOCAL_SECRET, destPubkeyBytes, challengeDataBytes);
     assertThat(hkdfKeys.getInitiatorKey()).isEqualTo(expectedInitiatorKeyBytes);
     assertThat(hkdfKeys.getRecipientKey()).isEqualTo(expectedRecipientKeyBytes);
   }
 
   @Test
   void testChallengeSign() {
-    Bytes statiKeyBytes =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
     Bytes challengeDataBytes =
         Bytes.fromHexString(
             "0x000000000000000000000000000000006469736376350001010102030405060708090a0b0c00180102030405060708090a0b0c0d0e0f100000000000000000");
@@ -71,7 +69,7 @@ public class CryptoTests {
 
     Bytes signatureBytes =
         HandshakeAuthData.signId(
-            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, statiKeyBytes);
+            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, LOCAL_SECRET);
     assertThat(signatureBytes).isEqualTo(expectedSignatureBytes);
   }
 

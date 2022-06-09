@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl;
@@ -61,12 +62,15 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
      * </pre>
      */
     static Bytes signId(
-        Bytes challengeData, Bytes ephemeralPubKey, Bytes32 destNodeId, Bytes homeNodePrivateKey) {
+        final Bytes challengeData,
+        final Bytes ephemeralPubKey,
+        final Bytes32 destNodeId,
+        final SecretKey homeNodeSecretKey) {
 
-      Bytes idSignatureInput =
+      Bytes32 idSignatureInput =
           CryptoUtil.sha256(
               Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, ephemeralPubKey, destNodeId));
-      return Functions.sign(homeNodePrivateKey, idSignatureInput);
+      return Functions.sign(homeNodeSecretKey, idSignatureInput);
     }
 
     Bytes32 getSourceNodeId();
@@ -75,10 +79,11 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
 
     Bytes getEphemeralPubKey();
 
-    Optional<NodeRecord> getNodeRecord(NodeRecordFactory nodeRecordFactory);
+    Optional<NodeRecord> getNodeRecord(final NodeRecordFactory nodeRecordFactory);
 
-    default boolean verify(Bytes challengeData, Bytes32 homeNodeId, Bytes remotePublicKey) {
-      Bytes idSignatureInput =
+    default boolean verify(
+        final Bytes challengeData, final Bytes32 homeNodeId, final Bytes remotePublicKey) {
+      final Bytes32 idSignatureInput =
           CryptoUtil.sha256(
               Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, getEphemeralPubKey(), homeNodeId));
       return Functions.verifyECDSASignature(getIdSignature(), idSignatureInput, remotePublicKey);

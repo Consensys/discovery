@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 public class DiscoveryManagerTest {
 
   @Test
-  public void testRegularHandshake() throws Exception {
+  public void testRegularHandshake() {
     TestNetwork network = new TestNetwork();
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
@@ -55,7 +55,7 @@ public class DiscoveryManagerTest {
   }
 
   @Test
-  public void testInvalidHandshakeShouldDropsSession() throws Exception {
+  public void testInvalidHandshakeShouldDropsSession() {
     TestNetwork network = new TestNetwork();
     TestManagerWrapper attackerNode = network.createDiscoveryManager(1);
     TestManagerWrapper victimNode = network.createDiscoveryManager(2);
@@ -83,7 +83,7 @@ public class DiscoveryManagerTest {
         (HandshakeMessagePacket) validHandshakeMessage.getPacket();
     RawPacket handshakeRawPacket = validHandshakeMessage.getRawPacket();
     Header<HandshakeAuthData> header = handshakePacket.getHeader();
-    Bytes invalidSignature = Functions.sign(attackerNode.getPrivateKey(), Bytes32.ZERO);
+    Bytes invalidSignature = Functions.sign(attackerNode.getSecretKey(), Bytes32.ZERO);
     Header<HandshakeAuthData> malformedHeader =
         Header.createHandshakeHeader(
             header.getAuthData().getSourceNodeId(),
@@ -113,7 +113,7 @@ public class DiscoveryManagerTest {
   }
 
   @Test
-  public void testDroppedSession() throws Exception {
+  public void testDroppedSession() {
     TestNetwork network = new TestNetwork();
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
@@ -137,7 +137,7 @@ public class DiscoveryManagerTest {
   }
 
   @Test
-  public void testDoubleUnathorizedPing() throws Exception {
+  public void testDoubleUnathorizedPing() {
     TestNetwork network = new TestNetwork();
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);

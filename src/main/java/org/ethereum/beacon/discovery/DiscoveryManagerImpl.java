@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.TalkReqMessage;
@@ -69,15 +70,15 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
-      NettyDiscoveryServer discoveryServer,
-      KBuckets nodeBucketStorage,
-      LocalNodeRecordStore localNodeRecordStore,
-      Bytes homeNodePrivateKey,
-      NodeRecordFactory nodeRecordFactory,
-      Scheduler taskScheduler,
-      ExpirationSchedulerFactory expirationSchedulerFactory,
-      TalkHandler talkHandler,
-      ExternalAddressSelector externalAddressSelector) {
+      final NettyDiscoveryServer discoveryServer,
+      final KBuckets nodeBucketStorage,
+      final LocalNodeRecordStore localNodeRecordStore,
+      final SecretKey homeNodeSecretKey,
+      final NodeRecordFactory nodeRecordFactory,
+      final Scheduler taskScheduler,
+      final ExpirationSchedulerFactory expirationSchedulerFactory,
+      final TalkHandler talkHandler,
+      final ExternalAddressSelector externalAddressSelector) {
     this.localNodeRecordStore = localNodeRecordStore;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
@@ -85,7 +86,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
-            homeNodePrivateKey,
+            homeNodeSecretKey,
             nodeBucketStorage,
             outgoingPipeline,
             expirationSchedulerFactory);
@@ -161,7 +162,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     localNodeRecordStore.onCustomFieldValueChanged(fieldName, value);
   }
 
-  private <T> CompletableFuture<T> executeTaskImpl(NodeRecord nodeRecord, Request<T> request) {
+  private <T> CompletableFuture<T> executeTaskImpl(
+      final NodeRecord nodeRecord, final Request<T> request) {
     Envelope envelope = new Envelope();
     envelope.put(Field.NODE, nodeRecord);
     envelope.put(Field.REQUEST, request);
@@ -171,7 +173,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
 
   @Override
   public CompletableFuture<Collection<NodeRecord>> findNodes(
-      NodeRecord nodeRecord, List<Integer> distances) {
+      final NodeRecord nodeRecord, final List<Integer> distances) {
     Request<Collection<NodeRecord>> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -181,7 +183,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
+  public CompletableFuture<Void> ping(final NodeRecord nodeRecord) {
     Request<Void> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -191,7 +193,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes requestBytes) {
+  public CompletableFuture<Bytes> talk(
+      final NodeRecord nodeRecord, final Bytes protocol, final Bytes requestBytes) {
     Request<Bytes> request =
         new Request<>(
             new CompletableFuture<>(),
@@ -216,7 +219,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @VisibleForTesting
-  public Optional<NodeSession> getNodeSession(Bytes remoteNodeId) {
+  public Optional<NodeSession> getNodeSession(final Bytes remoteNodeId) {
     return nodeSessionManager.getNodeSession(remoteNodeId);
   }
 

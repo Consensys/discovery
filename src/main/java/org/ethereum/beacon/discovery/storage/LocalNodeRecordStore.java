@@ -6,22 +6,23 @@ package org.ethereum.beacon.discovery.storage;
 
 import java.net.InetSocketAddress;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class LocalNodeRecordStore {
 
   private volatile NodeRecord latestRecord;
-  private final Bytes privateKey;
+  private final SecretKey secretKey;
   private final NodeRecordListener recordListener;
   private final NewAddressHandler newAddressHandler;
 
   public LocalNodeRecordStore(
-      NodeRecord record,
-      Bytes privateKey,
-      NodeRecordListener recordListener,
-      NewAddressHandler newAddressHandler) {
+      final NodeRecord record,
+      final SecretKey secretKey,
+      final NodeRecordListener recordListener,
+      final NewAddressHandler newAddressHandler) {
     this.latestRecord = record;
-    this.privateKey = privateKey;
+    this.secretKey = secretKey;
     this.recordListener = recordListener;
     this.newAddressHandler = newAddressHandler;
   }
@@ -43,9 +44,9 @@ public class LocalNodeRecordStore {
             });
   }
 
-  public void onCustomFieldValueChanged(final String fieldName, Bytes value) {
+  public void onCustomFieldValueChanged(final String fieldName, final Bytes value) {
     NodeRecord oldRecord = this.latestRecord;
-    NodeRecord newRecord = oldRecord.withUpdatedCustomField(fieldName, value, privateKey);
+    NodeRecord newRecord = oldRecord.withUpdatedCustomField(fieldName, value, secretKey);
     this.latestRecord = newRecord;
     recordListener.recordUpdated(oldRecord, newRecord);
   }

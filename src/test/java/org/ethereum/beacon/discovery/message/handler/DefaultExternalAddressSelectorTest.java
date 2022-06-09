@@ -17,6 +17,7 @@ import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,10 @@ class DefaultExternalAddressSelectorTest {
 
   private final LocalNodeRecordStore localNodeRecordStore =
       new LocalNodeRecordStore(
-          originalNodeRecord, nodeId, NodeRecordListener.NOOP, ADDRESS_UPDATER);
+          originalNodeRecord,
+          Functions.randomKeyPair().secretKey(),
+          NodeRecordListener.NOOP,
+          ADDRESS_UPDATER);
 
   private final DefaultExternalAddressSelector selector =
       new DefaultExternalAddressSelector(localNodeRecordStore);

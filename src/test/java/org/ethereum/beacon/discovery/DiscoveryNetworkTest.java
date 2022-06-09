@@ -16,7 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
@@ -50,13 +49,19 @@ public class DiscoveryNetworkTest {
         new KBuckets(
             clock,
             new LocalNodeRecordStore(
-                nodeRecord1, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+                nodeRecord1,
+                Functions.randomKeyPair().secretKey(),
+                NodeRecordListener.NOOP,
+                NewAddressHandler.NOOP),
             livenessChecker1);
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
             new LocalNodeRecordStore(
-                nodeRecord2, Bytes.EMPTY, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+                nodeRecord2,
+                Functions.randomKeyPair().secretKey(),
+                NodeRecordListener.NOOP,
+                NewAddressHandler.NOOP),
             livenessChecker2);
     ExpirationSchedulerFactory expirationSchedulerFactory =
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
@@ -67,10 +72,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                nodePair1.getPrivateKey(),
+                nodePair1.getSecretKey(),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair1.getPrivateKey(),
+            nodePair1.getSecretKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
@@ -84,10 +89,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                nodePair2.getPrivateKey(),
+                nodePair2.getSecretKey(),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair2.getPrivateKey(),
+            nodePair2.getSecretKey(),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,

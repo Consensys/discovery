@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -22,14 +23,17 @@ import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 public class HandshakePacketTest {
 
   private final Bytes32 srcNodeId =
       Bytes32.fromHexString("0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb");
-  private final Bytes32 srcStaticPrivateKey =
-      Bytes32.fromHexString("0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628");
+  private final SecretKey srcStaticPrivateKey =
+      Functions.createSecretKey(
+          Bytes32.fromHexString(
+              "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
   private final Bytes32 destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
@@ -106,10 +110,7 @@ public class HandshakePacketTest {
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
-    assertThatThrownBy(
-            () -> {
-              rawPacket1.demaskPacket(headerMaskingKey);
-            })
+    assertThatThrownBy(() -> rawPacket1.demaskPacket(headerMaskingKey))
         .isInstanceOf(DecodeException.class);
   }
 
@@ -136,10 +137,7 @@ public class HandshakePacketTest {
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
-    assertThatThrownBy(
-            () -> {
-              rawPacket1.demaskPacket(headerMaskingKey);
-            })
+    assertThatThrownBy(() -> rawPacket1.demaskPacket(headerMaskingKey))
         .isInstanceOf(DecodeException.class);
   }
 
@@ -166,10 +164,7 @@ public class HandshakePacketTest {
     Bytes packetBytes = rawPacket.getBytes();
 
     RawPacket rawPacket1 = RawPacket.decode(packetBytes);
-    assertThatThrownBy(
-            () -> {
-              rawPacket1.demaskPacket(headerMaskingKey);
-            })
+    assertThatThrownBy(() -> rawPacket1.demaskPacket(headerMaskingKey))
         .isInstanceOf(DecodeException.class);
   }
 }

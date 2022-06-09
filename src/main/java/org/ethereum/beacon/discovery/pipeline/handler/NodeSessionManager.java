@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -41,7 +42,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
   private static final Logger logger = LogManager.getLogger(NodeSessionManager.class);
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final Bytes staticNodeKey;
+  private final SecretKey staticNodeKey;
   private final KBuckets nodeBucketStorage;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
@@ -50,11 +51,11 @@ public class NodeSessionManager implements EnvelopeHandler {
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
 
   public NodeSessionManager(
-      LocalNodeRecordStore localNodeRecordStore,
-      Bytes staticNodeKey,
-      KBuckets nodeBucketStorage,
-      Pipeline outgoingPipeline,
-      ExpirationSchedulerFactory expirationSchedulerFactory) {
+      final LocalNodeRecordStore localNodeRecordStore,
+      final SecretKey staticNodeKey,
+      final KBuckets nodeBucketStorage,
+      final Pipeline outgoingPipeline,
+      final ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.staticNodeKey = staticNodeKey;
     this.nodeBucketStorage = nodeBucketStorage;
@@ -66,7 +67,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  public void handle(final Envelope envelope) {
     if (!HandlerUtil.requireField(Field.SESSION_LOOKUP, envelope)) {
       return;
     }
@@ -95,7 +96,8 @@ public class NodeSessionManager implements EnvelopeHandler {
                     "Session could not be resolved or created for {}", sessionRequest.getNodeId()));
   }
 
-  private Optional<NodeSession> getOrCreateSession(SessionLookup sessionLookup, Envelope envelope) {
+  private Optional<NodeSession> getOrCreateSession(
+      final SessionLookup sessionLookup, final Envelope envelope) {
     return getRemoteSocketAddress(envelope)
         .map(
             remoteSocketAddress -> {
@@ -112,13 +114,13 @@ public class NodeSessionManager implements EnvelopeHandler {
             });
   }
 
-  public void dropSession(NodeSession session) {
+  public void dropSession(final NodeSession session) {
     SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
     sessionExpirationScheduler.cancel(sessionKey);
     deleteSession(sessionKey);
   }
 
-  private void deleteSession(SessionKey sessionKey) {
+  private void deleteSession(final SessionKey sessionKey) {
     NodeSession removedSession = recentSessions.remove(sessionKey);
     if (removedSession != null) {
       removedSession.getLastOutboundNonce().ifPresent(lastNonceToSession::remove);
@@ -126,19 +128,19 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   @VisibleForTesting
-  public Optional<NodeSession> getNodeSession(Bytes nodeId) {
+  public Optional<NodeSession> getNodeSession(final Bytes nodeId) {
     return recentSessions.entrySet().stream()
         .filter(e -> e.getKey().nodeId.equals(nodeId))
         .map(Map.Entry::getValue)
         .findFirst();
   }
 
-  public Optional<NodeSession> getNodeSessionByLastOutboundNonce(Bytes12 nonce) {
+  public Optional<NodeSession> getNodeSessionByLastOutboundNonce(final Bytes12 nonce) {
     return Optional.ofNullable(lastNonceToSession.get(nonce));
   }
 
   public void onSessionLastNonceUpdate(
-      NodeSession session, Optional<Bytes12> previousNonce, Bytes12 newNonce) {
+      final NodeSession session, final Optional<Bytes12> previousNonce, final Bytes12 newNonce) {
     previousNonce.ifPresent(lastNonceToSession::remove);
     lastNonceToSession.put(newNonce, session);
   }

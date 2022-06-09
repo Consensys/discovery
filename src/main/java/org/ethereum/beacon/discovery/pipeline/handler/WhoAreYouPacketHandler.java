@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -28,7 +29,6 @@ import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
-import org.web3j.crypto.ECKeyPair;
 
 /** Handles {@link WhoAreYouPacket} in {@link Field#PACKET_WHOAREYOU} field */
 public class WhoAreYouPacketHandler implements EnvelopeHandler {
@@ -37,13 +37,13 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
 
-  public WhoAreYouPacketHandler(Pipeline outgoingPipeline, Scheduler scheduler) {
+  public WhoAreYouPacketHandler(final Pipeline outgoingPipeline, final Scheduler scheduler) {
     this.outgoingPipeline = outgoingPipeline;
     this.scheduler = scheduler;
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  public void handle(final Envelope envelope) {
     if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }
@@ -77,7 +77,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       Bytes remotePubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
       byte[] ephemeralKeyBytes = new byte[32];
       Functions.getRandom().nextBytes(ephemeralKeyBytes);
-      ECKeyPair ephemeralKey = ECKeyPair.create(ephemeralKeyBytes);
+      KeyPair ephemeralKeyPair =
+          Functions.createKeyPairFromSecretBytes(Bytes32.wrap(ephemeralKeyBytes));
 
       // The handshake uses the unmasked WHOAREYOU challenge as an input:
       // challenge-data     = masking-iv || static-header || authdata
@@ -98,7 +99,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Functions.hkdf_expand(
               session.getHomeNodeId(),
               destNodeId,
-              Bytes.wrap(ephemeralKeyBytes),
+              ephemeralKeyPair.secretKey(),
               remotePubKey,
               challengeData);
       session.setInitiatorKey(hkdfKeys.getInitiatorKey());
@@ -115,7 +116,8 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                               "Received WHOAREYOU in envelope #%s but no requests await in %s session",
                               envelope.getIdString(), session)));
 
-      Bytes ephemeralPubKey = Functions.getCompressedPublicKey(ephemeralKey);
+      Bytes ephemeralPubKey =
+          Functions.deriveCompressedPublicKeyFromPrivate(ephemeralKeyPair.secretKey());
 
       Bytes idSignature =
           HandshakeAuthData.signId(

@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
@@ -64,23 +65,23 @@ public class NodeSession {
   private Bytes recipientKey;
   private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
-  private final Bytes staticNodeKey;
+  private final SecretKey staticNodeKey;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
   private final Function<Random, Bytes12> nonceGenerator;
 
   public NodeSession(
-      Bytes nodeId,
-      Optional<NodeRecord> nodeRecord,
-      InetSocketAddress remoteAddress,
-      NodeSessionManager nodeSessionManager,
-      LocalNodeRecordStore localNodeRecordStore,
-      Bytes staticNodeKey,
-      KBuckets nodeBucketStorage,
-      Consumer<NetworkParcel> outgoingPipeline,
-      Random rnd,
-      ExpirationScheduler<Bytes> requestExpirationScheduler) {
+      final Bytes nodeId,
+      final Optional<NodeRecord> nodeRecord,
+      final InetSocketAddress remoteAddress,
+      final NodeSessionManager nodeSessionManager,
+      final LocalNodeRecordStore localNodeRecordStore,
+      final SecretKey staticNodeKey,
+      final KBuckets nodeBucketStorage,
+      final Consumer<NetworkParcel> outgoingPipeline,
+      final Random rnd,
+      final ExpirationScheduler<Bytes> requestExpirationScheduler) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
@@ -111,7 +112,7 @@ public class NodeSession {
     return whoAreYouChallenge;
   }
 
-  public void sendOutgoingOrdinary(V5Message message) {
+  public void sendOutgoingOrdinary(final V5Message message) {
     logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Bytes16 maskingIV = generateMaskingIV();
     Header<OrdinaryAuthData> header =
@@ -121,7 +122,7 @@ public class NodeSession {
     sendOutgoing(maskingIV, packet);
   }
 
-  public void sendOutgoingRandom(Bytes randomData) {
+  public void sendOutgoingRandom(final Bytes randomData) {
     Header<OrdinaryAuthData> header =
         Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
@@ -130,7 +131,7 @@ public class NodeSession {
     sendOutgoing(generateMaskingIV(), packet);
   }
 
-  public void sendOutgoingWhoAreYou(WhoAreYouPacket packet) {
+  public void sendOutgoingWhoAreYou(final WhoAreYouPacket packet) {
     logger.trace(
         () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
     Bytes16 maskingIV = generateMaskingIV();
@@ -138,7 +139,8 @@ public class NodeSession {
     sendOutgoing(maskingIV, packet);
   }
 
-  public void sendOutgoingHandshake(Header<HandshakeAuthData> header, V5Message message) {
+  public void sendOutgoingHandshake(
+      final Header<HandshakeAuthData> header, final V5Message message) {
     logger.trace(
         () ->
             String.format(
@@ -149,7 +151,7 @@ public class NodeSession {
     sendOutgoing(maskingIV, handshakeMessagePacket);
   }
 
-  private void sendOutgoing(Bytes16 maskingIV, Packet<?> packet) {
+  private void sendOutgoing(final Bytes16 maskingIV, final Packet<?> packet) {
     Bytes16 destNodeId = Bytes16.wrap(getNodeId(), 0);
     RawPacket rawPacket = RawPacket.createAndMask(maskingIV, packet, destNodeId);
     outgoingPipeline.accept(new NetworkParcelV5(rawPacket, remoteAddress));
@@ -166,7 +168,7 @@ public class NodeSession {
    * could ensure that restarts or even re-installs would increment the counter based on previously
    * saved state in all circumstances. The easiest to implement is a random number.
    */
-  public synchronized RequestInfo createNextRequest(Request<?> request) {
+  public synchronized RequestInfo createNextRequest(final Request<?> request) {
     byte[] requestId = new byte[REQUEST_ID_SIZE];
     rnd.nextBytes(requestId);
     Bytes wrappedId = Bytes.wrap(requestId);
@@ -201,7 +203,7 @@ public class NodeSession {
   }
 
   /** Updates request info. Thread-safe. */
-  public synchronized void cancelAllRequests(String message) {
+  public synchronized void cancelAllRequests(final String message) {
     logger.debug(() -> String.format("Cancelling all requests in session %s", this));
     Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
     requestIdsCopy.forEach(
@@ -254,7 +256,7 @@ public class NodeSession {
     return initiatorKey;
   }
 
-  public void setInitiatorKey(Bytes initiatorKey) {
+  public void setInitiatorKey(final Bytes initiatorKey) {
     this.initiatorKey = initiatorKey;
   }
 
@@ -263,7 +265,7 @@ public class NodeSession {
     return recipientKey;
   }
 
-  public void setRecipientKey(Bytes recipientKey) {
+  public void setRecipientKey(final Bytes recipientKey) {
     this.recipientKey = recipientKey;
   }
 
@@ -276,7 +278,7 @@ public class NodeSession {
   }
 
   @SuppressWarnings("unchecked")
-  public synchronized <T> void clearRequestInfo(Bytes requestId, T result) {
+  public synchronized <T> void clearRequestInfo(final Bytes requestId, T result) {
     final RequestInfo requestInfo = clearRequestInfo(requestId);
     checkNotNull(requestInfo, "Attempting to clear an unknown request");
     ((Request<T>) requestInfo.getRequest()).getResultPromise().complete(result);
@@ -287,13 +289,13 @@ public class NodeSession {
     nodeRecord.ifPresent(nodeBucketStorage::onNodeContacted);
   }
 
-  private synchronized RequestInfo clearRequestInfo(Bytes requestId) {
+  private synchronized RequestInfo clearRequestInfo(final Bytes requestId) {
     RequestInfo requestInfo = requestIdStatuses.remove(requestId);
     requestExpirationScheduler.cancel(requestId);
     return requestInfo;
   }
 
-  public synchronized Optional<RequestInfo> getRequestInfo(Bytes requestId) {
+  public synchronized Optional<RequestInfo> getRequestInfo(final Bytes requestId) {
     RequestInfo requestInfo = requestIdStatuses.get(requestId);
     return requestId == null ? Optional.empty() : Optional.of(requestInfo);
   }
@@ -314,7 +316,7 @@ public class NodeSession {
         .findFirst();
   }
 
-  public Stream<NodeRecord> getNodeRecordsInBucket(int distance) {
+  public Stream<NodeRecord> getNodeRecordsInBucket(final int distance) {
     return nodeBucketStorage.getLiveNodeRecords(distance);
   }
 
@@ -348,13 +350,13 @@ public class NodeSession {
     return state;
   }
 
-  public synchronized void setState(SessionState newStatus) {
+  public synchronized void setState(final SessionState newStatus) {
     logger.debug(
         () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
     this.state = newStatus;
   }
 
-  public Bytes getStaticNodeKey() {
+  public SecretKey getStaticNodeKey() {
     return staticNodeKey;
   }
 

@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.community;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -14,6 +15,10 @@ import org.junit.jupiter.api.Test;
 
 /** Tests crypto functions */
 public class CryptoTest {
+  private static final SecretKey LOCAL_SECRET =
+      Functions.createSecretKey(
+          Bytes32.fromHexString(
+              "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
 
   /**
    * The ECDH function takes the elliptic-curve scalar multiplication of a public key and a private
@@ -27,13 +32,11 @@ public class CryptoTest {
     Bytes publicKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
-    Bytes secretKey =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
 
     Bytes expectedSharedSecret =
         Bytes.fromHexString("0x033b11a2a1f214567e1537ce5e509ffd9b21373247f2a3ff6841f4976f53165e7e");
     Assertions.assertEquals(
-        expectedSharedSecret, Functions.deriveECDHKeyAgreement(secretKey, publicKey));
+        expectedSharedSecret, Functions.deriveECDHKeyAgreement(LOCAL_SECRET, publicKey));
   }
 
   /**
@@ -73,11 +76,9 @@ public class CryptoTest {
   public void testIdNonceSigning() {
     Bytes32 idNonce =
         Bytes32.fromHexString("0xa77e3aa0c144ae7c0a3af73692b7d6e5b7a2fdc0eda16e8d5e6cb0d08e88dd04");
-    Bytes ephemeralKey =
+    Bytes ephemeralPubKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
-    Bytes localSecretKey =
-        Bytes.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
     Bytes32 nodeIdB =
         Bytes32.fromHexString("0x885bba8dfeddd49855459df852ad5b63d13a3fae593f3f9fa7e317fd43651409");
 
@@ -86,7 +87,7 @@ public class CryptoTest {
             "0xDAC01B977399E6154AB67C8866A3B84BE2A5413257B2407F83FEC024933A7BEA269FDB7C474AED07612862016D379CA544F3593A7E3A465F52F3AE692F6EEFCB");
     Assertions.assertEquals(
         expectedIdNonceSig,
-        HandshakeAuthData.signId(idNonce, ephemeralKey, nodeIdB, localSecretKey));
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, nodeIdB, LOCAL_SECRET));
   }
 
   /**

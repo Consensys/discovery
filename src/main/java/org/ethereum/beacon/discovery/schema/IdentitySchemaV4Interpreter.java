@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -39,7 +40,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       ImmutableSet.of(EnrField.IP_V4, EnrField.IP_V6, EnrField.UDP, EnrField.UDP_V6);
 
   @Override
-  public boolean isValid(NodeRecord nodeRecord) {
+  public boolean isValid(final NodeRecord nodeRecord) {
     if (!IdentitySchemaInterpreter.super.isValid(nodeRecord)) {
       return false;
     }
@@ -61,14 +62,14 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
-  public Bytes getNodeId(NodeRecord nodeRecord) {
+  public Bytes getNodeId(final NodeRecord nodeRecord) {
     Bytes pkey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
     Preconditions.checkNotNull(pkey, "Missing PKEY_SECP256K1 field");
     return nodeIdCache.getUnchecked(pkey);
   }
 
-  private static Bytes calculateNodeId(final Bytes pkey) {
-    ECPoint pudDestPoint = Functions.publicKeyToPoint(pkey);
+  private static Bytes calculateNodeId(final Bytes publicKey) {
+    ECPoint pudDestPoint = Functions.publicKeyToPoint(publicKey);
     Bytes xPart =
         Bytes.wrap(
             Utils.extractBytesFromUnsignedBigInt(pudDestPoint.getXCoord().toBigInteger(), 32));
@@ -79,9 +80,9 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
-  public void sign(NodeRecord nodeRecord, Bytes privateKey) {
+  public void sign(final NodeRecord nodeRecord, final SecretKey secretKey) {
     Bytes signature =
-        Functions.sign(privateKey, Functions.hashKeccak(nodeRecord.serializeNoSignature()));
+        Functions.sign(secretKey, Functions.hashKeccak(nodeRecord.serializeNoSignature()));
     nodeRecord.setSignature(signature);
   }
 
@@ -104,25 +105,28 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       final NodeRecord nodeRecord,
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
-      final Bytes privateKey) {
+      final SecretKey secretKey) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !ADDRESS_FIELD_NAMES.contains(field.getName()));
 
     NodeRecordBuilder.addFieldsForAddress(
         fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, privateKey);
+    sign(newRecord, secretKey);
     return newRecord;
   }
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      NodeRecord nodeRecord, String fieldName, Bytes value, Bytes privateKey) {
+      final NodeRecord nodeRecord,
+      final String fieldName,
+      final Bytes value,
+      final SecretKey secretKey) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !field.getName().equals(fieldName));
     addCustomField(fields, fieldName, value);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, privateKey);
+    sign(newRecord, secretKey);
     return newRecord;
   }
 

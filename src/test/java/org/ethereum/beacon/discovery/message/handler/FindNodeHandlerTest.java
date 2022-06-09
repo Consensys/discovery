@@ -52,7 +52,7 @@ public class FindNodeHandlerTest {
           Clock.fixed(Instant.ofEpochSecond(100000), ZoneId.of("UTC")),
           new LocalNodeRecordStore(
               homeNodeRecord,
-              Bytes.fromHexString("0x1234"),
+              Functions.randomKeyPair().secretKey(),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
           new LivenessChecker(clock));

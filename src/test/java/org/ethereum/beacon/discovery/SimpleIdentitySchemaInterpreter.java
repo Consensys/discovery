@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
@@ -52,13 +54,19 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
-  public void sign(final NodeRecord nodeRecord, final Bytes privateKey) {
+  public void sign(final NodeRecord nodeRecord, final SecretKey secretKey) {
     nodeRecord.setSignature(MutableBytes.create(96));
   }
 
   @Override
   public Bytes getNodeId(final NodeRecord nodeRecord) {
-    return (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
+    Bytes prototype = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
+    // Aligning it for correct 32 bytes
+    if (prototype.size() <= 32) {
+      return Bytes32.leftPad(prototype);
+    } else {
+      return prototype.slice(0, 32);
+    }
   }
 
   @Override
@@ -86,15 +94,18 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final NodeRecord nodeRecord,
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
-      final Bytes privateKey) {
+      final SecretKey secretKey) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
-    sign(newRecord, privateKey);
+    sign(newRecord, secretKey);
     return newRecord;
   }
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      NodeRecord nodeRecord, String fieldName, Bytes value, Bytes privateKey) {
+      final NodeRecord nodeRecord,
+      final String fieldName,
+      final Bytes value,
+      final SecretKey secretKey) {
     final List<EnrField> fields = new ArrayList<>();
     nodeRecord.forEachField(
         (key, existingValue) -> {
@@ -104,7 +115,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
         });
     fields.add(new EnrField(fieldName, value));
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, privateKey);
+    sign(newRecord, secretKey);
     return newRecord;
   }
 }

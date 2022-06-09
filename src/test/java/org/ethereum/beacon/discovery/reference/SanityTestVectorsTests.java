@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
@@ -29,15 +30,15 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
+import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class SanityTestVectors {
-
-  Bytes nodeAKey =
-      Bytes.fromHexString("0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f");
-  Bytes nodeBKey =
-      Bytes.fromHexString("0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628");
+public class SanityTestVectorsTests {
+  private final KeyPair nodeAKeyPair =
+      Functions.createKeyPairFromSecretBytes(
+          Bytes32.fromHexString(
+              "0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"));
 
   @Test
   void testOrdinaryPingPacket() {
@@ -144,7 +145,8 @@ public class SanityTestVectors {
 
     PingMessage pingMessage = new PingMessage(pingReqId, pingEnrSeq);
     Bytes idSignature =
-        HandshakeAuthData.signId(whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeAKey);
+        HandshakeAuthData.signId(
+            whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeAKeyPair.secretKey());
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -223,7 +225,8 @@ public class SanityTestVectors {
 
     PingMessage pingMessage = new PingMessage(pingReqId, pingEnrSeq);
     Bytes idSignature =
-        HandshakeAuthData.signId(whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeAKey);
+        HandshakeAuthData.signId(
+            whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeAKeyPair.secretKey());
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
