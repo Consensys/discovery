@@ -185,7 +185,7 @@ public class NodeSession {
     requestExpirationScheduler.put(
         wrappedId,
         () -> {
-          logger.debug(
+          logger.trace(
               () ->
                   String.format(
                       "Request %s expired for id %s in session %s: no reply",
@@ -351,7 +351,7 @@ public class NodeSession {
   }
 
   public synchronized void setState(final SessionState newStatus) {
-    logger.debug(
+    logger.trace(
         () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
     this.state = newStatus;
   }
