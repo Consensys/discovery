@@ -115,4 +115,8 @@ public class DiscoverySystem {
   public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {
     return taskManager.searchForNewPeers();
   }
+
+  public DiscoveryManager getDiscoveryManager() {
+    return discoveryManager;
+  }
 }
