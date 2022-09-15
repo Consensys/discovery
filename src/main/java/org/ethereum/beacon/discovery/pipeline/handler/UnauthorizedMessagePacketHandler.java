@@ -17,7 +17,7 @@ import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -55,7 +55,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
       WhoAreYouPacket whoAreYouPacket = WhoAreYouPacket.create(header);
       session.sendOutgoingWhoAreYou(whoAreYouPacket);
 
-      session.setState(SessionState.WHOAREYOU_SENT);
+      session.setState(NodeSessionFacade.SessionState.WHOAREYOU_SENT);
     } catch (Exception ex) {
       String error =
           String.format(

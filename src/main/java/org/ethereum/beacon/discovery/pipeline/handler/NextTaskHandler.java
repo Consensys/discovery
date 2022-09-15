@@ -19,7 +19,7 @@ import org.ethereum.beacon.discovery.pipeline.Pipeline;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 
 /** Gets next request task in session and processes it */
@@ -70,10 +70,10 @@ public class NextTaskHandler implements EnvelopeHandler {
                 "Envelope %s: processing awaiting request %s",
                 envelope.getIdString(), requestInfo));
 
-    if (session.getState().equals(SessionState.INITIAL)) {
+    if (session.getState().equals(NodeSessionFacade.SessionState.INITIAL)) {
       session.sendOutgoingRandom(Bytes.random(RANDOM_MESSAGE_SIZE, ThreadLocalRandom.current()));
-      session.setState(SessionState.RANDOM_PACKET_SENT);
-    } else if (session.getState().equals(SessionState.AUTHENTICATED)) {
+      session.setState(NodeSessionFacade.SessionState.RANDOM_PACKET_SENT);
+    } else if (session.getState().equals(NodeSessionFacade.SessionState.AUTHENTICATED)) {
       V5Message message = requestInfo.getMessage();
       session.sendOutgoingOrdinary(message);
       requestInfo.setTaskStatus(TaskStatus.SENT);

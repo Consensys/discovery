@@ -52,6 +52,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.reactivestreams.Publisher;
@@ -225,7 +226,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public Stream<NodeRecord> streamActiveSessions() {
-    return nodeSessionManager.streamActiveSessions();
+  public Stream<NodeSessionFacade> streamNodeSessions() {
+    return nodeSessionManager.streamActiveSessions().map(session -> session);
   }
 }

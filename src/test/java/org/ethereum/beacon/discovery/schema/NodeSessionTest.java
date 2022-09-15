@@ -25,7 +25,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.info.Request;
 import org.ethereum.beacon.discovery.pipeline.info.RequestInfo;
 import org.ethereum.beacon.discovery.scheduler.ExpirationScheduler;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade.SessionState;
 import org.ethereum.beacon.discovery.storage.KBuckets;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NewAddressHandler;
@@ -141,7 +141,7 @@ public class NodeSessionTest {
     session.setState(state);
 
     timeoutHandler.run();
-    assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
+    assertThat(session.getState()).isEqualTo(NodeSessionFacade.SessionState.INITIAL);
   }
 
   @Test
@@ -153,10 +153,10 @@ public class NodeSessionTest {
     verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
 
     final Runnable timeoutHandler = timeoutHandlerCaptor.getValue();
-    session.setState(SessionState.AUTHENTICATED);
+    session.setState(NodeSessionFacade.SessionState.AUTHENTICATED);
 
     timeoutHandler.run();
-    assertThat(session.getState()).isEqualTo(SessionState.AUTHENTICATED);
+    assertThat(session.getState()).isEqualTo(NodeSessionFacade.SessionState.AUTHENTICATED);
   }
 
   private Request<?> createRequestMock() {

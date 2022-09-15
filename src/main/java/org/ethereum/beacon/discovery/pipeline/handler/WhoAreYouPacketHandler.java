@@ -25,7 +25,7 @@ import org.ethereum.beacon.discovery.scheduler.Scheduler;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
-import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -137,7 +137,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
               idSignature,
               ephemeralPubKey,
               Optional.ofNullable(respRecord));
-      session.setState(SessionState.AUTHENTICATED);
+      session.setState(NodeSessionFacade.SessionState.AUTHENTICATED);
 
       session.sendOutgoingHandshake(header, message);
 

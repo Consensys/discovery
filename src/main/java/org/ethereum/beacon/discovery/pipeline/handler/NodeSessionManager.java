@@ -171,10 +171,8 @@ public class NodeSessionManager implements EnvelopeHandler {
         .or(() -> envelope.get(Field.NODE).getUdpAddress());
   }
 
-  public Stream<NodeRecord> streamActiveSessions() {
-    return recentSessions.values().stream()
-        .filter(NodeSession::isAuthenticated)
-        .flatMap(session -> session.getNodeRecord().stream());
+  public Stream<NodeSession> streamActiveSessions() {
+    return recentSessions.values().stream();
   }
 
   private static class SessionKey {

@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.pipeline.handler;
 
-import static org.ethereum.beacon.discovery.schema.NodeSession.SessionState.AUTHENTICATED;
+import static org.ethereum.beacon.discovery.schema.NodeSessionFacade.SessionState.AUTHENTICATED;
 
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;

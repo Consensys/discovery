@@ -6,11 +6,14 @@ package org.ethereum.beacon.discovery;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
+import org.ethereum.beacon.discovery.schema.NodeSession;
+import org.ethereum.beacon.discovery.schema.NodeSessionFacade;
 
 /**
  * Discovery Manager, top interface for peer discovery mechanism as described at <a
@@ -49,5 +52,17 @@ public interface DiscoveryManager {
   /** Sends the TALKREQ so the specified {@code node} and returns the TALKRESP promise */
   CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes request);
 
-  Stream<NodeRecord> streamActiveSessions();
+  Stream<NodeSessionFacade> streamNodeSessions();
+
+  default Stream<NodeRecord> streamActiveSessions() {
+    return streamNodeSessions()
+            .filter(NodeSessionFacade::isAuthenticated)
+            .flatMap(session -> session.getNodeRecord().stream());
+  }
+
+  default Optional<NodeSessionFacade> getNodeSession(NodeRecord nodeRecord) {
+    return streamNodeSessions()
+            .filter(session -> nodeRecord.equals(session.getNodeRecord().orElse(null)))
+            .findFirst();
+  }
 }

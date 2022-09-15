@@ -47,7 +47,7 @@ import org.ethereum.beacon.discovery.type.Bytes16;
  * Stores session status and all keys for discovery message exchange between us, `homeNode` and the
  * other `node`
  */
-public class NodeSession {
+public class NodeSession implements NodeSessionFacade{
   private static final Logger LOG = LogManager.getLogger(NodeSession.class);
 
   public static final int REQUEST_ID_SIZE = 8;
@@ -97,14 +97,17 @@ public class NodeSession {
     this.nonceGenerator = new NonceGenerator();
   }
 
+  @Override
   public Bytes getNodeId() {
     return nodeId;
   }
 
+  @Override
   public Optional<NodeRecord> getNodeRecord() {
     return nodeRecord;
   }
 
+  @Override
   public InetSocketAddress getRemoteAddress() {
     return remoteAddress;
   }
@@ -243,6 +246,7 @@ public class NodeSession {
   }
 
   /** If true indicates that handshake is complete */
+  @Override
   public synchronized boolean isAuthenticated() {
     return SessionState.AUTHENTICATED.equals(state);
   }
@@ -275,6 +279,7 @@ public class NodeSession {
     this.recipientKey = recipientKey;
   }
 
+  @Override
   public Optional<InetSocketAddress> getReportedExternalAddress() {
     return reportedExternalAddress;
   }
@@ -352,6 +357,7 @@ public class NodeSession {
     return "NodeSession{" + nodeId + " (" + state + ")}";
   }
 
+  @Override
   public synchronized SessionState getState() {
     return state;
   }
@@ -366,10 +372,8 @@ public class NodeSession {
     return staticNodeKey;
   }
 
-  public enum SessionState {
-    INITIAL, // other side is trying to connect, or we are initiating (before random packet is sent
-    WHOAREYOU_SENT, // other side is initiator, we've sent whoareyou in response
-    RANDOM_PACKET_SENT, // our node is initiator, we've sent random packet
-    AUTHENTICATED
+  @Override
+  public void drop() {
+    nodeSessionManager.dropSession(this);
   }
 }
