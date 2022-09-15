@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 /**
@@ -43,7 +44,7 @@ public interface DiscoveryManager {
    * @return Future which is fired when reply is received or fails in timeout/not successful
    *     handshake/bad message exchange.
    */
-  CompletableFuture<Void> ping(NodeRecord nodeRecord);
+  CompletableFuture<PongData> ping(NodeRecord nodeRecord);
 
   /** Sends the TALKREQ so the specified {@code node} and returns the TALKRESP promise */
   CompletableFuture<Bytes> talk(NodeRecord nodeRecord, Bytes protocol, Bytes request);

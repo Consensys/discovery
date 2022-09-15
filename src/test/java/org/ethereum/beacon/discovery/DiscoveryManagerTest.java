@@ -13,6 +13,7 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestManagerWrapper.TestMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -34,7 +35,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
 
-    CompletableFuture<Void> pingRes = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes = m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     TestMessage out1_1 = m1.nextOutbound();
     assertThat(out1_1.getPacket()).isInstanceOf(OrdinaryMessagePacket.class);
@@ -119,7 +120,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
 
-    CompletableFuture<Void> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     m1.exchangeAll(m2);
 
@@ -129,7 +130,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m2_1 = network.createDiscoveryManager(2);
 
     // ping 1 => 2 would be unathorized on 2
-    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2_1.getNodeRecord());
+    CompletableFuture<PongData> pingRes2 = m1.getDiscoveryManager().ping(m2_1.getNodeRecord());
 
     // new handshake should be made
     m1.exchangeAll(m2_1);
@@ -143,7 +144,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
 
-    CompletableFuture<Void> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     m1.exchangeAll(m2);
 
@@ -173,7 +174,7 @@ public class DiscoveryManagerTest {
     m1.exchangeAll(m2_1);
 
     // should be ok now
-    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
     m1.exchangeAll(m2_1);
     assertThat(pingRes2).isCompleted();
   }
@@ -184,7 +185,7 @@ public class DiscoveryManagerTest {
     TestManagerWrapper m1 = network.createDiscoveryManager(1);
     TestManagerWrapper m2 = network.createDiscoveryManager(2);
 
-    CompletableFuture<Void> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes1 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     TestMessage out1_1 = m1.nextOutbound();
     m2.deliver(out1_1); // Random (Ping is pending)
@@ -205,7 +206,7 @@ public class DiscoveryManagerTest {
 
     assertThat(pingRes1).isCompleted();
 
-    CompletableFuture<Void> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
+    CompletableFuture<PongData> pingRes2 = m1.getDiscoveryManager().ping(m2.getNodeRecord());
 
     TestMessage out1_3 = m1.nextOutbound();
     m2.deliver(out1_3); // Regular Ping

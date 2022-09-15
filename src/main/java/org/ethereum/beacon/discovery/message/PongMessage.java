@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 
 /** PONG is the reply to PING {@link PingMessage} */
-public class PongMessage implements V5Message {
+public class PongMessage implements V5Message, PongData {
   // Unique request id
   private final Bytes requestId;
   // Local ENR sequence number of sender
@@ -53,14 +53,17 @@ public class PongMessage implements V5Message {
     return requestId;
   }
 
+  @Override
   public UInt64 getEnrSeq() {
     return enrSeq;
   }
 
+  @Override
   public Bytes getRecipientIp() {
     return recipientIp;
   }
 
+  @Override
   public int getRecipientPort() {
     return recipientPort;
   }

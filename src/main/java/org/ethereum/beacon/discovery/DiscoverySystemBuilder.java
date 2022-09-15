@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
@@ -269,7 +270,7 @@ public class DiscoverySystemBuilder {
     }
 
     @Override
-    public CompletableFuture<Void> ping(final NodeRecord node) {
+    public CompletableFuture<PongData> ping(final NodeRecord node) {
       return CompletableFuture.supplyAsync(() -> delegate.ping(node).orTimeout(500, MILLISECONDS))
           .thenCompose(Function.identity());
     }

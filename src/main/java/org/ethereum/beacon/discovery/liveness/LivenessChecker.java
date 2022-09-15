@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.database.ExpirationSet;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class LivenessChecker {
@@ -82,6 +83,6 @@ public class LivenessChecker {
   }
 
   public interface Pinger {
-    CompletableFuture<Void> ping(NodeRecord node);
+    CompletableFuture<PongData> ping(NodeRecord node);
   }
 }

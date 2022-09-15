@@ -43,7 +43,7 @@ public class PongHandler implements MessageHandler<PongMessage> {
         LOG.trace("Failed to update local node record because recipient IP was invalid", e);
       }
     }
-    session.clearRequestInfo(message.getRequestId(), null);
+    session.clearRequestInfo(message.getRequestId(), message);
     enrUpdateTracker.updateIfRequired(session, message.getEnrSeq());
   }
 

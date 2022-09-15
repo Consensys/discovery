@@ -18,6 +18,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.message.TalkReqMessage;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.DiscoveryClient;
@@ -183,8 +184,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   }
 
   @Override
-  public CompletableFuture<Void> ping(final NodeRecord nodeRecord) {
-    Request<Void> request =
+  public CompletableFuture<PongData> ping(NodeRecord nodeRecord) {
+    Request<PongData> request =
         new Request<>(
             new CompletableFuture<>(),
             reqId -> new PingMessage(reqId, localNodeRecordStore.getLocalNodeRecord().getSeq()),

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.BucketStats;
@@ -92,7 +93,7 @@ public class DiscoverySystem {
    * @return Future which is fired when reply is received or fails in timeout/not successful
    *     handshake/bad message exchange.
    */
-  public CompletableFuture<Void> ping(NodeRecord nodeRecord) {
+  public CompletableFuture<PongData> ping(NodeRecord nodeRecord) {
     return discoveryManager.ping(nodeRecord);
   }
 

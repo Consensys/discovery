@@ -36,9 +36,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.rlp.RLPReader;
+import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.TalkHandler;
+import org.ethereum.beacon.discovery.message.PongData;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -68,10 +70,11 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
 
-    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    final CompletableFuture<PongData> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
+    assertEquals(UInt64.ONE, pingResult.join().getEnrSeq());
 
     final CompletableFuture<Collection<NodeRecord>> findNodesResult =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
@@ -85,7 +88,7 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient();
 
-    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    final CompletableFuture<PongData> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
@@ -114,7 +117,7 @@ public class DiscoveryIntegrationTest {
   public void shouldCompleteFindnodesFutureWhenNoNodesAreFound() throws Exception {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
-    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    final CompletableFuture<PongData> pingResult = client.ping(bootnode.getLocalNodeRecord());
     final Bytes bootnodeId = bootnode.getLocalNodeRecord().getNodeId();
     final Bytes clientNodeId = client.getLocalNodeRecord().getNodeId();
     final int distance = Functions.logDistance(clientNodeId, bootnodeId);
@@ -136,7 +139,7 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem client = createDiscoveryClient(false, bootnode.getLocalNodeRecord());
 
-    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    final CompletableFuture<PongData> pingResult = client.ping(bootnode.getLocalNodeRecord());
     assertThrows(TimeoutException.class, () -> waitFor(pingResult, 5));
   }
 
@@ -351,7 +354,7 @@ public class DiscoveryIntegrationTest {
             bootnode.getLocalNodeRecord());
     final DiscoverySystem otherClient = createDiscoveryClient(client.getLocalNodeRecord());
 
-    final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
+    final CompletableFuture<PongData> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult);
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
@@ -364,7 +367,7 @@ public class DiscoveryIntegrationTest {
 
     buggyNodeRecordFactory.throwError.set(false);
 
-    final CompletableFuture<Void> otherClientPingResult =
+    final CompletableFuture<PongData> otherClientPingResult =
         otherClient.ping(client.getLocalNodeRecord());
     waitFor(otherClientPingResult);
     assertTrue(otherClientPingResult.isDone());
@@ -382,7 +385,7 @@ public class DiscoveryIntegrationTest {
     assertTrue(findNodesResult2.isDone());
     assertFalse(findNodesResult2.isCompletedExceptionally());
 
-    final CompletableFuture<Void> bootnodePingResult = bootnode.ping(client.getLocalNodeRecord());
+    final CompletableFuture<PongData> bootnodePingResult = bootnode.ping(client.getLocalNodeRecord());
     waitFor(bootnodePingResult);
     assertTrue(bootnodePingResult.isDone());
     assertFalse(bootnodePingResult.isCompletedExceptionally());
