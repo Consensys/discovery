@@ -7,7 +7,10 @@ package org.ethereum.beacon.discovery.schema;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
-/** Fields of <a href="https://github.com/ethereum/devp2p/blob/master/enr.md">Ethereum Node Record</a>. */
+/**
+ * Fields of <a href="https://github.com/ethereum/devp2p/blob/master/enr.md">Ethereum Node
+ * Record</a>.
+ */
 public class EnrField {
   // Schema id
   public static final String ID = "id";
