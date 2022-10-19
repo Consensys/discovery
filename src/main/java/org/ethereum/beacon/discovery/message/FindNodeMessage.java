@@ -37,11 +37,11 @@ public class FindNodeMessage implements V5Message {
   public static FindNodeMessage fromBytes(Bytes bytes) throws DecodeException {
     return RlpUtil.readRlpList(
         bytes,
-        listReader -> {
-          final Bytes requestId1 = checkMaxSize(listReader.readValue(), MAX_REQUEST_ID_SIZE);
-          List<Integer> distances1 = listReader.readListContents(RLPReader::readInt);
-          RlpUtil.checkComplete(listReader);
-          return new FindNodeMessage(requestId1, distances1);
+        reader -> {
+          final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
+          List<Integer> distances = reader.readListContents(RLPReader::readInt);
+          RlpUtil.checkComplete(reader);
+          return new FindNodeMessage(requestId, distances);
         });
   }
 
