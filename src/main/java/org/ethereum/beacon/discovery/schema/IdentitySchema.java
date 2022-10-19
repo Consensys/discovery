@@ -19,7 +19,7 @@ public enum IdentitySchema {
     }
   }
 
-  private String name;
+  private final String name;
 
   private IdentitySchema(String name) {
     this.name = name;
