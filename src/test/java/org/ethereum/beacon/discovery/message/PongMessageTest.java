@@ -60,4 +60,13 @@ class PongMessageTest {
     final Bytes rlp = original.getBytes();
     assertThatThrownBy(() -> decoder.decode(rlp)).isInstanceOf(RlpDecodeException.class);
   }
+
+  @Test
+  void shouldFailDecodingWhenPortIsInvalid() {
+    // The last 3 bytes is the important part. 0x010000 (65536) is UInt16.Max + 1.
+    final Bytes rlp = Bytes.fromHexString("0x02d7848548229388fffffffffffffffe841212121283010000");
+    assertThatThrownBy(() -> decoder.decode(rlp))
+        .isInstanceOf(RlpDecodeException.class)
+        .hasMessageContaining("Invalid port number");
+  }
 }
