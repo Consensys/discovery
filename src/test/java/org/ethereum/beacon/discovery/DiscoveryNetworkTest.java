@@ -39,8 +39,9 @@ public class DiscoveryNetworkTest {
   public void test() throws Exception {
     final Clock clock = Clock.systemUTC();
     // 1) start 2 nodes
-    NodeInfo nodePair1 = TestUtil.generateNode(30303);
-    NodeInfo nodePair2 = TestUtil.generateNode(30304);
+    // note: not using port 30303 because of binding issues with macOS.
+    NodeInfo nodePair1 = TestUtil.generateNode(30304);
+    NodeInfo nodePair2 = TestUtil.generateNode(30305);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
     LivenessChecker livenessChecker1 = new LivenessChecker(clock);

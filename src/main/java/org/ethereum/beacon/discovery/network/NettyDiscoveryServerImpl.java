@@ -76,6 +76,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
     bindFuture.addListener(
         result -> {
           if (!result.isSuccess()) {
+            logger.error("Problem binding to listen address", result.cause());
             future.completeExceptionally(result.cause());
             return;
           }
