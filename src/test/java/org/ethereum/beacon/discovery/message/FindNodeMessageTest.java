@@ -35,4 +35,14 @@ class FindNodeMessageTest {
     final Bytes rlp = Bytes.concatenate(message.getBytes(), Bytes.fromHexString("0x1234"));
     assertThatThrownBy(() -> decoder.decode(rlp)).isInstanceOf(RlpDecodeException.class);
   }
+
+  @Test
+  void shouldRejectInvalidDistance() {
+    final FindNodeMessage message =
+        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(256));
+    final Bytes rlp = message.getBytes();
+    assertThatThrownBy(() -> decoder.decode(rlp))
+        .isInstanceOf(RlpDecodeException.class)
+        .hasMessageContaining("Invalid distance");
+  }
 }
