@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 import static org.ethereum.beacon.discovery.util.RlpUtil.checkSizeEither;
 import static org.ethereum.beacon.discovery.util.Utils.isPortValid;
