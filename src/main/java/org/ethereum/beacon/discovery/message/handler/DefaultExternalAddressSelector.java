@@ -33,7 +33,7 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
    * address.
    *
    * <p>Also tracks the last time an address is reported so that stale addresses can be removed even
-   * if they have accumlated a lot of reports.
+   * if they have accumulated a lot of reports.
    */
   private final Map<InetSocketAddress, ReportData> reportedAddresses = new HashMap<>();
 
