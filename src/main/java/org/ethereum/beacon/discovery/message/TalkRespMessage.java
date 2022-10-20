@@ -30,6 +30,7 @@ public class TalkRespMessage implements V5Message {
         reader -> {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           final Bytes response = reader.readValue();
+          RlpUtil.checkComplete(reader);
           return new TalkRespMessage(requestId, response);
         });
   }
