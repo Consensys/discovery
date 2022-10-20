@@ -24,7 +24,7 @@ class PingMessageTest {
   }
 
   @Test
-  void shouldRejectTrailingBytesIpv6() {
+  void shouldRejectTrailingBytes() {
     assertRejectTrailingBytes(DECODER, MESSAGE);
   }
 }
