@@ -18,7 +18,7 @@ public class NewTaskHandler implements EnvelopeHandler {
   private static final Logger logger = LogManager.getLogger(NewTaskHandler.class);
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings("rawtypes")
   public void handle(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.REQUEST, envelope)) {
       return;
