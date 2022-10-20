@@ -38,13 +38,14 @@ public class FindNodeMessage implements V5Message {
   /**
    * According to the <a
    * href="https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md#node-table">Node
-   * Discovery Protocol</a>, a distance must greater than or equal to zero and less than 256.
+   * Discovery Protocol</a>, there are 256 buckets and the 0th bucket is reserved for our node.
+   * Therefore, a distance must be greater than or equal to 0 and less than or equal to 256.
    *
    * @param distance The distance value to check.
    * @return True if the distance is valid.
    */
   public static boolean isValidDistance(final int distance) {
-    return 0 <= distance && distance < 256;
+    return 0 <= distance && distance <= 256;
   }
 
   public static FindNodeMessage fromBytes(Bytes bytes) throws DecodeException {

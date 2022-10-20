@@ -39,7 +39,7 @@ class FindNodeMessageTest {
   @Test
   void shouldRejectInvalidDistance() {
     final FindNodeMessage message =
-        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(256));
+        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(257));
     final Bytes rlp = message.getBytes();
     assertThatThrownBy(() -> decoder.decode(rlp))
         .isInstanceOf(RlpDecodeException.class)
