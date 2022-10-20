@@ -39,6 +39,7 @@ public class PongMessage implements V5Message {
           final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
           final Bytes recipientIp = checkSizeEither(reader.readValue(), 4, 16);
           final int recipientPort = reader.readInt();
+          RlpUtil.checkComplete(reader);
           return new PongMessage(requestId, enrSeq, recipientIp, recipientPort);
         });
   }

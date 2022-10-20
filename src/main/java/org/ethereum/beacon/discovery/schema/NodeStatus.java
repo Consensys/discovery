@@ -11,7 +11,7 @@ import java.util.Map;
 public enum NodeStatus {
   ACTIVE(0x01), // Alive
   SLEEP(0x02), // Didn't answer last time(s)
-  DEAD(0x03); // Didnt' answer for a long time
+  DEAD(0x03); // Didn't answer for a long time
 
   private static final Map<Integer, NodeStatus> codeMap = new HashMap<>();
 
@@ -21,7 +21,7 @@ public enum NodeStatus {
     }
   }
 
-  private int code;
+  private final int code;
 
   NodeStatus(int code) {
     this.code = code;

@@ -41,7 +41,7 @@ public class Utils {
       };
 
   public static <A, B> Function<Optional<A>, Stream<B>> optionalFlatMap(Function<A, B> func) {
-    return opt -> opt.map(a -> Stream.of(func.apply(a))).orElseGet(Stream::empty);
+    return opt -> opt.stream().map(func);
   }
 
   public static <A, B> Function<A, Stream<B>> nullableFlatMap(Function<A, B> func) {

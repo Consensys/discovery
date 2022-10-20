@@ -29,7 +29,7 @@ class KBucket {
   private final List<BucketEntry> nodes = new ArrayList<>();
 
   /**
-   * Stores a node which could not be added becasue the bucket was full, but is confirmed live and
+   * Stores a node which could not be added because the bucket was full, but is confirmed live and
    * able to be inserted immediately should any node in the bucket be removed.
    */
   private Optional<BucketEntry> pendingNode = Optional.empty();

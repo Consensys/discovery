@@ -69,7 +69,7 @@ public enum MessageCode {
     }
   }
 
-  private int code;
+  private final int code;
 
   MessageCode(int code) {
     this.code = code;

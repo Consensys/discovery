@@ -20,7 +20,7 @@ public enum DiscoveryProtocol {
     }
   }
 
-  private String name;
+  private final String name;
 
   private DiscoveryProtocol(String name) {
     this.name = name;
