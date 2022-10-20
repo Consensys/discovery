@@ -37,6 +37,7 @@ public class TalkReqMessage implements V5Message {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           final Bytes protocol = reader.readValue();
           final Bytes request = reader.readValue();
+          RlpUtil.checkComplete(reader);
           return new TalkReqMessage(requestId, protocol, request);
         });
   }
