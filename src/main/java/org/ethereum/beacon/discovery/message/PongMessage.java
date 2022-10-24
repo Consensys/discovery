@@ -81,8 +81,12 @@ public class PongMessage implements V5Message {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     PongMessage that = (PongMessage) o;
     return Objects.equal(requestId, that.requestId)
         && Objects.equal(enrSeq, that.enrSeq)

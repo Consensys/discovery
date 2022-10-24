@@ -6,7 +6,7 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.41.0'
   id 'com.github.hierynomus.license' version '0.16.1'
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-  id 'net.ltgt.errorprone' version '2.0.2'
+  id 'net.ltgt.errorprone' version '3.0.1'
   id 'org.ajoberstar.grgit' version '4.1.1'
 }
 
@@ -23,6 +23,7 @@ targetCompatibility = '11'
 
 repositories {
   mavenCentral()
+  maven { url "https://artifacts.consensys.net/public/maven/maven/" }
 }
 
 dependencies {
@@ -47,6 +48,7 @@ dependencies {
   testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
 
   errorprone("com.google.errorprone:error_prone_core")
+  errorprone("tech.pegasys.tools.epchecks:errorprone-checks")
 }
 
 spotless {
@@ -91,25 +93,33 @@ tasks.withType(JavaCompile) {
 
   options.errorprone {
     disableWarningsInGeneratedCode
+
     // Our equals need to be symmetric, this checker doesn't respect that.
     check('EqualsGetClass', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     // We like to use futures with no return values.
     check('FutureReturnValueIgnored', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     // We use the JSR-305 annotations instead of the Google annotations.
     check('ImmutableEnumChecker', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
-
     check('FieldCanBeFinal', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    check('CanIgnoreReturnValueSuggester', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+
+    // These are experimental checks that we want enabled.
+    check('MissingBraces', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
     check('InsecureCryptoUsage', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
     check('WildcardImport', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('DeduplicateConstants', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('RedundantOverride', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('RedundantThrows', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('UnnecessarilyFullyQualified', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('InitializeInline', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('ClassName', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('InterfaceWithOnlyStatics', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
+    check('PackageLocation', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
 
-    // This check is broken in Java 12.  See https://github.com/google/error-prone/issues/1257
-    if (JavaVersion.current() == JavaVersion.VERSION_12) {
-      check('Finally', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
-    }
-    // This check is broken after Java 12.  See https://github.com/google/error-prone/issues/1352
-    if (JavaVersion.current() > JavaVersion.VERSION_12) {
-      check('TypeParameterUnusedInFormals', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
-    }
+    // These checks are imported from errorprone-checks dependency but not required.
+    check('MethodInputParametersMustBeFinal', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    check('BannedMethod', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    check('JavaCase', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
   }
   options.encoding = 'UTF-8'
 
