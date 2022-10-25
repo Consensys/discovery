@@ -75,7 +75,7 @@ public class NodeSessionManager implements EnvelopeHandler {
       return;
     }
     logger.trace(
-        "Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getIdString());
+        "Envelope {} in NodeSessionManager, requirements are satisfied!", envelope.getIdString());
 
     SessionLookup sessionRequest = envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
