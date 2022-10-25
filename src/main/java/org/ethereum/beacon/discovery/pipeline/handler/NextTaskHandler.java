@@ -47,6 +47,9 @@ public class NextTaskHandler implements EnvelopeHandler {
 
   @Override
   public void handle(Envelope envelope) {
+    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
+      return;
+    }
     if (!HandlerUtil.requireNodeRecord(envelope)) {
       return;
     }

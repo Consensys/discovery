@@ -50,6 +50,12 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.PACKET_WHOAREYOU, envelope)) {
       return;
     }
+    if (!HandlerUtil.requireField(Field.MASKING_IV, envelope)) {
+      return;
+    }
+    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
+      return;
+    }
     logger.trace(
         () ->
             String.format(
