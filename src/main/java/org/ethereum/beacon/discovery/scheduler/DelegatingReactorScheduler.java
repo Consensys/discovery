@@ -10,9 +10,9 @@ import javax.annotation.Nonnull;
 import reactor.core.Disposable;
 import reactor.core.scheduler.Scheduler;
 
-public class DelegatingReactorScheduler implements reactor.core.scheduler.Scheduler {
+public class DelegatingReactorScheduler implements Scheduler {
 
-  protected final reactor.core.scheduler.Scheduler delegate;
+  protected final Scheduler delegate;
   protected final Supplier<Long> timeSupplier;
 
   public DelegatingReactorScheduler(Scheduler delegate, Supplier<Long> timeSupplier) {

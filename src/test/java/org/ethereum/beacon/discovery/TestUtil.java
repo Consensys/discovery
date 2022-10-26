@@ -4,6 +4,9 @@
 
 package org.ethereum.beacon.discovery;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.net.InetSocketAddress;
 import java.util.BitSet;
 import java.util.Random;
@@ -13,6 +16,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
+import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
@@ -22,6 +27,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 
 public class TestUtil {
   public static final NodeRecordFactory NODE_RECORD_FACTORY =
@@ -172,5 +178,20 @@ public class TestUtil {
   public interface ThrowingRunnable {
 
     void run() throws Exception;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <M extends V5Message> void assertRoundTrip(
+      final DiscoveryV5MessageDecoder decoder, final M message) {
+    final Bytes rlp = message.getBytes();
+    final M result = (M) decoder.decode(rlp);
+    assertThat(result).isEqualTo(message);
+    assertThat(result.getBytes()).isEqualTo(rlp);
+  }
+
+  public static <M extends V5Message> void assertRejectTrailingBytes(
+      final DiscoveryV5MessageDecoder decoder, final M message) {
+    final Bytes rlp = Bytes.concatenate(message.getBytes(), Bytes.fromHexString("0x1234"));
+    assertThatThrownBy(() -> decoder.decode(rlp)).isInstanceOf(RlpDecodeException.class);
   }
 }

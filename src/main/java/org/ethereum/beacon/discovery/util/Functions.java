@@ -275,8 +275,12 @@ public class Functions {
 
     @Override
     public boolean equals(final Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       HKDFKeys hkdfKeys = (HKDFKeys) o;
       return Objects.equal(initiatorKey, hkdfKeys.initiatorKey)
           && Objects.equal(recipientKey, hkdfKeys.recipientKey)
