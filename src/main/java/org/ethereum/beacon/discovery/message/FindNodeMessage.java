@@ -59,7 +59,6 @@ public class FindNodeMessage implements V5Message {
               throw new RlpDecodeException("Invalid distance");
             }
           }
-          RlpUtil.checkComplete(reader);
           return new FindNodeMessage(requestId, distances);
         });
   }

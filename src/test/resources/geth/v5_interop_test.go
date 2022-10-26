@@ -44,7 +44,7 @@ func TestNodesServer(t *testing.T) {
 	fmt.Printf("Waiting for external nodes query\n")
 	c1 := make(chan string, 1)
 
-	// Run your long running function in it's own goroutine and pass back it's
+	// Run your long running function in its own goroutine and pass back it's
 	// response into our channel.
 	go func() {
 		text := LongRunningProcess()
