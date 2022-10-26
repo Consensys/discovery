@@ -80,7 +80,7 @@ public class KBuckets {
     }
   }
 
-  public Stream<NodeRecord> streamClosestNodes(Bytes nodeId) {
+  public synchronized Stream<NodeRecord> streamClosestNodes(Bytes nodeId) {
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(
             new KBucketsIterator(this, homeNodeId, nodeId), Spliterator.ORDERED),
