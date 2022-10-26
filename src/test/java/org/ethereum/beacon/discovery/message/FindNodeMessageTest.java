@@ -4,35 +4,28 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.ethereum.beacon.discovery.TestUtil.assertRejectTrailingBytes;
+import static org.ethereum.beacon.discovery.TestUtil.assertRoundTrip;
 
 import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
-import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.junit.jupiter.api.Test;
 
 class FindNodeMessageTest {
-
-  private final DiscoveryV5MessageDecoder decoder =
+  private static final DiscoveryV5MessageDecoder DECODER =
       new DiscoveryV5MessageDecoder(new NodeRecordFactory(new SimpleIdentitySchemaInterpreter()));
+  private static final FindNodeMessage MESSAGE =
+      new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(1, 2, 3, 4, 6, 9, 10));
 
   @Test
-  void shouldRoundTripViaRlp() {
-    final FindNodeMessage message =
-        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(1, 2, 3, 4, 6, 9, 10));
-    final Bytes rlp = message.getBytes();
-    final FindNodeMessage result = (FindNodeMessage) decoder.decode(rlp);
-    assertThat(result).isEqualTo(message);
+  void shouldRoundTrip() {
+    assertRoundTrip(DECODER, MESSAGE);
   }
 
   @Test
   void shouldRejectTrailingBytes() {
-    final FindNodeMessage message =
-        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(1, 2, 3, 4, 6, 9, 10));
-    final Bytes rlp = Bytes.concatenate(message.getBytes(), Bytes.fromHexString("0x1234"));
-    assertThatThrownBy(() -> decoder.decode(rlp)).isInstanceOf(RlpDecodeException.class);
+    assertRejectTrailingBytes(DECODER, MESSAGE);
   }
 }
