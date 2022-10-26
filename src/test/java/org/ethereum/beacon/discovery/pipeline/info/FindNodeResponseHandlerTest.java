@@ -3,8 +3,10 @@
  */
 package org.ethereum.beacon.discovery.pipeline.info;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -21,6 +23,8 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class FindNodeResponseHandlerTest {
   private static final Bytes PEER_ID = Bytes.fromHexString("0x1234567890ABCDEF");
@@ -66,6 +70,18 @@ class FindNodeResponseHandlerTest {
     final List<NodeRecord> records = singletonList(nodeInfo.getNodeRecord());
     final NodesMessage message = new NodesMessage(REQUEST_ID, records.size(), records);
     handler.handleResponseMessage(message, session);
+
+    verify(session, never()).onNodeRecordReceived(any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 0, 17})
+  public void shouldRejectInvalidTotalPackets(final int numPackets) {
+    final NodesMessage message = new NodesMessage(REQUEST_ID, numPackets, emptyList());
+    final FindNodeResponseHandler handler = new FindNodeResponseHandler(emptyList());
+    assertThatThrownBy(() -> handler.handleResponseMessage(message, session))
+        .hasMessageContaining("Invalid number of total packets")
+        .isInstanceOf(RuntimeException.class);
 
     verify(session, never()).onNodeRecordReceived(any());
   }

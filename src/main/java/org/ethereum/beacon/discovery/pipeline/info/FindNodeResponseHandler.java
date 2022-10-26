@@ -15,10 +15,11 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 public class FindNodeResponseHandler implements MultiPacketResponseHandler<NodesMessage> {
   private static final Logger logger = LogManager.getLogger(FindNodeResponseHandler.class);
+  private static final int NOT_SET = -1;
   private static final int MAX_TOTAL_PACKETS = 16;
   private final List<NodeRecord> foundNodes = new ArrayList<>();
   private final Collection<Integer> distances;
-  private int totalPackets = -1;
+  private int totalPackets = NOT_SET;
   private int receivedPackets = 0;
 
   public FindNodeResponseHandler(final Collection<Integer> distances) {
@@ -27,7 +28,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
 
   @Override
   public synchronized boolean handleResponseMessage(NodesMessage message, NodeSession session) {
-    if (totalPackets == -1) {
+    if (totalPackets == NOT_SET) {
       totalPackets = message.getTotal();
       if (totalPackets < 1 || totalPackets > MAX_TOTAL_PACKETS) {
         throw new RuntimeException("Invalid number of total packets: " + totalPackets);
@@ -47,8 +48,8 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
     logger.trace(
         () ->
             String.format(
-                "Received %s node records in session %s. Total buckets expected: %s",
-                message.getNodeRecords().size(), session, message.getTotal()));
+                "Received %s node records in session %s. Packet %s/%s.",
+                message.getNodeRecords().size(), session, receivedPackets, message.getTotal()));
     message.getNodeRecords().stream()
         .filter(this::isValid)
         .filter(record -> hasCorrectDistance(session, record))
