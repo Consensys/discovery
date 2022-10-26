@@ -6,11 +6,13 @@ package org.ethereum.beacon.discovery.message;
 
 import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 import static org.ethereum.beacon.discovery.util.RlpUtil.checkSizeEither;
+import static org.ethereum.beacon.discovery.util.Utils.isPortValid;
 
 import com.google.common.base.Objects;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 
 /** PONG is the reply to PING {@link PingMessage} */
@@ -39,6 +41,9 @@ public class PongMessage implements V5Message {
           final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
           final Bytes recipientIp = checkSizeEither(reader.readValue(), 4, 16);
           final int recipientPort = reader.readInt();
+          if (!isPortValid(recipientPort)) {
+            throw new RlpDecodeException("Invalid port number");
+          }
           return new PongMessage(requestId, enrSeq, recipientIp, recipientPort);
         });
   }
