@@ -14,6 +14,7 @@ import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPReader;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.ethereum.beacon.discovery.util.DecodeException;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 
 /**
@@ -34,12 +35,30 @@ public class FindNodeMessage implements V5Message {
     this.distances = distances;
   }
 
+  /**
+   * According to the <a
+   * href="https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md#node-table">Node
+   * Discovery Protocol</a>, there are 256 buckets and the 0th bucket is reserved for our node.
+   * Therefore, a distance must be greater than or equal to 0 and less than or equal to 256.
+   *
+   * @param distance The distance value to check.
+   * @return True if the distance is valid.
+   */
+  public static boolean isValidDistance(final int distance) {
+    return 0 <= distance && distance <= 256;
+  }
+
   public static FindNodeMessage fromBytes(Bytes bytes) throws DecodeException {
     return RlpUtil.readRlpList(
         bytes,
         reader -> {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           List<Integer> distances = reader.readListContents(RLPReader::readInt);
+          for (Integer distance : distances) {
+            if (!isValidDistance(distance)) {
+              throw new RlpDecodeException("Invalid distance");
+            }
+          }
           return new FindNodeMessage(requestId, distances);
         });
   }

@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery.message;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.ethereum.beacon.discovery.TestUtil.assertRejectTrailingBytes;
 import static org.ethereum.beacon.discovery.TestUtil.assertRoundTrip;
 
@@ -11,6 +12,7 @@ import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
+import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.junit.jupiter.api.Test;
 
 class FindNodeMessageTest {
@@ -27,5 +29,15 @@ class FindNodeMessageTest {
   @Test
   void shouldRejectTrailingBytes() {
     assertRejectTrailingBytes(DECODER, MESSAGE);
+  }
+
+  @Test
+  void shouldRejectInvalidDistance() {
+    final FindNodeMessage message =
+        new FindNodeMessage(Bytes.fromHexString("0x134488556699"), List.of(257));
+    final Bytes rlp = message.getBytes();
+    assertThatThrownBy(() -> DECODER.decode(rlp))
+        .isInstanceOf(RlpDecodeException.class)
+        .hasMessageContaining("Invalid distance");
   }
 }
