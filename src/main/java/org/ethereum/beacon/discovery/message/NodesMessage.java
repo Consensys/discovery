@@ -39,7 +39,6 @@ public class NodesMessage implements V5Message {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           final int total = reader.readInt();
           final List<NodeRecord> nodeRecords = reader.readListContents(nodeRecordFactory::fromRlp);
-          RlpUtil.checkComplete(reader);
           return new NodesMessage(requestId, total, nodeRecords);
         });
   }

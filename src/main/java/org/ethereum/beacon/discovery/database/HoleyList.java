@@ -19,7 +19,9 @@ public class HoleyList<V> {
   private long size = 0;
 
   public void put(long idx, V value) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (idx >= size()) {
       setSize(idx + 1);
     }
@@ -31,7 +33,9 @@ public class HoleyList<V> {
    * index
    */
   public Optional<V> get(long idx) {
-    if (idx < 0 || idx >= size()) return Optional.empty();
+    if (idx < 0 || idx >= size()) {
+      return Optional.empty();
+    }
     return Optional.ofNullable(data.get(idx));
   }
 
