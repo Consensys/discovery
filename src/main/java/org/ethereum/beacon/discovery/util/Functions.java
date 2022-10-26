@@ -238,17 +238,7 @@ public class Functions {
    */
   public static int logDistance(final Bytes nodeId1, final Bytes nodeId2) {
     Bytes distance = nodeId1.xor(nodeId2);
-    int logDistance = Byte.SIZE * distance.size(); // 256
-    final int maxLogDistance = logDistance;
-    for (int i = 0; i < maxLogDistance; ++i) {
-      boolean highBit = ((distance.get(i / 8) >> (7 - (i % 8))) & 1) == 1;
-      if (highBit) {
-        break;
-      } else {
-        logDistance--;
-      }
-    }
-    return logDistance;
+    return 256 - distance.numberOfLeadingZeros();
   }
 
   public static BigInteger distance(final Bytes nodeId1, final Bytes nodeId2) {
