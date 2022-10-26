@@ -20,8 +20,8 @@ import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.DecryptException;
 
-public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
-    implements Header<TAUthData> {
+public class HeaderImpl<TAuthData extends AuthData> extends AbstractBytes
+    implements Header<TAuthData> {
 
   public static Header<?> decrypt(Bytes data, Bytes16 iv, Bytes16 destNodeId)
       throws DecodeException {
@@ -62,9 +62,9 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
   }
 
   private final StaticHeader staticHeader;
-  private final TAUthData authData;
+  private final TAuthData authData;
 
-  public HeaderImpl(StaticHeader staticHeader, TAUthData authData) {
+  public HeaderImpl(StaticHeader staticHeader, TAuthData authData) {
     super(Bytes.wrap(staticHeader.getBytes(), authData.getBytes()));
     checkArgument(
         authData.getBytes().size() == staticHeader.getAuthDataSize(),
@@ -84,7 +84,7 @@ public class HeaderImpl<TAUthData extends AuthData> extends AbstractBytes
   }
 
   @Override
-  public TAUthData getAuthData() {
+  public TAuthData getAuthData() {
     return authData;
   }
 
