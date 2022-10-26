@@ -90,8 +90,12 @@ public class FindNodeMessage implements V5Message {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     FindNodeMessage that = (FindNodeMessage) o;
     return Objects.equal(requestId, that.requestId)
         && Objects.equal(getDistances(), that.getDistances());
