@@ -40,7 +40,6 @@ public class FindNodeMessage implements V5Message {
         reader -> {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           List<Integer> distances = reader.readListContents(RLPReader::readInt);
-          RlpUtil.checkComplete(reader);
           return new FindNodeMessage(requestId, distances);
         });
   }

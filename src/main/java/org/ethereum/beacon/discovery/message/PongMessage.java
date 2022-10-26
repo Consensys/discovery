@@ -44,7 +44,6 @@ public class PongMessage implements V5Message {
           if (!isPortValid(recipientPort)) {
             throw new RlpDecodeException("Invalid port number");
           }
-          RlpUtil.checkComplete(reader);
           return new PongMessage(requestId, enrSeq, recipientIp, recipientPort);
         });
   }
