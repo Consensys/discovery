@@ -117,4 +117,8 @@ public class Utils {
     }
     return 0;
   }
+
+  public static boolean isPortValid(final int port) {
+    return (port >= 0 && port <= 65535);
+  }
 }

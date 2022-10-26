@@ -32,7 +32,6 @@ public class PingMessage implements V5Message {
         reader -> {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
-          RlpUtil.checkComplete(reader);
           return new PingMessage(requestId, enrSeq);
         });
   }
