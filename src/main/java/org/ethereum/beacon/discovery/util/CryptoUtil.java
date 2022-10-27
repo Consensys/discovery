@@ -30,6 +30,7 @@ public class CryptoUtil {
     return Bytes32.wrap(sha256Digest.digest());
   }
 
+  @SuppressWarnings("DoNotInvokeMessageDigestDirectly")
   private static MessageDigest getSha256Digest() {
     try {
       return MessageDigest.getInstance("sha256", securityProvider);

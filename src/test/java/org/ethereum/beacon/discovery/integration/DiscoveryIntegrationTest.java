@@ -246,7 +246,7 @@ public class DiscoveryIntegrationTest {
     assertThat(findNodeRecordByNodeId(remoteNode, originalLocalNodeRecord.getNodeId()))
         .contains(originalLocalNodeRecord);
 
-    // Remote node pings us which should trigger us updating it's ENR.
+    // Remote node pings us which should trigger us updating its ENR.
     remoteNode.updateCustomFieldValue("eth2", Bytes.fromHexString("0x5555"));
     final NodeRecord updatedRemoteNodeRecord = remoteNode.getLocalNodeRecord();
     waitFor(remoteNode.ping(localNode.getLocalNodeRecord()));

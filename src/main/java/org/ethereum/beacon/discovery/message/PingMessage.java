@@ -32,7 +32,6 @@ public class PingMessage implements V5Message {
         reader -> {
           final Bytes requestId = checkMaxSize(reader.readValue(), MAX_REQUEST_ID_SIZE);
           final UInt64 enrSeq = UInt64.valueOf(reader.readBigInteger());
-          RlpUtil.checkComplete(reader);
           return new PingMessage(requestId, enrSeq);
         });
   }
@@ -64,8 +63,12 @@ public class PingMessage implements V5Message {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     PingMessage that = (PingMessage) o;
     return Objects.equal(requestId, that.requestId) && Objects.equal(enrSeq, that.enrSeq);
   }
