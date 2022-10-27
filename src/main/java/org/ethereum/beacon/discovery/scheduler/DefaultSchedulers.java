@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 
 public class DefaultSchedulers extends AbstractSchedulers {
 
-  private static final Logger logger = LogManager.getLogger(DefaultSchedulers.class);
+  private static final Logger LOG = LogManager.getLogger(DefaultSchedulers.class);
 
-  private Consumer<Throwable> errorHandler = t -> logger.error("Unhandled exception:", t);
+  private Consumer<Throwable> errorHandler = t -> LOG.error("Unhandled exception:", t);
   private volatile boolean started;
 
   public void setErrorHandler(Consumer<Throwable> errorHandler) {

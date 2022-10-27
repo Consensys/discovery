@@ -29,7 +29,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
 public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger();
 
   private final LoadingCache<Bytes, Bytes> nodeIdCache =
       CacheBuilder.newBuilder()
@@ -45,7 +45,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       return false;
     }
     if (nodeRecord.get(EnrField.PKEY_SECP256K1) == null) {
-      logger.trace(
+      LOG.trace(
           "Field {} does not exist but required for scheme {}",
           EnrField.PKEY_SECP256K1,
           getScheme());
@@ -140,7 +140,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     try {
       return Optional.of(new InetSocketAddress(getInetAddress(ipBytes), port));
     } catch (final UnknownHostException e) {
-      logger.trace("Unable to resolve host: {}", ipBytes);
+      LOG.trace("Unable to resolve host: {}", ipBytes);
       return Optional.empty();
     }
   }

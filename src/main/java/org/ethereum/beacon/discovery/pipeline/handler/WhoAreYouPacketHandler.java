@@ -32,7 +32,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link WhoAreYouPacket} in {@link Field#PACKET_WHOAREYOU} field */
 public class WhoAreYouPacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(WhoAreYouPacketHandler.class);
+  private static final Logger LOG = LogManager.getLogger(WhoAreYouPacketHandler.class);
 
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
@@ -50,7 +50,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.PACKET_WHOAREYOU, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in WhoAreYouPacketHandler, requirements are satisfied!",
@@ -65,7 +65,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       boolean nonceMatches =
           session.getLastOutboundNonce().map(whoAreYouNonce::equals).orElse(false);
       if (!nonceMatches) {
-        logger.debug(
+        LOG.debug(
             "Verification not passed for message [{}] from node {} in status {}",
             whoAreYouPacket,
             nodeRecord,
@@ -96,7 +96,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
       Bytes32 destNodeId = Bytes32.wrap(nodeRecord.getNodeId());
       Functions.HKDFKeys hkdfKeys =
-          Functions.hkdf_expand(
+          Functions.hkdfExpand(
               session.getHomeNodeId(),
               destNodeId,
               ephemeralKeyPair.secretKey(),
@@ -148,7 +148,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               whoAreYouPacket, session.getNodeRecord(), session.getState());
-      logger.debug(error, ex);
+      LOG.debug(error, ex);
       envelope.remove(Field.PACKET_WHOAREYOU);
       session.cancelAllRequests("Bad WHOAREYOU received from node");
     }

@@ -32,7 +32,7 @@ import org.bouncycastle.math.ec.ECPoint;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger();
   public static final int PRIVKEY_SIZE = 32;
   public static final int PUBKEY_SIZE = 64;
   public static final int SIGNATURE_SIZE = 64;
@@ -83,7 +83,7 @@ public class Functions {
   public static boolean verifyECDSASignature(
       final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
     if (signature.size() != SIGNATURE_SIZE) {
-      logger.trace("Invalid signature size, should be {} bytes", SIGNATURE_SIZE);
+      LOG.trace("Invalid signature size, should be {} bytes", SIGNATURE_SIZE);
       return false;
     }
     final PublicKey publicKey = derivePublicKeyFromCompressed(pubKey);
@@ -102,7 +102,7 @@ public class Functions {
         }
       }
     } catch (IllegalArgumentException e) {
-      logger.trace("Failed to verify ECDSA signature", e);
+      LOG.trace("Failed to verify ECDSA signature", e);
     }
     return false;
   }
@@ -174,22 +174,22 @@ public class Functions {
    * prk = HKDF-Extract(secret, id-nonce)
    * initiator-key, recipient-key, auth-resp-key = HKDF-Expand(prk, info)</code>
    */
-  public static HKDFKeys hkdf_expand(
+  public static HKDFKeys hkdfExpand(
       final Bytes srcNodeId,
       final Bytes destNodeId,
       final SecretKey srcSecretKey,
       final Bytes destPubKey,
       final Bytes idNonce) {
     final Bytes keyAgreement = deriveECDHKeyAgreement(srcSecretKey, destPubKey);
-    return hkdf_expand(srcNodeId, destNodeId, keyAgreement, idNonce);
+    return hkdfExpand(srcNodeId, destNodeId, keyAgreement, idNonce);
   }
 
   /**
-   * {@link #hkdf_expand(Bytes, Bytes, SecretKey, Bytes, Bytes)} but with keyAgreement already
+   * {@link #hkdfExpand(Bytes, Bytes, SecretKey, Bytes, Bytes)} but with keyAgreement already
    * derived by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
    */
   @SuppressWarnings({"DefaultCharset"})
-  public static HKDFKeys hkdf_expand(
+  public static HKDFKeys hkdfExpand(
       final Bytes srcNodeId,
       final Bytes destNodeId,
       final Bytes keyAgreement,

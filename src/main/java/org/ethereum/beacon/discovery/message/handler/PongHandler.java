@@ -16,7 +16,7 @@ import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class PongHandler implements MessageHandler<PongMessage> {
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger();
   private final ExternalAddressSelector externalAddressSelector;
   private final EnrUpdateTracker enrUpdateTracker;
 
@@ -40,7 +40,7 @@ public class PongHandler implements MessageHandler<PongMessage> {
         externalAddressSelector.onExternalAddressReport(
             currentAddress, reportedAddress, Instant.now());
       } catch (UnknownHostException e) {
-        logger.trace("Failed to update local node record because recipient IP was invalid", e);
+        LOG.trace("Failed to update local node record because recipient IP was invalid", e);
       }
     }
     session.clearRequestInfo(message.getRequestId(), null);

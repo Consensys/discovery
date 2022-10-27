@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface ExternalAddressSelector {
 
-  ExternalAddressSelector NOOP = (_1, _2, _3) -> {};
+  ExternalAddressSelector NOOP = (a, b, c) -> {};
 
   void onExternalAddressReport(
       final Optional<InetSocketAddress> previouslyReportedAddress,

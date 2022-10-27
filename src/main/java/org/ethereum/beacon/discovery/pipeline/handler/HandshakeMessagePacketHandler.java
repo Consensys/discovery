@@ -27,7 +27,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_HANDSHAKE} field */
 public class HandshakeMessagePacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(HandshakeMessagePacketHandler.class);
+  private static final Logger LOG = LogManager.getLogger(HandshakeMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
   private final NodeRecordFactory nodeRecordFactory;
@@ -55,7 +55,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in AuthHeaderMessagePacketHandler, requirements are satisfied!",
@@ -66,8 +66,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
     try {
 
       if (session.getWhoAreYouChallenge().isEmpty()) {
-        logger.debug(
-            String.format("Outbound WhoAreYou challenge not found for session %s", session));
+        LOG.debug(String.format("Outbound WhoAreYou challenge not found for session %s", session));
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -75,7 +74,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
       Bytes ephemeralPubKeyCompressed = packet.getHeader().getAuthData().getEphemeralPubKey();
       Functions.HKDFKeys keys =
-          Functions.hkdf_expand(
+          Functions.hkdfExpand(
               session.getNodeId(),
               session.getHomeNodeId(),
               session.getStaticNodeKey(),
@@ -87,7 +86,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
       Optional<NodeRecord> enr = packet.getHeader().getAuthData().getNodeRecord(nodeRecordFactory);
       if (!enr.map(NodeRecord::isValid).orElse(true)) {
-        logger.debug(
+        LOG.debug(
             String.format(
                 "Node record not valid for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
@@ -97,7 +96,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       final Optional<NodeRecord> nodeRecordMaybe = session.getNodeRecord().or(() -> enr);
       // Check the node record matches the ID we expect
       if (!nodeRecordMaybe.map(r -> r.getNodeId().equals(session.getNodeId())).orElse(false)) {
-        logger.debug(
+        LOG.debug(
             String.format(
                 "Incorrect node ID for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
@@ -116,7 +115,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
                   (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
 
       if (!idNonceVerifyResult) {
-        logger.debug(
+        LOG.debug(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
                 packet, session.getNodeRecord(), session.getState()));
@@ -134,7 +133,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       enr.ifPresent(session::onNodeRecordReceived);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
-      logger.debug(
+      LOG.debug(
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getState()),

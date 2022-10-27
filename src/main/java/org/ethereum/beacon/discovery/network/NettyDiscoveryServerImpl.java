@@ -25,7 +25,7 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
-  private static final Logger logger = LogManager.getLogger(NettyDiscoveryServerImpl.class);
+  private static final Logger LOG = LogManager.getLogger(NettyDiscoveryServerImpl.class);
   private static final int RECREATION_TIMEOUT = 5000;
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
@@ -42,7 +42,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
 
   @Override
   public CompletableFuture<NioDatagramChannel> start() {
-    logger.info("Starting discovery server on UDP port {}", listenAddress.getPort());
+    LOG.info("Starting discovery server on UDP port {}", listenAddress.getPort());
     if (!listen.compareAndSet(false, true)) {
       return CompletableFuture.failedFuture(
           new IllegalStateException("Attempted to start an already started server"));
@@ -86,11 +86,11 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               .addListener(
                   closeFuture -> {
                     if (!listen.get()) {
-                      logger.info("Shutting down discovery server");
+                      LOG.info("Shutting down discovery server");
                       group.shutdownGracefully();
                       return;
                     }
-                    logger.error(
+                    LOG.error(
                         "Discovery server closed. Trying to restore after "
                             + RECREATION_TIMEOUT
                             + " milliseconds delay",
@@ -111,23 +111,23 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   @Override
   public void stop() {
     if (listen.compareAndSet(true, false)) {
-      logger.info("Stopping discovery server");
+      LOG.info("Stopping discovery server");
       if (channel != null) {
         try {
           channel.close().sync();
         } catch (InterruptedException ex) {
-          logger.error("Failed to stop discovery server", ex);
+          LOG.error("Failed to stop discovery server", ex);
         }
         if (nioGroup != null) {
           try {
             nioGroup.shutdownGracefully().sync();
           } catch (InterruptedException ex) {
-            logger.error("Failed to stop NIO group", ex);
+            LOG.error("Failed to stop NIO group", ex);
           }
         }
       }
     } else {
-      logger.warn("An attempt to stop already stopping/stopped discovery server");
+      LOG.warn("An attempt to stop already stopping/stopped discovery server");
     }
   }
 }

@@ -12,11 +12,11 @@ public enum IdentityScheme {
   V4("v4"),
   V5("v5");
 
-  private static final Map<String, IdentityScheme> nameMap = new HashMap<>();
+  private static final Map<String, IdentityScheme> NAME_MAP = new HashMap<>();
 
   static {
     for (IdentityScheme scheme : IdentityScheme.values()) {
-      nameMap.put(scheme.name, scheme);
+      NAME_MAP.put(scheme.name, scheme);
     }
   }
 
@@ -27,7 +27,7 @@ public enum IdentityScheme {
   }
 
   public static IdentityScheme fromString(String name) {
-    return nameMap.get(name);
+    return NAME_MAP.get(name);
   }
 
   public String stringName() {
