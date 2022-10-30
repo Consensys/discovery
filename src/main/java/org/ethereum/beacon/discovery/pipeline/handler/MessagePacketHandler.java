@@ -20,7 +20,7 @@ import org.ethereum.beacon.discovery.util.DecryptException;
 
 /** Handles {@link MessagePacket} in {@link Field#PACKET_MESSAGE} field */
 public class MessagePacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(MessagePacketHandler.class);
+  private static final Logger LOG = LogManager.getLogger(MessagePacketHandler.class);
   private final NodeRecordFactory nodeRecordFactory;
 
   public MessagePacketHandler(NodeRecordFactory nodeRecordFactory) {
@@ -38,7 +38,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in MessagePacketHandler, requirements are satisfied!",
@@ -54,7 +54,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
       envelope.put(Field.MESSAGE, message);
       envelope.remove(Field.PACKET_MESSAGE);
     } catch (DecryptException e) {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Failed to decrypt message [%s] from node %s in status %s. Will be sending WHOAREYOU...",
@@ -69,11 +69,11 @@ public class MessagePacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               packet, session.getNodeRecord(), session.getState());
-      logger.debug(error, ex);
+      LOG.debug(error, ex);
       envelope.remove(Field.PACKET_MESSAGE);
       envelope.put(Field.BAD_PACKET, packet);
     } catch (Throwable t) {
-      logger.warn(
+      LOG.warn(
           "Unexpected error while reading message [{}] from node {}",
           packet,
           session.getNodeRecord(),

@@ -61,11 +61,11 @@ public enum MessageCode {
    */
   TOPICQUERY(0x0A);
 
-  private static final Map<Integer, MessageCode> codeMap = new HashMap<>();
+  private static final Map<Integer, MessageCode> CODE_MAP = new HashMap<>();
 
   static {
     for (MessageCode type : MessageCode.values()) {
-      codeMap.put(type.code, type);
+      CODE_MAP.put(type.code, type);
     }
   }
 
@@ -76,7 +76,7 @@ public enum MessageCode {
   }
 
   public static MessageCode fromNumber(int i) {
-    return codeMap.get(i);
+    return CODE_MAP.get(i);
   }
 
   public byte byteCode() {

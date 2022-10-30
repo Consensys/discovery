@@ -50,12 +50,12 @@ import org.junit.jupiter.api.Test;
 
 public class DiscoveryIntegrationTest {
 
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger();
   public static final String LOCALHOST = "127.0.0.1";
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
   public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
   public static final Consumer<DiscoverySystemBuilder> NO_MODIFY = __ -> {};
-  private static final AtomicInteger nextPort = new AtomicInteger(9001);
+  private static final AtomicInteger NEXT_PORT = new AtomicInteger(9001);
   private final List<DiscoverySystem> managers = new ArrayList<>();
 
   @AfterEach
@@ -99,15 +99,15 @@ public class DiscoveryIntegrationTest {
 
   @Test
   public void shouldSuccessfullyUpdateCustomFieldValue() throws Exception {
-    final String CUSTOM_FIELD_NAME = "custom_field_name";
-    final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");
+    final String customFieldName = "custom_field_name";
+    final Bytes customFieldValue = Bytes.fromHexString("0xdeadbeef");
     final DiscoverySystem bootnode = createDiscoveryClient();
     assertTrue(bootnode.getLocalNodeRecord().isValid());
 
-    bootnode.updateCustomFieldValue(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE);
+    bootnode.updateCustomFieldValue(customFieldName, customFieldValue);
 
     assertTrue(bootnode.getLocalNodeRecord().isValid());
-    assertEquals(bootnode.getLocalNodeRecord().get(CUSTOM_FIELD_NAME), CUSTOM_FIELD_VALUE);
+    assertEquals(bootnode.getLocalNodeRecord().get(customFieldName), customFieldValue);
   }
 
   @Test
@@ -417,7 +417,7 @@ public class DiscoveryIntegrationTest {
       throws Exception {
 
     for (int i = 0; i < 10; i++) {
-      int port = nextPort.incrementAndGet();
+      int port = NEXT_PORT.incrementAndGet();
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
         nodeRecordBuilder.secretKey(keyPair.secretKey());
@@ -449,7 +449,7 @@ public class DiscoveryIntegrationTest {
       } catch (final Exception e) {
         discoverySystem.stop();
         if (e.getCause() instanceof BindException) {
-          logger.info("Port conflict detected, retrying with new port", e);
+          LOG.info("Port conflict detected, retrying with new port", e);
         } else {
           throw e;
         }

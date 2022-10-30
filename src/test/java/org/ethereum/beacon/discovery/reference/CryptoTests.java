@@ -47,7 +47,7 @@ public class CryptoTests {
     Bytes expectedRecipientKeyBytes = Bytes.fromHexString("0xac74bb8773749920b0d3a8881c173ec5");
 
     HKDFKeys hkdfKeys =
-        Functions.hkdf_expand(
+        Functions.hkdfExpand(
             nodeIdABytes, nodeIdBBytes, LOCAL_SECRET, destPubkeyBytes, challengeDataBytes);
     assertThat(hkdfKeys.getInitiatorKey()).isEqualTo(expectedInitiatorKeyBytes);
     assertThat(hkdfKeys.getRecipientKey()).isEqualTo(expectedRecipientKeyBytes);

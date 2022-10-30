@@ -12,11 +12,11 @@ public enum DiscoveryProtocol {
   V4("v4"),
   V5("v5");
 
-  private static final Map<String, DiscoveryProtocol> nameMap = new HashMap<>();
+  private static final Map<String, DiscoveryProtocol> NAME_MAP = new HashMap<>();
 
   static {
     for (DiscoveryProtocol scheme : DiscoveryProtocol.values()) {
-      nameMap.put(scheme.name, scheme);
+      NAME_MAP.put(scheme.name, scheme);
     }
   }
 
@@ -27,7 +27,7 @@ public enum DiscoveryProtocol {
   }
 
   public static DiscoveryProtocol fromString(String name) {
-    return nameMap.get(name);
+    return NAME_MAP.get(name);
   }
 
   public String stringName() {

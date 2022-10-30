@@ -52,7 +52,7 @@ class RecursiveLookupTaskTest {
   public static final NodeRecord PEER4 = createPeer(PEER4_ID);
   public static final NodeRecord PEER5 = createPeer(PEER5_ID);
 
-  private final Bytes TARGET =
+  private static final Bytes TARGET =
       Bytes.fromHexString("0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
   private final KBuckets buckets = mock(KBuckets.class);
   private final FindNodesAction findNodesAction = mock(FindNodesAction.class);

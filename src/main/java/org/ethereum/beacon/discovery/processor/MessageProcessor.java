@@ -18,7 +18,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
  * DiscoveryMessageDecoder}'s.
  */
 public class MessageProcessor {
-  private static final Logger logger = LogManager.getLogger(MessageProcessor.class);
+  private static final Logger LOG = LogManager.getLogger(MessageProcessor.class);
 
   @SuppressWarnings({"rawtypes"})
   private final Map<DiscoveryProtocol, DiscoveryMessageProcessor> messageProcessors =
@@ -40,7 +40,7 @@ public class MessageProcessor {
           String.format(
               "Message %s with identity %s received in session %s is not supported",
               message, protocol, session);
-      logger.debug(error);
+      LOG.debug(error);
       throw new RuntimeException(error);
     }
     messageHandler.handleMessage(message, session);

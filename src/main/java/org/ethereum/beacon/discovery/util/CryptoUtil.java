@@ -22,7 +22,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class CryptoUtil {
 
-  private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
+  private static final BouncyCastleProvider SECURITY_PROVIDER = new BouncyCastleProvider();
 
   public static Bytes32 sha256(final Bytes indexBytes) {
     final MessageDigest sha256Digest = getSha256Digest();
@@ -33,7 +33,7 @@ public class CryptoUtil {
   @SuppressWarnings("DoNotInvokeMessageDigestDirectly")
   private static MessageDigest getSha256Digest() {
     try {
-      return MessageDigest.getInstance("sha256", securityProvider);
+      return MessageDigest.getInstance("sha256", SECURITY_PROVIDER);
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }

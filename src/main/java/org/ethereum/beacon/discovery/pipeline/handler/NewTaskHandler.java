@@ -15,7 +15,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 
 /** Enqueues task in session for any task found in {@link Field#REQUEST} */
 public class NewTaskHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(NewTaskHandler.class);
+  private static final Logger LOG = LogManager.getLogger(NewTaskHandler.class);
 
   @Override
   @SuppressWarnings("rawtypes")
@@ -26,7 +26,7 @@ public class NewTaskHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in NewTaskHandler, requirements are satisfied!",

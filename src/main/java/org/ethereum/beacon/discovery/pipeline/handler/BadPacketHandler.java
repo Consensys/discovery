@@ -13,20 +13,20 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 
 /** Handles packet from {@link Field#BAD_PACKET}. Currently just logs it. */
 public class BadPacketHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(BadPacketHandler.class);
+  private static final Logger LOG = LogManager.getLogger(BadPacketHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.BAD_PACKET, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in BadPacketLogger, requirements are satisfied!",
                 envelope.getIdString()));
 
-    logger.debug(
+    LOG.debug(
         () ->
             String.format(
                 "Bad packet: %s in envelope #%s: %s",
