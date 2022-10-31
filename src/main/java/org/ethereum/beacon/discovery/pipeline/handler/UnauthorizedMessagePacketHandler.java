@@ -37,7 +37,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
     LOG.trace(
         () ->
             String.format(
-                "Envelope %s in NotExpectedIncomingPacketHandler, requirements are satisfied!",
+                "Envelope %s in UnauthorizedMessagePacketHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);

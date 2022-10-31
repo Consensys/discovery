@@ -40,7 +40,7 @@ public class MessageHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.MESSAGE, envelope)) {
       return;
     }
-    if (!HandlerUtil.requireNodeRecord(envelope)) {
+    if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
     LOG.trace(

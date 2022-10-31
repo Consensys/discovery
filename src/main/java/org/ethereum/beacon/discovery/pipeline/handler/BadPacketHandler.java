@@ -23,7 +23,7 @@ public class BadPacketHandler implements EnvelopeHandler {
     LOG.trace(
         () ->
             String.format(
-                "Envelope %s in BadPacketLogger, requirements are satisfied!",
+                "Envelope %s in BadPacketHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
     LOG.debug(

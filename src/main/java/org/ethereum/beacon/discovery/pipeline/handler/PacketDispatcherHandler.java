@@ -34,7 +34,7 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
     LOG.trace(
         () ->
             String.format(
-                "Envelope %s in UnknownPacketTypeByStatus, requirements are satisfied!",
+                "Envelope %s in PacketDispatcherHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
     Packet<?> packet = envelope.get(Field.PACKET);

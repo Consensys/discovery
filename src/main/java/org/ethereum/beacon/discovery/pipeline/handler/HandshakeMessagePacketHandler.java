@@ -58,7 +58,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
     LOG.trace(
         () ->
             String.format(
-                "Envelope %s in AuthHeaderMessagePacketHandler, requirements are satisfied!",
+                "Envelope %s in HandshakeMessagePacketHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
     HandshakeMessagePacket packet = envelope.get(Field.PACKET_HANDSHAKE);

@@ -44,11 +44,14 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(final Envelope envelope) {
-    if (!HandlerUtil.requireNodeRecord(envelope)) {
+    if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.PACKET_WHOAREYOU, envelope)) {
       return;
+    }
+    if (!HandlerUtil.requireField(Field.MASKING_IV, envelope)) {
+      throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
     }
     LOG.trace(
         () ->
@@ -82,9 +85,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
       // The handshake uses the unmasked WHOAREYOU challenge as an input:
       // challenge-data     = masking-iv || static-header || authdata
-      if (!envelope.contains(Field.MASKING_IV)) {
-        throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
-      }
       Bytes16 whoAreYouMaskingIV = envelope.get(Field.MASKING_IV);
       Bytes challengeData =
           Bytes.wrap(
