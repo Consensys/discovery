@@ -14,7 +14,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.util.Functions;
 
 public class FindNodeResponseHandler implements MultiPacketResponseHandler<NodesMessage> {
-  private static final Logger logger = LogManager.getLogger(FindNodeResponseHandler.class);
+  private static final Logger LOG = LogManager.getLogger(FindNodeResponseHandler.class);
   private static final int NOT_SET = -1;
   private static final int MAX_TOTAL_PACKETS = 16;
   private final List<NodeRecord> foundNodes = new ArrayList<>();
@@ -45,7 +45,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
     receivedPackets++;
 
     // Parse node records
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Received %s node records in session %s. Packet %s/%s.",
@@ -68,7 +68,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
 
   private boolean isValid(final NodeRecord record) {
     if (!record.isValid()) {
-      logger.debug("Rejecting invalid node record {}", record);
+      LOG.debug("Rejecting invalid node record {}", record);
       return false;
     }
     return true;
@@ -77,7 +77,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
   private boolean hasCorrectDistance(final NodeSession session, final NodeRecord nodeRecordV5) {
     final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
     if (!distances.contains(actualDistance)) {
-      logger.debug(
+      LOG.debug(
           "Rejecting node record {} received from {} because distance was not in {}.",
           nodeRecordV5.getNodeId(),
           session.getNodeId(),

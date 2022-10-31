@@ -16,14 +16,14 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
  * Field#SESSION_LOOKUP}
  */
 public class NodeSessionRequestHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(NodeSessionRequestHandler.class);
+  private static final Logger LOG = LogManager.getLogger(NodeSessionRequestHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.NODE, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in NodeSessionRequestHandler, requirements are satisfied!",

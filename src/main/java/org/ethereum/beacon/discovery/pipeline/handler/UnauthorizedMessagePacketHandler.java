@@ -24,7 +24,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 
 public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
 
-  private static final Logger logger = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
+  private static final Logger LOG = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
@@ -34,10 +34,10 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
-                "Envelope %s in NotExpectedIncomingPacketHandler, requirements are satisfied!",
+                "Envelope %s in UnauthorizedMessagePacketHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
@@ -61,7 +61,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               unknownPacket, session.getNodeRecord(), session.getState());
-      logger.debug(error, ex);
+      LOG.debug(error, ex);
       envelope.put(Field.BAD_PACKET, unknownPacket);
       envelope.put(Field.BAD_EXCEPTION, ex);
     }

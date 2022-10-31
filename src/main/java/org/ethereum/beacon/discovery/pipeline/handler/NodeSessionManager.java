@@ -40,7 +40,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 public class NodeSessionManager implements EnvelopeHandler {
   private static final int SESSION_CLEANUP_DELAY_SECONDS = 180;
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
-  private static final Logger logger = LogManager.getLogger(NodeSessionManager.class);
+  private static final Logger LOG = LogManager.getLogger(NodeSessionManager.class);
   private final LocalNodeRecordStore localNodeRecordStore;
   private final SecretKey staticNodeKey;
   private final KBuckets nodeBucketStorage;
@@ -74,12 +74,12 @@ public class NodeSessionManager implements EnvelopeHandler {
     if (envelope.contains(Field.SESSION)) {
       return;
     }
-    logger.trace(
-        "Envelope {} in NodeIdToSession, requirements are satisfied!", envelope.getIdString());
+    LOG.trace(
+        "Envelope {} in NodeSessionManager, requirements are satisfied!", envelope.getIdString());
 
     SessionLookup sessionRequest = envelope.get(Field.SESSION_LOOKUP);
     envelope.remove(Field.SESSION_LOOKUP);
-    logger.trace(
+    LOG.trace(
         "Envelope {}: Session lookup requested for nodeId {}",
         envelope.getIdString(),
         sessionRequest);
@@ -88,11 +88,11 @@ public class NodeSessionManager implements EnvelopeHandler {
         .ifPresentOrElse(
             nodeSession -> {
               envelope.put(Field.SESSION, nodeSession);
-              logger.trace(
+              LOG.trace(
                   "Session resolved: {} in envelope #{}", nodeSession, envelope.getIdString());
             },
             () ->
-                logger.trace(
+                LOG.trace(
                     "Session could not be resolved or created for {}", sessionRequest.getNodeId()));
   }
 

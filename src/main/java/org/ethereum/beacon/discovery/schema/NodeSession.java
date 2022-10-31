@@ -48,7 +48,7 @@ import org.ethereum.beacon.discovery.type.Bytes16;
  * other `node`
  */
 public class NodeSession {
-  private static final Logger logger = LogManager.getLogger(NodeSession.class);
+  private static final Logger LOG = LogManager.getLogger(NodeSession.class);
 
   public static final int REQUEST_ID_SIZE = 8;
   private final Bytes32 homeNodeId;
@@ -113,7 +113,7 @@ public class NodeSession {
   }
 
   public void sendOutgoingOrdinary(final V5Message message) {
-    logger.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
+    LOG.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Bytes16 maskingIV = generateMaskingIV();
     Header<OrdinaryAuthData> header =
         Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
@@ -126,13 +126,13 @@ public class NodeSession {
     Header<OrdinaryAuthData> header =
         Header.createOrdinaryHeader(getHomeNodeId(), Bytes12.wrap(generateNonce()));
     OrdinaryMessagePacket packet = OrdinaryMessagePacket.createRandom(header, randomData);
-    logger.trace(
+    LOG.trace(
         () -> String.format("Sending outgoing Random message %s in session %s", packet, this));
     sendOutgoing(generateMaskingIV(), packet);
   }
 
   public void sendOutgoingWhoAreYou(final WhoAreYouPacket packet) {
-    logger.trace(
+    LOG.trace(
         () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
     Bytes16 maskingIV = generateMaskingIV();
     whoAreYouChallenge = Optional.of(Bytes.wrap(maskingIV, packet.getHeader().getBytes()));
@@ -141,7 +141,7 @@ public class NodeSession {
 
   public void sendOutgoingHandshake(
       final Header<HandshakeAuthData> header, final V5Message message) {
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Sending outgoing Handshake message %s, %s in session %s", header, message, this));
@@ -185,7 +185,7 @@ public class NodeSession {
     requestExpirationScheduler.put(
         wrappedId,
         () -> {
-          logger.trace(
+          LOG.trace(
               () ->
                   String.format(
                       "Request %s expired for id %s in session %s: no reply",
@@ -204,7 +204,7 @@ public class NodeSession {
 
   /** Updates request info. Thread-safe. */
   public synchronized void cancelAllRequests(final String message) {
-    logger.debug(() -> String.format("Cancelling all requests in session %s", this));
+    LOG.debug(() -> String.format("Cancelling all requests in session %s", this));
     Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
     requestIdsCopy.forEach(
         requestId -> {
@@ -326,7 +326,7 @@ public class NodeSession {
 
   public synchronized void onNodeRecordReceived(final NodeRecord node) {
     if (node.getNodeId().equals(nodeId) && isUpdateRequired(node, nodeRecord)) {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "NodeRecord updated from %s to %s in session %s", nodeRecord, node, this));
@@ -351,7 +351,7 @@ public class NodeSession {
   }
 
   public synchronized void setState(final SessionState newStatus) {
-    logger.trace(
+    LOG.trace(
         () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
     this.state = newStatus;
   }

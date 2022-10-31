@@ -181,22 +181,22 @@ class IdentitySchemaV4InterpreterTest {
 
   @Test
   public void shouldUpdateCustomFieldValue() {
-    final String CUSTOM_FIELD_NAME = "custom_field_name";
-    final Bytes CUSTOM_FIELD_VALUE1 = Bytes.fromHexString("0xdeadbeef");
-    final Bytes CUSTOM_FIELD_VALUE2 = Bytes.fromHexString("0xbeef");
+    final String customFieldName = "custom_field_name";
+    final Bytes customFieldValue1 = Bytes.fromHexString("0xdeadbeef");
+    final Bytes customFieldValue2 = Bytes.fromHexString("0xbeef");
     final NodeRecord initialRecord =
         createNodeRecord(
             new EnrField(EnrField.IP_V4, Bytes.wrap(new byte[4])),
             new EnrField(EnrField.UDP, 3030),
-            new EnrField(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE1));
+            new EnrField(customFieldName, customFieldValue1));
 
-    assertThat(initialRecord.get(CUSTOM_FIELD_NAME)).isEqualTo(CUSTOM_FIELD_VALUE1);
+    assertThat(initialRecord.get(customFieldName)).isEqualTo(customFieldValue1);
 
     final NodeRecord newRecord =
         interpreter.createWithUpdatedCustomField(
-            initialRecord, CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE2, SECRET_KEY);
+            initialRecord, customFieldName, customFieldValue2, SECRET_KEY);
 
-    assertThat(newRecord.get(CUSTOM_FIELD_NAME)).isEqualTo(CUSTOM_FIELD_VALUE2);
+    assertThat(newRecord.get(customFieldName)).isEqualTo(customFieldValue2);
   }
 
   @Test

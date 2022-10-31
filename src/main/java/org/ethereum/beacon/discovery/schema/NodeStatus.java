@@ -13,11 +13,11 @@ public enum NodeStatus {
   SLEEP(0x02), // Didn't answer last time(s)
   DEAD(0x03); // Didn't answer for a long time
 
-  private static final Map<Integer, NodeStatus> codeMap = new HashMap<>();
+  private static final Map<Integer, NodeStatus> CODE_MAP = new HashMap<>();
 
   static {
     for (NodeStatus type : NodeStatus.values()) {
-      codeMap.put(type.code, type);
+      CODE_MAP.put(type.code, type);
     }
   }
 
@@ -28,7 +28,7 @@ public enum NodeStatus {
   }
 
   public static NodeStatus fromNumber(int i) {
-    return codeMap.get(i);
+    return CODE_MAP.get(i);
   }
 
   public byte byteCode() {

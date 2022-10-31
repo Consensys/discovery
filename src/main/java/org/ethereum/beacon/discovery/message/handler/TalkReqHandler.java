@@ -15,7 +15,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class TalkReqHandler implements MessageHandler<TalkReqMessage> {
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger();
 
   private final TalkHandler appTalkHandler;
 
@@ -36,7 +36,7 @@ public class TalkReqHandler implements MessageHandler<TalkReqMessage> {
             })
         .exceptionally(
             err -> {
-              logger.debug("Application TalkHandler completed with error", err);
+              LOG.debug("Application TalkHandler completed with error", err);
               return null;
             });
   }

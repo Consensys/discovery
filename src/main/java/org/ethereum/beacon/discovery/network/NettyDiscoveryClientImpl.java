@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
 
 /** Netty discovery UDP client */
 public class NettyDiscoveryClientImpl implements DiscoveryClient {
-  private static final Logger logger = LogManager.getLogger(NettyDiscoveryClientImpl.class);
+  private static final Logger LOG = LogManager.getLogger(NettyDiscoveryClientImpl.class);
   private NioDatagramChannel channel;
 
   /**
@@ -32,7 +32,7 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
         .subscribe(
             networkPacket ->
                 send(networkPacket.getPacket().getBytes(), networkPacket.getDestination()));
-    logger.info("UDP discovery client started");
+    LOG.info("UDP discovery client started");
   }
 
   @Override
@@ -41,7 +41,7 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
   @Override
   public void send(Bytes data, InetSocketAddress destination) {
     DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(data.toArray()), destination);
-    logger.trace(() -> String.format("Sending packet %s", packet));
+    LOG.trace(() -> String.format("Sending packet %s", packet));
     channel.write(packet);
     channel.flush();
   }

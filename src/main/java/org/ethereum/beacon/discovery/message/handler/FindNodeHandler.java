@@ -18,7 +18,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
 public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
-  private static final Logger logger = LogManager.getLogger(FindNodeHandler.class);
+  private static final Logger LOG = LogManager.getLogger(FindNodeHandler.class);
 
   /**
    * The maximum size of any packet is 1280 bytes. Implementations should not generate or process
@@ -50,7 +50,7 @@ public class FindNodeHandler implements MessageHandler<FindNodeMessage> {
     List<List<NodeRecord>> nodeRecordBatches =
         Lists.partition(nodeRecordInfos, MAX_NODES_PER_MESSAGE);
 
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Sending %s nodes in reply to request with distances %s in session %s",

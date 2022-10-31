@@ -20,7 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
 public class MessageHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(MessageHandler.class);
+  private static final Logger LOG = LogManager.getLogger(MessageHandler.class);
   private final MessageProcessor messageProcessor;
 
   public MessageHandler(
@@ -40,10 +40,10 @@ public class MessageHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.MESSAGE, envelope)) {
       return;
     }
-    if (!HandlerUtil.requireNodeRecord(envelope)) {
+    if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in MessageHandler, requirements are satisfied!",
@@ -54,7 +54,7 @@ public class MessageHandler implements EnvelopeHandler {
     try {
       messageProcessor.handleIncoming(message, session);
     } catch (Exception ex) {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Failed to handle message %s in envelope #%s", message, envelope.getIdString()),

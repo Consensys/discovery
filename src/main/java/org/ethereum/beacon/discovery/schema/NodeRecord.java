@@ -38,7 +38,7 @@ public class NodeRecord {
    */
   public static final int MAX_ENCODED_SIZE = 300;
 
-  private static final EnrFieldInterpreter enrFieldInterpreter = EnrFieldInterpreterV4.DEFAULT;
+  private static final EnrFieldInterpreter ENR_FIELD_INTERPRETER = EnrFieldInterpreterV4.DEFAULT;
   private final UInt64 seq;
   // Signature
   private Bytes signature;
@@ -74,7 +74,8 @@ public class NodeRecord {
       Bytes signature,
       Map<String, Object> rawFields) {
     NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
-    rawFields.forEach((key, value) -> nodeRecord.set(key, enrFieldInterpreter.decode(key, value)));
+    rawFields.forEach(
+        (key, value) -> nodeRecord.set(key, ENR_FIELD_INTERPRETER.decode(key, value)));
     return nodeRecord;
   }
 
@@ -173,7 +174,7 @@ public class NodeRecord {
               continue;
             }
             listWriter.writeString(key);
-            enrFieldInterpreter.encode(listWriter, key, fields.get(key));
+            ENR_FIELD_INTERPRETER.encode(listWriter, key, fields.get(key));
           }
         });
   }

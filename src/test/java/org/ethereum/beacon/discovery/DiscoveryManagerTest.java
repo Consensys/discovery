@@ -25,6 +25,7 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("JavaCase")
 public class DiscoveryManagerTest {
 
   @Test

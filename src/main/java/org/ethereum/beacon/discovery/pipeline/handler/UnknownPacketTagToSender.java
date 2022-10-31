@@ -21,7 +21,7 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
  * resolved by another handler.
  */
 public class UnknownPacketTagToSender implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(UnknownPacketTagToSender.class);
+  private static final Logger LOG = LogManager.getLogger(UnknownPacketTagToSender.class);
 
   @Override
   public void handle(Envelope envelope) {
@@ -32,7 +32,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
       return;
     }
 
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in UnknownPacketTagToSender, requirements are satisfied!",
