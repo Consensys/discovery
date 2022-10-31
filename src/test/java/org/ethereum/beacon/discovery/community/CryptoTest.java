@@ -62,7 +62,7 @@ public class CryptoTest {
     Bytes expectedInitiatorKey = Bytes.fromHexString("0x238d8b50e4363cf603a48c6cc3542967");
     Bytes expectedRecipientKey = Bytes.fromHexString("0xbebc0183484f7e7ca2ac32e3d72c8891");
     Bytes expectedAuthResponseKey = Bytes.fromHexString("0xe987ad9e414d5b4f9bfe4ff1e52f2fae");
-    Functions.HKDFKeys keys = Functions.hkdf_expand(nodeIdA, nodeIdB, secretKey, idNonce);
+    Functions.HKDFKeys keys = Functions.hkdfExpand(nodeIdA, nodeIdB, secretKey, idNonce);
     Assertions.assertEquals(expectedInitiatorKey, keys.getInitiatorKey());
     Assertions.assertEquals(expectedRecipientKey, keys.getRecipientKey());
     Assertions.assertEquals(expectedAuthResponseKey, keys.getAuthResponseKey());

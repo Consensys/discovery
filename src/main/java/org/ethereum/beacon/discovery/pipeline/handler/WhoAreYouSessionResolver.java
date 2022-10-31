@@ -20,7 +20,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
  * Field#PACKET_WHOAREYOU}
  */
 public class WhoAreYouSessionResolver implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(WhoAreYouSessionResolver.class);
+  private static final Logger LOG = LogManager.getLogger(WhoAreYouSessionResolver.class);
   private final NodeSessionManager nodeSessionManager;
 
   public WhoAreYouSessionResolver(NodeSessionManager nodeSessionManager) {
@@ -37,7 +37,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
       return;
     }
 
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in WhoAreYouSessionResolver, requirements are satisfied!",
@@ -53,7 +53,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
           envelope.put(Field.SESSION, session);
         },
         () -> {
-          logger.trace("Unexpected WHOAREYOU packet: no source nonce found");
+          LOG.trace("Unexpected WHOAREYOU packet: no source nonce found");
           envelope.put(Field.BAD_PACKET, packet);
           envelope.put(Field.BAD_EXCEPTION, new RuntimeException("Not expected WHOAREYOU packet"));
         });

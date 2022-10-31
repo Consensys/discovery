@@ -19,7 +19,7 @@ import reactor.core.publisher.FluxSink;
  * is linked with discovery client.
  */
 public class OutgoingParcelHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(OutgoingParcelHandler.class);
+  private static final Logger LOG = LogManager.getLogger(OutgoingParcelHandler.class);
 
   private final FluxSink<NetworkParcel> outgoingSink;
 
@@ -32,7 +32,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in OutgoingParcelHandler, requirements are satisfied!",
@@ -41,7 +41,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
     if (envelope.get(Field.INCOMING) instanceof NetworkParcel) {
       NetworkParcel parcel = (NetworkParcel) envelope.get(Field.INCOMING);
       if (parcel.getPacket().getBytes().size() > IncomingDataPacker.MAX_PACKET_SIZE) {
-        logger.error(() -> "Outgoing packet is too large, dropping it: " + parcel.getPacket());
+        LOG.error(() -> "Outgoing packet is too large, dropping it: " + parcel.getPacket());
       } else {
         outgoingSink.next(parcel);
         envelope.remove(Field.INCOMING);

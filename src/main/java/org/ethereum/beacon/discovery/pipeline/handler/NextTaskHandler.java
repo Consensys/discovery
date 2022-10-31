@@ -24,7 +24,7 @@ import org.ethereum.beacon.discovery.task.TaskStatus;
 
 /** Gets next request task in session and processes it */
 public class NextTaskHandler implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(NextTaskHandler.class);
+  private static final Logger LOG = LogManager.getLogger(NextTaskHandler.class);
   private static final int DEFAULT_DELAY_MS = 1000;
   private static final int RANDOM_MESSAGE_SIZE = 128;
   private final Pipeline outgoingPipeline;
@@ -53,7 +53,7 @@ public class NextTaskHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in NextTaskHandler, requirements are satisfied!",
@@ -62,13 +62,12 @@ public class NextTaskHandler implements EnvelopeHandler {
     NodeSession session = envelope.get(Field.SESSION);
     Optional<RequestInfo> requestInfoOpt = session.getFirstAwaitRequestInfo();
     if (requestInfoOpt.isEmpty()) {
-      logger.trace(
-          () -> String.format("Envelope %s: no awaiting requests", envelope.getIdString()));
+      LOG.trace(() -> String.format("Envelope %s: no awaiting requests", envelope.getIdString()));
       return;
     }
 
     RequestInfo requestInfo = requestInfoOpt.get();
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s: processing awaiting request %s",

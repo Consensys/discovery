@@ -9,13 +9,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class HandlerUtil {
-  private static final Logger logger = LogManager.getLogger(HandlerUtil.class);
+  private static final Logger LOG = LogManager.getLogger(HandlerUtil.class);
 
   public static boolean requireField(Field<?> field, Envelope envelope) {
     if (envelope.contains(field)) {
       return true;
     } else {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Requirement not satisfied: field %s not exists in envelope %s",
@@ -29,7 +29,7 @@ public class HandlerUtil {
       return false;
     }
     if (envelope.get(Field.SESSION).getNodeRecord().isEmpty()) {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Requirement not satisfied: node record unknown in envelope %s",
@@ -44,7 +44,7 @@ public class HandlerUtil {
     if (conditionFunction.apply(envelope)) {
       return true;
     } else {
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Requirement not satisfied: condition %s not met for envelope %s",

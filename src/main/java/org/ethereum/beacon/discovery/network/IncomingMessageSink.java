@@ -18,7 +18,7 @@ import reactor.core.publisher.FluxSink;
  * could be later linked to processor to form incoming messages stream
  */
 public class IncomingMessageSink extends SimpleChannelInboundHandler<Envelope> {
-  private static final Logger logger = LogManager.getLogger(IncomingMessageSink.class);
+  private static final Logger LOG = LogManager.getLogger(IncomingMessageSink.class);
   private final FluxSink<Envelope> messageSink;
 
   public IncomingMessageSink(FluxSink<Envelope> messageSink) {
@@ -27,12 +27,12 @@ public class IncomingMessageSink extends SimpleChannelInboundHandler<Envelope> {
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, Envelope msg) {
-    logger.trace(() -> String.format("Incoming packet %s in session %s", msg, ctx));
+    LOG.trace(() -> String.format("Incoming packet %s in session %s", msg, ctx));
     messageSink.next(msg);
   }
 
   @Override
   public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-    logger.error("Unexpected exception caught", cause);
+    LOG.error("Unexpected exception caught", cause);
   }
 }

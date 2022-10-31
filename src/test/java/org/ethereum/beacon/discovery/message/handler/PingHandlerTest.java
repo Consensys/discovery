@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PingHandlerTest {
-  private final InetSocketAddress REMOTE_ADDRESS = new InetSocketAddress("localhost", 25234);
+  private static final InetSocketAddress REMOTE_ADDRESS = new InetSocketAddress("localhost", 25234);
   private final NodeSession session = mock(NodeSession.class);
   private final EnrUpdateTracker enrUpdateTracker = mock(EnrUpdateTracker.class);
   private final NodeInfo localNode = TestUtil.generateNode(9000);

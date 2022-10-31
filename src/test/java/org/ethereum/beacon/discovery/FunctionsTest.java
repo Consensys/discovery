@@ -69,10 +69,10 @@ public class FunctionsTest {
     Bytes idNonce =
         Bytes.fromHexString("68b02a985ecb99cc2d10cf188879d93ae7684c4f4707770017b078c6497c5a5d");
     Functions.HKDFKeys keys1 =
-        Functions.hkdf_expand(
+        Functions.hkdfExpand(
             nodeId1, nodeId2, testKey1.secretKey(), testKey2.publicKey().bytes(), idNonce);
     Functions.HKDFKeys keys2 =
-        Functions.hkdf_expand(
+        Functions.hkdfExpand(
             nodeId1, nodeId2, testKey2.secretKey(), testKey1.publicKey().bytes(), idNonce);
     assertEquals(keys1, keys2);
   }
@@ -103,7 +103,7 @@ public class FunctionsTest {
     final Bytes idNonce =
         Bytes.fromHexString("0x0101010101010101010101010101010101010101010101010101010101010101");
 
-    final HKDFKeys hkdfKeys = Functions.hkdf_expand(nodeIdA, nodeIdB, secretKey, idNonce);
+    final HKDFKeys hkdfKeys = Functions.hkdfExpand(nodeIdA, nodeIdB, secretKey, idNonce);
     assertEquals(
         Bytes.fromHexString("0x238d8b50e4363cf603a48c6cc3542967"), hkdfKeys.getInitiatorKey());
     assertEquals(

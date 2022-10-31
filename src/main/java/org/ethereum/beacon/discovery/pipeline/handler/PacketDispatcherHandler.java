@@ -21,7 +21,7 @@ import org.ethereum.beacon.discovery.util.Utils;
 /** Matches the current session state and inbound packet */
 public class PacketDispatcherHandler implements EnvelopeHandler {
 
-  private static final Logger logger = LogManager.getLogger(PacketDispatcherHandler.class);
+  private static final Logger LOG = LogManager.getLogger(PacketDispatcherHandler.class);
 
   @Override
   public void handle(Envelope envelope) {
@@ -31,7 +31,7 @@ public class PacketDispatcherHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.PACKET, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in PacketDispatcherHandler, requirements are satisfied!",

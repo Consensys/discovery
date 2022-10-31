@@ -18,7 +18,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 
 /** Handles raw BytesValue incoming data in {@link Field#INCOMING} */
 public class IncomingDataPacker implements EnvelopeHandler {
-  private static final Logger logger = LogManager.getLogger(IncomingDataPacker.class);
+  private static final Logger LOG = LogManager.getLogger(IncomingDataPacker.class);
   public static final int MAX_PACKET_SIZE = 1280;
   public static final int MIN_PACKET_SIZE = 63;
   private final Bytes16 homeNodeId;
@@ -32,7 +32,7 @@ public class IncomingDataPacker implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }
-    logger.trace(
+    LOG.trace(
         () ->
             String.format(
                 "Envelope %s in IncomingDataPacker, requirements are satisfied!",
@@ -53,13 +53,13 @@ public class IncomingDataPacker implements EnvelopeHandler {
 
       envelope.put(Field.PACKET, packet);
       envelope.put(Field.MASKING_IV, rawPacket.getMaskingIV());
-      logger.trace(
+      LOG.trace(
           () ->
               String.format("Incoming packet %s in envelope #%s", packet, envelope.getIdString()));
     } catch (Exception ex) {
       envelope.put(Field.BAD_PACKET, rawPacketBytes);
       envelope.put(Field.BAD_EXCEPTION, ex);
-      logger.trace(
+      LOG.trace(
           () ->
               String.format(
                   "Bad incoming packet %s in envelope #%s",

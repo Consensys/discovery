@@ -132,17 +132,17 @@ public class NodeRecordTest {
   public void testCustomField() {
     Random rnd = new Random(SEED);
     KeyPair keyPair = Functions.randomKeyPair(rnd);
-    final String CUSTOM_FIELD_NAME = "custom_field_name";
-    final Bytes CUSTOM_FIELD_VALUE = Bytes.fromHexString("0xdeadbeef");
+    final String customFieldName = "custom_field_name";
+    final Bytes customFieldValue = Bytes.fromHexString("0xdeadbeef");
     NodeRecord nodeRecord =
         new NodeRecordBuilder()
             .seq(0)
             .address("127.0.0.1", 30303)
             .secretKey(keyPair.secretKey())
-            .customField(CUSTOM_FIELD_NAME, CUSTOM_FIELD_VALUE)
+            .customField(customFieldName, customFieldValue)
             .build();
     assertTrue(nodeRecord.isValid());
-    assertEquals(nodeRecord.get(CUSTOM_FIELD_NAME), CUSTOM_FIELD_VALUE);
+    assertEquals(nodeRecord.get(customFieldName), customFieldValue);
   }
 
   @Test
