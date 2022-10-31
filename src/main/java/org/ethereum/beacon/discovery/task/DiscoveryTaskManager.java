@@ -116,7 +116,8 @@ public class DiscoveryTaskManager {
         distances.add(right);
       }
 
-      // If NUM_DISTANCES_TO_QUERY is an even number, this check is necessary.
+      // This check is necessary if NUM_DISTANCES_TO_QUERY is an even number or the target distance
+      // is close to the minimum/maximum boundary.
       if (distances.size() == NUM_DISTANCES_TO_QUERY) {
         break;
       }
