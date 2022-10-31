@@ -40,9 +40,6 @@ public class MessageHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.MESSAGE, envelope)) {
       return;
     }
-    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
-      return;
-    }
     if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }

@@ -53,9 +53,6 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
     if (!HandlerUtil.requireField(Field.MASKING_IV, envelope)) {
       throw new IllegalStateException("Internal error: No MASKING_IV field for WhoAreYou packet");
     }
-    if (!HandlerUtil.requireField(Field.SESSION, envelope)) {
-      return;
-    }
     LOG.trace(
         () ->
             String.format(
