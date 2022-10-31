@@ -24,7 +24,7 @@ public class HandlerUtil {
     }
   }
 
-  public static boolean requireNodeRecord(Envelope envelope) {
+  public static boolean requireSessionWithNodeRecord(Envelope envelope) {
     if (!requireField(Field.SESSION, envelope)) {
       return false;
     }

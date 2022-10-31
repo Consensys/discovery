@@ -44,7 +44,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
   @Override
   public void handle(final Envelope envelope) {
-    if (!HandlerUtil.requireNodeRecord(envelope)) {
+    if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
     if (!HandlerUtil.requireField(Field.PACKET_WHOAREYOU, envelope)) {
