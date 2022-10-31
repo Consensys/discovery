@@ -4,6 +4,9 @@
 
 package org.ethereum.beacon.discovery.task;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +29,7 @@ public class DiscoveryTaskManager {
   public static final Duration DEFAULT_LIVE_CHECK_INTERVAL = Duration.ofSeconds(1);
   public static final Duration DEFAULT_RECURSIVE_LOOKUP_INTERVAL = Duration.ofSeconds(10);
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
+  private static final int NUM_DISTANCES_TO_QUERY = 3;
   private final Bytes homeNodeId;
   private final Scheduler scheduler;
   private final RecursiveLookupTasks recursiveLookupTasks;
@@ -96,14 +100,39 @@ public class DiscoveryTaskManager {
         .execute();
   }
 
+  @VisibleForTesting
+  static List<Integer> getClosestDistances(final int targetDistance) {
+    final List<Integer> distances = new ArrayList<>();
+    checkArgument(targetDistance >= KBuckets.MINIMUM_BUCKET, "invalid target distance");
+    checkArgument(targetDistance <= KBuckets.MAXIMUM_BUCKET, "invalid target distance");
+    distances.add(targetDistance);
+
+    // Until we get the number of distances we want, add a distance from the right of the target
+    // distance, then add a distance from the left. These will be the closest nodes.
+    for (int offset = 1; distances.size() < NUM_DISTANCES_TO_QUERY; offset++) {
+      // If possible, query offset the right.
+      int right = targetDistance + offset;
+      if (right <= KBuckets.MAXIMUM_BUCKET) {
+        distances.add(right);
+      }
+
+      // If NUM_DISTANCES_TO_QUERY is an even number, this check is necessary.
+      if (distances.size() == NUM_DISTANCES_TO_QUERY) {
+        break;
+      }
+
+      // If possible, query offset to the left.
+      int left = targetDistance - offset;
+      if (left >= KBuckets.MINIMUM_BUCKET) {
+        distances.add(left);
+      }
+    }
+
+    return distances;
+  }
+
   private CompletableFuture<Collection<NodeRecord>> findNodes(
       final NodeRecord nodeRecord, final int targetDistance) {
-    final List<Integer> distances = new ArrayList<>();
-    for (int distance = targetDistance;
-        distance <= Math.min(KBuckets.MAXIMUM_BUCKET, targetDistance + 3);
-        distance++) {
-      distances.add(distance);
-    }
-    return recursiveLookupTasks.add(nodeRecord, distances);
+    return recursiveLookupTasks.add(nodeRecord, getClosestDistances(targetDistance));
   }
 }

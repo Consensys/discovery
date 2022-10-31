@@ -23,7 +23,7 @@ public class KBuckets {
    * Minimum distance we create a bucket for. 0 is our local node record and negative distances
    * aren't allowed.
    */
-  private static final int MIN_BUCKET = 1;
+  public static final int MINIMUM_BUCKET = 1;
 
   /** Maximum distance we create a bucket for. This is enough to cover all 32 byte node IDs. */
   public static final int MAXIMUM_BUCKET = 256;
@@ -130,7 +130,7 @@ public class KBuckets {
   }
 
   private Optional<KBucket> getOrCreateBucket(final int distance) {
-    if (distance > MAXIMUM_BUCKET || distance < MIN_BUCKET) {
+    if (distance > MAXIMUM_BUCKET || distance < MINIMUM_BUCKET) {
       // Distance too great, ignore.
       return Optional.empty();
     }
