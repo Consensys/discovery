@@ -4,6 +4,9 @@
 
 package org.ethereum.beacon.discovery.task;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +29,7 @@ public class DiscoveryTaskManager {
   public static final Duration DEFAULT_LIVE_CHECK_INTERVAL = Duration.ofSeconds(1);
   public static final Duration DEFAULT_RECURSIVE_LOOKUP_INTERVAL = Duration.ofSeconds(10);
   private static final int RECURSIVE_SEARCH_QUERY_LIMIT = 15;
+  private static final int LOOKUP_REQUEST_LIMIT = 4;
   private final Bytes homeNodeId;
   private final Scheduler scheduler;
   private final RecursiveLookupTasks recursiveLookupTasks;
@@ -96,14 +100,33 @@ public class DiscoveryTaskManager {
         .execute();
   }
 
+  @VisibleForTesting
+  static List<Integer> lookupDistances(int targetDistance) {
+    checkArgument(
+        targetDistance >= KBuckets.MINIMUM_BUCKET && targetDistance <= KBuckets.MAXIMUM_BUCKET,
+        "invalid target distance: %s",
+        targetDistance);
+
+    final List<Integer> distances = new ArrayList<>();
+    distances.add(targetDistance);
+
+    // We want to prioritize higher distances in the request over lower ones
+    // because lower distances are less likely to contain nodes.
+    for (int offset = 1; distances.size() < LOOKUP_REQUEST_LIMIT; offset++) {
+      if (targetDistance + offset <= KBuckets.MAXIMUM_BUCKET) {
+        distances.add(targetDistance + offset);
+        continue;
+      }
+      if (targetDistance - offset >= KBuckets.MINIMUM_BUCKET) {
+        distances.add(targetDistance - offset);
+      }
+    }
+
+    return distances;
+  }
+
   private CompletableFuture<Collection<NodeRecord>> findNodes(
       final NodeRecord nodeRecord, final int targetDistance) {
-    final List<Integer> distances = new ArrayList<>();
-    for (int distance = targetDistance;
-        distance <= Math.min(KBuckets.MAXIMUM_BUCKET, targetDistance + 3);
-        distance++) {
-      distances.add(distance);
-    }
-    return recursiveLookupTasks.add(nodeRecord, distances);
+    return recursiveLookupTasks.add(nodeRecord, lookupDistances(targetDistance));
   }
 }
