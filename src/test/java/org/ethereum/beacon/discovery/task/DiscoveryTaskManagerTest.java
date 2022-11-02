@@ -44,6 +44,21 @@ public class DiscoveryTaskManagerTest {
   }
 
   @Test
+  void lookupDistancesTargetDistance253() {
+    assertThat(DiscoveryTaskManager.lookupDistances(253)).isEqualTo(List.of(253, 254, 255, 256));
+  }
+
+  @Test
+  void lookupDistancesTargetDistance254() {
+    assertThat(DiscoveryTaskManager.lookupDistances(254)).isEqualTo(List.of(254, 255, 256, 253));
+  }
+
+  @Test
+  void lookupDistancesTargetDistance255() {
+    assertThat(DiscoveryTaskManager.lookupDistances(255)).isEqualTo(List.of(255, 256, 254, 253));
+  }
+
+  @Test
   void lookupDistancesMaxTarget() {
     assertThat(DiscoveryTaskManager.lookupDistances(256)).isEqualTo(List.of(256, 255, 254, 253));
   }
