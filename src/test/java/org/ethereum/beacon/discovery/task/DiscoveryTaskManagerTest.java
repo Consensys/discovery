@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 public class DiscoveryTaskManagerTest {
 
   @Test
-  void lookupDistancesShouldReturnFour() {
+  void lookupDistancesShouldReturnFourValues() {
     for (int distance = KBuckets.MINIMUM_BUCKET; distance <= KBuckets.MAXIMUM_BUCKET; distance++) {
       assertThat(DiscoveryTaskManager.lookupDistances(distance)).hasSize(4);
     }
@@ -27,20 +27,13 @@ public class DiscoveryTaskManagerTest {
   }
 
   @Test
-  void lookupDistancesShouldRejectTargetAboveMax() {
-    assertThatThrownBy(() -> DiscoveryTaskManager.lookupDistances(KBuckets.MAXIMUM_BUCKET + 1))
-        .hasMessageContaining("invalid target distance: 257")
-        .isInstanceOf(IllegalArgumentException.class);
+  void lookupDistancesMinTarget() {
+    assertThat(DiscoveryTaskManager.lookupDistances(1)).isEqualTo(List.of(1, 2, 3, 4));
   }
 
   @Test
   void lookupDistancesMiddleTarget() {
     assertThat(DiscoveryTaskManager.lookupDistances(128)).isEqualTo(List.of(128, 129, 130, 131));
-  }
-
-  @Test
-  void lookupDistancesMinTarget() {
-    assertThat(DiscoveryTaskManager.lookupDistances(1)).isEqualTo(List.of(1, 2, 3, 4));
   }
 
   @Test
@@ -61,5 +54,12 @@ public class DiscoveryTaskManagerTest {
   @Test
   void lookupDistancesMaxTarget() {
     assertThat(DiscoveryTaskManager.lookupDistances(256)).isEqualTo(List.of(256, 255, 254, 253));
+  }
+
+  @Test
+  void lookupDistancesShouldRejectTargetAboveMax() {
+    assertThatThrownBy(() -> DiscoveryTaskManager.lookupDistances(KBuckets.MAXIMUM_BUCKET + 1))
+        .hasMessageContaining("invalid target distance: 257")
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }
