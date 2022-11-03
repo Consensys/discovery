@@ -112,18 +112,18 @@ public class DiscoveryTaskManager {
 
     // We want to prioritize higher distances in the request over lower ones
     // because lower distances are less likely to contain nodes.
-    for (int offset = 1; targetDistance + offset <= KBuckets.MAXIMUM_BUCKET; offset++) {
-      if (distances.size() >= LOOKUP_REQUEST_LIMIT) {
-        break;
-      }
+    for (int offset = 1;
+        targetDistance + offset <= KBuckets.MAXIMUM_BUCKET
+            && distances.size() < LOOKUP_REQUEST_LIMIT;
+        offset++) {
       distances.add(targetDistance + offset);
     }
 
     // If there's any space left, add lower distances.
-    for (int offset = 1; targetDistance - offset >= KBuckets.MINIMUM_BUCKET; offset++) {
-      if (distances.size() >= LOOKUP_REQUEST_LIMIT) {
-        break;
-      }
+    for (int offset = 1;
+        targetDistance - offset >= KBuckets.MINIMUM_BUCKET
+            && distances.size() < LOOKUP_REQUEST_LIMIT;
+        offset++) {
       distances.add(targetDistance - offset);
     }
 
