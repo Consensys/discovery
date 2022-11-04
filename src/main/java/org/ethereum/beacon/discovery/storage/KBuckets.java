@@ -102,10 +102,7 @@ public class KBuckets {
 
   public synchronized BucketStats getStats() {
     final BucketStats stats = new BucketStats();
-    buckets.forEach(
-        (distance, bucket) ->
-            stats.setBucketStat(
-                distance, bucket.getLiveNodes().size(), bucket.getAllNodes().size()));
+    buckets.forEach((distance, bucket) -> bucket.updateStats(distance, stats));
     return stats;
   }
 
