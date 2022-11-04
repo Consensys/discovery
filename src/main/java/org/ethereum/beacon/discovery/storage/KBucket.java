@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -41,15 +42,20 @@ class KBucket {
     this.clock = clock;
   }
 
+  public void updateStats(final int distance, final BucketStats stats) {
+    stats.setBucketStat(distance, (int) streamLiveEntries().count(), nodes.size());
+  }
+
   public List<NodeRecord> getAllNodes() {
     return nodes.stream().map(BucketEntry::getNode).collect(Collectors.toList());
   }
 
   public List<NodeRecord> getLiveNodes() {
-    return nodes.stream()
-        .takeWhile(BucketEntry::isLive)
-        .map(BucketEntry::getNode)
-        .collect(Collectors.toList());
+    return streamLiveEntries().map(BucketEntry::getNode).collect(Collectors.toList());
+  }
+
+  private Stream<BucketEntry> streamLiveEntries() {
+    return nodes.stream().takeWhile(BucketEntry::isLive);
   }
 
   public Optional<NodeRecord> getPendingNode() {
