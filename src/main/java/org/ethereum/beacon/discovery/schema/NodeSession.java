@@ -220,14 +220,12 @@ public class NodeSession {
   }
 
   /** Generates random nonce */
-  public Bytes12 generateNonce() {
-    final Optional<Bytes12> oldNonce;
-    final Bytes12 newNonce;
-    synchronized (this) {
-      newNonce = nonceGenerator.apply(rnd);
-      oldNonce = lastOutboundNonce;
-      lastOutboundNonce = Optional.of(newNonce);
-    }
+  public synchronized Bytes12 generateNonce() {
+    final Bytes12 newNonce = nonceGenerator.apply(rnd);
+    final Optional<Bytes12> oldNonce = lastOutboundNonce;
+    lastOutboundNonce = Optional.of(newNonce);
+    // Update while synchronized to ensure only one update in flight at a time. Otherwise the
+    // previous nonce may not have been recorded before we try to remove it leading to a memory leak
     nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
     return newNonce;
   }
