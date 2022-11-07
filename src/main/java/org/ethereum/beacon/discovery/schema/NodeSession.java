@@ -69,6 +69,7 @@ public class NodeSession {
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
+  private boolean active = true;
   private final Function<Random, Bytes12> nonceGenerator;
 
   public NodeSession(
@@ -224,14 +225,21 @@ public class NodeSession {
     final Bytes12 newNonce = nonceGenerator.apply(rnd);
     final Optional<Bytes12> oldNonce = lastOutboundNonce;
     lastOutboundNonce = Optional.of(newNonce);
-    // Update while synchronized to ensure only one update in flight at a time. Otherwise the
-    // previous nonce may not have been recorded before we try to remove it leading to a memory leak
-    nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
+    if (active) {
+      // Update while synchronized to ensure only one update in flight at a time. Otherwise the
+      // previous nonce may not have been recorded before we try to remove it leading to a memory
+      // leak. Also only records the session if it's active to avoid re-adding a removed session
+      nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
+    }
     return newNonce;
   }
 
   public synchronized Optional<Bytes12> getLastOutboundNonce() {
     return lastOutboundNonce;
+  }
+
+  public synchronized void markInactive() {
+    active = false;
   }
 
   /** If true indicates that handshake is complete */
