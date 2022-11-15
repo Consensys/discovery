@@ -4,14 +4,15 @@
 
 package org.ethereum.beacon.discovery.database;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.base.Ticker;
+import com.google.common.cache.CacheBuilder;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
-import java.util.TreeSet;
-import kotlin.Pair;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Set-alike collection with data expiring in configured time. This structure is not thread safe,
@@ -21,30 +22,31 @@ import kotlin.Pair;
  */
 public class ExpirationSet<V extends Comparable<V>> {
 
-  private final long expirationDelayMillis;
-  private final Clock clock;
-  private final long size;
-  private final TreeSet<Pair<Long, V>> dataExpiration =
-      new TreeSet<>(
-          Comparator.comparingLong(Pair<Long, V>::getFirst)
-              .reversed()
-              .thenComparing(Pair::getSecond));
-  private final Set<V> data = new HashSet<>();
+  private final Set<V> data;
 
   /**
    * Creates new set with records expiring in configured timeline after insertion
    *
    * @param expirationDelayMillis Expiration delay, each record will be removed after this time
    * @param clock Clock instance
-   * @param size Maximum size of a set, the oldest records will be removed to store new
+   * @param maxSize Maximum size of a set, the oldest records will be removed to store new
    */
-  public ExpirationSet(final long expirationDelayMillis, final Clock clock, final long size) {
-    this.expirationDelayMillis = expirationDelayMillis;
-    this.clock = clock;
-    if (size < 1) {
-      throw new RuntimeException("Minimal size is 1");
-    }
-    this.size = size;
+  public ExpirationSet(final long expirationDelayMillis, final Clock clock, final long maxSize) {
+    checkArgument(maxSize > 0, "Minimal size is 1");
+    data =
+        Collections.newSetFromMap(
+            CacheBuilder.newBuilder()
+                .maximumSize(maxSize)
+                .expireAfterWrite(expirationDelayMillis, TimeUnit.MILLISECONDS)
+                .ticker(
+                    new Ticker() {
+                      @Override
+                      public long read() {
+                        return TimeUnit.MILLISECONDS.toNanos(clock.millis());
+                      }
+                    })
+                .<V, Boolean>build()
+                .asMap());
   }
 
   /**
@@ -52,65 +54,21 @@ public class ExpirationSet<V extends Comparable<V>> {
    *
    * @param expirationDelay Expiration delay, each record will be removed after this time
    * @param clock Clock instance
-   * @param size Maximum size of a set, the oldest records will be removed to store new
+   * @param maxSize Maximum size of a set, the oldest records will be removed to store new
    */
-  public ExpirationSet(final Duration expirationDelay, final Clock clock, final long size) {
-    this(expirationDelay.toMillis(), clock, size);
-  }
-
-  private void clearExpired() {
-    final long currentTime = clock.millis();
-    boolean next = true;
-    while (next && !dataExpiration.isEmpty()) {
-      Pair<Long, V> last = dataExpiration.last();
-      if (last.getFirst() < currentTime) {
-        dataExpiration.remove(last);
-        data.remove(last.getSecond());
-      } else {
-        next = false;
-      }
-    }
-  }
-
-  public int size() {
-    clearExpired();
-    return data.size();
-  }
-
-  public boolean isEmpty() {
-    clearExpired();
-    return data.isEmpty();
+  public ExpirationSet(final Duration expirationDelay, final Clock clock, final long maxSize) {
+    this(expirationDelay.toMillis(), clock, maxSize);
   }
 
   public boolean contains(V o) {
-    clearExpired();
     return data.contains(o);
   }
 
   public boolean add(V v) {
-    clearExpired();
-    // no renewal
-    if (contains(v)) {
+    if (data.contains(v)) {
+      // Ensure re-adding doesn't reset expiration.
       return false;
     }
-    while (data.size() >= size) {
-      Pair<Long, V> last = dataExpiration.last();
-      dataExpiration.remove(last);
-      data.remove(last.getSecond());
-    }
-    dataExpiration.add(new Pair<>(clock.millis() + expirationDelayMillis, v));
-    data.add(v);
-    return true;
-  }
-
-  public boolean addAll(Collection<? extends V> c) {
-    clearExpired();
-    c.forEach(this::add);
-    return true;
-  }
-
-  public void clear() {
-    data.clear();
-    dataExpiration.clear();
+    return data.add(v);
   }
 }

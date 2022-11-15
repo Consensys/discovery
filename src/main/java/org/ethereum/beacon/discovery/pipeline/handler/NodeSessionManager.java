@@ -123,6 +123,9 @@ public class NodeSessionManager implements EnvelopeHandler {
   private void deleteSession(final SessionKey sessionKey) {
     NodeSession removedSession = recentSessions.remove(sessionKey);
     if (removedSession != null) {
+      // Mark inactive to prevent registering any new nonces
+      removedSession.markInactive();
+      // And then clean up the last recorded nonce, if any
       removedSession.getLastOutboundNonce().ifPresent(lastNonceToSession::remove);
     }
   }
