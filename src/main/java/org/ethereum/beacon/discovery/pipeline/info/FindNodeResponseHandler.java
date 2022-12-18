@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.message.NodesMessage;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -19,11 +20,14 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
   private static final int MAX_TOTAL_PACKETS = 16;
   private final List<NodeRecord> foundNodes = new ArrayList<>();
   private final Collection<Integer> distances;
+  private final AddressAccessPolicy addressAccessPolicy;
   private int totalPackets = NOT_SET;
   private int receivedPackets = 0;
 
-  public FindNodeResponseHandler(final Collection<Integer> distances) {
+  public FindNodeResponseHandler(
+      final Collection<Integer> distances, final AddressAccessPolicy addressAccessPolicy) {
     this.distances = distances;
+    this.addressAccessPolicy = addressAccessPolicy;
   }
 
   @Override
@@ -53,6 +57,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
     message.getNodeRecords().stream()
         .filter(this::isValid)
         .filter(record -> hasCorrectDistance(session, record))
+        .filter(addressAccessPolicy::allow)
         .forEach(
             nodeRecord -> {
               foundNodes.add(nodeRecord);

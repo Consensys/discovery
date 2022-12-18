@@ -39,6 +39,7 @@ import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionRequestHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.OutgoingParcelHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.PacketDispatcherHandler;
+import org.ethereum.beacon.discovery.pipeline.handler.PacketSourceFilter;
 import org.ethereum.beacon.discovery.pipeline.handler.UnauthorizedMessagePacketHandler;
 import org.ethereum.beacon.discovery.pipeline.handler.UnknownPacketTagToSender;
 import org.ethereum.beacon.discovery.pipeline.handler.WhoAreYouPacketHandler;
@@ -66,6 +67,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
+  private final AddressAccessPolicy addressAccessPolicy;
   private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
 
@@ -78,8 +80,10 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       final Scheduler taskScheduler,
       final ExpirationSchedulerFactory expirationSchedulerFactory,
       final TalkHandler talkHandler,
-      final ExternalAddressSelector externalAddressSelector) {
+      final ExternalAddressSelector externalAddressSelector,
+      final AddressAccessPolicy addressAccessPolicy) {
     this.localNodeRecordStore = localNodeRecordStore;
+    this.addressAccessPolicy = addressAccessPolicy;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
     this.discoveryServer = discoveryServer;
@@ -91,6 +95,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             outgoingPipeline,
             expirationSchedulerFactory);
     incomingPipeline
+        .addHandler(new PacketSourceFilter(addressAccessPolicy))
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))
         .addHandler(new WhoAreYouSessionResolver(nodeSessionManager))
         .addHandler(new UnknownPacketTagToSender())
@@ -99,7 +104,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler))
         .addHandler(
             new HandshakeMessagePacketHandler(
-                outgoingPipeline, taskScheduler, nodeRecordFactory, nodeSessionManager))
+                outgoingPipeline,
+                taskScheduler,
+                nodeRecordFactory,
+                nodeSessionManager,
+                addressAccessPolicy))
         .addHandler(new MessagePacketHandler(nodeRecordFactory))
         .addHandler(new UnauthorizedMessagePacketHandler())
         .addHandler(
@@ -111,7 +120,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .addHandler(new BadPacketHandler());
     final FluxSink<NetworkParcel> outgoingSink = outgoingMessages.sink();
     outgoingPipeline
-        .addHandler(new OutgoingParcelHandler(outgoingSink))
+        .addHandler(new OutgoingParcelHandler(outgoingSink, addressAccessPolicy))
         .addHandler(new NodeSessionRequestHandler())
         .addHandler(nodeSessionManager)
         .addHandler(new NewTaskHandler())
@@ -178,7 +187,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         new Request<>(
             new CompletableFuture<>(),
             reqId -> new FindNodeMessage(reqId, distances),
-            new FindNodeResponseHandler(distances));
+            new FindNodeResponseHandler(distances, addressAccessPolicy));
     return executeTaskImpl(nodeRecord, request);
   }
 

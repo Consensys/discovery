@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ethereum.beacon.discovery.AddressAccessPolicy.ALLOW_ALL;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.TestUtil.TEST_TRAFFIC_READ_LIMIT;
 import static org.ethereum.beacon.discovery.TestUtil.waitFor;
@@ -80,7 +81,8 @@ public class DiscoveryNetworkTest {
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
             TalkHandler.NOOP,
-            ExternalAddressSelector.NOOP);
+            ExternalAddressSelector.NOOP,
+            ALLOW_ALL);
     livenessChecker1.setPinger(discoveryManager1::ping);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
@@ -97,7 +99,8 @@ public class DiscoveryNetworkTest {
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,
             TalkHandler.NOOP,
-            ExternalAddressSelector.NOOP);
+            ExternalAddressSelector.NOOP,
+            ALLOW_ALL);
     livenessChecker2.setPinger(discoveryManager2::ping);
 
     // 3) Expect standard 1 => 2 dialog
