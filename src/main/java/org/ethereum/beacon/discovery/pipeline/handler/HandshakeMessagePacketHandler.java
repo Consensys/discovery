@@ -101,9 +101,17 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       // Check the node record matches the ID we expect
       if (!nodeRecordMaybe.map(r -> r.getNodeId().equals(session.getNodeId())).orElse(false)) {
         LOG.debug(
-            String.format(
-                "Incorrect node ID for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getState()));
+            "Incorrect node ID for message [{}] from node {} in status {}",
+            packet,
+            session.getNodeRecord(),
+            session.getState());
+        markHandshakeAsFailed(envelope, session);
+        return;
+      } else if (!enr.map(addressAccessPolicy::allow).orElse(true)) {
+        LOG.debug(
+            "Rejecting handshake from node {} because the ENR was disallowed: {}",
+            session.getNodeRecord(),
+            enr);
         markHandshakeAsFailed(envelope, session);
         return;
       }
@@ -134,7 +142,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
 
       session.setState(AUTHENTICATED);
       envelope.remove(Field.PACKET_HANDSHAKE);
-      enr.filter(addressAccessPolicy::allow).ifPresent(session::onNodeRecordReceived);
+      enr.ifPresent(session::onNodeRecordReceived);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);
     } catch (Exception ex) {
       LOG.debug(
