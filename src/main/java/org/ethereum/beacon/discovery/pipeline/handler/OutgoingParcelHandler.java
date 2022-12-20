@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
@@ -22,9 +23,12 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(OutgoingParcelHandler.class);
 
   private final FluxSink<NetworkParcel> outgoingSink;
+  private final AddressAccessPolicy addressAccessPolicy;
 
-  public OutgoingParcelHandler(FluxSink<NetworkParcel> outgoingSink) {
+  public OutgoingParcelHandler(
+      FluxSink<NetworkParcel> outgoingSink, final AddressAccessPolicy addressAccessPolicy) {
     this.outgoingSink = outgoingSink;
+    this.addressAccessPolicy = addressAccessPolicy;
   }
 
   @Override
@@ -41,7 +45,10 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
     if (envelope.get(Field.INCOMING) instanceof NetworkParcel) {
       NetworkParcel parcel = (NetworkParcel) envelope.get(Field.INCOMING);
       if (parcel.getPacket().getBytes().size() > IncomingDataPacker.MAX_PACKET_SIZE) {
-        LOG.error(() -> "Outgoing packet is too large, dropping it: " + parcel.getPacket());
+        LOG.error("Outgoing packet is too large, dropping it: {}", parcel.getPacket());
+      } else if (!addressAccessPolicy.allow(parcel.getDestination())) {
+        LOG.debug(
+            "Dropping outgoing packet to disallowed destination: {}", parcel.getDestination());
       } else {
         outgoingSink.next(parcel);
         envelope.remove(Field.INCOMING);

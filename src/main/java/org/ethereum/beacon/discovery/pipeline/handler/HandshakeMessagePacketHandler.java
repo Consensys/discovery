@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
@@ -32,16 +33,19 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   private final Scheduler scheduler;
   private final NodeRecordFactory nodeRecordFactory;
   private final NodeSessionManager nodeSessionManager;
+  private final AddressAccessPolicy addressAccessPolicy;
 
   public HandshakeMessagePacketHandler(
       Pipeline outgoingPipeline,
       Scheduler scheduler,
       NodeRecordFactory nodeRecordFactory,
-      NodeSessionManager nodeSessionManager) {
+      NodeSessionManager nodeSessionManager,
+      AddressAccessPolicy addressAccessPolicy) {
     this.outgoingPipeline = outgoingPipeline;
     this.scheduler = scheduler;
     this.nodeRecordFactory = nodeRecordFactory;
     this.nodeSessionManager = nodeSessionManager;
+    this.addressAccessPolicy = addressAccessPolicy;
   }
 
   @Override
@@ -97,9 +101,17 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
       // Check the node record matches the ID we expect
       if (!nodeRecordMaybe.map(r -> r.getNodeId().equals(session.getNodeId())).orElse(false)) {
         LOG.debug(
-            String.format(
-                "Incorrect node ID for message [%s] from node %s in status %s",
-                packet, session.getNodeRecord(), session.getState()));
+            "Incorrect node ID for message [{}] from node {} in status {}",
+            packet,
+            session.getNodeRecord(),
+            session.getState());
+        markHandshakeAsFailed(envelope, session);
+        return;
+      } else if (!enr.map(addressAccessPolicy::allow).orElse(true)) {
+        LOG.debug(
+            "Rejecting handshake from node {} because the ENR was disallowed: {}",
+            session.getNodeRecord(),
+            enr);
         markHandshakeAsFailed(envelope, session);
         return;
       }

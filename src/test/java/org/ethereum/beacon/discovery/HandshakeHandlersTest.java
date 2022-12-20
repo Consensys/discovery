@@ -5,6 +5,7 @@
 package org.ethereum.beacon.discovery;
 
 import static java.util.Collections.singletonList;
+import static org.ethereum.beacon.discovery.AddressAccessPolicy.ALLOW_ALL;
 import static org.ethereum.beacon.discovery.TestUtil.NODE_RECORD_FACTORY_NO_VERIFICATION;
 import static org.ethereum.beacon.discovery.pipeline.Field.BAD_PACKET;
 import static org.ethereum.beacon.discovery.pipeline.Field.MASKING_IV;
@@ -168,7 +169,7 @@ public class HandshakeHandlersTest {
         new Request<>(
             new CompletableFuture<>(),
             id -> new FindNodeMessage(id, singletonList(1)),
-            new FindNodeResponseHandler(singletonList(1)));
+            new FindNodeResponseHandler(singletonList(1), ALLOW_ALL));
     nodeSessionAt1For2.createNextRequest(request);
 
     RawPacket whoAreYouRawPacket = outgoing2Packets.poll(1, TimeUnit.SECONDS);
@@ -181,7 +182,8 @@ public class HandshakeHandlersTest {
             outgoingPipeline,
             taskScheduler,
             NODE_RECORD_FACTORY_NO_VERIFICATION,
-            mock(NodeSessionManager.class));
+            mock(NodeSessionManager.class),
+            ALLOW_ALL);
     Envelope envelopeAt2From1 = new Envelope();
     RawPacket handshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
     envelopeAt2From1.put(

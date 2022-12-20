@@ -58,6 +58,7 @@ public class DiscoverySystemBuilder {
   private TalkHandler talkHandler = TalkHandler.NOOP;
   private NettyDiscoveryServer discoveryServer = null;
   private ExternalAddressSelector externalAddressSelector = null;
+  private AddressAccessPolicy addressAccessPolicy = AddressAccessPolicy.ALLOW_ALL;
   private final Clock clock = Clock.systemUTC();
   private final LivenessChecker livenessChecker = new LivenessChecker(clock);
 
@@ -148,6 +149,11 @@ public class DiscoverySystemBuilder {
   public DiscoverySystemBuilder externalAddressSelector(
       final ExternalAddressSelector externalAddressSelector) {
     this.externalAddressSelector = externalAddressSelector;
+    return this;
+  }
+
+  public DiscoverySystemBuilder addressAccessPolicy(final AddressAccessPolicy addressAccessPolicy) {
+    this.addressAccessPolicy = addressAccessPolicy;
     return this;
   }
 
@@ -247,7 +253,8 @@ public class DiscoverySystemBuilder {
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,
         talkHandler,
-        externalAddressSelector);
+        externalAddressSelector,
+        addressAccessPolicy);
   }
 
   /**
