@@ -63,7 +63,7 @@ public class NodeSession {
   private SessionState state = SessionState.INITIAL;
   private Bytes initiatorKey;
   private Bytes recipientKey;
-  private final Map<Bytes, RequestInfo> requestIdStatuses = new ConcurrentHashMap<>();
+  private final Map<Bytes, RequestInfo> requestIdStatuses;
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
   private final SecretKey staticNodeKey;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
@@ -83,6 +83,32 @@ public class NodeSession {
       final Consumer<NetworkParcel> outgoingPipeline,
       final Random rnd,
       final ExpirationScheduler<Bytes> requestExpirationScheduler) {
+    this(
+        nodeId,
+        nodeRecord,
+        remoteAddress,
+        nodeSessionManager,
+        localNodeRecordStore,
+        staticNodeKey,
+        nodeBucketStorage,
+        outgoingPipeline,
+        rnd,
+        requestExpirationScheduler,
+        new ConcurrentHashMap<>());
+  }
+
+  NodeSession(
+      final Bytes nodeId,
+      final Optional<NodeRecord> nodeRecord,
+      final InetSocketAddress remoteAddress,
+      final NodeSessionManager nodeSessionManager,
+      final LocalNodeRecordStore localNodeRecordStore,
+      final SecretKey staticNodeKey,
+      final KBuckets nodeBucketStorage,
+      final Consumer<NetworkParcel> outgoingPipeline,
+      final Random rnd,
+      final ExpirationScheduler<Bytes> requestExpirationScheduler,
+      final Map<Bytes, RequestInfo> requestIdStatuses) {
     this.nodeId = nodeId;
     this.nodeRecord = nodeRecord;
     this.remoteAddress = remoteAddress;
@@ -95,6 +121,7 @@ public class NodeSession {
     this.rnd = rnd;
     this.requestExpirationScheduler = requestExpirationScheduler;
     this.nonceGenerator = new NonceGenerator();
+    this.requestIdStatuses = requestIdStatuses;
   }
 
   public Bytes getNodeId() {
@@ -206,17 +233,25 @@ public class NodeSession {
   /** Updates request info. Thread-safe. */
   public synchronized void cancelAllRequests(final String message) {
     LOG.debug(() -> String.format("Cancelling all requests in session %s", this));
-    Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
+    final Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
     requestIdsCopy.forEach(
         requestId -> {
-          RequestInfo requestInfo = clearRequestInfo(requestId);
-          requestInfo
-              .getRequest()
-              .getResultPromise()
-              .completeExceptionally(
-                  new RuntimeException(
-                      String.format(
-                          "Request %s cancelled due to reason: %s", requestInfo, message)));
+          final RequestInfo requestInfo = clearRequestInfo(requestId);
+          if (requestInfo != null) {
+            try {
+              requestInfo
+                  .getRequest()
+                  .getResultPromise()
+                  .completeExceptionally(
+                      new RuntimeException(
+                          String.format(
+                              "Request %s cancelled due to reason: %s", requestInfo, message)));
+            } catch (Exception e) {
+              LOG.debug("Exception occurred clearing requests", e);
+            }
+          } else {
+            LOG.debug("Found an empty requestInfo for requestId {}", () -> requestId);
+          }
         });
   }
 
@@ -252,7 +287,7 @@ public class NodeSession {
   }
 
   public Bytes16 generateMaskingIV() {
-    byte[] ivBytes = new byte[16];
+    final byte[] ivBytes = new byte[16];
     rnd.nextBytes(ivBytes);
     return Bytes16.wrap(ivBytes);
   }
@@ -296,13 +331,13 @@ public class NodeSession {
   }
 
   private synchronized RequestInfo clearRequestInfo(final Bytes requestId) {
-    RequestInfo requestInfo = requestIdStatuses.remove(requestId);
+    final RequestInfo requestInfo = requestIdStatuses.remove(requestId);
     requestExpirationScheduler.cancel(requestId);
     return requestInfo;
   }
 
   public synchronized Optional<RequestInfo> getRequestInfo(final Bytes requestId) {
-    RequestInfo requestInfo = requestIdStatuses.get(requestId);
+    final RequestInfo requestInfo = requestIdStatuses.get(requestId);
     return requestId == null ? Optional.empty() : Optional.of(requestInfo);
   }
 
