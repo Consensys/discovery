@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.beacon.discovery.task.TaskStatus.AWAIT;
 import static org.ethereum.beacon.discovery.task.TaskStatus.SENT;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,8 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
