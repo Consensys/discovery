@@ -6,13 +6,18 @@ package org.ethereum.beacon.discovery.schema;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
@@ -142,6 +147,28 @@ public class NodeSessionTest {
 
     timeoutHandler.run();
     assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
+  }
+
+  @Test
+  void cancelAllRequests_shouldContinueIfNotFound() {
+    final Bytes msgId = Bytes.random(2);
+    final Map<Bytes, RequestInfo> requestIdStatuses = spy(new HashMap<>());
+    doReturn(Set.of(msgId)).when(requestIdStatuses).keySet();
+
+    final NodeSession mySession =
+        new NodeSession(
+            nodeId,
+            Optional.empty(),
+            InetSocketAddress.createUnresolved("127.0.0.1", 2999),
+            nodeSessionManager,
+            localNodeRecordStore,
+            SECRET_KEY,
+            kBuckets,
+            outgoingPipeline,
+            new Random(1342),
+            expirationScheduler,
+            requestIdStatuses);
+    mySession.cancelAllRequests("BAD PANDA");
   }
 
   @Test
