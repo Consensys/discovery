@@ -79,4 +79,4 @@ workflows:
           requires:
             - build
           context:
-            - cloudsmith-protocols
+            - protocols-cloudsmith
