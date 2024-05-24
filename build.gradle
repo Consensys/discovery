@@ -2,17 +2,16 @@
 
 plugins {
   id 'java-library'
-  id 'com.diffplug.spotless' version '6.11.0'
-  id 'com.github.ben-manes.versions' version '0.43.0'
+  id 'com.diffplug.spotless' version '6.25.0'
+  id 'com.github.ben-manes.versions' version '0.51.0'
   id 'com.github.hierynomus.license' version '0.16.1'
-  id 'io.spring.dependency-management' version '1.1.0'
-  id 'net.ltgt.errorprone' version '3.0.1'
-  id 'org.ajoberstar.grgit' version '5.0.0'
+  id 'io.spring.dependency-management' version '1.1.5'
+  id 'net.ltgt.errorprone' version '3.1.0'
+  id 'org.ajoberstar.grgit' version '5.2.2'
 }
 
 rootProject.version = calculatePublishVersion()
 def specificVersion = calculateVersion()
-def isDevelopBuild = rootProject.version.contains('develop')
 
 apply from: "${rootDir}/gradle/versions.gradle"
 apply from: "${rootDir}/gradle/check-licenses.gradle"
@@ -64,7 +63,7 @@ spotless {
     importOrder 'tech.pegasys', 'net.consensys', 'java', ''
     trimTrailingWhitespace()
     endWithNewline()
-    googleJavaFormat('1.13.0')
+    googleJavaFormat('1.17.0')
   }
 }
 
@@ -102,6 +101,8 @@ tasks.withType(JavaCompile) {
     check('ImmutableEnumChecker', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     check('FieldCanBeFinal', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     check('CanIgnoreReturnValueSuggester', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    // We prefer to be more explicit in address selection especially in tests, so removing this check
+    check('AddressSelection', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
 
     // These are experimental checks that we want enabled.
     check('MissingBraces', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
@@ -126,7 +127,7 @@ tasks.withType(JavaCompile) {
   options.encoding = 'UTF-8'
 
   jar {
-    baseName project.name
+    archiveBaseName = project.name
 
     manifest {
       attributes(
@@ -146,7 +147,7 @@ test {
   ]
   useJUnitPlatform()
   reports {
-    junitXml.enabled = true
+    junitXml.required = true
   }
 }
 
@@ -157,12 +158,12 @@ javadoc {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
+  archiveClassifier = 'sources'
   from sourceSets.main.allSource
 }
 
 task runTestDiscovery(type:JavaExec) {
-    main = 'org.ethereum.beacon.discovery.app.DiscoveryTestServer'
+    mainClass = 'org.ethereum.beacon.discovery.app.DiscoveryTestServer'
     classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
     systemProperty "log4j.configurationFile", "log4j2-test-discovery.xml"
 }
