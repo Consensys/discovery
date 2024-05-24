@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.BitSet;
 import java.util.Random;
@@ -172,7 +173,7 @@ public class TestUtil {
     System.arraycopy(src, 0, targetNodeId, 0, src.length);
     final Bytes nodeId = Bytes.wrap(targetNodeId).reverse();
     return SimpleIdentitySchemaInterpreter.createNodeRecord(
-        nodeId, new InetSocketAddress("127.0.0.1", 2));
+        nodeId, new InetSocketAddress(InetAddress.getLoopbackAddress(), 2));
   }
 
   public interface ThrowingRunnable {
