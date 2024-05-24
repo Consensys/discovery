@@ -101,6 +101,8 @@ tasks.withType(JavaCompile) {
     check('ImmutableEnumChecker', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     check('FieldCanBeFinal', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     check('CanIgnoreReturnValueSuggester', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    // We prefer to be more explicit in address selection especially in tests, so removing this check
+    check('AddressSelection', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
 
     // These are experimental checks that we want enabled.
     check('MissingBraces', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
