@@ -10,10 +10,13 @@ import static java.util.Objects.requireNonNullElseGet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +47,7 @@ public class DiscoverySystemBuilder {
 
   private static final AtomicInteger COUNTER = new AtomicInteger();
   private List<NodeRecord> bootnodes = Collections.emptyList();
-  private Optional<InetSocketAddress> listenAddress = Optional.empty();
+  private Optional<List<InetSocketAddress>> listenAddresses = Optional.empty();
   private NodeRecord localNodeRecord;
   private SecretKey secretKey;
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
@@ -56,8 +59,8 @@ public class DiscoverySystemBuilder {
   private Duration lifeCheckInterval = DiscoveryTaskManager.DEFAULT_LIVE_CHECK_INTERVAL;
   private int trafficReadLimit = 250000; // bytes per sec
   private TalkHandler talkHandler = TalkHandler.NOOP;
-  private NettyDiscoveryServer discoveryServer = null;
-  private ExternalAddressSelector externalAddressSelector = null;
+  private List<NettyDiscoveryServer> discoveryServers;
+  private ExternalAddressSelector externalAddressSelector;
   private AddressAccessPolicy addressAccessPolicy = AddressAccessPolicy.ALLOW_ALL;
   private final Clock clock = Clock.systemUTC();
   private final LivenessChecker livenessChecker = new LivenessChecker(clock);
@@ -73,7 +76,16 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder listen(final String listenAddress, final int listenPort) {
-    this.listenAddress = Optional.of(new InetSocketAddress(listenAddress, listenPort));
+    this.listenAddresses = Optional.of(List.of(new InetSocketAddress(listenAddress, listenPort)));
+    return this;
+  }
+
+  public DiscoverySystemBuilder listen(
+      final List<String> listenAddresses, final List<Integer> listenPorts) {
+    this.listenAddresses =
+        Optional.of(
+            Streams.zip(listenAddresses.stream(), listenPorts.stream(), InetSocketAddress::new)
+                .collect(Collectors.toList()));
     return this;
   }
 
@@ -142,7 +154,12 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder discoveryServer(final NettyDiscoveryServer discoveryServer) {
-    this.discoveryServer = discoveryServer;
+    this.discoveryServers = List.of(discoveryServer);
+    return this;
+  }
+
+  public DiscoverySystemBuilder discoveryServers(final NettyDiscoveryServer... discoveryServers) {
+    this.discoveryServers = Arrays.asList(discoveryServers);
     return this;
   }
 
@@ -169,17 +186,27 @@ public class DiscoverySystemBuilder {
                             oldRecord.getTcpAddress().map(InetSocketAddress::getPort),
                             secretKey)));
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
-    final InetSocketAddress serverListenAddress =
-        listenAddress
-            .or(localNodeRecord::getUdpAddress)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Local node record must contain an IP and UDP port"));
-    discoveryServer =
+    final List<InetSocketAddress> serverListenAddresses =
+        listenAddresses.orElseGet(
+            () -> {
+              final List<InetSocketAddress> localNodeRecordAddresses = new ArrayList<>();
+              localNodeRecord.getUdpAddress().ifPresent(localNodeRecordAddresses::add);
+              localNodeRecord.getUdp6Address().ifPresent(localNodeRecordAddresses::add);
+              if (localNodeRecordAddresses.isEmpty()) {
+                throw new IllegalArgumentException(
+                    "Local node record must contain an IP and UDP port(s)");
+              }
+              return localNodeRecordAddresses;
+            });
+    discoveryServers =
         requireNonNullElseGet(
-            discoveryServer,
-            () -> new NettyDiscoveryServerImpl(serverListenAddress, trafficReadLimit));
+            discoveryServers,
+            () ->
+                serverListenAddresses.stream()
+                    .map(
+                        serverListenAddress ->
+                            new NettyDiscoveryServerImpl(serverListenAddress, trafficReadLimit))
+                    .collect(Collectors.toList()));
 
     localNodeRecordStore =
         requireNonNullElseGet(
@@ -245,7 +272,7 @@ public class DiscoverySystemBuilder {
   DiscoveryManagerImpl buildDiscoveryManager() {
     createDefaults();
     return new DiscoveryManagerImpl(
-        discoveryServer,
+        discoveryServers,
         nodeBucketStorage,
         localNodeRecordStore,
         secretKey,

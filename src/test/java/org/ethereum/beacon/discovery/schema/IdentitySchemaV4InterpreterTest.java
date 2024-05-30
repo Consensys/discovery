@@ -60,7 +60,7 @@ class IdentitySchemaV4InterpreterTest {
   @Test
   public void shouldUseV4TcpPortIfV6IpSpecifiedWithNoV6TcpPort() {
     assertThat(
-            getTcpAddressForNodeRecordWithFields(
+            getTcp6AddressForNodeRecordWithFields(
                 new EnrField(EnrField.IP_V6, IPV6_LOCALHOST),
                 new EnrField(EnrField.TCP, 30303),
                 new EnrField(EnrField.UDP_V6, 100)))
@@ -93,7 +93,7 @@ class IdentitySchemaV4InterpreterTest {
   @Test
   public void shouldGetTcpInetAddressForIpV6Record() {
     final Optional<InetSocketAddress> result =
-        getTcpAddressForNodeRecordWithFields(
+        getTcp6AddressForNodeRecordWithFields(
             new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.TCP_V6, 1234));
     assertThat(result).contains(new InetSocketAddress("::1", 1234));
   }
@@ -123,7 +123,7 @@ class IdentitySchemaV4InterpreterTest {
   @Test
   public void shouldUseV4UdpPortIfV6IpSpecifiedWithNoV6UdpPort() {
     assertThat(
-            getUdpAddressForNodeRecordWithFields(
+            getUdp6AddressForNodeRecordWithFields(
                 new EnrField(EnrField.IP_V6, IPV6_LOCALHOST),
                 new EnrField(EnrField.UDP, 30303),
                 new EnrField(EnrField.TCP_V6, 100)))
@@ -156,7 +156,7 @@ class IdentitySchemaV4InterpreterTest {
   @Test
   public void shouldGetUdpInetAddressForIpV6Record() {
     final Optional<InetSocketAddress> result =
-        getTcpAddressForNodeRecordWithFields(
+        getTcp6AddressForNodeRecordWithFields(
             new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.TCP_V6, 1234));
     assertThat(result).contains(new InetSocketAddress("::1", 1234));
   }
@@ -211,8 +211,8 @@ class IdentitySchemaV4InterpreterTest {
         interpreter.createWithNewAddress(
             initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
-    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
-    assertThat(newRecord.getTcpAddress())
+    assertThat(newRecord.getUdp6Address()).contains(newSocketAddress);
+    assertThat(newRecord.getTcp6Address())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
@@ -229,9 +229,12 @@ class IdentitySchemaV4InterpreterTest {
         interpreter.createWithNewAddress(
             initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
-    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
-    assertThat(newRecord.getTcpAddress())
+    assertThat(newRecord.getUdpAddress()).isEmpty();
+    assertThat(newRecord.getUdp6Address()).contains(newSocketAddress);
+    assertThat(newRecord.getTcpAddress()).isEmpty();
+    assertThat(newRecord.getTcp6Address())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
+    assertThat(newRecord.get(EnrField.IP_V4)).isNull();
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
 
@@ -281,9 +284,19 @@ class IdentitySchemaV4InterpreterTest {
     return interpreter.getTcpAddress(createNodeRecord(fields));
   }
 
+  private Optional<InetSocketAddress> getTcp6AddressForNodeRecordWithFields(
+      final EnrField... fields) {
+    return interpreter.getTcp6Address(createNodeRecord(fields));
+  }
+
   private Optional<InetSocketAddress> getUdpAddressForNodeRecordWithFields(
       final EnrField... fields) {
     return interpreter.getUdpAddress(createNodeRecord(fields));
+  }
+
+  private Optional<InetSocketAddress> getUdp6AddressForNodeRecordWithFields(
+      final EnrField... fields) {
+    return interpreter.getUdp6Address(createNodeRecord(fields));
   }
 
   private NodeRecord createNodeRecord(final EnrField... fields) {

@@ -13,6 +13,7 @@ import static org.ethereum.beacon.discovery.TestUtil.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -68,8 +69,9 @@ public class DiscoveryNetworkTest {
         new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
     DiscoveryManagerImpl discoveryManager1 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(
-                nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
+            List.of(
+                new NettyDiscoveryServerImpl(
+                    nodeRecord1.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT)),
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
@@ -86,8 +88,9 @@ public class DiscoveryNetworkTest {
     livenessChecker1.setPinger(discoveryManager1::ping);
     DiscoveryManagerImpl discoveryManager2 =
         new DiscoveryManagerImpl(
-            new NettyDiscoveryServerImpl(
-                nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT),
+            List.of(
+                new NettyDiscoveryServerImpl(
+                    nodeRecord2.getUdpAddress().get(), TEST_TRAFFIC_READ_LIMIT)),
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,

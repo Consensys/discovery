@@ -38,7 +38,11 @@ public interface IdentitySchemaInterpreter {
 
   Optional<InetSocketAddress> getUdpAddress(NodeRecord nodeRecord);
 
+  Optional<InetSocketAddress> getUdp6Address(NodeRecord nodeRecord);
+
   Optional<InetSocketAddress> getTcpAddress(NodeRecord nodeRecord);
+
+  Optional<InetSocketAddress> getTcp6Address(NodeRecord nodeRecord);
 
   NodeRecord createWithNewAddress(
       NodeRecord nodeRecord,

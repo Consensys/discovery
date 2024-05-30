@@ -7,10 +7,13 @@ package org.ethereum.beacon.discovery;
 import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDICATE;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,16 +66,16 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private static final Logger LOG = LogManager.getLogger();
 
   private final ReplayProcessor<NetworkParcel> outgoingMessages = ReplayProcessor.cacheLast();
-  private final NettyDiscoveryServer discoveryServer;
+  private final List<NettyDiscoveryServer> discoveryServers;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AddressAccessPolicy addressAccessPolicy;
-  private volatile DiscoveryClient discoveryClient;
+  private volatile List<DiscoveryClient> discoveryClients;
   private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
-      final NettyDiscoveryServer discoveryServer,
+      final List<NettyDiscoveryServer> discoveryServers,
       final KBuckets nodeBucketStorage,
       final LocalNodeRecordStore localNodeRecordStore,
       final SecretKey homeNodeSecretKey,
@@ -86,7 +89,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     this.addressAccessPolicy = addressAccessPolicy;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
-    this.discoveryServer = discoveryServer;
+    this.discoveryServers = discoveryServers;
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
@@ -140,25 +143,36 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
-    Flux.from(discoveryServer.getIncomingPackets())
+    final Publisher<?>[] incomingPacketsSources =
+        discoveryServers.stream()
+            .map(NettyDiscoveryServer::getIncomingPackets)
+            .toArray(Publisher<?>[]::new);
+    Flux.concat(incomingPacketsSources)
         .doOnNext(incomingPipeline::push)
         .onErrorContinue(
             RECOVERABLE_ERRORS_PREDICATE,
-            (err, msg) -> LOG.debug("Error while processing message: " + err))
+            (err, msg) -> LOG.debug("Error while processing message: " + msg, err))
         .subscribe();
-    return discoveryServer
-        .start()
-        .thenAccept(
-            channel -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channel));
+    final List<NioDatagramChannel> channels = new CopyOnWriteArrayList<>();
+    return CompletableFuture.allOf(
+            discoveryServers.stream()
+                .map(discoveryServer -> discoveryServer.start().thenAccept(channels::add))
+                .toArray(CompletableFuture<?>[]::new))
+        .thenRun(
+            () ->
+                discoveryClients =
+                    channels.stream()
+                        .map(channel -> new NettyDiscoveryClientImpl(outgoingMessages, channel))
+                        .collect(Collectors.toList()));
   }
 
   @Override
   public void stop() {
-    final DiscoveryClient client = this.discoveryClient;
-    if (client != null) {
-      client.stop();
+    final List<DiscoveryClient> clients = this.discoveryClients;
+    if (clients != null) {
+      clients.forEach(DiscoveryClient::stop);
     }
-    discoveryServer.stop();
+    discoveryServers.forEach(NettyDiscoveryServer::stop);
   }
 
   @Override

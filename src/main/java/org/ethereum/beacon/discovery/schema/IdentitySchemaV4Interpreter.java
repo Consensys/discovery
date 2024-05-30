@@ -88,15 +88,23 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public Optional<InetSocketAddress> getUdpAddress(final NodeRecord nodeRecord) {
-    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.UDP)
-        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.UDP_V6))
+    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.UDP);
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getUdp6Address(NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.UDP_V6)
         .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.UDP));
   }
 
   @Override
   public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
-    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.TCP)
-        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP_V6))
+    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.TCP);
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getTcp6Address(NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP_V6)
         .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.TCP));
   }
 
