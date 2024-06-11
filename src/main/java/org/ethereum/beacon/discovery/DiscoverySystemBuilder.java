@@ -10,7 +10,6 @@ import static java.util.Objects.requireNonNullElseGet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.net.InetSocketAddress;
 import java.time.Clock;
@@ -80,12 +79,8 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder listen(
-      final List<String> listenAddresses, final List<Integer> listenPorts) {
-    this.listenAddresses =
-        Optional.of(
-            Streams.zip(listenAddresses.stream(), listenPorts.stream(), InetSocketAddress::new)
-                .collect(Collectors.toList()));
+  public DiscoverySystemBuilder listen(final InetSocketAddress... listenAddresses) {
+    this.listenAddresses = Optional.of(Arrays.asList(listenAddresses));
     return this;
   }
 
@@ -94,7 +89,7 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder nodeRecordFactory(NodeRecordFactory nodeRecordFactory) {
+  public DiscoverySystemBuilder nodeRecordFactory(final NodeRecordFactory nodeRecordFactory) {
     this.nodeRecordFactory = nodeRecordFactory;
     return this;
   }

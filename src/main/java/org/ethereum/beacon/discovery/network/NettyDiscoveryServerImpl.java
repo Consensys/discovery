@@ -45,7 +45,8 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
     LOG.info("Starting discovery server on UDP port {}", listenAddress.getPort());
     if (!listen.compareAndSet(false, true)) {
       return CompletableFuture.failedFuture(
-          new IllegalStateException("Attempted to start an already started server"));
+          new IllegalStateException(
+              "Attempted to start an already started server on port " + listenAddress.getPort()));
     }
     nioGroup = new NioEventLoopGroup(1);
     return startServer(nioGroup);
@@ -86,14 +87,15 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               .addListener(
                   closeFuture -> {
                     if (!listen.get()) {
-                      LOG.info("Shutting down discovery server");
+                      LOG.info(
+                          "Shutting down discovery server on port {}", listenAddress.getPort());
                       group.shutdownGracefully();
                       return;
                     }
                     LOG.error(
-                        "Discovery server closed. Trying to restore after "
-                            + RECREATION_TIMEOUT
-                            + " milliseconds delay",
+                        String.format(
+                            "Discovery server on port %d has been closed. Trying to restore after %d milliseconds delay",
+                            listenAddress.getPort(), RECREATION_TIMEOUT),
                         closeFuture.cause());
                     Thread.sleep(RECREATION_TIMEOUT);
                     startServer(group);
@@ -111,12 +113,12 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   @Override
   public void stop() {
     if (listen.compareAndSet(true, false)) {
-      LOG.info("Stopping discovery server");
+      LOG.info("Stopping discovery server on UDP port {}", listenAddress.getPort());
       if (channel != null) {
         try {
           channel.close().sync();
         } catch (InterruptedException ex) {
-          LOG.error("Failed to stop discovery server", ex);
+          LOG.error("Failed to stop discovery server on port " + listenAddress.getPort(), ex);
         }
         if (nioGroup != null) {
           try {

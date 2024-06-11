@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,7 +70,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
   private final AddressAccessPolicy addressAccessPolicy;
-  private volatile List<DiscoveryClient> discoveryClients;
+  private volatile DiscoveryClient discoveryClient;
   private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
@@ -158,19 +157,14 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             discoveryServers.stream()
                 .map(discoveryServer -> discoveryServer.start().thenAccept(channels::add))
                 .toArray(CompletableFuture<?>[]::new))
-        .thenRun(
-            () ->
-                discoveryClients =
-                    channels.stream()
-                        .map(channel -> new NettyDiscoveryClientImpl(outgoingMessages, channel))
-                        .collect(Collectors.toList()));
+        .thenRun(() -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channels));
   }
 
   @Override
   public void stop() {
-    final List<DiscoveryClient> clients = this.discoveryClients;
-    if (clients != null) {
-      clients.forEach(DiscoveryClient::stop);
+    final DiscoveryClient client = this.discoveryClient;
+    if (client != null) {
+      client.stop();
     }
     discoveryServers.forEach(NettyDiscoveryServer::stop);
   }
