@@ -10,6 +10,14 @@ executors:
       GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2
 
 commands:
+  install_java:
+    description: "Install Java 11"
+    steps:
+      - run:
+          name: Install Java 11
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-11-jdk
   prepare:
     description: "Prepare"
     steps:
@@ -30,6 +38,7 @@ jobs:
   build:
     executor: medium_executor
     steps:
+      - install_java
       - prepare
       - run:
           name: Assemble
@@ -52,6 +61,7 @@ jobs:
   publish:
     executor: medium_executor
     steps:
+      - install_java
       - prepare
       - attach_workspace:
           at: ~/project
