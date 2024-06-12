@@ -168,7 +168,11 @@ public class NodeSessionManager implements EnvelopeHandler {
 
   private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
     return Optional.ofNullable(envelope.get(Field.REMOTE_SENDER))
-        .or(() -> envelope.get(Field.NODE).getUdpAddress());
+        .or(
+            () -> {
+              final NodeRecord nodeRecord = envelope.get(Field.NODE);
+              return nodeRecord.getUdpAddress().or(nodeRecord::getUdp6Address);
+            });
   }
 
   public Stream<NodeRecord> streamActiveSessions() {

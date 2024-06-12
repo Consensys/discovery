@@ -15,10 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.BindException;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +56,7 @@ public class DiscoveryIntegrationTest {
 
   private static final Logger LOG = LogManager.getLogger();
   public static final String LOCALHOST = "127.0.0.1";
+  public static final String LOCALHOST_IPV6 = "::1";
   public static final Duration RETRY_TIMEOUT = Duration.ofSeconds(30);
   public static final Duration LIVE_CHECK_INTERVAL = Duration.ofSeconds(30);
   public static final Consumer<DiscoverySystemBuilder> NO_MODIFY = __ -> {};
@@ -145,6 +150,24 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem bootnode = createDiscoveryClient();
     final DiscoverySystem node1 = createDiscoveryClient(bootnode.getLocalNodeRecord());
     final DiscoverySystem node2 = createDiscoveryClient(bootnode.getLocalNodeRecord());
+
+    waitFor(
+        () -> {
+          waitFor(node1.searchForNewPeers(), 10);
+          waitFor(node2.searchForNewPeers(), 10);
+          assertKnownNodes(node2, bootnode, node1);
+          assertKnownNodes(node1, bootnode, node2);
+          assertKnownNodes(bootnode, node1, node2);
+        });
+  }
+
+  @Test
+  public void IPv4andIPv6NodeShouldDiscoverOtherNode_onOnlyIPv6() throws Exception {
+    final DiscoverySystem bootnode = createDiscoveryClient(List.of(LOCALHOST, LOCALHOST_IPV6));
+    final DiscoverySystem node1 =
+        createDiscoveryClient(List.of(LOCALHOST, LOCALHOST_IPV6), bootnode.getLocalNodeRecord());
+    final DiscoverySystem node2 =
+        createDiscoveryClient(List.of(LOCALHOST_IPV6), bootnode.getLocalNodeRecord());
 
     waitFor(
         () -> {
@@ -300,7 +323,10 @@ public class DiscoveryIntegrationTest {
 
     final DiscoverySystem bootnode =
         createDiscoveryClient(
-            true, LOCALHOST, Functions.randomKeyPair(), b -> b.talkHandler(testTalkHandler));
+            true,
+            singletonList(LOCALHOST),
+            Functions.randomKeyPair(),
+            b -> b.talkHandler(testTalkHandler));
     final DiscoverySystem client = createDiscoveryClient(bootnode.getLocalNodeRecord());
 
     List<CompletableFuture<Bytes>> responses = new ArrayList<>();
@@ -344,7 +370,7 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem client =
         createDiscoveryClient(
             true,
-            LOCALHOST,
+            Collections.singletonList(LOCALHOST),
             Functions.randomKeyPair(),
             discoverySystemBuilder ->
                 discoverySystemBuilder.nodeRecordFactory(buggyNodeRecordFactory),
@@ -394,30 +420,45 @@ public class DiscoveryIntegrationTest {
 
   private DiscoverySystem createDiscoveryClient(
       final KeyPair keyPair, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(true, LOCALHOST, keyPair, NO_MODIFY, bootnodes);
+    return createDiscoveryClient(
+        true, Collections.singletonList(LOCALHOST), keyPair, NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord, final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(
-        signNodeRecord, LOCALHOST, Functions.randomKeyPair(), NO_MODIFY, bootnodes);
+        signNodeRecord,
+        Collections.singletonList(LOCALHOST),
+        Functions.randomKeyPair(),
+        NO_MODIFY,
+        bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final String ipAddress, final NodeRecord... bootnodes) throws Exception {
-    return createDiscoveryClient(true, ipAddress, Functions.randomKeyPair(), NO_MODIFY, bootnodes);
+    return createDiscoveryClient(
+        true,
+        Collections.singletonList(ipAddress),
+        Functions.randomKeyPair(),
+        NO_MODIFY,
+        bootnodes);
+  }
+
+  private DiscoverySystem createDiscoveryClient(
+      final List<String> ipAddresses, final NodeRecord... bootnodes) throws Exception {
+    return createDiscoveryClient(
+        true, ipAddresses, Functions.randomKeyPair(), NO_MODIFY, bootnodes);
   }
 
   private DiscoverySystem createDiscoveryClient(
       final boolean signNodeRecord,
-      final String ipAddress,
+      final List<String> ipAddresses,
       final KeyPair keyPair,
       final Consumer<DiscoverySystemBuilder> discModifier,
       final NodeRecord... bootnodes)
       throws Exception {
 
     for (int i = 0; i < 10; i++) {
-      int port = NEXT_PORT.incrementAndGet();
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
         nodeRecordBuilder.secretKey(keyPair.secretKey());
@@ -427,14 +468,33 @@ public class DiscoveryIntegrationTest {
         nodeRecordBuilder.nodeRecordFactory(
             new NodeRecordFactory(new IdentitySchemaV4InterpreterMock()));
       }
+      final List<InetSocketAddress> socketAddresses =
+          ipAddresses.stream()
+              .map(hostname -> new InetSocketAddress(hostname, NEXT_PORT.incrementAndGet()))
+              .collect(Collectors.toList());
+      socketAddresses.forEach(
+          socketAddress ->
+              nodeRecordBuilder.address(socketAddress.getHostString(), socketAddress.getPort()));
       final NodeRecord nodeRecord =
           nodeRecordBuilder
-              .address(ipAddress, port)
               .publicKey(Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey()))
               .build();
+      final InetSocketAddress[] listenAddresses =
+          socketAddresses.stream()
+              .map(
+                  address -> {
+                    final String listenAddress;
+                    if (address.getAddress() instanceof Inet6Address) {
+                      listenAddress = "::";
+                    } else {
+                      listenAddress = "0.0.0.0";
+                    }
+                    return new InetSocketAddress(listenAddress, address.getPort());
+                  })
+              .toArray(InetSocketAddress[]::new);
       DiscoverySystemBuilder discoverySystemBuilder =
           new DiscoverySystemBuilder()
-              .listen("0.0.0.0", port)
+              .listen(listenAddresses)
               .localNodeRecord(nodeRecord)
               .secretKey(keyPair.secretKey())
               .retryTimeout(RETRY_TIMEOUT)
