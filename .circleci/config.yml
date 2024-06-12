@@ -1,8 +1,8 @@
 version: 2.1
 executors:
   medium_executor:
-    docker:
-      - image: cimg/openjdk:11.0.13
+    machine:
+      image: ubuntu-2204:current
     resource_class: medium
     working_directory: ~/project
     environment:
