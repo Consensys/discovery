@@ -7,12 +7,14 @@ package org.ethereum.beacon.discovery;
 import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDICATE;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -152,10 +154,20 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
             RECOVERABLE_ERRORS_PREDICATE,
             (err, msg) -> LOG.debug("Error while processing message: " + msg, err))
         .subscribe();
-    final List<NioDatagramChannel> channels = new CopyOnWriteArrayList<>();
+    final Map<InternetProtocolFamily, NioDatagramChannel> channels = new ConcurrentHashMap<>();
     return CompletableFuture.allOf(
             discoveryServers.stream()
-                .map(discoveryServer -> discoveryServer.start().thenAccept(channels::add))
+                .map(
+                    discoveryServer ->
+                        discoveryServer
+                            .start()
+                            .thenAccept(
+                                channel -> {
+                                  final InternetProtocolFamily ipFamily =
+                                      InternetProtocolFamily.of(
+                                          discoveryServer.getListenAddress().getAddress());
+                                  channels.put(ipFamily, channel);
+                                }))
                 .toArray(CompletableFuture<?>[]::new))
         .thenRun(() -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channels));
   }

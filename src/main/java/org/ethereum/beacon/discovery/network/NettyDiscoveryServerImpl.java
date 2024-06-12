@@ -25,8 +25,10 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
+
   private static final Logger LOG = LogManager.getLogger(NettyDiscoveryServerImpl.class);
   private static final int RECREATION_TIMEOUT = 5000;
+
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final InetSocketAddress listenAddress;
@@ -53,15 +55,15 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   }
 
   private CompletableFuture<NioDatagramChannel> startServer(final NioEventLoopGroup group) {
-    CompletableFuture<NioDatagramChannel> future = new CompletableFuture<>();
-    Bootstrap b = new Bootstrap();
+    final CompletableFuture<NioDatagramChannel> future = new CompletableFuture<>();
+    final Bootstrap b = new Bootstrap();
     b.group(group)
         .channel(NioDatagramChannel.class)
         .handler(
             new ChannelInitializer<NioDatagramChannel>() {
               @Override
               public void initChannel(NioDatagramChannel ch) {
-                ChannelPipeline pipeline = ch.pipeline();
+                final ChannelPipeline pipeline = ch.pipeline();
                 pipeline
                     .addFirst(new LoggingHandler(LogLevel.TRACE))
                     .addLast(new DatagramToEnvelope())
@@ -103,6 +105,11 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
           future.complete((NioDatagramChannel) this.channel);
         });
     return future;
+  }
+
+  @Override
+  public InetSocketAddress getListenAddress() {
+    return listenAddress;
   }
 
   @Override
