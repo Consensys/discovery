@@ -33,7 +33,6 @@ import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
-import org.ethereum.beacon.discovery.network.DiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
@@ -87,17 +86,7 @@ public class DiscoverySystemBuilder {
     Preconditions.checkArgument(
         listenAddresses.length == 1 || listenAddresses.length == 2,
         "Can define only 1 or 2 listen addresses - IPv4/IPv6 or IPv4 and IPv6");
-    if (listenAddresses.length == 2) {
-      final Set<InternetProtocolFamily> ipFamilies =
-          Arrays.stream(listenAddresses)
-              .map(InetSocketAddress::getAddress)
-              .map(InternetProtocolFamily::of)
-              .collect(Collectors.toSet());
-      if (ipFamilies.size() != 2) {
-        throw new IllegalArgumentException(
-            String.format("Expected an IPv4 and an IPv6 address but only %s was set", ipFamilies));
-      }
-    }
+    validateListenAddresses(Arrays.stream(listenAddresses).collect(Collectors.toList()));
     this.listenAddresses = Optional.of(Arrays.asList(listenAddresses));
     return this;
   }
@@ -175,18 +164,10 @@ public class DiscoverySystemBuilder {
     Preconditions.checkArgument(
         discoveryServers.length == 1 || discoveryServers.length == 2,
         "Can define only 1 or 2 discovery servers - IPv4/IPv6 or IPv4 and IPv6");
-    if (discoveryServers.length == 2) {
-      final Set<InternetProtocolFamily> ipFamilies =
-          Arrays.stream(discoveryServers)
-              .map(DiscoveryServer::getListenAddress)
-              .map(InetSocketAddress::getAddress)
-              .map(InternetProtocolFamily::of)
-              .collect(Collectors.toSet());
-      if (ipFamilies.size() != 2) {
-        throw new IllegalArgumentException(
-            String.format("Expected an IPv4 and an IPv6 address but only %s was set", ipFamilies));
-      }
-    }
+    validateListenAddresses(
+        Arrays.stream(discoveryServers)
+            .map(NettyDiscoveryServer::getListenAddress)
+            .collect(Collectors.toList()));
     this.discoveryServers = Arrays.asList(discoveryServers);
     return this;
   }
@@ -200,6 +181,20 @@ public class DiscoverySystemBuilder {
   public DiscoverySystemBuilder addressAccessPolicy(final AddressAccessPolicy addressAccessPolicy) {
     this.addressAccessPolicy = addressAccessPolicy;
     return this;
+  }
+
+  private void validateListenAddresses(final List<InetSocketAddress> listenAddresses) {
+    if (listenAddresses.size() == 2) {
+      final Set<InternetProtocolFamily> ipFamilies =
+          listenAddresses.stream()
+              .map(InetSocketAddress::getAddress)
+              .map(InternetProtocolFamily::of)
+              .collect(Collectors.toSet());
+      if (ipFamilies.size() != 2) {
+        throw new IllegalArgumentException(
+            String.format("Expected an IPv4 and an IPv6 address but only %s was set", ipFamilies));
+      }
+    }
   }
 
   private void createDefaults() {

@@ -38,7 +38,6 @@ import org.ethereum.beacon.discovery.util.Functions;
  * should be in request field and stores it in {@link Field#SESSION} field.
  */
 public class NodeSessionManager implements EnvelopeHandler {
-
   private static final int SESSION_CLEANUP_DELAY_SECONDS = 180;
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
   private static final Logger LOG = LogManager.getLogger(NodeSessionManager.class);
@@ -172,8 +171,8 @@ public class NodeSessionManager implements EnvelopeHandler {
         .or(
             () -> {
               final NodeRecord nodeRecord = envelope.get(Field.NODE);
-              final NodeRecord localNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-              if (localNodeRecord.getUdp6Address().isPresent()) {
+              final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
+              if (homeNodeRecord.getUdp6Address().isPresent()) {
                 // use IPv6
                 return nodeRecord.getUdp6Address();
               } else {
@@ -190,7 +189,6 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   private static class SessionKey {
-
     private final Bytes nodeId;
     private final InetSocketAddress remoteSocketAddress;
 
