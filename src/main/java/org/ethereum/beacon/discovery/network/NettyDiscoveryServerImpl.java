@@ -37,7 +37,8 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private Channel channel;
   private NioEventLoopGroup nioGroup;
 
-  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress, final int trafficReadLimit) {
+  public NettyDiscoveryServerImpl(
+      final InetSocketAddress listenAddress, final int trafficReadLimit) {
     this.listenAddress = listenAddress;
     this.trafficReadLimit = trafficReadLimit;
   }

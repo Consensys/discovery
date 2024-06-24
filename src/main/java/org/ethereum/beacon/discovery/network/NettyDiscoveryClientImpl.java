@@ -47,10 +47,12 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
     final DatagramPacket packet =
         new DatagramPacket(Unpooled.copiedBuffer(data.toArray()), destination);
     final NioDatagramChannel channel =
-        channels.getOrDefault(
-            InternetProtocolFamily.of(destination.getAddress()),
-            // default to any other available channel
-            channels.values().stream().findFirst().orElseThrow());
+        channels.get(InternetProtocolFamily.of(destination.getAddress()));
+    if (channel == null) {
+      LOG.trace(
+          () -> String.format("Dropping packet %s because of IP version incompatibility", packet));
+      return;
+    }
     LOG.trace(() -> String.format("Sending packet %s", packet));
     channel.write(packet);
     channel.flush();

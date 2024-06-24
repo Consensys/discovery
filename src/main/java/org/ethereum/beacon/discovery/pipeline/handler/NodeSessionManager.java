@@ -38,6 +38,7 @@ import org.ethereum.beacon.discovery.util.Functions;
  * should be in request field and stores it in {@link Field#SESSION} field.
  */
 public class NodeSessionManager implements EnvelopeHandler {
+
   private static final int SESSION_CLEANUP_DELAY_SECONDS = 180;
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
   private static final Logger LOG = LogManager.getLogger(NodeSessionManager.class);
@@ -115,13 +116,13 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   public void dropSession(final NodeSession session) {
-    SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
+    final SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
     sessionExpirationScheduler.cancel(sessionKey);
     deleteSession(sessionKey);
   }
 
   private void deleteSession(final SessionKey sessionKey) {
-    NodeSession removedSession = recentSessions.remove(sessionKey);
+    final NodeSession removedSession = recentSessions.remove(sessionKey);
     if (removedSession != null) {
       // Mark inactive to prevent registering any new nonces
       removedSession.markInactive();
@@ -150,9 +151,9 @@ public class NodeSessionManager implements EnvelopeHandler {
 
   private NodeSession createNodeSession(
       final SessionKey key, final Optional<NodeRecord> suppliedNodeRecord) {
-    Optional<NodeRecord> nodeRecord =
+    final Optional<NodeRecord> nodeRecord =
         suppliedNodeRecord.or(() -> nodeBucketStorage.getNode(key.nodeId));
-    SecureRandom random = Functions.getRandom();
+    final SecureRandom random = Functions.getRandom();
     return new NodeSession(
         key.nodeId,
         nodeRecord,
@@ -171,7 +172,14 @@ public class NodeSessionManager implements EnvelopeHandler {
         .or(
             () -> {
               final NodeRecord nodeRecord = envelope.get(Field.NODE);
-              return nodeRecord.getUdpAddress().or(nodeRecord::getUdp6Address);
+              final NodeRecord localNodeRecord = localNodeRecordStore.getLocalNodeRecord();
+              if (localNodeRecord.getUdp6Address().isPresent()) {
+                // use IPv6
+                return nodeRecord.getUdp6Address();
+              } else {
+                // use IPv4
+                return nodeRecord.getUdpAddress();
+              }
             });
   }
 
@@ -182,6 +190,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   private static class SessionKey {
+
     private final Bytes nodeId;
     private final InetSocketAddress remoteSocketAddress;
 
