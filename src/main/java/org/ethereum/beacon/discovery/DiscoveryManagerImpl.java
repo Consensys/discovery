@@ -152,7 +152,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
         .doOnNext(incomingPipeline::push)
         .onErrorContinue(
             RECOVERABLE_ERRORS_PREDICATE,
-            (err, msg) -> LOG.debug("Error while processing message: " + msg, err))
+            (err, __) -> LOG.debug("Error while processing message", err))
         .subscribe();
     final Map<InternetProtocolFamily, NioDatagramChannel> channels = new ConcurrentHashMap<>();
     return CompletableFuture.allOf(
