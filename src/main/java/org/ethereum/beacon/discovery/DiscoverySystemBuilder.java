@@ -83,9 +83,6 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder listen(final InetSocketAddress... listenAddresses) {
-    Preconditions.checkArgument(
-        listenAddresses.length == 1 || listenAddresses.length == 2,
-        "Can define only 1 or 2 listen addresses - IPv4/IPv6 or IPv4 and IPv6");
     validateListenAddresses(Arrays.stream(listenAddresses).collect(Collectors.toList()));
     this.listenAddresses = Optional.of(Arrays.asList(listenAddresses));
     return this;
@@ -161,13 +158,11 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder discoveryServers(final NettyDiscoveryServer... discoveryServers) {
-    Preconditions.checkArgument(
-        discoveryServers.length == 1 || discoveryServers.length == 2,
-        "Can define only 1 or 2 discovery servers - IPv4/IPv6 or IPv4 and IPv6");
-    validateListenAddresses(
+    final List<InetSocketAddress> listenAddresses =
         Arrays.stream(discoveryServers)
             .map(NettyDiscoveryServer::getListenAddress)
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList());
+    validateListenAddresses(listenAddresses);
     this.discoveryServers = Arrays.asList(discoveryServers);
     return this;
   }
@@ -184,6 +179,9 @@ public class DiscoverySystemBuilder {
   }
 
   private void validateListenAddresses(final List<InetSocketAddress> listenAddresses) {
+    Preconditions.checkArgument(
+        listenAddresses.size() == 1 || listenAddresses.size() == 2,
+        "Can define only 1 or 2 listen addresses - IPv4/IPv6 or IPv4 and IPv6");
     if (listenAddresses.size() == 2) {
       final Set<InternetProtocolFamily> ipFamilies =
           listenAddresses.stream()

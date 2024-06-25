@@ -1,6 +1,6 @@
 dependencyManagement {
   dependencies {
-    dependencySet(group: 'com.google.errorprone', version: '2.27.1') {
+    dependencySet(group: 'com.google.errorprone', version: '2.28.0') {
       entry 'error_prone_annotation'
       entry 'error_prone_check_api'
       entry 'error_prone_core'
@@ -9,10 +9,10 @@ dependencyManagement {
 
     dependency 'tech.pegasys.tools.epchecks:errorprone-checks:1.1.1'
 
-    dependency 'com.google.guava:guava:33.2.0-jre'
+    dependency 'com.google.guava:guava:33.2.1-jre'
 
-    dependency "io.netty:netty-all:4.1.110.Final"
-    dependency 'io.projectreactor:reactor-core:3.6.6'
+    dependency "io.netty:netty-all:4.1.111.Final"
+    dependency 'io.projectreactor:reactor-core:3.6.7'
 
     dependencySet(group: 'org.apache.logging.log4j', version: '2.23.1') {
       entry 'log4j-api'
@@ -22,7 +22,7 @@ dependencyManagement {
 
     dependency 'org.bouncycastle:bcprov-jdk18on:1.78.1'
 
-    dependency 'org.assertj:assertj-core:3.25.3'
+    dependency 'org.assertj:assertj-core:3.26.0'
     dependency 'org.mockito:mockito-core:5.12.0'
 
     dependencySet(group: 'org.apache.tuweni', version: '2.3.1') {
