@@ -174,7 +174,8 @@ public class NodeSessionManager implements EnvelopeHandler {
               final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
               final Optional<InetSocketAddress> homeUdpAddress = homeNodeRecord.getUdpAddress();
               final Optional<InetSocketAddress> homeUdp6Address = homeNodeRecord.getUdp6Address();
-              // Check for dual-stack and prefer IPv6 if available, otherwise check IPv6, then default to IPv4
+              // Check for dual-stack and prefer IPv6 if available, otherwise check IPv6, then
+              // default to IPv4
               if (homeUdpAddress.isPresent() && homeUdp6Address.isPresent()) {
                 return nodeRecord.getUdp6Address().or(nodeRecord::getUdpAddress);
               } else if (homeUdp6Address.isPresent()) {
