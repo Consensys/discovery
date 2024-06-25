@@ -115,13 +115,13 @@ public class NodeSessionManager implements EnvelopeHandler {
   }
 
   public void dropSession(final NodeSession session) {
-    SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
+    final SessionKey sessionKey = new SessionKey(session.getNodeId(), session.getRemoteAddress());
     sessionExpirationScheduler.cancel(sessionKey);
     deleteSession(sessionKey);
   }
 
   private void deleteSession(final SessionKey sessionKey) {
-    NodeSession removedSession = recentSessions.remove(sessionKey);
+    final NodeSession removedSession = recentSessions.remove(sessionKey);
     if (removedSession != null) {
       // Mark inactive to prevent registering any new nonces
       removedSession.markInactive();
@@ -150,9 +150,9 @@ public class NodeSessionManager implements EnvelopeHandler {
 
   private NodeSession createNodeSession(
       final SessionKey key, final Optional<NodeRecord> suppliedNodeRecord) {
-    Optional<NodeRecord> nodeRecord =
+    final Optional<NodeRecord> nodeRecord =
         suppliedNodeRecord.or(() -> nodeBucketStorage.getNode(key.nodeId));
-    SecureRandom random = Functions.getRandom();
+    final SecureRandom random = Functions.getRandom();
     return new NodeSession(
         key.nodeId,
         nodeRecord,
@@ -168,7 +168,22 @@ public class NodeSessionManager implements EnvelopeHandler {
 
   private Optional<InetSocketAddress> getRemoteSocketAddress(final Envelope envelope) {
     return Optional.ofNullable(envelope.get(Field.REMOTE_SENDER))
-        .or(() -> envelope.get(Field.NODE).getUdpAddress());
+        .or(
+            () -> {
+              final NodeRecord nodeRecord = envelope.get(Field.NODE);
+              final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
+              final Optional<InetSocketAddress> homeUdpAddress = homeNodeRecord.getUdpAddress();
+              final Optional<InetSocketAddress> homeUdp6Address = homeNodeRecord.getUdp6Address();
+              // Check for dual-stack and prefer IPv6 if available, otherwise check IPv6, then
+              // default to IPv4
+              if (homeUdpAddress.isPresent() && homeUdp6Address.isPresent()) {
+                return nodeRecord.getUdp6Address().or(nodeRecord::getUdpAddress);
+              } else if (homeUdp6Address.isPresent()) {
+                return nodeRecord.getUdp6Address();
+              } else {
+                return nodeRecord.getUdpAddress();
+              }
+            });
   }
 
   public Stream<NodeRecord> streamActiveSessions() {

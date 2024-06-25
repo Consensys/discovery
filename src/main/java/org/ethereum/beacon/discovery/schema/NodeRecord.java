@@ -213,8 +213,16 @@ public class NodeRecord {
     return identitySchemaInterpreter.getTcpAddress(this);
   }
 
+  public Optional<InetSocketAddress> getTcp6Address() {
+    return identitySchemaInterpreter.getTcp6Address(this);
+  }
+
   public Optional<InetSocketAddress> getUdpAddress() {
     return identitySchemaInterpreter.getUdpAddress(this);
+  }
+
+  public Optional<InetSocketAddress> getUdp6Address() {
+    return identitySchemaInterpreter.getUdp6Address(this);
   }
 
   public NodeRecord withNewAddress(
@@ -242,6 +250,10 @@ public class NodeRecord {
         + getUdpAddress()
         + ", tcpAddress="
         + getTcpAddress()
+        + ", udp6Address="
+        + getUdp6Address()
+        + ", tcp6Address="
+        + getTcp6Address()
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="

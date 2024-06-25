@@ -25,8 +25,10 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.ReplayProcessor;
 
 public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
+
   private static final Logger LOG = LogManager.getLogger(NettyDiscoveryServerImpl.class);
   private static final int RECREATION_TIMEOUT = 5000;
+
   private final ReplayProcessor<Envelope> incomingPackets = ReplayProcessor.cacheLast();
   private final FluxSink<Envelope> incomingSink = incomingPackets.sink();
   private final InetSocketAddress listenAddress;
@@ -35,32 +37,34 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   private Channel channel;
   private NioEventLoopGroup nioGroup;
 
-  public NettyDiscoveryServerImpl(InetSocketAddress listenAddress, final int trafficReadLimit) {
+  public NettyDiscoveryServerImpl(
+      final InetSocketAddress listenAddress, final int trafficReadLimit) {
     this.listenAddress = listenAddress;
     this.trafficReadLimit = trafficReadLimit;
   }
 
   @Override
   public CompletableFuture<NioDatagramChannel> start() {
-    LOG.info("Starting discovery server on UDP port {}", listenAddress.getPort());
+    LOG.info("Starting discovery server listening on {}", listenAddress);
     if (!listen.compareAndSet(false, true)) {
       return CompletableFuture.failedFuture(
-          new IllegalStateException("Attempted to start an already started server"));
+          new IllegalStateException(
+              "Attempted to start an already started server listening on " + listenAddress));
     }
     nioGroup = new NioEventLoopGroup(1);
     return startServer(nioGroup);
   }
 
   private CompletableFuture<NioDatagramChannel> startServer(final NioEventLoopGroup group) {
-    CompletableFuture<NioDatagramChannel> future = new CompletableFuture<>();
-    Bootstrap b = new Bootstrap();
+    final CompletableFuture<NioDatagramChannel> future = new CompletableFuture<>();
+    final Bootstrap b = new Bootstrap();
     b.group(group)
         .channel(NioDatagramChannel.class)
         .handler(
             new ChannelInitializer<NioDatagramChannel>() {
               @Override
               public void initChannel(NioDatagramChannel ch) {
-                ChannelPipeline pipeline = ch.pipeline();
+                final ChannelPipeline pipeline = ch.pipeline();
                 pipeline
                     .addFirst(new LoggingHandler(LogLevel.TRACE))
                     .addLast(new DatagramToEnvelope())
@@ -86,14 +90,14 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
               .addListener(
                   closeFuture -> {
                     if (!listen.get()) {
-                      LOG.info("Shutting down discovery server");
+                      LOG.info("Shutting down discovery server listening on {}", listenAddress);
                       group.shutdownGracefully();
                       return;
                     }
                     LOG.error(
-                        "Discovery server closed. Trying to restore after "
-                            + RECREATION_TIMEOUT
-                            + " milliseconds delay",
+                        String.format(
+                            "Discovery server listening on %s has been closed. Trying to restore after %d milliseconds delay",
+                            listenAddress, RECREATION_TIMEOUT),
                         closeFuture.cause());
                     Thread.sleep(RECREATION_TIMEOUT);
                     startServer(group);
@@ -104,6 +108,11 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   }
 
   @Override
+  public InetSocketAddress getListenAddress() {
+    return listenAddress;
+  }
+
+  @Override
   public Publisher<Envelope> getIncomingPackets() {
     return incomingPackets;
   }
@@ -111,12 +120,12 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
   @Override
   public void stop() {
     if (listen.compareAndSet(true, false)) {
-      LOG.info("Stopping discovery server");
+      LOG.info("Stopping discovery server listening on {}", listenAddress);
       if (channel != null) {
         try {
           channel.close().sync();
         } catch (InterruptedException ex) {
-          LOG.error("Failed to stop discovery server", ex);
+          LOG.error("Failed to stop discovery server listening on " + listenAddress, ex);
         }
         if (nioGroup != null) {
           try {

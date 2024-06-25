@@ -85,7 +85,17 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
+  public Optional<InetSocketAddress> getUdp6Address(NodeRecord nodeRecord) {
+    return Optional.empty();
+  }
+
+  @Override
   public Optional<InetSocketAddress> getTcpAddress(final NodeRecord nodeRecord) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getTcp6Address(NodeRecord nodeRecord) {
     return Optional.empty();
   }
 

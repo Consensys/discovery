@@ -7,10 +7,14 @@ package org.ethereum.beacon.discovery;
 import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDICATE;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.netty.channel.socket.InternetProtocolFamily;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,7 +67,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private static final Logger LOG = LogManager.getLogger();
 
   private final ReplayProcessor<NetworkParcel> outgoingMessages = ReplayProcessor.cacheLast();
-  private final NettyDiscoveryServer discoveryServer;
+  private final List<NettyDiscoveryServer> discoveryServers;
   private final Pipeline incomingPipeline = new PipelineImpl();
   private final Pipeline outgoingPipeline = new PipelineImpl();
   private final LocalNodeRecordStore localNodeRecordStore;
@@ -72,7 +76,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   private final NodeSessionManager nodeSessionManager;
 
   public DiscoveryManagerImpl(
-      final NettyDiscoveryServer discoveryServer,
+      final List<NettyDiscoveryServer> discoveryServers,
       final KBuckets nodeBucketStorage,
       final LocalNodeRecordStore localNodeRecordStore,
       final SecretKey homeNodeSecretKey,
@@ -86,7 +90,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     this.addressAccessPolicy = addressAccessPolicy;
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
-    this.discoveryServer = discoveryServer;
+    this.discoveryServers = discoveryServers;
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
@@ -140,16 +144,30 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
-    Flux.from(discoveryServer.getIncomingPackets())
-        .doOnNext(incomingPipeline::push)
-        .onErrorContinue(
-            RECOVERABLE_ERRORS_PREDICATE,
-            (err, msg) -> LOG.debug("Error while processing message: " + err))
-        .subscribe();
-    return discoveryServer
-        .start()
-        .thenAccept(
-            channel -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channel));
+    discoveryServers.forEach(
+        discoveryServer ->
+            Flux.from(discoveryServer.getIncomingPackets())
+                .doOnNext(incomingPipeline::push)
+                .onErrorContinue(
+                    RECOVERABLE_ERRORS_PREDICATE,
+                    (err, msg) -> LOG.debug("Error while processing message", err))
+                .subscribe());
+    final Map<InternetProtocolFamily, NioDatagramChannel> channels = new ConcurrentHashMap<>();
+    return CompletableFuture.allOf(
+            discoveryServers.stream()
+                .map(
+                    discoveryServer ->
+                        discoveryServer
+                            .start()
+                            .thenAccept(
+                                channel -> {
+                                  final InternetProtocolFamily ipFamily =
+                                      InternetProtocolFamily.of(
+                                          discoveryServer.getListenAddress().getAddress());
+                                  channels.put(ipFamily, channel);
+                                }))
+                .toArray(CompletableFuture<?>[]::new))
+        .thenRun(() -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channels));
   }
 
   @Override
@@ -158,7 +176,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     if (client != null) {
       client.stop();
     }
-    discoveryServer.stop();
+    discoveryServers.forEach(NettyDiscoveryServer::stop);
   }
 
   @Override
