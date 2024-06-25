@@ -144,16 +144,12 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
   public CompletableFuture<Void> start() {
     incomingPipeline.build();
     outgoingPipeline.build();
-    final Publisher<?>[] incomingPacketsSources =
-        discoveryServers.stream()
-            .map(NettyDiscoveryServer::getIncomingPackets)
-            .toArray(Publisher<?>[]::new);
-    Flux.concat(incomingPacketsSources)
+    discoveryServers.forEach(discoveryServer -> Flux.from(discoveryServer.getIncomingPackets())
         .doOnNext(incomingPipeline::push)
         .onErrorContinue(
             RECOVERABLE_ERRORS_PREDICATE,
             (err, msg) -> LOG.debug("Error while processing message", err))
-        .subscribe();
+        .subscribe());
     final Map<InternetProtocolFamily, NioDatagramChannel> channels = new ConcurrentHashMap<>();
     return CompletableFuture.allOf(
             discoveryServers.stream()
