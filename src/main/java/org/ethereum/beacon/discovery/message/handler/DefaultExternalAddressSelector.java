@@ -15,7 +15,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -90,7 +89,7 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     final List<InetSocketAddress> staleAddresses =
         reportedAddresses.entrySet().stream()
             .filter(entry -> entry.getValue().lastReportedBefore(cutOffTime))
-            .map(Entry::getKey)
+            .map(Map.Entry::getKey)
             .collect(Collectors.toList());
     staleAddresses.forEach(reportedAddresses::remove);
   }
@@ -99,8 +98,8 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     while (reportedAddresses.size() > MAX_EXTERNAL_ADDRESS_COUNT) {
       // Too many addresses being tracked, remove the one with the fewest votes
       reportedAddresses.entrySet().stream()
-          .min(Entry.comparingByValue(Comparator.comparing(ReportData::getLastReportedTime)))
-          .map(Entry::getKey)
+          .min(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getLastReportedTime)))
+          .map(Map.Entry::getKey)
           .ifPresent(reportedAddresses::remove);
     }
   }
@@ -121,8 +120,8 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
   private Optional<InetSocketAddress> selectExternalAddress() {
     return reportedAddresses.entrySet().stream()
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
-        .max(Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
-        .map(Entry::getKey);
+        .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
+        .map(Map.Entry::getKey);
   }
 
   @VisibleForTesting
