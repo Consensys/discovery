@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.netty.channel.socket.InternetProtocolFamily;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
@@ -14,8 +15,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
 public class DefaultExternalAddressSelector implements ExternalAddressSelector {
@@ -58,8 +61,24 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     selectExternalAddress()
         .ifPresent(
             selectedAddress -> {
-              final Optional<InetSocketAddress> currentAddress =
-                  localNodeRecordStore.getLocalNodeRecord().getUdpAddress();
+              final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
+              final Optional<InetSocketAddress> currentAddress;
+              switch (InternetProtocolFamily.of(selectedAddress.getAddress())) {
+                case IPv4:
+                  {
+                    currentAddress = homeNodeRecord.getUdpAddress();
+                    break;
+                  }
+                case IPv6:
+                  {
+                    currentAddress = homeNodeRecord.getUdp6Address();
+                    break;
+                  }
+                default:
+                  {
+                    currentAddress = Optional.empty();
+                  }
+              }
               if (currentAddress.map(current -> !current.equals(selectedAddress)).orElse(true)) {
                 localNodeRecordStore.onSocketAddressChanged(selectedAddress);
               }
@@ -71,7 +90,7 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     final List<InetSocketAddress> staleAddresses =
         reportedAddresses.entrySet().stream()
             .filter(entry -> entry.getValue().lastReportedBefore(cutOffTime))
-            .map(Map.Entry::getKey)
+            .map(Entry::getKey)
             .collect(Collectors.toList());
     staleAddresses.forEach(reportedAddresses::remove);
   }
@@ -80,8 +99,8 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     while (reportedAddresses.size() > MAX_EXTERNAL_ADDRESS_COUNT) {
       // Too many addresses being tracked, remove the one with the fewest votes
       reportedAddresses.entrySet().stream()
-          .min(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getLastReportedTime)))
-          .map(Map.Entry::getKey)
+          .min(Entry.comparingByValue(Comparator.comparing(ReportData::getLastReportedTime)))
+          .map(Entry::getKey)
           .ifPresent(reportedAddresses::remove);
     }
   }
@@ -102,8 +121,8 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
   private Optional<InetSocketAddress> selectExternalAddress() {
     return reportedAddresses.entrySet().stream()
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
-        .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
-        .map(Map.Entry::getKey);
+        .max(Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
+        .map(Entry::getKey);
   }
 
   @VisibleForTesting

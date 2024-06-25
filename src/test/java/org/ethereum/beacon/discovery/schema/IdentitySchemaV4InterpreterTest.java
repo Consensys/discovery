@@ -218,7 +218,7 @@ class IdentitySchemaV4InterpreterTest {
   }
 
   @Test
-  public void shouldSwitchFromIpV4ToIpV6() throws Exception {
+  public void shouldAddIpV6toAlreadyExistingIpV4() throws Exception {
     final NodeRecord initialRecord =
         createNodeRecord(
             new EnrField(EnrField.IP_V4, Bytes.wrap(new byte[4])),
@@ -229,28 +229,33 @@ class IdentitySchemaV4InterpreterTest {
         interpreter.createWithNewAddress(
             initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
-    assertThat(newRecord.getUdpAddress()).isEmpty();
+    assertThat(newRecord.getUdpAddress()).isEqualTo(initialRecord.getUdpAddress());
     assertThat(newRecord.getUdp6Address()).contains(newSocketAddress);
-    assertThat(newRecord.getTcpAddress()).isEmpty();
+    assertThat(newRecord.getTcpAddress()).isEqualTo(initialRecord.getTcpAddress());
     assertThat(newRecord.getTcp6Address())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
-    assertThat(newRecord.get(EnrField.IP_V4)).isNull();
+    assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(initialRecord.get(EnrField.IP_V4));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
 
   @Test
-  public void shouldSwitchFromIpV6ToIpV4() {
+  public void shouldAddIpV4ToAlreadyExistingIpV6() {
     final NodeRecord initialRecord =
         createNodeRecord(
-            new EnrField(EnrField.IP_V6, IPV6_LOCALHOST), new EnrField(EnrField.UDP_V6, 3030));
+            new EnrField(EnrField.IP_V6, IPV6_LOCALHOST),
+            new EnrField(EnrField.UDP_V6, 3030),
+            new EnrField(EnrField.TCP_V6, 5666));
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
             initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
 
+    assertThat(newRecord.getUdp6Address()).isEqualTo(initialRecord.getUdp6Address());
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.getTcp6Address()).isEqualTo(initialRecord.getTcp6Address());
     assertThat(newRecord.getTcpAddress())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
+    assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(initialRecord.get(EnrField.IP_V6));
     assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(Bytes.wrap(new byte[] {127, 0, 0, 1}));
   }
 

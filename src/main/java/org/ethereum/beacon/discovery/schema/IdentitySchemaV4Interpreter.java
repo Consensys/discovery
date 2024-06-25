@@ -11,6 +11,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import io.netty.channel.socket.InternetProtocolFamily;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -29,6 +30,7 @@ import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
 public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
+
   private static final Logger LOG = LogManager.getLogger();
 
   private final LoadingCache<Bytes, Bytes> nodeIdCache =
@@ -36,8 +38,11 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
           .maximumSize(4000)
           .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeId));
 
-  private static final ImmutableSet<String> ADDRESS_FIELD_NAMES =
-      ImmutableSet.of(EnrField.IP_V4, EnrField.IP_V6, EnrField.UDP, EnrField.UDP_V6);
+  private static final ImmutableSet<String> ADDRESS_IP_V4_FIELD_NAMES =
+      ImmutableSet.of(EnrField.IP_V4, EnrField.UDP);
+
+  private static final ImmutableSet<String> ADDRESS_IP_V6_FIELD_NAMES =
+      ImmutableSet.of(EnrField.IP_V6, EnrField.UDP_V6);
 
   @Override
   public boolean isValid(final NodeRecord nodeRecord) {
@@ -115,8 +120,25 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       final Optional<Integer> newTcpPort,
       final SecretKey secretKey) {
     final List<EnrField> fields =
-        getAllFieldsThatMatch(nodeRecord, field -> !ADDRESS_FIELD_NAMES.contains(field.getName()));
-
+        getAllFieldsThatMatch(
+            nodeRecord,
+            field -> {
+              // ignoring the address fields that we are going to change
+              switch (InternetProtocolFamily.of(newAddress.getAddress())) {
+                case IPv4:
+                  {
+                    return !ADDRESS_IP_V4_FIELD_NAMES.contains(field.getName());
+                  }
+                case IPv6:
+                  {
+                    return !ADDRESS_IP_V6_FIELD_NAMES.contains(field.getName());
+                  }
+                default:
+                  {
+                    return true;
+                  }
+              }
+            });
     NodeRecordBuilder.addFieldsForAddress(
         fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);

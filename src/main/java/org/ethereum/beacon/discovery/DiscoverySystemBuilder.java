@@ -200,12 +200,28 @@ public class DiscoverySystemBuilder {
         requireNonNullElseGet(
             newAddressHandler,
             () ->
-                (oldRecord, newAddress) ->
-                    Optional.of(
-                        oldRecord.withNewAddress(
-                            newAddress,
-                            oldRecord.getTcpAddress().map(InetSocketAddress::getPort),
-                            secretKey)));
+                (oldRecord, newAddress) -> {
+                  final Optional<InetSocketAddress> oldTcpAddress;
+                  switch (InternetProtocolFamily.of(newAddress.getAddress())) {
+                    case IPv4:
+                      {
+                        oldTcpAddress = oldRecord.getTcpAddress();
+                        break;
+                      }
+                    case IPv6:
+                      {
+                        oldTcpAddress = oldRecord.getTcp6Address();
+                        break;
+                      }
+                    default:
+                      {
+                        oldTcpAddress = Optional.empty();
+                      }
+                  }
+                  return Optional.of(
+                      oldRecord.withNewAddress(
+                          newAddress, oldTcpAddress.map(InetSocketAddress::getPort), secretKey));
+                });
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final List<InetSocketAddress> serverListenAddresses =
         listenAddresses.orElseGet(
