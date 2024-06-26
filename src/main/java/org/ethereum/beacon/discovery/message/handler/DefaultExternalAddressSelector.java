@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
 public class DefaultExternalAddressSelector implements ExternalAddressSelector {
@@ -58,8 +60,11 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     selectExternalAddress()
         .ifPresent(
             selectedAddress -> {
+              final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
               final Optional<InetSocketAddress> currentAddress =
-                  localNodeRecordStore.getLocalNodeRecord().getUdpAddress();
+                  selectedAddress.getAddress() instanceof Inet6Address
+                      ? homeNodeRecord.getUdp6Address()
+                      : homeNodeRecord.getUdpAddress();
               if (currentAddress.map(current -> !current.equals(selectedAddress)).orElse(true)) {
                 localNodeRecordStore.onSocketAddressChanged(selectedAddress);
               }
