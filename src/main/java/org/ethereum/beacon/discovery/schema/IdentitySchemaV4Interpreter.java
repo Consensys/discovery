@@ -11,13 +11,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.socket.InternetProtocolFamily;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -123,21 +124,12 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
         getAllFieldsThatMatch(
             nodeRecord,
             field -> {
-              // ignoring the address fields that we are going to change
-              switch (InternetProtocolFamily.of(newAddress.getAddress())) {
-                case IPv4:
-                  {
-                    return !ADDRESS_IP_V4_FIELD_NAMES.contains(field.getName());
-                  }
-                case IPv6:
-                  {
-                    return !ADDRESS_IP_V6_FIELD_NAMES.contains(field.getName());
-                  }
-                default:
-                  {
-                    return true;
-                  }
-              }
+              // don't match the address fields that we are going to change
+              final Set<String> addressFieldsToChange =
+                  newAddress.getAddress() instanceof Inet6Address
+                      ? ADDRESS_IP_V6_FIELD_NAMES
+                      : ADDRESS_IP_V4_FIELD_NAMES;
+              return !addressFieldsToChange.contains(field.getName());
             });
     NodeRecordBuilder.addFieldsForAddress(
         fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort);

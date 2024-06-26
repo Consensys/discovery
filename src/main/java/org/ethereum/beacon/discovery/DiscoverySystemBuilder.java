@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.channel.socket.InternetProtocolFamily;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.time.Clock;
 import java.time.Duration;
@@ -201,23 +202,10 @@ public class DiscoverySystemBuilder {
             newAddressHandler,
             () ->
                 (oldRecord, newAddress) -> {
-                  final Optional<InetSocketAddress> oldTcpAddress;
-                  switch (InternetProtocolFamily.of(newAddress.getAddress())) {
-                    case IPv4:
-                      {
-                        oldTcpAddress = oldRecord.getTcpAddress();
-                        break;
-                      }
-                    case IPv6:
-                      {
-                        oldTcpAddress = oldRecord.getTcp6Address();
-                        break;
-                      }
-                    default:
-                      {
-                        oldTcpAddress = Optional.empty();
-                      }
-                  }
+                  final Optional<InetSocketAddress> oldTcpAddress =
+                      newAddress.getAddress() instanceof Inet6Address
+                          ? oldRecord.getTcp6Address()
+                          : oldRecord.getTcpAddress();
                   return Optional.of(
                       oldRecord.withNewAddress(
                           newAddress, oldTcpAddress.map(InetSocketAddress::getPort), secretKey));

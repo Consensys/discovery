@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.netty.channel.socket.InternetProtocolFamily;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
@@ -61,23 +61,10 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
         .ifPresent(
             selectedAddress -> {
               final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-              final Optional<InetSocketAddress> currentAddress;
-              switch (InternetProtocolFamily.of(selectedAddress.getAddress())) {
-                case IPv4:
-                  {
-                    currentAddress = homeNodeRecord.getUdpAddress();
-                    break;
-                  }
-                case IPv6:
-                  {
-                    currentAddress = homeNodeRecord.getUdp6Address();
-                    break;
-                  }
-                default:
-                  {
-                    currentAddress = Optional.empty();
-                  }
-              }
+              final Optional<InetSocketAddress> currentAddress =
+                  selectedAddress.getAddress() instanceof Inet6Address
+                      ? homeNodeRecord.getUdp6Address()
+                      : homeNodeRecord.getUdpAddress();
               if (currentAddress.map(current -> !current.equals(selectedAddress)).orElse(true)) {
                 localNodeRecordStore.onSocketAddressChanged(selectedAddress);
               }
