@@ -414,6 +414,38 @@ public class DiscoveryIntegrationTest {
     assertFalse(bootnodePingResult.isCompletedExceptionally());
   }
 
+  @Test
+  public void shouldLookupNodes() throws Exception {
+    final DiscoverySystem bootnode = createDiscoveryClient();
+    final DiscoverySystem node1 = createDiscoveryClient(bootnode.getLocalNodeRecord());
+    final DiscoverySystem node2 = createDiscoveryClient(bootnode.getLocalNodeRecord());
+
+    waitFor(
+        () -> {
+          waitFor(node1.searchForNewPeers(), 10);
+          waitFor(node2.searchForNewPeers(), 10);
+          assertThat(bootnode.lookupNode(bootnode.getLocalNodeRecord().getNodeId()))
+              .contains(bootnode.getLocalNodeRecord());
+          assertThat(bootnode.lookupNode(node1.getLocalNodeRecord().getNodeId()))
+              .contains(node1.getLocalNodeRecord());
+          assertThat(bootnode.lookupNode(node2.getLocalNodeRecord().getNodeId()))
+              .contains(node2.getLocalNodeRecord());
+          assertThat(bootnode.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+
+          assertThat(node1.lookupNode(bootnode.getLocalNodeRecord().getNodeId()))
+              .contains(bootnode.getLocalNodeRecord());
+          assertThat(node1.lookupNode(node2.getLocalNodeRecord().getNodeId()))
+              .contains(node2.getLocalNodeRecord());
+          assertThat(node1.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+
+          assertThat(node2.lookupNode(node1.getLocalNodeRecord().getNodeId()))
+              .contains(node1.getLocalNodeRecord());
+          assertThat(node2.lookupNode(bootnode.getLocalNodeRecord().getNodeId()))
+              .contains(bootnode.getLocalNodeRecord());
+          assertThat(node2.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+        });
+  }
+
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }

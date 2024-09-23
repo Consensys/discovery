@@ -5,6 +5,7 @@ package org.ethereum.beacon.discovery;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
@@ -113,5 +114,21 @@ public class DiscoverySystem {
 
   public CompletableFuture<Collection<NodeRecord>> searchForNewPeers() {
     return taskManager.searchForNewPeers();
+  }
+
+  /**
+   * Lookup node in locally stored KBuckets by its nodeId. Allows lookup of local node record.
+   *
+   * @param nodeId NodeId, big endian UInt256 Node ID in bytes
+   * @return NodeRecord if any found
+   */
+  public Optional<NodeRecord> lookupNode(final Bytes nodeId) {
+    if (nodeId.equals(getLocalNodeRecord().getNodeId())) {
+      return Optional.of(getLocalNodeRecord());
+    }
+    return buckets
+        .streamClosestNodes(nodeId)
+        .findFirst()
+        .filter(node -> node.getNodeId().equals(nodeId));
   }
 }
