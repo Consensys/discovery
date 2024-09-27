@@ -52,4 +52,6 @@ public interface IdentitySchemaInterpreter {
 
   NodeRecord createWithUpdatedCustomField(
       NodeRecord nodeRecord, String newAddress, Bytes value, SecretKey secretKey);
+
+  Bytes calculateNodeId(Bytes publicKey);
 }

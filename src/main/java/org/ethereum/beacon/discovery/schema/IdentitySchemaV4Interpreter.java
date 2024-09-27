@@ -37,7 +37,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   private final LoadingCache<Bytes, Bytes> nodeIdCache =
       CacheBuilder.newBuilder()
           .maximumSize(4000)
-          .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeId));
+          .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeIdImpl));
 
   private static final ImmutableSet<String> ADDRESS_IP_V4_FIELD_NAMES =
       ImmutableSet.of(EnrField.IP_V4, EnrField.UDP);
@@ -74,7 +74,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     return nodeIdCache.getUnchecked(pkey);
   }
 
-  private static Bytes calculateNodeId(final Bytes publicKey) {
+  private static Bytes calculateNodeIdImpl(final Bytes publicKey) {
     ECPoint pudDestPoint = Functions.publicKeyToPoint(publicKey);
     Bytes xPart =
         Bytes.wrap(
@@ -150,6 +150,11 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, secretKey);
     return newRecord;
+  }
+
+  @Override
+  public Bytes calculateNodeId(final Bytes publicKey) {
+    return nodeIdCache.getUnchecked(publicKey);
   }
 
   private static Optional<InetSocketAddress> addressFromFields(

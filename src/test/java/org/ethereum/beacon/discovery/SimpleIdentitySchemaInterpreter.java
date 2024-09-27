@@ -128,4 +128,11 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
     sign(newRecord, secretKey);
     return newRecord;
   }
+
+  @Override
+  public Bytes calculateNodeId(final Bytes publicKey) {
+    final NodeRecord nodeRecord =
+        createNodeRecord(publicKey, new InetSocketAddress("127.0.0.1", 2));
+    return nodeRecord.getNodeId();
+  }
 }

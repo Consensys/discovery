@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -282,6 +283,18 @@ class IdentitySchemaV4InterpreterTest {
     Bytes invalidEnrBytes = RLP.encode(writer -> nodeRecord.writeRlp(writer, true, keys));
     assertThatThrownBy(() -> NodeRecordFactory.DEFAULT.fromBytes(invalidEnrBytes))
         .isInstanceOf(DecodeException.class);
+  }
+
+  @Test
+  public void calculateNodeIdShouldMatchExpected() {
+    final Bytes expectedNodeId =
+        NodeRecordFactory.DEFAULT
+            .createFromValues(
+                UInt64.ZERO,
+                new EnrField(EnrField.PKEY_SECP256K1, PUB_KEY),
+                new EnrField(EnrField.ID, IdentitySchema.V4))
+            .getNodeId();
+    assertEquals(expectedNodeId, interpreter.calculateNodeId(PUB_KEY));
   }
 
   private Optional<InetSocketAddress> getTcpAddressForNodeRecordWithFields(
