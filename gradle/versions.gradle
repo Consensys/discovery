@@ -25,7 +25,8 @@ dependencyManagement {
     dependency 'org.assertj:assertj-core:3.26.0'
     dependency 'org.mockito:mockito-core:5.12.0'
 
-    dependencySet(group: 'org.apache.tuweni', version: '2.3.1') {
+    dependency 'io.vertx:vertx-core:4.5.9'
+    dependencySet(group: 'io.tmio', version: '2.4.2') {
       entry 'tuweni-bytes'
       entry 'tuweni-crypto'
       entry 'tuweni-rlp'
