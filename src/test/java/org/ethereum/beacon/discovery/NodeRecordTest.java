@@ -4,7 +4,6 @@
 
 package org.ethereum.beacon.discovery;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.ethereum.beacon.discovery.TestUtil.SEED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,18 +15,22 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
+import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.Functions;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -101,7 +104,7 @@ public class NodeRecordTest {
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
-    assertThat(result).isEqualTo(record);
+    assertEquals(record, result);
   }
 
   @Test
@@ -230,14 +233,13 @@ public class NodeRecordTest {
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
-    assertThat(result).isEqualTo(record);
-    assertThat(result.asEnr())
-        .isEqualTo(
-            "enr:-JC4QBF-k6ezIoeB4BTMx9sLpFmcTZT4nBGUZLJ0JeYlT_rtfpVIa02sdfJwjUcXCb1h_HwGUtgPwwz2cbJiyAP4wT4Bg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN0Y3CCdl8");
+    assertEquals(record, result);
+    String expectedEnr = "enr:-JC4QBF-k6ezIoeB4BTMx9sLpFmcTZT4nBGUZLJ0JeYlT_rtfpVIa02sdfJwjUcXCb1h_HwGUtgPwwz2cbJiyAP4wT4Bg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN0Y3CCdl8";
+    assertEquals(expectedEnr, result.asEnr());
     final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(result.asEnr());
-    assertThat(nodeRecord.isValid()).isTrue();
-    assertThat(nodeRecord.get("eth")).isEqualTo(Collections.singletonList(forkIdList));
-    assertThat(nodeRecord).isEqualTo(result);
+    assertTrue(nodeRecord.isValid());
+    assertEquals(Collections.singletonList(forkIdList), nodeRecord.get("eth"));
+    assertEquals(result, nodeRecord);
   }
 
   @Test
@@ -245,8 +247,13 @@ public class NodeRecordTest {
     final String enr =
         "enr:-KK4QH0RsNJmIG0EX9LSnVxMvg-CAOr3ZFF92hunU63uE7wcYBjG1cFbUTvEa5G_4nDJkRhUq9q2ck9xY-VX1RtBsruBtIRldGgykIL0pysBABAg__________-CaWSCdjSCaXCEEnXQ0YlzZWNwMjU2azGhA1grTzOdMgBvjNrk-vqWtTZsYQIi0QawrhoZrsn5Hd56g3RjcIIjKIN1ZHCCIyg";
     final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(enr);
-    assertThat(nodeRecord.asEnr()).isEqualTo(enr);
-    assertThat(nodeRecord.get("eth2"))
-        .isEqualTo(Bytes.fromHexString("0x82f4a72b01001020ffffffffffffffff"));
+    assertEquals(enr, nodeRecord.asEnr());
+    assertEquals(Bytes.fromHexString("0x82f4a72b01001020ffffffffffffffff"), nodeRecord.get("eth2"));
+  }
+
+  @Test
+  public void testNodeRecordConstructorFailsToConstructOver300Bytes() {
+    Assertions.assertThrows(IllegalArgumentException.class, () ->
+    NodeRecord.fromValues(IdentitySchemaInterpreter.V4, UInt64.ONE, List.of(new EnrField("test", Bytes.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")))));
   }
 }
