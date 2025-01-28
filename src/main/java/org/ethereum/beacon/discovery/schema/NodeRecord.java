@@ -47,25 +47,30 @@ public class NodeRecord {
   private final IdentitySchemaInterpreter identitySchemaInterpreter;
 
   private NodeRecord(
-      IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq, Bytes signature) {
+      IdentitySchemaInterpreter identitySchemaInterpreter,
+      UInt64 seq,
+      Bytes signature,
+      Map<String, Object> fields) {
     this.seq = seq;
     this.signature = signature;
     this.identitySchemaInterpreter = identitySchemaInterpreter;
-  }
-
-  private NodeRecord(IdentitySchemaInterpreter identitySchemaInterpreter, UInt64 seq) {
-    this.seq = seq;
-    this.signature = MutableBytes.create(96);
-    this.identitySchemaInterpreter = identitySchemaInterpreter;
+    this.fields.putAll(fields);
+    // serialise to check size
+    Bytes serializedNodeRecord = serialize();
+    checkArgument(
+        serializedNodeRecord.size() <= MAX_ENCODED_SIZE,
+        "Node record exceeds maximum encoded size");
   }
 
   public static NodeRecord fromValues(
       IdentitySchemaInterpreter identitySchemaInterpreter,
       UInt64 seq,
       List<EnrField> fieldKeyPairs) {
-    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq);
-    fieldKeyPairs.forEach(objects -> nodeRecord.set(objects.getName(), objects.getValue()));
-    return nodeRecord;
+    return new NodeRecord(
+        identitySchemaInterpreter,
+        seq,
+        MutableBytes.create(96),
+        fieldKeyPairs.stream().collect(Collectors.toMap(EnrField::getName, EnrField::getValue)));
   }
 
   public static NodeRecord fromRawFields(
@@ -73,10 +78,13 @@ public class NodeRecord {
       UInt64 seq,
       Bytes signature,
       Map<String, Object> rawFields) {
-    NodeRecord nodeRecord = new NodeRecord(identitySchemaInterpreter, seq, signature);
-    rawFields.forEach(
-        (key, value) -> nodeRecord.set(key, ENR_FIELD_INTERPRETER.decode(key, value)));
-    return nodeRecord;
+    return new NodeRecord(
+        identitySchemaInterpreter,
+        seq,
+        signature,
+        rawFields.entrySet().stream()
+            .peek((e) -> e.setValue(ENR_FIELD_INTERPRETER.decode(e.getKey(), e.getValue())))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
   }
 
   public String asBase64() {
@@ -179,14 +187,6 @@ public class NodeRecord {
         });
   }
 
-  public Bytes asRlp() {
-    return asRlpImpl(true);
-  }
-
-  public Bytes asRlpNoSignature() {
-    return asRlpImpl(false);
-  }
-
   private Bytes asRlpImpl(boolean withSignature) {
     return RLP.encode(writer -> writeRlp(writer, withSignature));
   }
@@ -200,9 +200,7 @@ public class NodeRecord {
   }
 
   private Bytes serializeImpl(boolean withSignature) {
-    Bytes bytes = withSignature ? asRlp() : asRlpNoSignature();
-    checkArgument(bytes.size() <= MAX_ENCODED_SIZE, "Node record exceeds maximum encoded size");
-    return bytes;
+    return asRlpImpl(withSignature);
   }
 
   public Bytes getNodeId() {
