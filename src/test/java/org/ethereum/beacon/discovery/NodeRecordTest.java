@@ -15,11 +15,9 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
@@ -234,7 +232,8 @@ public class NodeRecordTest {
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
     assertEquals(record, result);
-    String expectedEnr = "enr:-JC4QBF-k6ezIoeB4BTMx9sLpFmcTZT4nBGUZLJ0JeYlT_rtfpVIa02sdfJwjUcXCb1h_HwGUtgPwwz2cbJiyAP4wT4Bg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN0Y3CCdl8";
+    String expectedEnr =
+        "enr:-JC4QBF-k6ezIoeB4BTMx9sLpFmcTZT4nBGUZLJ0JeYlT_rtfpVIa02sdfJwjUcXCb1h_HwGUtgPwwz2cbJiyAP4wT4Bg2V0aMfGhHpznvGAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN0Y3CCdl8";
     assertEquals(expectedEnr, result.asEnr());
     final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(result.asEnr());
     assertTrue(nodeRecord.isValid());
@@ -253,7 +252,16 @@ public class NodeRecordTest {
 
   @Test
   public void testNodeRecordConstructorFailsToConstructOver300Bytes() {
-    Assertions.assertThrows(IllegalArgumentException.class, () ->
-    NodeRecord.fromValues(IdentitySchemaInterpreter.V4, UInt64.ONE, List.of(new EnrField("test", Bytes.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")))));
+    Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            NodeRecord.fromValues(
+                IdentitySchemaInterpreter.V4,
+                UInt64.ONE,
+                List.of(
+                    new EnrField(
+                        "test",
+                        Bytes.fromHexString(
+                            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")))));
   }
 }

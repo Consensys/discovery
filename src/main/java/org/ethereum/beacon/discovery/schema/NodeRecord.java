@@ -83,7 +83,9 @@ public class NodeRecord {
         seq,
         signature,
         rawFields.entrySet().stream()
-            .map((e) -> Map.entry(e.getKey(), ENR_FIELD_INTERPRETER.decode(e.getKey(), e.getValue())))
+            .map(
+                (e) ->
+                    Map.entry(e.getKey(), ENR_FIELD_INTERPRETER.decode(e.getKey(), e.getValue())))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
   }
 
