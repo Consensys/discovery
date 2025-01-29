@@ -70,7 +70,9 @@ public class NodeRecord {
         identitySchemaInterpreter,
         seq,
         MutableBytes.create(96),
-        fieldKeyPairs.stream().distinct().collect(Collectors.toMap(EnrField::getName, EnrField::getValue)));
+        fieldKeyPairs.stream()
+            .distinct()
+            .collect(Collectors.toMap(EnrField::getName, EnrField::getValue)));
   }
 
   public static NodeRecord fromRawFields(
