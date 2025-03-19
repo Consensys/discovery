@@ -17,8 +17,8 @@ apply from: "${rootDir}/gradle/versions.gradle"
 apply from: "${rootDir}/gradle/check-licenses.gradle"
 defaultTasks 'build', 'checkLicenses'
 
-sourceCompatibility = '11'
-targetCompatibility = '11'
+sourceCompatibility = '21'
+targetCompatibility = '21'
 
 repositories {
   mavenCentral()
