@@ -11,15 +11,20 @@ executors:
 
 commands:
   install_java:
-    description: "Install Java 11"
+    description: "Install Java 21"
     steps:
       - run:
-          name: Install Java 11
+          name: Install Java 21
           command: |
-            sudo apt-get update
-            sudo apt-get install -y openjdk-11-jdk
-            sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
-            sudo update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+            sudo apt update
+            sudo apt install -y openjdk-21-jdk
+            if [ "$(uname -m)" = "aarch64" ]; then
+              ARCH="arm64"
+            else
+              ARCH="amd64"
+            fi
+            sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-$ARCH/bin/java
+            sudo update-alternatives --set javac /usr/lib/jvm/java-21-openjdk-$ARCH/bin/javac
   prepare:
     description: "Prepare"
     steps:
