@@ -7,9 +7,8 @@ import static org.ethereum.beacon.discovery.packet.StaticHeader.PROTOCOL_ID;
 import static org.ethereum.beacon.discovery.packet.StaticHeader.VERSION;
 
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket.OrdinaryAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
@@ -39,7 +38,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
     return new HeaderImpl<>(staticHeader, authData);
   }
 
-  static Header<OrdinaryAuthData> createOrdinaryHeader(Bytes32 srcNodeId, Bytes12 gcmNonce) {
+  static Header<OrdinaryAuthData> createOrdinaryHeader(Bytes srcNodeId, Bytes12 gcmNonce) {
     OrdinaryAuthData authData = new OrdinaryAuthDataImpl(srcNodeId);
     return create(Flag.MESSAGE, gcmNonce, authData);
   }
@@ -51,7 +50,7 @@ public interface Header<TAuthData extends AuthData> extends BytesSerializable {
   }
 
   static Header<HandshakeAuthData> createHandshakeHeader(
-      Bytes32 srcNodeId,
+      Bytes srcNodeId,
       Bytes12 nonce,
       Bytes idSignature,
       Bytes ephemeralPubKey,

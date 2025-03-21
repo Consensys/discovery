@@ -6,8 +6,8 @@ package org.ethereum.beacon.discovery.type;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Random;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.DelegatingBytes;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.DelegatingBytes;
 
 public class Bytes12 extends DelegatingBytes {
 
@@ -32,7 +32,7 @@ public class Bytes12 extends DelegatingBytes {
   }
 
   private Bytes12(Bytes delegate) {
-    super(delegate);
+    super(delegate, 12);
     checkArgument(delegate.size() == 12, "Expected Bytes of size 12");
   }
 }

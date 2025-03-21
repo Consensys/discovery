@@ -4,9 +4,9 @@
 
 package org.ethereum.beacon.discovery.community;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -74,12 +74,12 @@ public class CryptoTest {
    */
   @Test
   public void testIdNonceSigning() {
-    Bytes32 idNonce =
+    Bytes idNonce =
         Bytes32.fromHexString("0xa77e3aa0c144ae7c0a3af73692b7d6e5b7a2fdc0eda16e8d5e6cb0d08e88dd04");
     Bytes ephemeralPubKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
-    Bytes32 nodeIdB =
+    Bytes nodeIdB =
         Bytes32.fromHexString("0x885bba8dfeddd49855459df852ad5b63d13a3fae593f3f9fa7e317fd43651409");
 
     Bytes expectedIdNonceSig =

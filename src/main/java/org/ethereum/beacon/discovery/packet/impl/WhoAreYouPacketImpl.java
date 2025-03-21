@@ -3,8 +3,8 @@
  */
 package org.ethereum.beacon.discovery.packet.impl;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
@@ -24,7 +24,7 @@ public class WhoAreYouPacketImpl extends PacketImpl<WhoAreYouAuthData> implement
     private static final int AUTH_DATA_SIZE = ENR_SEQ_OFF + ENR_SEQ_SIZE;
 
     public WhoAreYouAuthDataImpl(Bytes16 idNonce, UInt64 enrSeq) {
-      this(Bytes.concatenate(idNonce, enrSeq.toBytes()));
+      this(Bytes.wrap(idNonce, enrSeq.toBytes()));
     }
 
     public WhoAreYouAuthDataImpl(Bytes bytes) {

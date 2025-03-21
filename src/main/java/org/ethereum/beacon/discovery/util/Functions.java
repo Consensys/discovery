@@ -15,15 +15,15 @@ import java.security.SecureRandom;
 import java.util.Random;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.Hash;
-import org.apache.tuweni.crypto.SECP256K1;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
-import org.apache.tuweni.crypto.SECP256K1.Parameters;
-import org.apache.tuweni.crypto.SECP256K1.PublicKey;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.apache.tuweni.crypto.SECP256K1.Signature;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.Hash;
+import org.apache.tuweni.v2.crypto.SECP256K1;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.crypto.SECP256K1.Parameters;
+import org.apache.tuweni.v2.crypto.SECP256K1.PublicKey;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.crypto.SECP256K1.Signature;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
@@ -49,12 +49,12 @@ public class Functions {
   }
 
   /** SHA2 (SHA256) */
-  public static Bytes32 hash(final Bytes value) {
+  public static Bytes hash(final Bytes value) {
     return Hashes.sha256(value);
   }
 
   /** SHA3 (Keccak256) */
-  public static Bytes32 hashKeccak(final Bytes value) {
+  public static Bytes hashKeccak(final Bytes value) {
     return Hash.keccak256(value);
   }
 
@@ -65,7 +65,7 @@ public class Functions {
    * @param messageHash message, hashed
    * @return ECDSA signature with properties merged together: r || s
    */
-  public static Bytes sign(final SecretKey secretKey, final Bytes32 messageHash) {
+  public static Bytes sign(final SecretKey secretKey, final Bytes messageHash) {
     final KeyPair keyPair = KeyPair.fromSecretKey(secretKey);
     final Signature signature = SECP256K1.signHashed(messageHash, keyPair);
     // cutting v
@@ -81,7 +81,7 @@ public class Functions {
    * @return whether `signature` reflects message `x` signed with `pubkey`
    */
   public static boolean verifyECDSASignature(
-      final Bytes signature, final Bytes32 hashedMessage, final Bytes pubKey) {
+      final Bytes signature, final Bytes hashedMessage, final Bytes pubKey) {
     if (signature.size() != SIGNATURE_SIZE) {
       LOG.trace("Invalid signature size, should be {} bytes", SIGNATURE_SIZE);
       return false;
@@ -114,18 +114,18 @@ public class Functions {
   public static SECP256K1.KeyPair randomKeyPair(final Random rnd) {
     final byte[] privKeyBytes = new byte[PRIVKEY_SIZE];
     rnd.nextBytes(privKeyBytes);
-    return createKeyPairFromSecretBytes(Bytes32.wrap(privKeyBytes));
+    return createKeyPairFromSecretBytes(Bytes32.fromArray(privKeyBytes));
   }
 
-  /** Maps public key to point on {@link org.apache.tuweni.crypto.SECP256K1.Parameters#CURVE} */
+  /** Maps public key to point on {@link org.apache.tuweni.v2.crypto.SECP256K1.Parameters#CURVE} */
   public static ECPoint publicKeyToPoint(final Bytes pkey) {
     final byte[] destPubPointBytes;
     if (pkey.size() == 64) { // uncompressed
       destPubPointBytes = new byte[pkey.size() + 1];
       destPubPointBytes[0] = 0x04; // default prefix
-      System.arraycopy(pkey.toArray(), 0, destPubPointBytes, 1, pkey.size());
+      System.arraycopy(pkey.toArrayUnsafe(), 0, destPubPointBytes, 1, pkey.size());
     } else {
-      destPubPointBytes = pkey.toArray();
+      destPubPointBytes = pkey.toArrayUnsafe();
     }
     return Parameters.CURVE.getCurve().decodePoint(destPubPointBytes);
   }
@@ -149,15 +149,16 @@ public class Functions {
   /** Derives key agreement ECDH by multiplying private key by public */
   public static Bytes deriveECDHKeyAgreement(final SecretKey srcSecretKey, final Bytes destPubKey) {
     final ECPoint pudDestPoint = publicKeyToPoint(destPubKey);
-    final ECPoint mult = pudDestPoint.multiply(new BigInteger(1, srcSecretKey.bytes().toArray()));
+    final ECPoint mult =
+        pudDestPoint.multiply(new BigInteger(1, srcSecretKey.bytes().toArrayUnsafe()));
     return Bytes.wrap(mult.getEncoded(true));
   }
 
-  public static KeyPair createKeyPairFromSecretBytes(final Bytes32 privateKey) {
+  public static KeyPair createKeyPairFromSecretBytes(final Bytes privateKey) {
     return KeyPair.fromSecretKey(createSecretKey(privateKey));
   }
 
-  public static SecretKey createSecretKey(final Bytes32 privateKey) {
+  public static SecretKey createSecretKey(final Bytes privateKey) {
     return SecretKey.fromBytes(privateKey);
   }
 
@@ -196,10 +197,12 @@ public class Functions {
       final Bytes idNonce) {
     try {
       Bytes info =
-          Bytes.concatenate(
-              Bytes.wrap("discovery v5 key agreement".getBytes()), srcNodeId, destNodeId);
+          Bytes.wrap(Bytes.wrap("discovery v5 key agreement".getBytes()), srcNodeId, destNodeId);
       HKDFParameters hkdfParameters =
-          new HKDFParameters(keyAgreement.toArray(), idNonce.toArray(), info.toArray());
+          new HKDFParameters(
+              keyAgreement.mutableCopy().toArrayUnsafe(),
+              idNonce.mutableCopy().toArrayUnsafe(),
+              info.mutableCopy().toArrayUnsafe());
       Digest digest = new SHA256Digest();
       HKDFBytesGenerator hkdfBytesGenerator = new HKDFBytesGenerator(digest);
       hkdfBytesGenerator.init(hkdfParameters);
@@ -237,12 +240,12 @@ public class Functions {
    * in XOR)
    */
   public static int logDistance(final Bytes nodeId1, final Bytes nodeId2) {
-    Bytes distance = nodeId1.xor(nodeId2);
+    Bytes distance = nodeId1.mutableCopy().xor(nodeId2);
     return 256 - distance.numberOfLeadingZeros();
   }
 
   public static BigInteger distance(final Bytes nodeId1, final Bytes nodeId2) {
-    return nodeId1.xor(nodeId2).toUnsignedBigInteger(ByteOrder.LITTLE_ENDIAN);
+    return nodeId1.mutableCopy().xor(nodeId2).toUnsignedBigInteger(ByteOrder.LITTLE_ENDIAN);
   }
 
   /**

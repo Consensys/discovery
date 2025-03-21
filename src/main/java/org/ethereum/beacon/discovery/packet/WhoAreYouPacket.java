@@ -3,7 +3,7 @@
  */
 package org.ethereum.beacon.discovery.packet;
 
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.packet.impl.WhoAreYouPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes16;

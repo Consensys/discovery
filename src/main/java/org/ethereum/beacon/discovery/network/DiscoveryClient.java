@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.network;
 
 import java.net.InetSocketAddress;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 
 /** Discovery client sends outgoing messages */
 public interface DiscoveryClient {

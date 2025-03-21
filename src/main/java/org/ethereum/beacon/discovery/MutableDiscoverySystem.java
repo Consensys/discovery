@@ -4,7 +4,7 @@
 package org.ethereum.beacon.discovery;
 
 import java.util.List;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public interface MutableDiscoverySystem extends DiscoverySystem {

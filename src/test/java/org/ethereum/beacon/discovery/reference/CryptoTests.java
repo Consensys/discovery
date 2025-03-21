@@ -5,9 +5,9 @@ package org.ethereum.beacon.discovery.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -60,7 +60,7 @@ public class CryptoTests {
             "0x000000000000000000000000000000006469736376350001010102030405060708090a0b0c00180102030405060708090a0b0c0d0e0f100000000000000000");
     Bytes ephemeralPubkeyBytes =
         Bytes.fromHexString("0x039961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231");
-    Bytes32 nodeIdBBytes =
+    Bytes nodeIdBBytes =
         Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
 
     Bytes expectedSignatureBytes =

@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.message.handler;
 
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 
