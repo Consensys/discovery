@@ -17,12 +17,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.MutableBytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.rlp.RLP;
+import org.apache.tuweni.v2.rlp.RLPWriter;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 
 /**
  * Ethereum Node Record V4
@@ -92,7 +92,7 @@ public class NodeRecord {
   }
 
   public String asBase64() {
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(serialize().toArray());
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(serialize().toArrayUnsafe());
   }
 
   public String asEnr() {

@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
@@ -82,7 +82,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     Bytes yPart =
         Bytes.wrap(
             Utils.extractBytesFromUnsignedBigInt(pudDestPoint.getYCoord().toBigInteger(), 32));
-    return Functions.hashKeccak(Bytes.concatenate(xPart, yPart));
+    return Functions.hashKeccak(Bytes.wrap(xPart, yPart));
   }
 
   @Override

@@ -8,8 +8,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.ethereum.beacon.discovery.TestUtil.assertRejectTrailingBytes;
 import static org.ethereum.beacon.discovery.TestUtil.assertRoundTrip;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.junit.jupiter.api.Test;

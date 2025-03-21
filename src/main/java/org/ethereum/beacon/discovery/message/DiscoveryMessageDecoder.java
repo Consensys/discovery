@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.message;
 
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.DiscoveryProtocol;
 
 /** Discovery message decoder */

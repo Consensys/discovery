@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
@@ -28,20 +28,20 @@ import org.junit.jupiter.api.Test;
 
 public class HandshakePacketTest {
 
-  private final Bytes32 srcNodeId =
+  private final Bytes srcNodeId =
       Bytes32.fromHexString("0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb");
   private final SecretKey srcStaticPrivateKey =
       Functions.createSecretKey(
           Bytes32.fromHexString(
               "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
-  private final Bytes32 destNodeId =
+  private final Bytes destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
   private final Bytes16 headerMaskingKey = Bytes16.wrap(destNodeId, 0);
   private final Bytes12 aesGcmNonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");
   private final Bytes secretKey = Bytes.fromHexString("0x00000000000000000000000000000000");
   private final Bytes16 aesCtrIV = Bytes16.fromHexString("0x00000000000000000000000000000000");
-  private final Bytes32 idNonce =
+  private final Bytes idNonce =
       Bytes32.fromHexString("0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
   private final Bytes ephemeralPubKey =
       Bytes.fromHexString(
@@ -96,7 +96,7 @@ public class HandshakePacketTest {
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
-            Bytes.concatenate(
+            Bytes.wrap(
                 Bytes.of(77), // invalid version
                 aesGcmNonce,
                 Bytes.of(idSignature.size()),
@@ -123,7 +123,7 @@ public class HandshakePacketTest {
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
-            Bytes.concatenate(
+            Bytes.wrap(
                 Bytes.of(HandshakeMessagePacket.HANDSHAKE_VERSION),
                 aesGcmNonce,
                 Bytes.of(255), // invalid sig size
@@ -150,7 +150,7 @@ public class HandshakePacketTest {
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
-            Bytes.concatenate(
+            Bytes.wrap(
                 Bytes.of(HandshakeMessagePacket.HANDSHAKE_VERSION),
                 aesGcmNonce,
                 Bytes.of(idSignature.size()),

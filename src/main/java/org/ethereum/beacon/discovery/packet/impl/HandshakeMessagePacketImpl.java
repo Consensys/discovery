@@ -6,8 +6,8 @@ package org.ethereum.beacon.discovery.packet.impl;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -23,14 +23,14 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
   public static class HandshakeAuthDataImpl extends AbstractBytes implements HandshakeAuthData {
 
     public static HandshakeAuthDataImpl create(
-        Bytes32 srcNodeId,
+        Bytes srcNodeId,
         Bytes idSignature,
         Bytes ephemeralPubKey,
         Optional<NodeRecord> nodeRecord) {
       checkArgument(idSignature.size() < 256, "ID signature too large");
       checkArgument(ephemeralPubKey.size() < 256, "Ephemeral pubKey too large");
       return new HandshakeAuthDataImpl(
-          Bytes.concatenate(
+          Bytes.wrap(
               srcNodeId,
               Bytes.of(idSignature.size()),
               Bytes.of(ephemeralPubKey.size()),
@@ -52,8 +52,8 @@ public class HandshakeMessagePacketImpl extends MessagePacketImpl<HandshakeAuthD
     private static final int ID_SIG_OFF = EPH_KEY_SIZE_OFF + EPH_KEY_SIZE_SIZE;
 
     @Override
-    public Bytes32 getSourceNodeId() {
-      return Bytes32.wrap(getBytes(), SRC_NODE_ID_OFF);
+    public Bytes getSourceNodeId() {
+      return Bytes32.fromBytes(getBytes(), SRC_NODE_ID_OFF);
     }
 
     private int getSignatureSize() {

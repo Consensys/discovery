@@ -37,9 +37,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
-import org.apache.tuweni.rlp.RLPReader;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.rlp.RLPReader;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.TalkHandler;
@@ -430,19 +430,23 @@ public class DiscoveryIntegrationTest {
               .contains(node1.getLocalNodeRecord());
           assertThat(bootnode.lookupNode(node2.getLocalNodeRecord().getNodeId()))
               .contains(node2.getLocalNodeRecord());
-          assertThat(bootnode.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+          assertThat(
+                  bootnode.lookupNode(node1.getLocalNodeRecord().getNodeId().mutableCopy().not()))
+              .isEmpty();
 
           assertThat(node1.lookupNode(bootnode.getLocalNodeRecord().getNodeId()))
               .contains(bootnode.getLocalNodeRecord());
           assertThat(node1.lookupNode(node2.getLocalNodeRecord().getNodeId()))
               .contains(node2.getLocalNodeRecord());
-          assertThat(node1.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+          assertThat(node1.lookupNode(node1.getLocalNodeRecord().getNodeId().mutableCopy().not()))
+              .isEmpty();
 
           assertThat(node2.lookupNode(node1.getLocalNodeRecord().getNodeId()))
               .contains(node1.getLocalNodeRecord());
           assertThat(node2.lookupNode(bootnode.getLocalNodeRecord().getNodeId()))
               .contains(bootnode.getLocalNodeRecord());
-          assertThat(node2.lookupNode(node1.getLocalNodeRecord().getNodeId().not())).isEmpty();
+          assertThat(node2.lookupNode(node1.getLocalNodeRecord().getNodeId().mutableCopy().not()))
+              .isEmpty();
         });
   }
 

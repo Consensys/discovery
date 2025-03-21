@@ -9,7 +9,7 @@ import static org.ethereum.beacon.discovery.TestUtil.assertRejectTrailingBytes;
 import static org.ethereum.beacon.discovery.TestUtil.assertRoundTrip;
 
 import java.util.List;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.util.RlpDecodeException;

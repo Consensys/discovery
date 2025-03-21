@@ -6,9 +6,9 @@ package org.ethereum.beacon.discovery.packet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
 import org.ethereum.beacon.discovery.packet.impl.RawPacketImpl;
 import org.ethereum.beacon.discovery.type.Bytes12;
@@ -18,7 +18,7 @@ import org.ethereum.beacon.discovery.util.DecodeException;
 import org.junit.jupiter.api.Test;
 
 public class WhoAreYouPacketTest {
-  private final Bytes32 destNodeId =
+  private final Bytes destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
   private final Bytes16 headerMaskingKey = Bytes16.wrap(destNodeId, 0);
   private final Bytes12 aesGcmNonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");
