@@ -131,4 +131,31 @@ public class DiscoverySystem {
         .findFirst()
         .filter(node -> node.getNodeId().equals(nodeId));
   }
+
+  /**
+   * Gets all the KBuckets in the routing table
+   *
+   * @return all the KBuckets in the routing table
+   */
+  public List<List<NodeRecord>> getNodeRecordBuckets() {
+    return buckets.getNodeRecordBuckets();
+  }
+
+  /**
+   * Adds a NodeRecord to the routing table
+   *
+   * @param nodeRecord The NodeRecord to add to the routing table
+   */
+  public void addNodeRecord(NodeRecord nodeRecord) {
+    buckets.offer(nodeRecord);
+  }
+
+  /**
+   * Deletes the NodeRecord identified by nodeId from the routing table
+   *
+   * @param nodeId The node ID to be deleted from the routing table
+   */
+  public void deleteNode(Bytes nodeId) {
+    buckets.deleteNode(nodeId);
+  }
 }

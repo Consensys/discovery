@@ -138,6 +138,27 @@ class KBucketsTest {
     assertThat(buckets.streamClosestNodes(localNode.getNodeId())).isEmpty();
   }
 
+  @Test
+  void testGetNodeRecordBuckets() {
+    final NodeRecord node = createNodeAtDistance(1);
+    buckets.offer(node);
+
+    List<List<NodeRecord>> internalBuckets = buckets.getNodeRecordBuckets();
+    assertThat(internalBuckets.size()).isEqualTo(1);
+    assertThat(internalBuckets.getFirst().getFirst()).isEqualTo(node);
+  }
+
+  @Test
+  void testDeleteNode() {
+    final NodeRecord node = createNodeAtDistance(1);
+    buckets.offer(node);
+    buckets.deleteNode(node.getNodeId());
+
+    List<List<NodeRecord>> internalBuckets = buckets.getNodeRecordBuckets();
+    assertThat(internalBuckets.size()).isEqualTo(1);
+    assertThat(internalBuckets.getFirst().size()).isEqualTo(0);
+  }
+
   private NodeRecord createNodeAtDistance(final int distance) {
     return TestUtil.createNodeAtDistance(localNode.getNodeId(), distance);
   }

@@ -85,7 +85,7 @@ class KBucket {
       return;
     }
     if (isFull()) {
-      getLastNode().checkLiveness(clock.millis());
+      nodes.getLast().checkLiveness(clock.millis());
       if (pendingNode.isEmpty()) {
         livenessChecker.checkLiveness(node);
       }
@@ -102,7 +102,7 @@ class KBucket {
             existingEntry -> {
               // Move to the start of the bucket
               nodes.remove(existingEntry);
-              nodes.add(0, existingEntry.withLastConfirmedTime(clock.millis()));
+              nodes.addFirst(existingEntry.withLastConfirmedTime(clock.millis()));
               performMaintenance();
             },
             () -> {
@@ -117,7 +117,7 @@ class KBucket {
                   pendingNode = Optional.of(new BucketEntry(livenessChecker, node, clock.millis()));
                 }
               } else {
-                nodes.add(0, new BucketEntry(livenessChecker, node, clock.millis()));
+                nodes.addFirst(new BucketEntry(livenessChecker, node, clock.millis()));
               }
             });
   }
@@ -147,12 +147,12 @@ class KBucket {
     if (nodes.isEmpty()) {
       return;
     }
-    final BucketEntry lastNode = getLastNode();
+    final BucketEntry lastNode = nodes.getLast();
     if (lastNode.hasFailedLivenessCheck(currentTime)) {
       nodes.remove(lastNode);
       pendingNode.ifPresent(
           pendingEntry -> {
-            nodes.add(0, pendingEntry);
+            nodes.addFirst(pendingEntry);
             pendingNode = Optional.empty();
           });
     } else {
@@ -176,10 +176,6 @@ class KBucket {
         });
   }
 
-  private BucketEntry getLastNode() {
-    return nodes.get(nodes.size() - 1);
-  }
-
   private boolean isFull() {
     return nodes.size() >= K;
   }
@@ -198,5 +194,15 @@ class KBucket {
 
   public boolean isEmpty() {
     return nodes.isEmpty();
+  }
+
+  public void deleteNode(Bytes nodeId) {
+    nodes.removeIf((bucketEntry) -> bucketEntry.getNodeId().equals(nodeId));
+    performPendingNodeMaintenance();
+    pendingNode.ifPresent(
+        pendingEntry -> {
+          nodes.addFirst(pendingEntry);
+          pendingNode = Optional.empty();
+        });
   }
 }
