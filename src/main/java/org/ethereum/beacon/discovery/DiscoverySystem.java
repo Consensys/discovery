@@ -133,9 +133,9 @@ public class DiscoverySystem {
   }
 
   /**
-   * Gets all the KBuckets in the routing table
+   * Gets all the NodeRecords in the routing table, grouped by their bucket
    *
-   * @return all the KBuckets in the routing table
+   * @return all the NodeRecords in the routing table, grouped by their bucket
    */
   public List<List<NodeRecord>> getNodeRecordBuckets() {
     return buckets.getNodeRecordBuckets();
