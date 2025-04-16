@@ -378,7 +378,7 @@ public class DiscoveryIntegrationTest {
     final DiscoverySystem otherClient = createDiscoveryClient(client.getLocalNodeRecord());
 
     final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
-    waitFor(pingResult);
+    waitFor(pingResult, 60);
     assertTrue(pingResult.isDone());
     assertFalse(pingResult.isCompletedExceptionally());
 
@@ -392,24 +392,24 @@ public class DiscoveryIntegrationTest {
 
     final CompletableFuture<Void> otherClientPingResult =
         otherClient.ping(client.getLocalNodeRecord());
-    waitFor(otherClientPingResult);
+    waitFor(otherClientPingResult, 60);
     assertTrue(otherClientPingResult.isDone());
     assertFalse(otherClientPingResult.isCompletedExceptionally());
 
     final CompletableFuture<Collection<NodeRecord>> findNodesResult1 =
         otherClient.findNodes(client.getLocalNodeRecord(), singletonList(0));
-    waitFor(findNodesResult1);
+    waitFor(findNodesResult1, 60);
     assertTrue(findNodesResult1.isDone());
     assertFalse(findNodesResult1.isCompletedExceptionally());
 
     final CompletableFuture<Collection<NodeRecord>> findNodesResult2 =
         client.findNodes(bootnode.getLocalNodeRecord(), singletonList(0));
-    waitFor(findNodesResult2);
+    waitFor(findNodesResult2, 60);
     assertTrue(findNodesResult2.isDone());
     assertFalse(findNodesResult2.isCompletedExceptionally());
 
     final CompletableFuture<Void> bootnodePingResult = bootnode.ping(client.getLocalNodeRecord());
-    waitFor(bootnodePingResult);
+    waitFor(bootnodePingResult, 60);
     assertTrue(bootnodePingResult.isDone());
     assertFalse(bootnodePingResult.isCompletedExceptionally());
   }
