@@ -285,12 +285,13 @@ public class DiscoverySystemBuilder {
             recursiveLookupInterval,
             retryTimeout,
             lifeCheckInterval);
-    return desiredClass.cast(new DiscoverySystemImpl(
-        discoveryManager,
-        discoveryTaskManager,
-        expirationSchedulerFactory,
-        nodeBucketStorage,
-        bootnodes));
+    return desiredClass.cast(
+        new DiscoverySystemImpl(
+            discoveryManager,
+            discoveryTaskManager,
+            expirationSchedulerFactory,
+            nodeBucketStorage,
+            bootnodes));
   }
 
   @VisibleForTesting

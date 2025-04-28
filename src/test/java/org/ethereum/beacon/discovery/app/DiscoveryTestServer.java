@@ -16,7 +16,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.DiscoverySystem;
-import org.ethereum.beacon.discovery.DiscoverySystemImpl;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
