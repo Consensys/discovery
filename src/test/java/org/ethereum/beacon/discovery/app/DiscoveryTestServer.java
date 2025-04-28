@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.DiscoverySystem;
+import org.ethereum.beacon.discovery.DiscoverySystemImpl;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
@@ -101,7 +102,7 @@ public class DiscoveryTestServer {
             .localNodeRecord(nodeRecord)
             .secretKey(keyPair.secretKey())
             .bootnodes(bootnodes);
-    final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
+    final DiscoverySystem discoverySystem = discoverySystemBuilder.build(DiscoverySystem.class);
     discoverySystem.start().get(5, TimeUnit.SECONDS);
 
     NodeRecord myNode = discoverySystem.getLocalNodeRecord();

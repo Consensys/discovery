@@ -41,6 +41,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.rlp.RLPReader;
 import org.ethereum.beacon.discovery.DiscoverySystem;
+import org.ethereum.beacon.discovery.DiscoverySystemImpl;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
@@ -180,7 +181,7 @@ public class DiscoveryIntegrationTest {
   }
 
   private void assertKnownNodes(
-      final DiscoverySystem source, final DiscoverySystem... expectedNodes) {
+          final DiscoverySystem source, final DiscoverySystem... expectedNodes) {
     final Set<NodeRecord> actual =
         source
             .streamLiveNodes()
@@ -296,7 +297,7 @@ public class DiscoveryIntegrationTest {
   }
 
   private Optional<NodeRecord> findNodeRecordByNodeId(
-      final DiscoverySystem searchNode, final Bytes nodeId) {
+          final DiscoverySystem searchNode, final Bytes nodeId) {
     return searchNode.streamLiveNodes().filter(node -> node.getNodeId().equals(nodeId)).findAny();
   }
 
@@ -533,7 +534,7 @@ public class DiscoveryIntegrationTest {
               .lifeCheckInterval(LIVE_CHECK_INTERVAL)
               .bootnodes(bootnodes);
       discModifier.accept(discoverySystemBuilder);
-      final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
+      final DiscoverySystem discoverySystem = discoverySystemBuilder.build(DiscoverySystem.class);
       try {
         waitFor(discoverySystem.start());
         managers.add(discoverySystem);
