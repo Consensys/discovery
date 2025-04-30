@@ -101,7 +101,7 @@ public class DiscoveryTestServer {
             .localNodeRecord(nodeRecord)
             .secretKey(keyPair.secretKey())
             .bootnodes(bootnodes);
-    final DiscoverySystem discoverySystem = discoverySystemBuilder.build(DiscoverySystem.class);
+    final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
     discoverySystem.start().get(5, TimeUnit.SECONDS);
 
     NodeRecord myNode = discoverySystem.getLocalNodeRecord();

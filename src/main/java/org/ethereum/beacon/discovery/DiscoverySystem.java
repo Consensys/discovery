@@ -62,11 +62,4 @@ public interface DiscoverySystem {
    * @return NodeRecord if any found
    */
   Optional<NodeRecord> lookupNode(final Bytes nodeId);
-
-  /**
-   * Gets all the NodeRecords in the routing table, grouped by their bucket
-   *
-   * @return all the NodeRecords in the routing table, grouped by their bucket
-   */
-  List<List<NodeRecord>> getNodeRecordBuckets();
 }

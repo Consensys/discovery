@@ -533,7 +533,7 @@ public class DiscoveryIntegrationTest {
               .lifeCheckInterval(LIVE_CHECK_INTERVAL)
               .bootnodes(bootnodes);
       discModifier.accept(discoverySystemBuilder);
-      final DiscoverySystem discoverySystem = discoverySystemBuilder.build(DiscoverySystem.class);
+      final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
       try {
         waitFor(discoverySystem.start());
         managers.add(discoverySystem);

@@ -263,7 +263,15 @@ public class DiscoverySystemBuilder {
   LocalNodeRecordStore localNodeRecordStore;
   ExpirationSchedulerFactory expirationSchedulerFactory;
 
-  public <T extends DiscoverySystem> T build(Class<T> desiredClass) {
+  public DiscoverySystem build() {
+    return buildImpl();
+  }
+
+  public MutableDiscoverySystem buildMutable() {
+    return buildImpl();
+  }
+
+  private DiscoverySystemImpl buildImpl() {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(secretKey, "Missing secret key");
     createDefaults();
@@ -285,13 +293,13 @@ public class DiscoverySystemBuilder {
             recursiveLookupInterval,
             retryTimeout,
             lifeCheckInterval);
-    return desiredClass.cast(
+    return
         new DiscoverySystemImpl(
             discoveryManager,
             discoveryTaskManager,
             expirationSchedulerFactory,
             nodeBucketStorage,
-            bootnodes));
+            bootnodes);
   }
 
   @VisibleForTesting

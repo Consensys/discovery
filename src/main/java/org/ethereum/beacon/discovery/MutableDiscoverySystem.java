@@ -6,6 +6,8 @@ package org.ethereum.beacon.discovery;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
+import java.util.List;
+
 public interface MutableDiscoverySystem extends DiscoverySystem {
   /**
    * Adds a NodeRecord to the routing table
@@ -20,4 +22,11 @@ public interface MutableDiscoverySystem extends DiscoverySystem {
    * @param nodeId The node ID to be deleted from the routing table
    */
   void deleteNode(Bytes nodeId);
+
+  /**
+   * Gets all the NodeRecords in the routing table, grouped by their bucket
+   *
+   * @return all the NodeRecords in the routing table, grouped by their bucket
+   */
+  List<List<NodeRecord>> getNodeRecordBuckets();
 }
