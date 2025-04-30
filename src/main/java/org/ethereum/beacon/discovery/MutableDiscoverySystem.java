@@ -3,10 +3,9 @@
  */
 package org.ethereum.beacon.discovery;
 
+import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
-
-import java.util.List;
 
 public interface MutableDiscoverySystem extends DiscoverySystem {
   /**

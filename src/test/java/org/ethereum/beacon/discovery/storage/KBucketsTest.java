@@ -162,7 +162,7 @@ class KBucketsTest {
   @Test
   void testDeleteNodeForEmptyBucket() {
     final NodeRecord node = createNodeAtDistance(1);
-    //note we are not adding the node to the bucket
+    // note we are not adding the node to the bucket
     buckets.deleteNode(node.getNodeId());
 
     List<List<NodeRecord>> internalBuckets = buckets.getNodeRecordBuckets();
