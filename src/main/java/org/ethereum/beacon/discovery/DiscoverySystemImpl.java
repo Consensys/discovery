@@ -133,7 +133,7 @@ public class DiscoverySystemImpl implements DiscoverySystem, MutableDiscoverySys
   }
 
   @Override
-  public void deleteNode(Bytes nodeId) {
+  public void deleteNodeRecord(Bytes nodeId) {
     buckets.deleteNode(nodeId);
   }
 }
