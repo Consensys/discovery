@@ -20,7 +20,7 @@ public interface MutableDiscoverySystem extends DiscoverySystem {
    *
    * @param nodeId The node ID to be deleted from the routing table
    */
-  void deleteNode(Bytes nodeId);
+  void deleteNodeRecord(Bytes nodeId);
 
   /**
    * Gets all the NodeRecords in the routing table, grouped by their bucket
