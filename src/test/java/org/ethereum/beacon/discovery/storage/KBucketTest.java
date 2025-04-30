@@ -434,6 +434,19 @@ class KBucketTest {
     assertThat(bucket.getLiveNodes()).containsExactly(node3, node4, node2);
   }
 
+  @Test
+  void testDeleteNode() {
+    final NodeRecord nodeToBeDeleted = fillBucket();
+    final NodeRecord pendingNode = createNewNodeRecord();
+
+    bucket.offer(pendingNode);
+    bucket.onLivenessConfirmed(pendingNode);
+    bucket.deleteNode(nodeToBeDeleted.getNodeId());
+
+    assertThat(bucket.getAllNodes()).doesNotContain(nodeToBeDeleted);
+    assertThat(bucket.getAllNodes()).contains(pendingNode);
+  }
+
   private void confirmNodesInBucketAsLive() {
     bucket.getAllNodes().forEach(bucket::onLivenessConfirmed);
   }
@@ -453,7 +466,7 @@ class KBucketTest {
   }
 
   private NodeRecord getLastNodeInBucket() {
-    return bucket.getAllNodes().get(bucket.getAllNodes().size() - 1);
+    return bucket.getAllNodes().getLast();
   }
 
   private NodeRecord fillBucketWithLiveNodes() {

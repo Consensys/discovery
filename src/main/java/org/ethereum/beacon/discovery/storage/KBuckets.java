@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.storage;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
@@ -142,5 +143,16 @@ public class KBuckets {
 
   public synchronized boolean containsNode(final Bytes nodeId) {
     return getNode(nodeId).isPresent();
+  }
+
+  public synchronized List<List<NodeRecord>> getNodeRecordBuckets() {
+    return buckets.values().stream().map(KBucket::getAllNodes).toList();
+  }
+
+  public synchronized void deleteNode(final Bytes nodeId) {
+    final int distance = Functions.logDistance(homeNodeId, nodeId);
+    if (distance <= MAXIMUM_BUCKET) {
+      getBucket(distance).ifPresent((bucket) -> bucket.deleteNode(nodeId));
+    }
   }
 }

@@ -264,6 +264,14 @@ public class DiscoverySystemBuilder {
   ExpirationSchedulerFactory expirationSchedulerFactory;
 
   public DiscoverySystem build() {
+    return buildImpl();
+  }
+
+  public MutableDiscoverySystem buildMutable() {
+    return buildImpl();
+  }
+
+  private DiscoverySystemImpl buildImpl() {
     checkNotNull(localNodeRecord, "Missing local node record");
     checkNotNull(secretKey, "Missing secret key");
     createDefaults();
@@ -285,7 +293,7 @@ public class DiscoverySystemBuilder {
             recursiveLookupInterval,
             retryTimeout,
             lifeCheckInterval);
-    return new DiscoverySystem(
+    return new DiscoverySystemImpl(
         discoveryManager,
         discoveryTaskManager,
         expirationSchedulerFactory,
