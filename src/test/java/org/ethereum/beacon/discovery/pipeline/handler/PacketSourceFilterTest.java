@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;

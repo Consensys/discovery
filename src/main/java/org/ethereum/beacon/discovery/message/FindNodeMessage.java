@@ -9,10 +9,10 @@ import static org.ethereum.beacon.discovery.util.RlpUtil.checkMaxSize;
 
 import com.google.common.base.Objects;
 import java.util.List;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPReader;
-import org.apache.tuweni.rlp.RLPWriter;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.rlp.RLP;
+import org.apache.tuweni.v2.rlp.RLPReader;
+import org.apache.tuweni.v2.rlp.RLPWriter;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
@@ -74,7 +74,7 @@ public class FindNodeMessage implements V5Message {
 
   @Override
   public Bytes getBytes() {
-    return Bytes.concatenate(
+    return Bytes.wrap(
         Bytes.of(getCode().byteCode()),
         RLP.encodeList(
             writer -> {

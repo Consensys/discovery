@@ -7,8 +7,8 @@ package org.ethereum.beacon.discovery.message.handler;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.junit.jupiter.api.Test;

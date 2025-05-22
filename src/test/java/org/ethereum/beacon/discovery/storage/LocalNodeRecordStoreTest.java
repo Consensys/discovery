@@ -9,7 +9,7 @@ import static org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter.ADDR
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.junit.jupiter.api.Test;

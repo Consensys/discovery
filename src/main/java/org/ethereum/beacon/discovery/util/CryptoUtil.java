@@ -16,18 +16,18 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class CryptoUtil {
 
   private static final BouncyCastleProvider SECURITY_PROVIDER = new BouncyCastleProvider();
 
-  public static Bytes32 sha256(final Bytes indexBytes) {
+  public static Bytes sha256(final Bytes indexBytes) {
     final MessageDigest sha256Digest = getSha256Digest();
     indexBytes.update(sha256Digest);
-    return Bytes32.wrap(sha256Digest.digest());
+    return Bytes32.fromArray(sha256Digest.digest());
   }
 
   @SuppressWarnings("DoNotInvokeMessageDigestDirectly")
@@ -87,10 +87,10 @@ public class CryptoUtil {
       Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
       cipher.init(
           Cipher.ENCRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(message.toArray()));
+          new SecretKeySpec(privateKey.mutableCopy().toArrayUnsafe(), "AES"),
+          new GCMParameterSpec(128, nonce.mutableCopy().toArrayUnsafe()));
+      cipher.updateAAD(aad.toArrayUnsafe());
+      return Bytes.wrap(cipher.doFinal(message.toArrayUnsafe()));
     } catch (Exception e) {
       throw new RuntimeException("No AES/GCM cipher provider", e);
     }
@@ -105,10 +105,10 @@ public class CryptoUtil {
       Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
       cipher.init(
           Cipher.DECRYPT_MODE,
-          new SecretKeySpec(privateKey.toArray(), "AES"),
-          new GCMParameterSpec(128, nonce.toArray()));
-      cipher.updateAAD(aad.toArray());
-      return Bytes.wrap(cipher.doFinal(encoded.toArray()));
+          new SecretKeySpec(privateKey.mutableCopy().toArrayUnsafe(), "AES"),
+          new GCMParameterSpec(128, nonce.toArrayUnsafe()));
+      cipher.updateAAD(aad.toArrayUnsafe());
+      return Bytes.wrap(cipher.doFinal(encoded.toArrayUnsafe()));
     } catch (NoSuchAlgorithmException
         | InvalidKeyException
         | InvalidAlgorithmParameterException

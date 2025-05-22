@@ -11,8 +11,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;

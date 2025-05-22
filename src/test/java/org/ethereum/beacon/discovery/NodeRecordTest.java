@@ -16,10 +16,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -58,7 +58,7 @@ public class NodeRecordTest {
     assertEquals(IdentitySchema.V4, nodeRecord.getIdentityScheme());
     assertArrayEquals(
         InetAddress.getByName(expectedHost).getAddress(),
-        ((Bytes) nodeRecord.get(EnrField.IP_V4)).toArray());
+        ((Bytes) nodeRecord.get(EnrField.IP_V4)).toArrayUnsafe());
     assertEquals(expectedUdpPort, nodeRecord.get(EnrField.UDP));
     //    assertEquals(expectedTcpPort, nodeRecord.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecord.getSeq());
@@ -72,7 +72,7 @@ public class NodeRecordTest {
     assertEquals(IdentitySchema.V4, nodeRecordRestored.getIdentityScheme());
     assertArrayEquals(
         InetAddress.getByName(expectedHost).getAddress(),
-        ((Bytes) nodeRecordRestored.get(EnrField.IP_V4)).toArray());
+        ((Bytes) nodeRecordRestored.get(EnrField.IP_V4)).toArrayUnsafe());
     assertEquals(expectedUdpPort, nodeRecordRestored.get(EnrField.UDP));
     //    assertEquals(expectedTcpPort, nodeRecordRestored.get(EnrField.TCP_V4));
     assertEquals(expectedSeqNumber, nodeRecordRestored.getSeq());

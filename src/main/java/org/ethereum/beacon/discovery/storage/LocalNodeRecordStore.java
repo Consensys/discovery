@@ -5,8 +5,8 @@
 package org.ethereum.beacon.discovery.storage;
 
 import java.net.InetSocketAddress;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class LocalNodeRecordStore {

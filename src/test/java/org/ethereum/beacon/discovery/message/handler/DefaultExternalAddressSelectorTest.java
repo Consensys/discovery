@@ -12,7 +12,7 @@ import static org.ethereum.beacon.discovery.message.handler.DefaultExternalAddre
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;

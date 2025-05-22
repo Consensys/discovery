@@ -6,7 +6,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.Packet;
@@ -39,7 +39,7 @@ public class UnknownPacketTagToSender implements EnvelopeHandler {
                 envelope.getIdString()));
 
     Packet<?> packet = envelope.get(Field.PACKET);
-    Bytes32 nodeId;
+    Bytes nodeId;
     if (packet instanceof HandshakeMessagePacket) {
       nodeId = ((HandshakeMessagePacket) packet).getHeader().getAuthData().getSourceNodeId();
     } else {

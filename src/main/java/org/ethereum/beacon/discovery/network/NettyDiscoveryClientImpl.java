@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -45,7 +45,7 @@ public class NettyDiscoveryClientImpl implements DiscoveryClient {
   @Override
   public void send(final Bytes data, final InetSocketAddress destination) {
     final DatagramPacket packet =
-        new DatagramPacket(Unpooled.copiedBuffer(data.toArray()), destination);
+        new DatagramPacket(Unpooled.copiedBuffer(data.toArrayUnsafe()), destination);
     final NioDatagramChannel channel =
         channels.get(InternetProtocolFamily.of(destination.getAddress()));
     if (channel == null) {

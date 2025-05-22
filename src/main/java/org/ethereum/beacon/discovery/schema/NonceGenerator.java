@@ -5,7 +5,7 @@ package org.ethereum.beacon.discovery.schema;
 
 import java.util.Random;
 import java.util.function.Function;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.type.Bytes12;
 
 public class NonceGenerator implements Function<Random, Bytes12> {

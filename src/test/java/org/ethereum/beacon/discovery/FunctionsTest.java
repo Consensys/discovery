@@ -7,9 +7,9 @@ package org.ethereum.beacon.discovery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -82,7 +82,7 @@ public class FunctionsTest {
     final Bytes publicKey =
         Bytes.fromHexString(
             "0x9961e4c2356d61bedb83052c115d311acb3a96f5777296dcf297351130266231503061ac4aaee666073d7e5bc2c80c3f5c5b500c1cb5fd0a76abbb6b675ad157");
-    final Bytes32 secretKey =
+    final Bytes secretKey =
         Bytes32.fromHexString("0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736");
     final Bytes result =
         Functions.deriveECDHKeyAgreement(
@@ -143,8 +143,7 @@ public class FunctionsTest {
                 "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
     Bytes pubKey = Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
 
-    Bytes message =
-        Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
+    Bytes message = Bytes.wrap(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
     assertTrue(Functions.verifyECDSASignature(idNonceSig, Functions.hash(message), pubKey));
   }
 

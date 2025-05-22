@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes32;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
 import org.ethereum.beacon.discovery.TestUtil;

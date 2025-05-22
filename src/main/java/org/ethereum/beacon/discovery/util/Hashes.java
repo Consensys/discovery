@@ -5,8 +5,8 @@
 package org.ethereum.beacon.discovery.util;
 
 import java.security.MessageDigest;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
 import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
 
 /** Utility methods to calculate message hashes */

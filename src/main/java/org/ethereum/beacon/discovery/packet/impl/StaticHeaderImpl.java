@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.StaticHeader;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes2;
@@ -37,7 +37,7 @@ public class StaticHeaderImpl extends AbstractBytes implements StaticHeader {
     checkArgument(protocolId.length() == 6, "ProtocolId should be of length 6");
     checkArgument(authDataSize < 1 << 16, "Auth data size should be < 65536");
     Bytes headerBytes =
-        Bytes.concatenate(
+        Bytes.wrap(
             Bytes.wrap(protocolId.getBytes(StaticHeaderImpl.PROTOCOL_ID_ENCODING)),
             version,
             Bytes.of(flag.getCode()),

@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.message.handler;
 
 import java.net.InetSocketAddress;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.PongMessage;
 import org.ethereum.beacon.discovery.schema.NodeRecord;

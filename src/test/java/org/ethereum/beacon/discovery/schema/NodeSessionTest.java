@@ -20,9 +20,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
@@ -45,7 +45,7 @@ import org.mockito.ArgumentCaptor;
 public class NodeSessionTest {
   private static final SecretKey SECRET_KEY = Functions.randomKeyPair().secretKey();
   private final NodeSessionManager nodeSessionManager = mock(NodeSessionManager.class);
-  private final Bytes32 nodeId = Bytes32.ZERO;
+  private final Bytes nodeId = Bytes32.ZERO;
 
   @SuppressWarnings("unchecked")
   private final Consumer<NetworkParcel> outgoingPipeline = mock(Consumer.class);
