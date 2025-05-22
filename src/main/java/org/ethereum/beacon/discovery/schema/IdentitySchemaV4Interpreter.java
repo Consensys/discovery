@@ -115,10 +115,22 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
+  public Optional<InetSocketAddress> getQuicAddress(NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V4, EnrField.QUIC);
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getQuic6Address(NodeRecord nodeRecord) {
+    return addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.QUIC_V6)
+        .or(() -> addressFromFields(nodeRecord, EnrField.IP_V6, EnrField.QUIC));
+  }
+
+  @Override
   public NodeRecord createWithNewAddress(
       final NodeRecord nodeRecord,
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
+      final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(
@@ -132,7 +144,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
               return !addressFieldsToChange.contains(field.getName());
             });
     NodeRecordBuilder.addFieldsForAddress(
-        fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort);
+        fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort, newQuicPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, secretKey);
     return newRecord;

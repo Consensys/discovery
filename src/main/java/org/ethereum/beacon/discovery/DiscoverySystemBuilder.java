@@ -206,9 +206,16 @@ public class DiscoverySystemBuilder {
                       newAddress.getAddress() instanceof Inet6Address
                           ? oldRecord.getTcp6Address()
                           : oldRecord.getTcpAddress();
+                  final Optional<InetSocketAddress> oldQuicAddress =
+                      newAddress.getAddress() instanceof Inet6Address
+                          ? oldRecord.getQuic6Address()
+                          : oldRecord.getQuicAddress();
                   return Optional.of(
                       oldRecord.withNewAddress(
-                          newAddress, oldTcpAddress.map(InetSocketAddress::getPort), secretKey));
+                          newAddress,
+                          oldTcpAddress.map(InetSocketAddress::getPort),
+                          oldQuicAddress.map(InetSocketAddress::getPort),
+                          secretKey));
                 });
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final List<InetSocketAddress> serverListenAddresses =

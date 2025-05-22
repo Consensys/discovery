@@ -44,10 +44,15 @@ public interface IdentitySchemaInterpreter {
 
   Optional<InetSocketAddress> getTcp6Address(NodeRecord nodeRecord);
 
+  Optional<InetSocketAddress> getQuicAddress(NodeRecord nodeRecord);
+
+  Optional<InetSocketAddress> getQuic6Address(NodeRecord nodeRecord);
+
   NodeRecord createWithNewAddress(
       NodeRecord nodeRecord,
       InetSocketAddress newAddress,
       Optional<Integer> newTcpPort,
+      Optional<Integer> newQuicPort,
       SecretKey secretKey);
 
   NodeRecord createWithUpdatedCustomField(

@@ -26,7 +26,8 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   public static final NewAddressHandler ADDRESS_UPDATER =
       (oldRecord, newAddress) ->
-          Optional.of(oldRecord.withNewAddress(newAddress, Optional.empty(), null));
+          Optional.of(
+              oldRecord.withNewAddress(newAddress, Optional.empty(), Optional.empty(), null));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
@@ -100,10 +101,21 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
+  public Optional<InetSocketAddress> getQuicAddress(NodeRecord nodeRecord) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<InetSocketAddress> getQuic6Address(NodeRecord nodeRecord) {
+    return Optional.empty();
+  }
+
+  @Override
   public NodeRecord createWithNewAddress(
       final NodeRecord nodeRecord,
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
+      final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
     sign(newRecord, secretKey);
