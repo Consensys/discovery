@@ -171,7 +171,7 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), Optional.empty(), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress())
@@ -210,12 +210,29 @@ class IdentitySchemaV4InterpreterTest {
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), Optional.empty(), SECRET_KEY);
 
     assertThat(newRecord.getUdp6Address()).contains(newSocketAddress);
     assertThat(newRecord.getTcp6Address())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
+  }
+
+  @Test
+  public void shouldAddQuicPort() throws Exception {
+    final NodeRecord initialRecord =
+        createNodeRecord(
+            new EnrField(EnrField.IP_V4, Bytes.wrap(new byte[4])),
+            new EnrField(EnrField.UDP, 9000));
+    final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
+    final NodeRecord newRecord =
+        interpreter.createWithNewAddress(
+            initialRecord, newSocketAddress, Optional.empty(), Optional.of(9001), SECRET_KEY);
+
+    assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);
+    assertThat(newRecord.get(EnrField.IP_V4))
+        .isEqualTo(Bytes.wrap(newSocketAddress.getAddress().getAddress()));
+    assertThat(newRecord.getQuicAddress()).contains(new InetSocketAddress("127.0.0.1", 9001));
   }
 
   @Test
@@ -228,13 +245,16 @@ class IdentitySchemaV4InterpreterTest {
         new InetSocketAddress(InetAddress.getByAddress(IPV6_LOCALHOST.toArrayUnsafe()), 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), Optional.of(5668), SECRET_KEY);
 
     assertThat(newRecord.getUdpAddress()).isEqualTo(initialRecord.getUdpAddress());
     assertThat(newRecord.getUdp6Address()).contains(newSocketAddress);
     assertThat(newRecord.getTcpAddress()).isEqualTo(initialRecord.getTcpAddress());
     assertThat(newRecord.getTcp6Address())
         .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5667));
+    assertThat(newRecord.getQuicAddress()).isEqualTo(initialRecord.getQuicAddress());
+    assertThat(newRecord.getQuic6Address())
+        .contains(new InetSocketAddress(newSocketAddress.getAddress(), 5668));
     assertThat(newRecord.get(EnrField.IP_V4)).isEqualTo(initialRecord.get(EnrField.IP_V4));
     assertThat(newRecord.get(EnrField.IP_V6)).isEqualTo(IPV6_LOCALHOST);
   }
@@ -249,7 +269,7 @@ class IdentitySchemaV4InterpreterTest {
     final InetSocketAddress newSocketAddress = new InetSocketAddress("127.0.0.1", 40404);
     final NodeRecord newRecord =
         interpreter.createWithNewAddress(
-            initialRecord, newSocketAddress, Optional.of(5667), SECRET_KEY);
+            initialRecord, newSocketAddress, Optional.of(5667), Optional.empty(), SECRET_KEY);
 
     assertThat(newRecord.getUdp6Address()).isEqualTo(initialRecord.getUdp6Address());
     assertThat(newRecord.getUdpAddress()).contains(newSocketAddress);

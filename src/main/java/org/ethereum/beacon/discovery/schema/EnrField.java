@@ -20,12 +20,16 @@ public class EnrField {
   public static final String TCP = "tcp";
   // UDP port, integer
   public static final String UDP = "udp";
+  // QUIC (UDP) port, integer
+  public static final String QUIC = "quic";
   // IPv6 address
   public static final String IP_V6 = "ip6";
   // IPv6-specific TCP port
   public static final String TCP_V6 = "tcp6";
   // IPv6-specific UDP port
   public static final String UDP_V6 = "udp6";
+  // IPv6-specific QUIC (UDP) port
+  public static final String QUIC_V6 = "quic6";
 
   /* ENR v4 Identity Schema */
   // Compressed secp256k1 public key, 33 bytes

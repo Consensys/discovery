@@ -227,12 +227,21 @@ public class NodeRecord {
     return identitySchemaInterpreter.getUdp6Address(this);
   }
 
+  public Optional<InetSocketAddress> getQuicAddress() {
+    return identitySchemaInterpreter.getQuicAddress(this);
+  }
+
+  public Optional<InetSocketAddress> getQuic6Address() {
+    return identitySchemaInterpreter.getQuic6Address(this);
+  }
+
   public NodeRecord withNewAddress(
       final InetSocketAddress newUdpAddress,
       final Optional<Integer> newTcpPort,
+      final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, secretKey);
+        this, newUdpAddress, newTcpPort, newQuicPort, secretKey);
   }
 
   public NodeRecord withUpdatedCustomField(
@@ -252,10 +261,14 @@ public class NodeRecord {
         + getUdpAddress()
         + ", tcpAddress="
         + getTcpAddress()
+        + ", quicAddress="
+        + getQuicAddress()
         + ", udp6Address="
         + getUdp6Address()
         + ", tcp6Address="
         + getTcp6Address()
+        + ", quic6Address="
+        + getQuic6Address()
         + ", asBase64="
         + this.asBase64()
         + ", nodeId="

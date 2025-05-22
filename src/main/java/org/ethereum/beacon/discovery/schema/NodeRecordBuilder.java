@@ -53,9 +53,22 @@ public class NodeRecordBuilder {
   }
 
   public NodeRecordBuilder address(final String ipAddress, final int udpPort, final int tcpPort) {
+    return address(ipAddress, udpPort, tcpPort, Optional.empty());
+  }
+
+  public NodeRecordBuilder address(
+      final String ipAddress, final int udpPort, final int tcpPort, final int quicPort) {
+    return address(ipAddress, udpPort, tcpPort, Optional.of(quicPort));
+  }
+
+  public NodeRecordBuilder address(
+      final String ipAddress,
+      final int udpPort,
+      final int tcpPort,
+      final Optional<Integer> quicPort) {
     try {
       final InetAddress inetAddress = InetAddress.getByName(ipAddress);
-      addFieldsForAddress(fields, inetAddress, udpPort, Optional.of(tcpPort));
+      addFieldsForAddress(fields, inetAddress, udpPort, Optional.of(tcpPort), quicPort);
     } catch (UnknownHostException e) {
       throw new IllegalArgumentException("Unable to resolve address: " + ipAddress);
     }
@@ -71,13 +84,16 @@ public class NodeRecordBuilder {
       final List<EnrField> fields,
       final InetAddress inetAddress,
       final int udpPort,
-      final Optional<Integer> newTcpPort) {
+      final Optional<Integer> newTcpPort,
+      final Optional<Integer> newQuicPort) {
     final Bytes address = Bytes.wrap(inetAddress.getAddress());
     final boolean isIpV6 = inetAddress instanceof Inet6Address;
     fields.add(new EnrField(isIpV6 ? EnrField.IP_V6 : EnrField.IP_V4, address));
     fields.add(new EnrField(isIpV6 ? EnrField.UDP_V6 : EnrField.UDP, udpPort));
     newTcpPort.ifPresent(
         tcpPort -> fields.add(new EnrField(isIpV6 ? EnrField.TCP_V6 : EnrField.TCP, tcpPort)));
+    newQuicPort.ifPresent(
+        quicPort -> fields.add(new EnrField(isIpV6 ? EnrField.QUIC_V6 : EnrField.QUIC, quicPort)));
   }
 
   static void addCustomField(

@@ -30,9 +30,12 @@ public class EnrFieldInterpreterV4 implements EnrFieldInterpreter {
     fieldDecoders.put(EnrField.IP_V4, Function.identity());
     fieldDecoders.put(EnrField.TCP, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
     fieldDecoders.put(EnrField.UDP, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
+    fieldDecoders.put(EnrField.QUIC, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
     fieldDecoders.put(EnrField.IP_V6, Function.identity());
     fieldDecoders.put(EnrField.TCP_V6, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
     fieldDecoders.put(EnrField.UDP_V6, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
+    fieldDecoders.put(
+        EnrField.QUIC_V6, fromBytes(bytes -> bytes.toUnsignedBigInteger().intValue()));
   }
 
   private static Function<Object, Object> fromBytes(final Function<Bytes, Object> decoder) {

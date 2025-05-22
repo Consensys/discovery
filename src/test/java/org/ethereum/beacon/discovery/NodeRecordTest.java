@@ -251,6 +251,16 @@ public class NodeRecordTest {
   }
 
   @Test
+  void shouldDecodeEnr_withQuicField() {
+    final String enr =
+        "enr:-MS4QEyTlybz9KMHKN7pXHOvlD8Q1muUXN7mbeUCPjSyKOEYScKDpmkaxxuE8DOC-YlCIqweCQpEw8uLG4s4z0huDAEUh2F0dG5ldHOIAAAAAAAGAACEZXRoMpBprg6ZBQFwAP__________gmlkgnY0gmlwhIjzqrKEcXVpY4IjKYlzZWNwMjU2azGhA-tFvPZaDfibme3y3o9xderqssFhY1Pnjw6AwqwreQz7iHN5bmNuZXRzAIN0Y3CCIyiDdWRwgiMo";
+
+    final NodeRecord nodeRecord = NODE_RECORD_FACTORY.fromEnr(enr);
+    assertEquals(enr, nodeRecord.asEnr());
+    assertEquals(9001, nodeRecord.get(EnrField.QUIC));
+  }
+
+  @Test
   public void testNodeRecordConstructorFailsToConstructOver300Bytes() {
     Assertions.assertThrows(
         IllegalArgumentException.class,
