@@ -5,8 +5,8 @@ package org.ethereum.beacon.discovery.type;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.DelegatingBytes;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.DelegatingBytes;
 
 public class Bytes2 extends DelegatingBytes {
 
@@ -19,7 +19,7 @@ public class Bytes2 extends DelegatingBytes {
   }
 
   private Bytes2(Bytes delegate) {
-    super(delegate);
+    super(delegate, 2);
     checkArgument(delegate.size() == 2, "Expected Bytes of size 2");
   }
 }

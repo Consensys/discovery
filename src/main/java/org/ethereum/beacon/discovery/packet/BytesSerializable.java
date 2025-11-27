@@ -3,7 +3,7 @@
  */
 package org.ethereum.beacon.discovery.packet;
 
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 /** Any class which can be encoded/decoded to/from {@link Bytes} and is backed by {@link Bytes} */

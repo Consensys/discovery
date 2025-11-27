@@ -8,10 +8,10 @@ import static org.ethereum.beacon.discovery.TestUtil.isFieldsEqual;
 
 import java.util.List;
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
@@ -42,9 +42,9 @@ public class SanityTestVectorsTests {
 
   @Test
   void testOrdinaryPingPacket() {
-    Bytes32 srcNodeId =
+    Bytes srcNodeId =
         Bytes32.fromHexString("0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb");
-    Bytes32 destNodeId =
+    Bytes destNodeId =
         Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
     Bytes12 nonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");
     Bytes16 readKey = Bytes16.fromHexString("0x00000000000000000000000000000000");
@@ -79,7 +79,7 @@ public class SanityTestVectorsTests {
 
   @Test
   void testWhoAreYouPacket() {
-    Bytes32 destNodeId =
+    Bytes destNodeId =
         Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
     Bytes16 maskingIV = Bytes16.fromHexString("0x00000000000000000000000000000000");
     Bytes12 whoareyouRequestNonce = Bytes12.fromHexString("0x0102030405060708090a0b0c");
@@ -116,9 +116,9 @@ public class SanityTestVectorsTests {
   @Test
   void testHandshakePacket() {
 
-    Bytes32 srcNodeId =
+    Bytes srcNodeId =
         Bytes32.fromHexString("0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb");
-    Bytes32 destNodeId =
+    Bytes destNodeId =
         Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
     Bytes16 maskingIV = Bytes16.fromHexString("0x00000000000000000000000000000000");
     Bytes12 nonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");
@@ -177,9 +177,9 @@ public class SanityTestVectorsTests {
   @Test
   void testHandshakeWithEnrPacket() {
 
-    Bytes32 srcNodeId =
+    Bytes srcNodeId =
         Bytes32.fromHexString("0xaaaa8419e9f49d0083561b48287df592939a8d19947d8c0ef88f2a4856a69fbb");
-    Bytes32 destNodeId =
+    Bytes destNodeId =
         Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
     Bytes16 maskingIV = Bytes16.fromHexString("0x00000000000000000000000000000000");
     Bytes12 nonce = Bytes12.fromHexString("0xffffffffffffffffffffffff");

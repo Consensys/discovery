@@ -5,9 +5,9 @@
 package org.ethereum.beacon.discovery.util;
 
 import java.util.function.Function;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPReader;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.rlp.RLP;
+import org.apache.tuweni.v2.rlp.RLPReader;
 
 /** Handy utilities used for RLP encoding and decoding. */
 public class RlpUtil {

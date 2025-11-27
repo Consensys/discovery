@@ -14,8 +14,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.DiscoveryManager;
 import org.ethereum.beacon.discovery.scheduler.ExpirationSchedulerFactory;
 import org.ethereum.beacon.discovery.scheduler.Scheduler;
@@ -95,7 +94,7 @@ public class DiscoveryTaskManager {
             nodeBucketStorage,
             this::findNodes,
             RECURSIVE_SEARCH_QUERY_LIMIT,
-            Bytes32.random(),
+            Bytes.random(32),
             homeNodeId)
         .execute();
   }

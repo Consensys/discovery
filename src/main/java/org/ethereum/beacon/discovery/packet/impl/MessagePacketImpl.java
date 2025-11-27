@@ -3,7 +3,7 @@
  */
 package org.ethereum.beacon.discovery.packet.impl;
 
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.AuthData;

@@ -12,10 +12,10 @@ import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.KeyPair;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
@@ -165,12 +165,12 @@ public class TestUtil {
   }
 
   public static NodeRecord createNodeAtDistance(final Bytes sourceNode, final int distance) {
-    final BitSet bits = BitSet.valueOf(sourceNode.reverse().toArray());
+    final BitSet bits = BitSet.valueOf(sourceNode.mutableCopy().reverse().toArray());
     bits.flip(distance - 1);
     final byte[] targetNodeId = new byte[sourceNode.size()];
     final byte[] src = bits.toByteArray();
     System.arraycopy(src, 0, targetNodeId, 0, src.length);
-    final Bytes nodeId = Bytes.wrap(targetNodeId).reverse();
+    final Bytes nodeId = Bytes.wrap(targetNodeId).mutableCopy().reverse();
     return SimpleIdentitySchemaInterpreter.createNodeRecord(
         nodeId, new InetSocketAddress("127.0.0.1", 2));
   }
@@ -191,7 +191,7 @@ public class TestUtil {
 
   public static <M extends V5Message> void assertRejectTrailingBytes(
       final DiscoveryV5MessageDecoder decoder, final M message) {
-    final Bytes rlp = Bytes.concatenate(message.getBytes(), Bytes.fromHexString("0x1234"));
+    final Bytes rlp = Bytes.wrap(message.getBytes(), Bytes.fromHexString("0x1234"));
     assertThatThrownBy(() -> decoder.decode(rlp)).isInstanceOf(RlpDecodeException.class);
   }
 }

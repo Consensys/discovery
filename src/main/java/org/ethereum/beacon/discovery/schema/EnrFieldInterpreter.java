@@ -4,7 +4,7 @@
 
 package org.ethereum.beacon.discovery.schema;
 
-import org.apache.tuweni.rlp.RLPWriter;
+import org.apache.tuweni.v2.rlp.RLPWriter;
 
 /** Encoder/decoder for fields of ethereum node record */
 public interface EnrFieldInterpreter {

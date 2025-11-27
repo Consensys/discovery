@@ -15,11 +15,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes32;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.rlp.RLP;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class IdentitySchemaV4InterpreterTest {
 
   private static final Bytes PUB_KEY =
       Bytes.fromHexString("0x02197B9014C6C0500CF168BD1F17A3B4A1307251849A5ECEEE0B5EBC76A7EBDB37");
-  private static final Bytes32 PRIV_KEY =
+  private static final Bytes PRIV_KEY =
       Bytes32.fromHexString("0x2E953344686E18C99CDE5292D822D4427BDC5B473F3A6D69D6D0D897D9595110");
   private static final SecretKey SECRET_KEY = Functions.createSecretKey(PRIV_KEY);
   private static final Bytes IPV6_LOCALHOST =

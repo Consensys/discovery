@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;

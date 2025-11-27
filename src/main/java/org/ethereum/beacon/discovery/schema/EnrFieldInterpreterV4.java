@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLPWriter;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.rlp.RLPWriter;
 import org.ethereum.beacon.discovery.util.RlpDecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 

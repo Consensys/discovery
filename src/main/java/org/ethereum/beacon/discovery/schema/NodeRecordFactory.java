@@ -13,10 +13,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPReader;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.rlp.RLP;
+import org.apache.tuweni.v2.rlp.RLPReader;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.util.DecodeException;
 import org.ethereum.beacon.discovery.util.RlpUtil;
 
@@ -70,7 +70,7 @@ public class NodeRecordFactory {
   }
 
   public NodeRecord fromBytes(Bytes bytes) {
-    return fromBytes(bytes.toArray());
+    return fromBytes(bytes.toArrayUnsafe());
   }
 
   public NodeRecord fromRlp(final RLPReader reader) {

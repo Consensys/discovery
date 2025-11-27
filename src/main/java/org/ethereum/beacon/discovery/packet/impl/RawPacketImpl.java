@@ -4,7 +4,7 @@
 package org.ethereum.beacon.discovery.packet.impl;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
@@ -26,7 +26,7 @@ public class RawPacketImpl extends AbstractBytes implements RawPacket {
   @VisibleForTesting
   public static Bytes maskHeader(Header<?> header, Bytes16 maskingIV, Bytes16 maskingKey) {
     Bytes headerPlainBytes =
-        Bytes.concatenate(header.getStaticHeader().getBytes(), header.getAuthData().getBytes());
+        Bytes.wrap(header.getStaticHeader().getBytes(), header.getAuthData().getBytes());
     return CryptoUtil.aesctrEncrypt(maskingKey, maskingIV, headerPlainBytes);
   }
 

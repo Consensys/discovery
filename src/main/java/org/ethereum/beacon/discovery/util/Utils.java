@@ -5,7 +5,6 @@
 package org.ethereum.beacon.discovery.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -13,10 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import reactor.core.Exceptions;
 
 public class Utils {
@@ -88,27 +85,12 @@ public class Utils {
     }
   }
 
-  /**
-   * Left pad a {@link Bytes} value with zero bytes to create a {@link Bytes}.
-   *
-   * @param value The bytes value pad.
-   * @return A {@link Bytes} that exposes the left-padded bytes of {@code value}.
-   * @throws IllegalArgumentException if { @code value.size() &gt; 4}.
-   */
-  public static Bytes leftPad(Bytes value, int length) {
-    checkNotNull(value);
-    checkArgument(value.size() <= length, "Expected at most %s bytes but got %s", 4, value.size());
-    MutableBytes result = MutableBytes.create(length);
-    value.copyTo(result, length - value.size());
-    return result;
-  }
-
   public static UInt64 toUInt64(Bytes bytes) throws IllegalArgumentException {
     checkArgument(bytes.size() <= 8);
-    return UInt64.fromBytes(Utils.leftPad(bytes, 8));
+    return UInt64.fromBytes(bytes.mutableCopy().leftPad(8));
   }
 
-  public static int compareBytes(Bytes32 b1, Bytes32 b2) {
+  public static int compareBytes(Bytes b1, Bytes b2) {
     for (int i = 0; i < b1.size(); i++) {
       int res = (b1.get(i) & 0xFF) - (b2.get(i) & 0xFF);
       if (res != 0) {

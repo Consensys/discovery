@@ -10,11 +10,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.apache.tuweni.units.bigints.UInt64;
+import org.apache.tuweni.v2.bytes.Bytes;
+import org.apache.tuweni.v2.bytes.MutableBytes;
+import org.apache.tuweni.v2.crypto.SECP256K1.SecretKey;
+import org.apache.tuweni.v2.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -64,7 +63,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
     Bytes prototype = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
     // Aligning it for correct 32 bytes
     if (prototype.size() <= 32) {
-      return Bytes32.leftPad(prototype);
+      return prototype.mutableCopy().leftPad(32);
     } else {
       return prototype.slice(0, 32);
     }
