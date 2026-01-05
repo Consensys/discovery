@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.ethereum.beacon.discovery;
+package org.ethereum.beacon.discovery.crypto;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -13,7 +13,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * <p>Implementations perform signing and ECDH key agreement without exposing private key material.
  * Keys may be held in-memory, external services, or hardware modules.
  */
-public interface SecurityModule {
+public interface NodeKeyHolder {
 
   /**
    * Derives a shared secret using ECDH with the given peer public key.

@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.InMemorySecurityModule;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.NodesMessage;
@@ -53,7 +53,7 @@ public class FindNodeHandlerTest {
           Clock.fixed(Instant.ofEpochSecond(100000), ZoneId.of("UTC")),
           new LocalNodeRecordStore(
               homeNodeRecord,
-              InMemorySecurityModule.create(Functions.randomKeyPair().secretKey()),
+              InMemoryNodeKeyHolder.create(Functions.randomKeyPair().secretKey()),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
           new LivenessChecker(clock));

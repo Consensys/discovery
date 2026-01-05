@@ -5,7 +5,7 @@
 package org.ethereum.beacon.discovery.mock;
 
 import org.apache.tuweni.bytes.MutableBytes;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 
@@ -17,7 +17,7 @@ public class IdentitySchemaV4InterpreterMock extends IdentitySchemaV4Interpreter
   }
 
   @Override
-  public void sign(NodeRecord nodeRecord, SecurityModule securityModule) {
+  public void sign(NodeRecord nodeRecord, NodeKeyHolder nodeKeyHolder) {
     nodeRecord.setSignature(MutableBytes.create(96));
   }
 }

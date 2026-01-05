@@ -29,7 +29,7 @@ import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
@@ -201,15 +201,15 @@ public class Functions {
   public static HKDFKeys hkdfExpand(
       final Bytes srcNodeId,
       final Bytes destNodeId,
-      final SecurityModule securityModule,
+      final NodeKeyHolder nodeKeyHolder,
       final Bytes destPubKey,
       final Bytes idNonce) {
-    final Bytes keyAgreement = securityModule.deriveECDHKeyAgreement(destPubKey);
+    final Bytes keyAgreement = nodeKeyHolder.deriveECDHKeyAgreement(destPubKey);
     return hkdfExpand(srcNodeId, destNodeId, keyAgreement, idNonce);
   }
 
   /**
-   * {@link #hkdfExpand(Bytes, Bytes, SecurityModule, Bytes, Bytes)} but with keyAgreement already
+   * {@link #hkdfExpand(Bytes, Bytes, NodeKeyHolder, Bytes, Bytes)} but with keyAgreement already
    * derived by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
    */
   @SuppressWarnings({"DefaultCharset"})

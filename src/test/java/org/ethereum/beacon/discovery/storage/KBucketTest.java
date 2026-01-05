@@ -12,10 +12,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.InMemorySecurityModule;
-import org.ethereum.beacon.discovery.SecurityModule;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 
 class KBucketTest {
 
-  private static final SecurityModule SECURITY_MODULE =
-      InMemorySecurityModule.create(Functions.randomKeyPair().secretKey());
+  private static final NodeKeyHolder SECURITY_MODULE =
+      InMemoryNodeKeyHolder.create(Functions.randomKeyPair().secretKey());
 
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
 

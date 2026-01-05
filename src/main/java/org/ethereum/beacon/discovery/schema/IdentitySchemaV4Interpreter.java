@@ -26,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
@@ -86,8 +86,8 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
-  public void sign(final NodeRecord nodeRecord, final SecurityModule cryptoService) {
-    Bytes signature = cryptoService.sign(Functions.hashKeccak(nodeRecord.serializeNoSignature()));
+  public void sign(final NodeRecord nodeRecord, final NodeKeyHolder nodeKeyHolder) {
+    Bytes signature = nodeKeyHolder.sign(Functions.hashKeccak(nodeRecord.serializeNoSignature()));
     nodeRecord.setSignature(signature);
   }
 
@@ -130,7 +130,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final SecurityModule securityModule) {
+      final NodeKeyHolder nodeKeyHolder) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(
             nodeRecord,
@@ -145,7 +145,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     NodeRecordBuilder.addFieldsForAddress(
         fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort, newQuicPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, securityModule);
+    sign(newRecord, nodeKeyHolder);
     return newRecord;
   }
 
@@ -154,12 +154,12 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       final NodeRecord nodeRecord,
       final String fieldName,
       final Bytes value,
-      final SecurityModule securityModule) {
+      final NodeKeyHolder nodeKeyHolder) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !field.getName().equals(fieldName));
     addCustomField(fields, fieldName, value);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, securityModule);
+    sign(newRecord, nodeKeyHolder);
     return newRecord;
   }
 

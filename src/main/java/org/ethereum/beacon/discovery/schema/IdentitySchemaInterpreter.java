@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.schema;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 
 /**
  * Interprets identity schema of ethereum node record:
@@ -26,7 +26,7 @@ public interface IdentitySchemaInterpreter {
   IdentitySchema getScheme();
 
   /* Signs nodeRecord, modifying it */
-  void sign(NodeRecord nodeRecord, SecurityModule cryptoService);
+  void sign(NodeRecord nodeRecord, NodeKeyHolder nodeKeyHolder);
 
   /** Verifies that `nodeRecord` is of scheme implementation */
   default boolean isValid(NodeRecord nodeRecord) {
@@ -53,10 +53,10 @@ public interface IdentitySchemaInterpreter {
       InetSocketAddress newAddress,
       Optional<Integer> newTcpPort,
       Optional<Integer> newQuicPort,
-      SecurityModule securityModule);
+      NodeKeyHolder nodeKeyHolder);
 
   NodeRecord createWithUpdatedCustomField(
-      NodeRecord nodeRecord, String newAddress, Bytes value, SecurityModule securityModule);
+      NodeRecord nodeRecord, String newAddress, Bytes value, NodeKeyHolder nodeKeyHolder);
 
   Bytes calculateNodeId(Bytes publicKey);
 }

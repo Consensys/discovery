@@ -14,14 +14,14 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.InMemorySecurityModule;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 
 public class NodeRecordBuilder {
 
   private final List<EnrField> fields = new ArrayList<>();
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
-  private Optional<SecurityModule> securityModule = Optional.empty();
+  private Optional<NodeKeyHolder> nodeKeyHolder = Optional.empty();
   private UInt64 seq = UInt64.ONE;
 
   public NodeRecordBuilder nodeRecordFactory(final NodeRecordFactory nodeRecordFactory) {
@@ -44,8 +44,8 @@ public class NodeRecordBuilder {
   }
 
   public NodeRecordBuilder secretKey(final SecretKey secretKey) {
-    this.securityModule = Optional.of(new InMemorySecurityModule(secretKey));
-    publicKey(securityModule.get().deriveCompressedPublicKeyFromPrivate());
+    this.nodeKeyHolder = Optional.of(new InMemoryNodeKeyHolder(secretKey));
+    publicKey(nodeKeyHolder.get().deriveCompressedPublicKeyFromPrivate());
     return this;
   }
 
@@ -105,7 +105,7 @@ public class NodeRecordBuilder {
   public NodeRecord build() {
     fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
     final NodeRecord nodeRecord = nodeRecordFactory.createFromValues(seq, fields);
-    securityModule.ifPresent(nodeRecord::sign);
+    nodeKeyHolder.ifPresent(nodeRecord::sign);
     checkArgument(
         nodeRecord.isValid(),
         "Generated node record was not valid. Ensure all required fields were supplied");

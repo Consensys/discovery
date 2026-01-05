@@ -6,8 +6,6 @@ package org.ethereum.beacon.discovery.schema;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
@@ -21,11 +19,12 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.InMemorySecurityModule;
-import org.ethereum.beacon.discovery.SecurityModule;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
 
 /**
  * Ethereum Node Record V4
@@ -157,8 +156,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(final SecurityModule securityModule) {
-    identitySchemaInterpreter.sign(this, securityModule);
+  public void sign(final NodeKeyHolder nodeKeyHolder) {
+    identitySchemaInterpreter.sign(this, nodeKeyHolder);
   }
 
   public void writeRlp(final RLPWriter writer) {
@@ -238,29 +237,29 @@ public class NodeRecord {
     return identitySchemaInterpreter.getQuic6Address(this);
   }
 
-
   public NodeRecord withNewAddress(
-    final InetSocketAddress newUdpAddress,
-    final Optional<Integer> newTcpPort,
-    final Optional<Integer> newQuicPort,
-    final SecurityModule securityModule) {
+      final InetSocketAddress newUdpAddress,
+      final Optional<Integer> newTcpPort,
+      final Optional<Integer> newQuicPort,
+      final NodeKeyHolder nodeKeyHolder) {
     return identitySchemaInterpreter.createWithNewAddress(
-      this, newUdpAddress, newTcpPort, newQuicPort, securityModule);
+        this, newUdpAddress, newTcpPort, newQuicPort, nodeKeyHolder);
   }
+
+  @Deprecated
   public NodeRecord withNewAddress(
       final InetSocketAddress newUdpAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort,
-      InMemorySecurityModule.create(secretKey));
+        this, newUdpAddress, newTcpPort, newQuicPort, new InMemoryNodeKeyHolder(secretKey));
   }
 
   public NodeRecord withUpdatedCustomField(
-      final String fieldName, final Bytes value, final SecurityModule securityModule) {
+      final String fieldName, final Bytes value, final NodeKeyHolder nodeKeyHolder) {
     return identitySchemaInterpreter.createWithUpdatedCustomField(
-        this, fieldName, value, securityModule);
+        this, fieldName, value, nodeKeyHolder);
   }
 
   @Override
