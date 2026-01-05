@@ -8,20 +8,11 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * Provides cryptographic operations for the local node in the discovery system.
+ * Provides a wrapper around node private key operations.
  *
  * <p>Implementations perform signing and ECDH key agreement without exposing private key material.
- * Keys may be held in-memory, external services, or hardware modules.
  */
-public interface SecretKeyHolder {
-
-  /**
-   * Derives a shared secret using ECDH with the given peer public key.
-   *
-   * @param destPubKey the destination peer's public key
-   * @return the derived shared secret
-   */
-  Bytes deriveECDHKeyAgreement(Bytes destPubKey);
+public interface NodeKeyService {
 
   /**
    * Signs a 32-byte message hash.
@@ -30,6 +21,14 @@ public interface SecretKeyHolder {
    * @return the signature
    */
   Bytes sign(final Bytes32 messageHash);
+
+  /**
+   * Derives a shared secret using ECDH with the given peer public key.
+   *
+   * @param destPubKey the destination peer's public key
+   * @return the derived shared secret
+   */
+  Bytes deriveECDHKeyAgreement(Bytes destPubKey);
 
   /**
    * Derives the compressed public key corresponding to the private key held by this module.

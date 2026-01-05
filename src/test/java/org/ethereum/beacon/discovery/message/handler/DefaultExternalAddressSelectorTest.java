@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
-import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
@@ -35,7 +35,7 @@ class DefaultExternalAddressSelectorTest {
   private final LocalNodeRecordStore localNodeRecordStore =
       new LocalNodeRecordStore(
           originalNodeRecord,
-          InMemorySecretKeyHolder.create(Functions.randomKeyPair().secretKey()),
+          NodeKeyServiceImpl.create(Functions.randomKeyPair().secretKey()),
           NodeRecordListener.NOOP,
           ADDRESS_UPDATER);
 

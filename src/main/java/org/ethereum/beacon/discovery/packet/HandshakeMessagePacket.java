@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyService;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.impl.HandshakeMessagePacketImpl;
@@ -65,12 +65,12 @@ public interface HandshakeMessagePacket extends MessagePacket<HandshakeAuthData>
         final Bytes challengeData,
         final Bytes ephemeralPubKey,
         final Bytes32 destNodeId,
-        final SecretKeyHolder secretKeyHolder) {
+        final NodeKeyService nodeKeyService) {
 
       Bytes32 idSignatureInput =
           CryptoUtil.sha256(
               Bytes.wrap(ID_SIGNATURE_PREFIX, challengeData, ephemeralPubKey, destNodeId));
-      return secretKeyHolder.sign(idSignatureInput);
+      return nodeKeyService.sign(idSignatureInput);
     }
 
     Bytes32 getSourceNodeId();

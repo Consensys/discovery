@@ -30,8 +30,8 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
-import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.NodeKeyService;
+import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
@@ -83,22 +83,22 @@ public class HandshakeHandlersTest {
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
-    SecretKeyHolder secretKeyHolder1 = new InMemorySecretKeyHolder(nodePair1.getSecretKey());
+    NodeKeyService nodeKeyService1 = new NodeKeyServiceImpl(nodePair1.getSecretKey());
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    SecretKeyHolder secretKeyHolder2 = new InMemorySecretKeyHolder(nodePair2.getSecretKey());
+    NodeKeyService nodeKeyService2 = new NodeKeyServiceImpl(nodePair2.getSecretKey());
 
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(
-            nodeRecord1, secretKeyHolder1, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
+            nodeRecord1, nodeKeyService1, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
     KBuckets nodeBucketStorage1 =
         new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker(clock));
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
             new LocalNodeRecordStore(
-                nodeRecord2, secretKeyHolder2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+                nodeRecord2, nodeKeyService2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
             new LivenessChecker(clock));
 
     // Node1 create AuthHeaderPacket
@@ -119,7 +119,7 @@ public class HandshakeHandlersTest {
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
             mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
-          secretKeyHolder1,
+            nodeKeyService1,
             nodeBucketStorage1,
             outgoingMessages1to2,
             rnd,
@@ -138,8 +138,8 @@ public class HandshakeHandlersTest {
             nodeRecord1.getUdpAddress().orElseThrow(),
             mock(NodeSessionManager.class),
             new LocalNodeRecordStore(
-                nodeRecord2, secretKeyHolder2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
-          secretKeyHolder2,
+                nodeRecord2, nodeKeyService2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            nodeKeyService2,
             nodeBucketStorage2,
             outgoingMessages2to1,
             rnd,
