@@ -12,8 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
@@ -37,7 +37,7 @@ public class HandshakePacketTest {
           Bytes32.fromHexString(
               "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
-  private final NodeKeyService nodeKeyService = NodeKeyServiceImpl.create(srcStaticPrivateKey);
+  private final NodeKeyService nodeKeyService = InMemoryNodeKeyService.create(srcStaticPrivateKey);
 
   private final Bytes32 destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");

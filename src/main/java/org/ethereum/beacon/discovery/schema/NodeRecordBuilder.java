@@ -14,8 +14,8 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 
 public class NodeRecordBuilder {
 
@@ -45,7 +45,7 @@ public class NodeRecordBuilder {
 
   @Deprecated
   public NodeRecordBuilder secretKey(final SecretKey secretKey) {
-    this.nodeKeyService = Optional.of(new NodeKeyServiceImpl(secretKey));
+    this.nodeKeyService = Optional.of(InMemoryNodeKeyService.create(secretKey));
     publicKey(nodeKeyService.get().deriveCompressedPublicKeyFromPrivate());
     return this;
   }

@@ -23,8 +23,8 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.pipeline.handler.NodeSessionManager;
@@ -45,7 +45,7 @@ import org.mockito.ArgumentCaptor;
 
 public class NodeSessionTest {
   private static final NodeKeyService SECURITY_MODULE =
-      new NodeKeyServiceImpl(Functions.randomKeyPair().secretKey());
+      InMemoryNodeKeyService.create(Functions.randomKeyPair().secretKey());
   private final NodeSessionManager nodeSessionManager = mock(NodeSessionManager.class);
   private final Bytes32 nodeId = Bytes32.ZERO;
 

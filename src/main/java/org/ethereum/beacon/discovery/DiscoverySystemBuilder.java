@@ -30,8 +30,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
@@ -92,7 +92,7 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder secretKey(final SecretKey secretKey) {
-    this.nodeKeyService = new NodeKeyServiceImpl(secretKey);
+    this.nodeKeyService = InMemoryNodeKeyService.create(secretKey);
     return this;
   }
 

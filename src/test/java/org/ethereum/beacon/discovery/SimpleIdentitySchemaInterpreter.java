@@ -14,8 +14,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -29,7 +29,10 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       (oldRecord, newAddress) ->
           Optional.of(
               oldRecord.withNewAddress(
-                  newAddress, Optional.empty(), Optional.empty(), NodeKeyServiceImpl.create(null)));
+                  newAddress,
+                  Optional.empty(),
+                  Optional.empty(),
+                  InMemoryNodeKeyService.create(null)));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));

@@ -12,8 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
@@ -42,7 +42,8 @@ public class SanityTestVectorsTests {
           Bytes32.fromHexString(
               "0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"));
 
-  private final NodeKeyService nodeKeyService = NodeKeyServiceImpl.create(nodeAKeyPair.secretKey());
+  private final NodeKeyService nodeKeyService =
+      InMemoryNodeKeyService.create(nodeAKeyPair.secretKey());
 
   @Test
   void testOrdinaryPingPacket() {

@@ -20,8 +20,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -92,7 +92,7 @@ public class NodeRecordTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
-    final NodeKeyService nodeKeyService = NodeKeyServiceImpl.create(keyPair.secretKey());
+    final NodeKeyService nodeKeyService = InMemoryNodeKeyService.create(keyPair.secretKey());
 
     final NodeRecord record =
         NODE_RECORD_FACTORY.createFromValues(
@@ -160,7 +160,7 @@ public class NodeRecordTest {
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
 
-    final NodeKeyService nodeKeyService = NodeKeyServiceImpl.create(keyPair.secretKey());
+    final NodeKeyService nodeKeyService = InMemoryNodeKeyService.create(keyPair.secretKey());
 
     final int seq = 1;
 
@@ -233,7 +233,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("eth", Collections.singletonList(forkIdList)));
-    record.sign(NodeKeyServiceImpl.create(keyPair.secretKey()));
+    record.sign(InMemoryNodeKeyService.create(keyPair.secretKey()));
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);

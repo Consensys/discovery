@@ -23,8 +23,8 @@ import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 
 /**
  * Ethereum Node Record V4
@@ -253,7 +253,7 @@ public class NodeRecord {
       final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, new NodeKeyServiceImpl(secretKey));
+        this, newUdpAddress, newTcpPort, newQuicPort, InMemoryNodeKeyService.create(secretKey));
   }
 
   public NodeRecord withUpdatedCustomField(

@@ -30,8 +30,8 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
 import org.ethereum.beacon.discovery.crypto.NodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyServiceImpl;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
@@ -83,11 +83,11 @@ public class HandshakeHandlersTest {
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
-    NodeKeyService nodeKeyService1 = new NodeKeyServiceImpl(nodePair1.getSecretKey());
+    NodeKeyService nodeKeyService1 = InMemoryNodeKeyService.create(nodePair1.getSecretKey());
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    NodeKeyService nodeKeyService2 = new NodeKeyServiceImpl(nodePair2.getSecretKey());
+    NodeKeyService nodeKeyService2 = InMemoryNodeKeyService.create(nodePair2.getSecretKey());
 
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(

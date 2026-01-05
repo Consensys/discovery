@@ -10,15 +10,15 @@ import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /** In-memory {@link NodeKeyService} implementation backed by a SECP256K1 {@link SecretKey}. */
-public class NodeKeyServiceImpl implements NodeKeyService {
+public class InMemoryNodeKeyService implements NodeKeyService {
   private final SecretKey secretKey;
 
-  public NodeKeyServiceImpl(final SecretKey secretKey) {
+  private InMemoryNodeKeyService(final SecretKey secretKey) {
     this.secretKey = secretKey;
   }
 
-  public static NodeKeyServiceImpl create(final SecretKey secretKey) {
-    return new NodeKeyServiceImpl(secretKey);
+  public static InMemoryNodeKeyService create(final SecretKey secretKey) {
+    return new InMemoryNodeKeyService(secretKey);
   }
 
   /** {@inheritDoc} */
