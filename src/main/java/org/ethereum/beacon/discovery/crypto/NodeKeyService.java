@@ -8,7 +8,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * Provides a wrapper around node private key operations.
+ * Abstraction for performing private-key operations.
  *
  * <p>Implementations perform signing and ECDH key agreement without exposing private key material.
  */
