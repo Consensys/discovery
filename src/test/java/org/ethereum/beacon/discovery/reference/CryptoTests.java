@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.InMemorySecurityModule;
+import org.ethereum.beacon.discovery.SecurityModule;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -19,6 +21,8 @@ public class CryptoTests {
       Functions.createSecretKey(
           Bytes32.fromHexString(
               "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
+
+  private final SecurityModule securityModule = InMemorySecurityModule.create(LOCAL_SECRET);
 
   @Test
   void testECDH() {
@@ -69,7 +73,7 @@ public class CryptoTests {
 
     Bytes signatureBytes =
         HandshakeAuthData.signId(
-            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, LOCAL_SECRET);
+            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, securityModule);
     assertThat(signatureBytes).isEqualTo(expectedSignatureBytes);
   }
 

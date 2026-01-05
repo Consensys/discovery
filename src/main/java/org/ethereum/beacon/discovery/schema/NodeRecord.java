@@ -6,6 +6,8 @@ package org.ethereum.beacon.discovery.schema;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
@@ -19,10 +21,11 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.InMemorySecurityModule;
+import org.ethereum.beacon.discovery.SecurityModule;
 
 /**
  * Ethereum Node Record V4
@@ -154,8 +157,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(final SecretKey secretKey) {
-    identitySchemaInterpreter.sign(this, secretKey);
+  public void sign(final SecurityModule securityModule) {
+    identitySchemaInterpreter.sign(this, securityModule);
   }
 
   public void writeRlp(final RLPWriter writer) {
@@ -235,19 +238,29 @@ public class NodeRecord {
     return identitySchemaInterpreter.getQuic6Address(this);
   }
 
+
+  public NodeRecord withNewAddress(
+    final InetSocketAddress newUdpAddress,
+    final Optional<Integer> newTcpPort,
+    final Optional<Integer> newQuicPort,
+    final SecurityModule securityModule) {
+    return identitySchemaInterpreter.createWithNewAddress(
+      this, newUdpAddress, newTcpPort, newQuicPort, securityModule);
+  }
   public NodeRecord withNewAddress(
       final InetSocketAddress newUdpAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, secretKey);
+        this, newUdpAddress, newTcpPort, newQuicPort,
+      InMemorySecurityModule.create(secretKey));
   }
 
   public NodeRecord withUpdatedCustomField(
-      final String fieldName, final Bytes value, final SecretKey secretKey) {
+      final String fieldName, final Bytes value, final SecurityModule securityModule) {
     return identitySchemaInterpreter.createWithUpdatedCustomField(
-        this, fieldName, value, secretKey);
+        this, fieldName, value, securityModule);
   }
 
   @Override

@@ -52,7 +52,7 @@ public class DiscoverySystemBuilder {
   private List<NodeRecord> bootnodes = Collections.emptyList();
   private Optional<List<InetSocketAddress>> listenAddresses = Optional.empty();
   private NodeRecord localNodeRecord;
-  private SecretKey secretKey;
+  private SecurityModule securityModule;
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
@@ -90,7 +90,12 @@ public class DiscoverySystemBuilder {
   }
 
   public DiscoverySystemBuilder secretKey(final SecretKey secretKey) {
-    this.secretKey = secretKey;
+    this.securityModule = new InMemorySecurityModule(secretKey);
+    return this;
+  }
+
+  public DiscoverySystemBuilder securityModule(final SecurityModule securityModule) {
+    this.securityModule = securityModule;
     return this;
   }
 
@@ -215,7 +220,7 @@ public class DiscoverySystemBuilder {
                           newAddress,
                           oldTcpAddress.map(InetSocketAddress::getPort),
                           oldQuicAddress.map(InetSocketAddress::getPort),
-                          secretKey));
+                          securityModule));
                 });
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final List<InetSocketAddress> serverListenAddresses =
@@ -245,7 +250,7 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             () ->
                 new LocalNodeRecordStore(
-                    localNodeRecord, secretKey, localNodeRecordListener, newAddressHandler));
+                    localNodeRecord, securityModule, localNodeRecordListener, newAddressHandler));
     nodeBucketStorage =
         requireNonNullElseGet(
             nodeBucketStorage, () -> new KBuckets(clock, localNodeRecordStore, livenessChecker));
@@ -280,7 +285,7 @@ public class DiscoverySystemBuilder {
 
   private DiscoverySystemImpl buildImpl() {
     checkNotNull(localNodeRecord, "Missing local node record");
-    checkNotNull(secretKey, "Missing secret key");
+    checkNotNull(securityModule, "Missing secret key");
     createDefaults();
 
     // Check local node record is valid
@@ -315,7 +320,7 @@ public class DiscoverySystemBuilder {
         discoveryServers,
         nodeBucketStorage,
         localNodeRecordStore,
-        secretKey,
+        securityModule,
         nodeRecordFactory,
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,

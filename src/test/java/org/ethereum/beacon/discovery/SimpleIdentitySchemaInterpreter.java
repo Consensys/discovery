@@ -13,7 +13,6 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
@@ -27,7 +26,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   public static final NewAddressHandler ADDRESS_UPDATER =
       (oldRecord, newAddress) ->
           Optional.of(
-              oldRecord.withNewAddress(newAddress, Optional.empty(), Optional.empty(), null));
+              oldRecord.withNewAddress(newAddress, Optional.empty(), Optional.empty(), InMemorySecurityModule.create(null)));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
@@ -55,7 +54,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
-  public void sign(final NodeRecord nodeRecord, final SecretKey secretKey) {
+  public void sign(final NodeRecord nodeRecord, final SecurityModule securityModule) {
     nodeRecord.setSignature(MutableBytes.create(96));
   }
 
@@ -116,9 +115,9 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final SecretKey secretKey) {
+      final SecurityModule securityModule) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
-    sign(newRecord, secretKey);
+    sign(newRecord, securityModule);
     return newRecord;
   }
 
@@ -127,7 +126,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final NodeRecord nodeRecord,
       final String fieldName,
       final Bytes value,
-      final SecretKey secretKey) {
+      final SecurityModule securityModule) {
     final List<EnrField> fields = new ArrayList<>();
     nodeRecord.forEachField(
         (key, existingValue) -> {
@@ -137,7 +136,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
         });
     fields.add(new EnrField(fieldName, value));
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, secretKey);
+    sign(newRecord, securityModule);
     return newRecord;
   }
 

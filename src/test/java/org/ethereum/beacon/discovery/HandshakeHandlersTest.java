@@ -69,7 +69,6 @@ import org.ethereum.beacon.discovery.storage.NewAddressHandler;
 import org.ethereum.beacon.discovery.storage.NodeRecordListener;
 import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"DoubleBraceInitialization"})
@@ -82,22 +81,22 @@ public class HandshakeHandlersTest {
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
+    SecurityModule securityModule1 = new InMemorySecurityModule(nodePair1.getSecretKey());
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
+    SecurityModule securityModule2 = new InMemorySecurityModule(nodePair2.getSecretKey());
+
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(
-            nodeRecord1, nodePair1.getSecretKey(), NodeRecordListener.NOOP, NewAddressHandler.NOOP);
+            nodeRecord1, securityModule1, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
     KBuckets nodeBucketStorage1 =
         new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker(clock));
     KBuckets nodeBucketStorage2 =
         new KBuckets(
             clock,
             new LocalNodeRecordStore(
-                nodeRecord2,
-                Functions.randomKeyPair().secretKey(),
-                NodeRecordListener.NOOP,
-                NewAddressHandler.NOOP),
+                nodeRecord2, securityModule2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
             new LivenessChecker(clock));
 
     // Node1 create AuthHeaderPacket
@@ -118,7 +117,7 @@ public class HandshakeHandlersTest {
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
             mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
-            nodePair1.getSecretKey(),
+            securityModule1,
             nodeBucketStorage1,
             outgoingMessages1to2,
             rnd,
@@ -137,11 +136,8 @@ public class HandshakeHandlersTest {
             nodeRecord1.getUdpAddress().orElseThrow(),
             mock(NodeSessionManager.class),
             new LocalNodeRecordStore(
-                nodeRecord2,
-                nodePair2.getSecretKey(),
-                NodeRecordListener.NOOP,
-                NewAddressHandler.NOOP),
-            nodePair2.getSecretKey(),
+                nodeRecord2, securityModule2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            securityModule2,
             nodeBucketStorage2,
             outgoingMessages2to1,
             rnd,

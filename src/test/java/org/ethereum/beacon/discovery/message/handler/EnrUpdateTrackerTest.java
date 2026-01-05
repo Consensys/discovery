@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.InMemorySecurityModule;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -66,7 +67,7 @@ class EnrUpdateTrackerTest {
     final NodeRecord currentNodeRecord =
         TestUtil.generateNode(8000)
             .getNodeRecord()
-            .withUpdatedCustomField("test", Bytes.EMPTY, SECRET_KEY);
+            .withUpdatedCustomField("test", Bytes.EMPTY, InMemorySecurityModule.create(SECRET_KEY));
     when(session.getNodeRecord()).thenReturn(Optional.of(currentNodeRecord));
     tracker.updateIfRequired(session, currentNodeRecord.getSeq().subtract(1));
 

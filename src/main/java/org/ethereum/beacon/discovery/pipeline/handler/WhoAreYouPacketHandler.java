@@ -121,7 +121,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
 
       Bytes idSignature =
           HandshakeAuthData.signId(
-              challengeData, ephemeralPubKey, destNodeId, session.getStaticNodeKey());
+              challengeData, ephemeralPubKey, destNodeId, session.getSecurityModule());
 
       NodeRecord respRecord = null;
       UInt64 lastKnownOurEnrVer = whoAreYouPacket.getHeader().getAuthData().getEnrSeq();

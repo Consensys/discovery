@@ -90,6 +90,8 @@ public class NodeRecordTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
+    final SecurityModule securityModule = InMemorySecurityModule.create(keyPair.secretKey());
+
     final NodeRecord record =
         NODE_RECORD_FACTORY.createFromValues(
             UInt64.ONE,
@@ -98,8 +100,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("foo", Bytes.fromHexString("0x1234")));
-    record.sign(keyPair.secretKey());
-
+    record.sign(securityModule);
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
     assertEquals(record, result);
@@ -156,6 +157,9 @@ public class NodeRecordTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
+
+    final SecurityModule securityModule = InMemorySecurityModule.create(keyPair.secretKey());
+
     final int seq = 1;
 
     NodeRecord nodeRecord =
@@ -168,7 +172,7 @@ public class NodeRecordTest {
                 new EnrField(
                     EnrField.PKEY_SECP256K1,
                     Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey())));
-    nodeRecord.sign(keyPair.secretKey());
+    nodeRecord.sign(securityModule);
     assertEquals(nodeId, nodeRecord.getNodeId());
     assertEquals(
         "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8",
@@ -227,7 +231,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("eth", Collections.singletonList(forkIdList)));
-    record.sign(keyPair.secretKey());
+    record.sign(InMemorySecurityModule.create(keyPair.secretKey()));
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);

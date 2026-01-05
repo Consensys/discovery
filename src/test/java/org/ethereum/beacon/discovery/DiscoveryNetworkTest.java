@@ -52,7 +52,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                Functions.randomKeyPair().secretKey(),
+                InMemorySecurityModule.create(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker1);
@@ -61,7 +61,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                Functions.randomKeyPair().secretKey(),
+                InMemorySecurityModule.create(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker2);
@@ -75,10 +75,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                nodePair1.getSecretKey(),
+                InMemorySecurityModule.create(nodePair1.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair1.getSecretKey(),
+            InMemorySecurityModule.create(nodePair1.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
@@ -94,10 +94,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                nodePair2.getSecretKey(),
+                InMemorySecurityModule.create(nodePair2.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair2.getSecretKey(),
+            InMemorySecurityModule.create(nodePair2.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,

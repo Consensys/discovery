@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.SecurityModule;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
@@ -42,7 +42,7 @@ public class NodeSessionManager implements EnvelopeHandler {
   private static final int REQUEST_CLEANUP_DELAY_SECONDS = 60;
   private static final Logger LOG = LogManager.getLogger(NodeSessionManager.class);
   private final LocalNodeRecordStore localNodeRecordStore;
-  private final SecretKey staticNodeKey;
+  private final SecurityModule securityModule;
   private final KBuckets nodeBucketStorage;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
@@ -52,12 +52,12 @@ public class NodeSessionManager implements EnvelopeHandler {
 
   public NodeSessionManager(
       final LocalNodeRecordStore localNodeRecordStore,
-      final SecretKey staticNodeKey,
+      final SecurityModule securityModule,
       final KBuckets nodeBucketStorage,
       final Pipeline outgoingPipeline,
       final ExpirationSchedulerFactory expirationSchedulerFactory) {
     this.localNodeRecordStore = localNodeRecordStore;
-    this.staticNodeKey = staticNodeKey;
+    this.securityModule = securityModule;
     this.nodeBucketStorage = nodeBucketStorage;
     this.outgoingPipeline = outgoingPipeline;
     this.sessionExpirationScheduler =
@@ -159,7 +159,7 @@ public class NodeSessionManager implements EnvelopeHandler {
         key.remoteSocketAddress,
         this,
         localNodeRecordStore,
-        staticNodeKey,
+        securityModule,
         nodeBucketStorage,
         outgoingPipeline::push,
         random,

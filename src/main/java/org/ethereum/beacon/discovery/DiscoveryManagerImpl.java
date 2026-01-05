@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.message.FindNodeMessage;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.TalkReqMessage;
@@ -79,7 +78,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
       final List<NettyDiscoveryServer> discoveryServers,
       final KBuckets nodeBucketStorage,
       final LocalNodeRecordStore localNodeRecordStore,
-      final SecretKey homeNodeSecretKey,
+      final SecurityModule securityModule,
       final NodeRecordFactory nodeRecordFactory,
       final Scheduler taskScheduler,
       final ExpirationSchedulerFactory expirationSchedulerFactory,
@@ -94,7 +93,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
-            homeNodeSecretKey,
+            securityModule,
             nodeBucketStorage,
             outgoingPipeline,
             expirationSchedulerFactory);
