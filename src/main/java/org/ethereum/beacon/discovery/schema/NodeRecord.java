@@ -23,8 +23,8 @@ import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
-import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
 
 /**
  * Ethereum Node Record V4
@@ -156,8 +156,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(final NodeKeyHolder nodeKeyHolder) {
-    identitySchemaInterpreter.sign(this, nodeKeyHolder);
+  public void sign(final SecretKeyHolder secretKeyHolder) {
+    identitySchemaInterpreter.sign(this, secretKeyHolder);
   }
 
   public void writeRlp(final RLPWriter writer) {
@@ -241,9 +241,9 @@ public class NodeRecord {
       final InetSocketAddress newUdpAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final NodeKeyHolder nodeKeyHolder) {
+      final SecretKeyHolder secretKeyHolder) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, nodeKeyHolder);
+        this, newUdpAddress, newTcpPort, newQuicPort, secretKeyHolder);
   }
 
   @Deprecated
@@ -253,13 +253,13 @@ public class NodeRecord {
       final Optional<Integer> newQuicPort,
       final SecretKey secretKey) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, new InMemoryNodeKeyHolder(secretKey));
+        this, newUdpAddress, newTcpPort, newQuicPort, new InMemorySecretKeyHolder(secretKey));
   }
 
   public NodeRecord withUpdatedCustomField(
-      final String fieldName, final Bytes value, final NodeKeyHolder nodeKeyHolder) {
+      final String fieldName, final Bytes value, final SecretKeyHolder secretKeyHolder) {
     return identitySchemaInterpreter.createWithUpdatedCustomField(
-        this, fieldName, value, nodeKeyHolder);
+        this, fieldName, value, secretKeyHolder);
   }
 
   @Override

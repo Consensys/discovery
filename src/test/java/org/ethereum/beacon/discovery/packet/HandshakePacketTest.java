@@ -12,8 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
-import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
@@ -37,7 +37,7 @@ public class HandshakePacketTest {
           Bytes32.fromHexString(
               "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
-  private final NodeKeyHolder nodeKeyHolder = InMemoryNodeKeyHolder.create(srcStaticPrivateKey);
+  private final SecretKeyHolder secretKeyHolder = InMemorySecretKeyHolder.create(srcStaticPrivateKey);
 
   private final Bytes32 destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
@@ -55,7 +55,7 @@ public class HandshakePacketTest {
   void testPacketRoundtrip() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
     Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, nodeKeyHolder);
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, secretKeyHolder);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -96,7 +96,7 @@ public class HandshakePacketTest {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
     Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, nodeKeyHolder);
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, secretKeyHolder);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -123,7 +123,7 @@ public class HandshakePacketTest {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
     Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, nodeKeyHolder);
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, secretKeyHolder);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -150,7 +150,7 @@ public class HandshakePacketTest {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
     Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, nodeKeyHolder);
+        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, secretKeyHolder);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(

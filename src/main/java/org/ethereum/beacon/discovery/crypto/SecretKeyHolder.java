@@ -13,7 +13,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * <p>Implementations perform signing and ECDH key agreement without exposing private key material.
  * Keys may be held in-memory, external services, or hardware modules.
  */
-public interface NodeKeyHolder {
+public interface SecretKeyHolder {
 
   /**
    * Derives a shared secret using ECDH with the given peer public key.

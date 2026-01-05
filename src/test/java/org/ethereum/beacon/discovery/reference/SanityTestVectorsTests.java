@@ -12,8 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
-import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
@@ -42,8 +42,8 @@ public class SanityTestVectorsTests {
           Bytes32.fromHexString(
               "0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"));
 
-  private final NodeKeyHolder nodeKeyHolder =
-      InMemoryNodeKeyHolder.create(nodeAKeyPair.secretKey());
+  private final SecretKeyHolder secretKeyHolder =
+      InMemorySecretKeyHolder.create(nodeAKeyPair.secretKey());
 
   @Test
   void testOrdinaryPingPacket() {
@@ -151,7 +151,7 @@ public class SanityTestVectorsTests {
     PingMessage pingMessage = new PingMessage(pingReqId, pingEnrSeq);
     Bytes idSignature =
         HandshakeAuthData.signId(
-            whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeKeyHolder);
+            whoareyouChallengeData, ephemeralPubkey, destNodeId, secretKeyHolder);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -231,7 +231,7 @@ public class SanityTestVectorsTests {
     PingMessage pingMessage = new PingMessage(pingReqId, pingEnrSeq);
     Bytes idSignature =
         HandshakeAuthData.signId(
-            whoareyouChallengeData, ephemeralPubkey, destNodeId, nodeKeyHolder);
+            whoareyouChallengeData, ephemeralPubkey, destNodeId, secretKeyHolder);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(

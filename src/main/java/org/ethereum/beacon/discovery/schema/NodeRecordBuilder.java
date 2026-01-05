@@ -14,14 +14,14 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyHolder;
-import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.InMemorySecretKeyHolder;
+import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
 
 public class NodeRecordBuilder {
 
   private final List<EnrField> fields = new ArrayList<>();
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
-  private Optional<NodeKeyHolder> nodeKeyHolder = Optional.empty();
+  private Optional<SecretKeyHolder> secretKeyHolder = Optional.empty();
   private UInt64 seq = UInt64.ONE;
 
   public NodeRecordBuilder nodeRecordFactory(final NodeRecordFactory nodeRecordFactory) {
@@ -43,11 +43,19 @@ public class NodeRecordBuilder {
     return this;
   }
 
+  @Deprecated
   public NodeRecordBuilder secretKey(final SecretKey secretKey) {
-    this.nodeKeyHolder = Optional.of(new InMemoryNodeKeyHolder(secretKey));
-    publicKey(nodeKeyHolder.get().deriveCompressedPublicKeyFromPrivate());
+    this.secretKeyHolder = Optional.of(new InMemorySecretKeyHolder(secretKey));
+    publicKey(secretKeyHolder.get().deriveCompressedPublicKeyFromPrivate());
     return this;
   }
+
+  public NodeRecordBuilder secretKeyHolder(final SecretKeyHolder secretKeyHolder) {
+    this.secretKeyHolder = Optional.of(secretKeyHolder);
+    publicKey(this.secretKeyHolder.get().deriveCompressedPublicKeyFromPrivate());
+    return this;
+  }
+
 
   public NodeRecordBuilder address(final String ipAddress, final int port) {
     return address(ipAddress, port, port);
@@ -105,7 +113,7 @@ public class NodeRecordBuilder {
   public NodeRecord build() {
     fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
     final NodeRecord nodeRecord = nodeRecordFactory.createFromValues(seq, fields);
-    nodeKeyHolder.ifPresent(nodeRecord::sign);
+    secretKeyHolder.ifPresent(nodeRecord::sign);
     checkArgument(
         nodeRecord.isValid(),
         "Generated node record was not valid. Ensure all required fields were supplied");

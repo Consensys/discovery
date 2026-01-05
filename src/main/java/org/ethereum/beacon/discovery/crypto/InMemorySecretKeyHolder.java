@@ -9,18 +9,18 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.util.Functions;
 
-/** In-memory {@link NodeKeyHolder} implementation backed by a SECP256K1 {@link SecretKey}. */
-public class InMemoryNodeKeyHolder implements NodeKeyHolder {
+/** In-memory {@link SecretKeyHolder} implementation backed by a SECP256K1 {@link SecretKey}. */
+public class InMemorySecretKeyHolder implements SecretKeyHolder {
 
-  /** The SECP256K1 private key representing the node's identity. */
+  /** The private key */
   private final SecretKey secretKey;
 
-  public InMemoryNodeKeyHolder(final SecretKey secretKey) {
+  public InMemorySecretKeyHolder(final SecretKey secretKey) {
     this.secretKey = secretKey;
   }
 
-  public static InMemoryNodeKeyHolder create(final SecretKey secretKey) {
-    return new InMemoryNodeKeyHolder(secretKey);
+  public static InMemorySecretKeyHolder create(final SecretKey secretKey) {
+    return new InMemorySecretKeyHolder(secretKey);
   }
 
   /** {@inheritDoc} */

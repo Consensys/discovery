@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.ethereum.beacon.discovery.crypto.NodeKeyHolder;
+import org.ethereum.beacon.discovery.crypto.SecretKeyHolder;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
@@ -66,7 +66,7 @@ public class NodeSession {
   private Bytes recipientKey;
   private final Map<Bytes, RequestInfo> requestIdStatuses;
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
-  private final NodeKeyHolder nodeKeyHolder;
+  private final SecretKeyHolder secretKeyHolder;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
@@ -79,7 +79,7 @@ public class NodeSession {
       final InetSocketAddress remoteAddress,
       final NodeSessionManager nodeSessionManager,
       final LocalNodeRecordStore localNodeRecordStore,
-      final NodeKeyHolder nodeKeyHolder,
+      final SecretKeyHolder secretKeyHolder,
       final KBuckets nodeBucketStorage,
       final Consumer<NetworkParcel> outgoingPipeline,
       final Random rnd,
@@ -90,7 +90,7 @@ public class NodeSession {
         remoteAddress,
         nodeSessionManager,
         localNodeRecordStore,
-        nodeKeyHolder,
+      secretKeyHolder,
         nodeBucketStorage,
         outgoingPipeline,
         rnd,
@@ -105,7 +105,7 @@ public class NodeSession {
       final InetSocketAddress remoteAddress,
       final NodeSessionManager nodeSessionManager,
       final LocalNodeRecordStore localNodeRecordStore,
-      final NodeKeyHolder nodeKeyHolder,
+      final SecretKeyHolder secretKeyHolder,
       final KBuckets nodeBucketStorage,
       final Consumer<NetworkParcel> outgoingPipeline,
       final Random rnd,
@@ -117,7 +117,7 @@ public class NodeSession {
     this.localNodeRecordStore = localNodeRecordStore;
     this.nodeSessionManager = nodeSessionManager;
     this.nodeBucketStorage = nodeBucketStorage;
-    this.nodeKeyHolder = nodeKeyHolder;
+    this.secretKeyHolder = secretKeyHolder;
     this.homeNodeId = Bytes32.wrap(localNodeRecordStore.getLocalNodeRecord().getNodeId());
     this.outgoingPipeline = outgoingPipeline;
     this.rnd = rnd;
@@ -399,8 +399,8 @@ public class NodeSession {
     this.state = newStatus;
   }
 
-  public NodeKeyHolder getNodeKeyHolder() {
-    return nodeKeyHolder;
+  public SecretKeyHolder getSecretKeyHolder() {
+    return secretKeyHolder;
   }
 
   public enum SessionState {
