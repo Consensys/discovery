@@ -100,7 +100,7 @@ public class DiscoveryTestServer {
         new DiscoverySystemBuilder()
             .listen("0.0.0.0", port)
             .localNodeRecord(nodeRecord)
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .bootnodes(bootnodes);
     final DiscoverySystem discoverySystem = discoverySystemBuilder.build();
     discoverySystem.start().get(5, TimeUnit.SECONDS);

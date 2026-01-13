@@ -529,7 +529,7 @@ public class DiscoveryIntegrationTest {
           new DiscoverySystemBuilder()
               .listen(listenAddresses)
               .localNodeRecord(nodeRecord)
-              .secretKey(keyPair.secretKey())
+              .signer(new DefaultSigner(keyPair.secretKey()))
               .retryTimeout(RETRY_TIMEOUT)
               .lifeCheckInterval(LIVE_CHECK_INTERVAL)
               .bootnodes(bootnodes);
