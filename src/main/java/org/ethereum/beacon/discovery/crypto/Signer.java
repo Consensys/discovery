@@ -12,13 +12,13 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * <p>Implementations perform signing and ECDH key agreement without exposing private key material.
  */
-public interface NodeKeyService {
+public interface Signer {
 
   /**
-   * Signs a 32-byte message hash.
+   * Creates a signature of message `x`.
    *
-   * @param messageHash the hash of the message to sign
-   * @return the signature
+   * @param messageHash message, hashed
+   * @return ECDSA signature with properties merged together: r || s
    */
   Bytes sign(final Bytes32 messageHash);
 

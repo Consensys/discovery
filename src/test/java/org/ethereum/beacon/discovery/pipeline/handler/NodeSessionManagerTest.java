@@ -15,7 +15,7 @@ import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.TestUtil;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -48,10 +48,10 @@ class NodeSessionManagerTest {
       new NodeSessionManager(
           new LocalNodeRecordStore(
               homeNodeRecord,
-              InMemoryNodeKeyService.create(homeNodeInfo.getSecretKey()),
+              DefaultSigner.create(homeNodeInfo.getSecretKey()),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
-          InMemoryNodeKeyService.create(STATIC_NODE_SECRET),
+          DefaultSigner.create(STATIC_NODE_SECRET),
           nodeBucketStorage,
           outgoingPipeline,
           expirationSchedulerFactory);

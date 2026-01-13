@@ -14,8 +14,8 @@ import static org.mockito.Mockito.verify;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.StubClock;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyService;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 
 class KBucketTest {
 
-  private static final NodeKeyService SECURITY_MODULE =
-      InMemoryNodeKeyService.create(Functions.randomKeyPair().secretKey());
+  private static final Signer SECURITY_MODULE =
+      DefaultSigner.create(Functions.randomKeyPair().secretKey());
 
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
 

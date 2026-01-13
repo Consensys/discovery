@@ -14,8 +14,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyService;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -32,7 +32,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
                   newAddress,
                   Optional.empty(),
                   Optional.empty(),
-                  InMemoryNodeKeyService.create(null)));
+                  DefaultSigner.create(null)));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
@@ -60,7 +60,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
-  public void sign(final NodeRecord nodeRecord, final NodeKeyService nodeKeyService) {
+  public void sign(final NodeRecord nodeRecord, final Signer signer) {
     nodeRecord.setSignature(MutableBytes.create(96));
   }
 
@@ -121,9 +121,9 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final NodeKeyService nodeKeyService) {
+      final Signer signer) {
     final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
-    sign(newRecord, nodeKeyService);
+    sign(newRecord, signer);
     return newRecord;
   }
 
@@ -132,7 +132,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final NodeRecord nodeRecord,
       final String fieldName,
       final Bytes value,
-      final NodeKeyService nodeKeyService) {
+      final Signer signer) {
     final List<EnrField> fields = new ArrayList<>();
     nodeRecord.forEachField(
         (key, existingValue) -> {
@@ -142,7 +142,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
         });
     fields.add(new EnrField(fieldName, value));
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, nodeKeyService);
+    sign(newRecord, signer);
     return newRecord;
   }
 

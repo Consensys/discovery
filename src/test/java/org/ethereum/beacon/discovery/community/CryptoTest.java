@@ -7,7 +7,7 @@ package org.ethereum.beacon.discovery.community;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -89,7 +89,7 @@ public class CryptoTest {
     Assertions.assertEquals(
         expectedIdNonceSig,
         HandshakeAuthData.signId(
-            idNonce, ephemeralPubKey, nodeIdB, InMemoryNodeKeyService.create(LOCAL_SECRET)));
+            idNonce, ephemeralPubKey, nodeIdB, DefaultSigner.create(LOCAL_SECRET)));
   }
 
   /**

@@ -12,6 +12,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.TestManagerWrapper.TestMessage;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
@@ -22,7 +23,6 @@ import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.type.Bytes16;
-import org.ethereum.beacon.discovery.util.Functions;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("JavaCase")
@@ -84,7 +84,7 @@ public class DiscoveryManagerTest {
         (HandshakeMessagePacket) validHandshakeMessage.getPacket();
     RawPacket handshakeRawPacket = validHandshakeMessage.getRawPacket();
     Header<HandshakeAuthData> header = handshakePacket.getHeader();
-    Bytes invalidSignature = Functions.sign(attackerNode.getSecretKey(), Bytes32.ZERO);
+    Bytes invalidSignature =  new DefaultSigner(attackerNode.getSecretKey()).sign(Bytes32.ZERO);
     Header<HandshakeAuthData> malformedHeader =
         Header.createHandshakeHeader(
             header.getAuthData().getSourceNodeId(),

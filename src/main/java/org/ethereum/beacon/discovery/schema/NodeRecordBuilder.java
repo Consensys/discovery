@@ -14,14 +14,14 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.InMemoryNodeKeyService;
-import org.ethereum.beacon.discovery.crypto.NodeKeyService;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
+import org.ethereum.beacon.discovery.crypto.Signer;
 
 public class NodeRecordBuilder {
 
   private final List<EnrField> fields = new ArrayList<>();
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
-  private Optional<NodeKeyService> nodeKeyService = Optional.empty();
+  private Optional<Signer> nodeKeyService = Optional.empty();
   private UInt64 seq = UInt64.ONE;
 
   public NodeRecordBuilder nodeRecordFactory(final NodeRecordFactory nodeRecordFactory) {
@@ -45,13 +45,13 @@ public class NodeRecordBuilder {
 
   @Deprecated
   public NodeRecordBuilder secretKey(final SecretKey secretKey) {
-    this.nodeKeyService = Optional.of(InMemoryNodeKeyService.create(secretKey));
+    this.nodeKeyService = Optional.of(DefaultSigner.create(secretKey));
     publicKey(nodeKeyService.get().deriveCompressedPublicKeyFromPrivate());
     return this;
   }
 
-  public NodeRecordBuilder nodeKeyService(final NodeKeyService nodeKeyService) {
-    this.nodeKeyService = Optional.of(nodeKeyService);
+  public NodeRecordBuilder nodeKeyService(final Signer signer) {
+    this.nodeKeyService = Optional.of(signer);
     publicKey(this.nodeKeyService.get().deriveCompressedPublicKeyFromPrivate());
     return this;
   }
