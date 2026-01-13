@@ -16,6 +16,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.message.DiscoveryV5MessageDecoder;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
@@ -89,7 +90,7 @@ public class TestUtil {
             .seq(1)
             .nodeRecordFactory(
                 verification ? NODE_RECORD_FACTORY : NODE_RECORD_FACTORY_NO_VERIFICATION)
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .address(LOCALHOST, port)
             .build();
 

@@ -84,7 +84,7 @@ public class DiscoveryManagerTest {
         (HandshakeMessagePacket) validHandshakeMessage.getPacket();
     RawPacket handshakeRawPacket = validHandshakeMessage.getRawPacket();
     Header<HandshakeAuthData> header = handshakePacket.getHeader();
-    Bytes invalidSignature =  new DefaultSigner(attackerNode.getSecretKey()).sign(Bytes32.ZERO);
+    Bytes invalidSignature = new DefaultSigner(attackerNode.getSecretKey()).sign(Bytes32.ZERO);
     Header<HandshakeAuthData> malformedHeader =
         Header.createHandshakeHeader(
             header.getAuthData().getSourceNodeId(),

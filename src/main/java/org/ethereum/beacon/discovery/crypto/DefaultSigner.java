@@ -6,7 +6,6 @@ package org.ethereum.beacon.discovery.crypto;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.crypto.SECP256K1;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.ethereum.beacon.discovery.util.Functions;
 
@@ -36,16 +35,12 @@ public class DefaultSigner implements Signer {
    */
   @Override
   public Bytes sign(final Bytes32 messageHash) {
-    final SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(secretKey);
-    final SECP256K1.Signature signature = SECP256K1.signHashed(messageHash, keyPair);
-    // cutting v
-    return signature.bytes().slice(0, 64);
+    return Functions.sign(secretKey, messageHash);
   }
 
   /** {@inheritDoc} */
   @Override
   public Bytes deriveCompressedPublicKeyFromPrivate() {
-    final SECP256K1.PublicKey publicKey = SECP256K1.PublicKey.fromSecretKey(secretKey);
-    return Bytes.wrap(publicKey.asEcPoint().getEncoded(true));
+    return Functions.deriveCompressedPublicKeyFromPrivate(secretKey);
   }
 }

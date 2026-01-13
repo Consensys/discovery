@@ -54,8 +54,7 @@ public class HandshakePacketTest {
   @Test
   void testPacketRoundtrip() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -95,8 +94,7 @@ public class HandshakePacketTest {
   void testWrongVersionFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -122,8 +120,7 @@ public class HandshakePacketTest {
   void testTooLargeSigSizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -149,8 +146,7 @@ public class HandshakePacketTest {
   void testTooLargeEphKeySizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(

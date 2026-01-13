@@ -19,11 +19,9 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
-import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.crypto.Signer;
 
 /**
@@ -246,20 +244,9 @@ public class NodeRecord {
         this, newUdpAddress, newTcpPort, newQuicPort, signer);
   }
 
-  @Deprecated
-  public NodeRecord withNewAddress(
-      final InetSocketAddress newUdpAddress,
-      final Optional<Integer> newTcpPort,
-      final Optional<Integer> newQuicPort,
-      final SecretKey secretKey) {
-    return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, DefaultSigner.create(secretKey));
-  }
-
   public NodeRecord withUpdatedCustomField(
       final String fieldName, final Bytes value, final Signer signer) {
-    return identitySchemaInterpreter.createWithUpdatedCustomField(
-        this, fieldName, value, signer);
+    return identitySchemaInterpreter.createWithUpdatedCustomField(this, fieldName, value, signer);
   }
 
   @Override

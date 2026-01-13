@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServer;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
 import org.ethereum.beacon.discovery.network.NetworkParcelV5;
@@ -146,12 +147,15 @@ public class TestManagerWrapper {
 
   private static DiscoveryManagerImpl createTestManager(KeyPair keyPair, int port) {
     final NodeRecord nodeRecord =
-        new NodeRecordBuilder().secretKey(keyPair.secretKey()).address(LOCALHOST, port).build();
+        new NodeRecordBuilder()
+            .signer(new DefaultSigner(keyPair.secretKey()))
+            .address(LOCALHOST, port)
+            .build();
     DiscoverySystemBuilder builder = new DiscoverySystemBuilder();
     builder
         .discoveryServer(Mockito.mock(NettyDiscoveryServer.class))
         .localNodeRecord(nodeRecord)
-        .secretKey(keyPair.secretKey())
+        .signer(new DefaultSigner(keyPair.secretKey()))
         .retryTimeout(RETRY_TIMEOUT)
         .lifeCheckInterval(LIVE_CHECK_INTERVAL);
     DiscoveryManagerImpl mgr = builder.buildDiscoveryManager();

@@ -151,10 +151,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      final NodeRecord nodeRecord,
-      final String fieldName,
-      final Bytes value,
-      final Signer signer) {
+      final NodeRecord nodeRecord, final String fieldName, final Bytes value, final Signer signer) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !field.getName().equals(fieldName));
     addCustomField(fields, fieldName, value);

@@ -159,7 +159,7 @@ public class NodeSessionManager implements EnvelopeHandler {
         key.remoteSocketAddress,
         this,
         localNodeRecordStore,
-      signer,
+        signer,
         nodeBucketStorage,
         outgoingPipeline::push,
         random,

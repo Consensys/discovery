@@ -116,14 +116,14 @@ public class NodeRecordTest {
         new NodeRecordBuilder()
             .seq(0)
             .address("127.0.0.1", 30303)
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .build();
     assertTrue(nodeRecord0.isValid());
     NodeRecord nodeRecord1 =
         new NodeRecordBuilder()
             .seq(1)
             .address("127.0.0.1", 30303)
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .build();
     assertTrue(nodeRecord1.isValid());
     assertNotEquals(nodeRecord0.serialize(), nodeRecord1.serialize());
@@ -142,7 +142,7 @@ public class NodeRecordTest {
         new NodeRecordBuilder()
             .seq(0)
             .address("127.0.0.1", 30303)
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .customField(customFieldName, customFieldValue)
             .build();
     assertTrue(nodeRecord.isValid());

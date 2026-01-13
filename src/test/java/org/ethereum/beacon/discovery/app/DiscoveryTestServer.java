@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
 import org.ethereum.beacon.discovery.schema.NodeRecordBuilder;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -91,7 +92,7 @@ public class DiscoveryTestServer {
 
     final NodeRecord nodeRecord =
         new NodeRecordBuilder()
-            .secretKey(keyPair.secretKey())
+            .signer(new DefaultSigner(keyPair.secretKey()))
             .address(address.getHostAddress(), port)
             .build();
 

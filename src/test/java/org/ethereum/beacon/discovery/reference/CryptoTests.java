@@ -52,7 +52,11 @@ public class CryptoTests {
 
     HKDFKeys hkdfKeys =
         Functions.hkdfExpand(
-            nodeIdABytes, nodeIdBBytes, LOCAL_SECRET, destPubkeyBytes, challengeDataBytes);
+            nodeIdABytes,
+            nodeIdBBytes,
+            new DefaultSigner(LOCAL_SECRET),
+            destPubkeyBytes,
+            challengeDataBytes);
     assertThat(hkdfKeys.getInitiatorKey()).isEqualTo(expectedInitiatorKeyBytes);
     assertThat(hkdfKeys.getRecipientKey()).isEqualTo(expectedRecipientKeyBytes);
   }
@@ -72,8 +76,7 @@ public class CryptoTests {
             "0x94852a1e2318c4e5e9d422c98eaf19d1d90d876b29cd06ca7cb7546d0fff7b484fe86c09a064fe72bdbef73ba8e9c34df0cd2b53e9d65528c2c7f336d5dfc6e6");
 
     Bytes signatureBytes =
-        HandshakeAuthData.signId(
-            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, signer);
+        HandshakeAuthData.signId(challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, signer);
     assertThat(signatureBytes).isEqualTo(expectedSignatureBytes);
   }
 

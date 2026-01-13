@@ -11,6 +11,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.Header;
@@ -99,7 +100,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Functions.hkdfExpand(
               session.getHomeNodeId(),
               destNodeId,
-              ephemeralKeyPair.secretKey(),
+              new DefaultSigner(ephemeralKeyPair.secretKey()),
               remotePubKey,
               challengeData);
       session.setInitiatorKey(hkdfKeys.getInitiatorKey());
@@ -117,11 +118,10 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
                               envelope.getIdString(), session)));
 
       Bytes ephemeralPubKey =
-          Functions.deriveCompressedPublicKeyFromPrivate(ephemeralKeyPair.secretKey());
+          new DefaultSigner(ephemeralKeyPair.secretKey()).deriveCompressedPublicKeyFromPrivate();
 
       Bytes idSignature =
-          HandshakeAuthData.signId(
-              challengeData, ephemeralPubKey, destNodeId, session.getNodeKeyService());
+          HandshakeAuthData.signId(challengeData, ephemeralPubKey, destNodeId, session.getSigner());
 
       NodeRecord respRecord = null;
       UInt64 lastKnownOurEnrVer = whoAreYouPacket.getHeader().getAuthData().getEnrSeq();

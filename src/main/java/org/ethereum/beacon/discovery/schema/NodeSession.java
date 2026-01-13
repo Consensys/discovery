@@ -90,7 +90,7 @@ public class NodeSession {
         remoteAddress,
         nodeSessionManager,
         localNodeRecordStore,
-      signer,
+        signer,
         nodeBucketStorage,
         outgoingPipeline,
         rnd,
@@ -399,7 +399,7 @@ public class NodeSession {
     this.state = newStatus;
   }
 
-  public Signer getNodeKeyService() {
+  public Signer getSigner() {
     return signer;
   }
 

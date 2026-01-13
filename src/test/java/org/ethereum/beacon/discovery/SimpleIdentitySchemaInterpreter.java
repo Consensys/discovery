@@ -29,10 +29,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       (oldRecord, newAddress) ->
           Optional.of(
               oldRecord.withNewAddress(
-                  newAddress,
-                  Optional.empty(),
-                  Optional.empty(),
-                  DefaultSigner.create(null)));
+                  newAddress, Optional.empty(), Optional.empty(), DefaultSigner.create(null)));
 
   public static NodeRecord createNodeRecord(final int nodeId) {
     return createNodeRecord(Bytes.ofUnsignedInt(nodeId));
@@ -129,10 +126,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      final NodeRecord nodeRecord,
-      final String fieldName,
-      final Bytes value,
-      final Signer signer) {
+      final NodeRecord nodeRecord, final String fieldName, final Bytes value, final Signer signer) {
     final List<EnrField> fields = new ArrayList<>();
     nodeRecord.forEachField(
         (key, existingValue) -> {

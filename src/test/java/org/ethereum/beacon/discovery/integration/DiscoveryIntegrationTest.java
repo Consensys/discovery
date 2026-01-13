@@ -43,6 +43,7 @@ import org.apache.tuweni.rlp.RLPReader;
 import org.ethereum.beacon.discovery.DiscoverySystem;
 import org.ethereum.beacon.discovery.DiscoverySystemBuilder;
 import org.ethereum.beacon.discovery.TalkHandler;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.mock.IdentitySchemaV4InterpreterMock;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaV4Interpreter;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -493,7 +494,7 @@ public class DiscoveryIntegrationTest {
     for (int i = 0; i < 10; i++) {
       final NodeRecordBuilder nodeRecordBuilder = new NodeRecordBuilder();
       if (signNodeRecord) {
-        nodeRecordBuilder.secretKey(keyPair.secretKey());
+        nodeRecordBuilder.signer(new DefaultSigner(keyPair.secretKey()));
       } else {
         // We're not signing the record so use an identity schema that won't check the
         // signature locally. The other side should still validate it.

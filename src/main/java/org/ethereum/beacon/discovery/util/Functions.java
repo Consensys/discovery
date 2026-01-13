@@ -209,8 +209,8 @@ public class Functions {
   }
 
   /**
-   * {@link #hkdfExpand(Bytes, Bytes, Signer, Bytes, Bytes)} but with keyAgreement already
-   * derived by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
+   * {@link #hkdfExpand(Bytes, Bytes, Signer, Bytes, Bytes)} but with keyAgreement already derived
+   * by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
    */
   @SuppressWarnings({"DefaultCharset"})
   public static HKDFKeys hkdfExpand(

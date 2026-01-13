@@ -94,7 +94,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
-          signer,
+            signer,
             nodeBucketStorage,
             outgoingPipeline,
             expirationSchedulerFactory);

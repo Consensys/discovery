@@ -119,7 +119,7 @@ public class HandshakeHandlersTest {
             nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
             mock(NodeSessionManager.class),
             localNodeRecordStoreAt1,
-          signer1,
+            signer1,
             nodeBucketStorage1,
             outgoingMessages1to2,
             rnd,
@@ -139,7 +139,7 @@ public class HandshakeHandlersTest {
             mock(NodeSessionManager.class),
             new LocalNodeRecordStore(
                 nodeRecord2, signer2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
-          signer2,
+            signer2,
             nodeBucketStorage2,
             outgoingMessages2to1,
             rnd,
