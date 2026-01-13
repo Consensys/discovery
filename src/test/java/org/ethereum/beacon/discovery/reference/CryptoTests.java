@@ -52,11 +52,7 @@ public class CryptoTests {
 
     HKDFKeys hkdfKeys =
         Functions.hkdfExpand(
-            nodeIdABytes,
-            nodeIdBBytes,
-            new DefaultSigner(LOCAL_SECRET),
-            destPubkeyBytes,
-            challengeDataBytes);
+            nodeIdABytes, nodeIdBBytes, signer, destPubkeyBytes, challengeDataBytes);
     assertThat(hkdfKeys.getInitiatorKey()).isEqualTo(expectedInitiatorKeyBytes);
     assertThat(hkdfKeys.getRecipientKey()).isEqualTo(expectedRecipientKeyBytes);
   }
