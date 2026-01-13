@@ -23,8 +23,7 @@ import org.junit.jupiter.api.Test;
 
 class KBucketTest {
 
-  private static final Signer SECURITY_MODULE =
-      new DefaultSigner(Functions.randomKeyPair().secretKey());
+  private static final Signer SIGNER = new DefaultSigner(Functions.randomKeyPair().secretKey());
 
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
 
@@ -106,7 +105,7 @@ class KBucketTest {
   void offer_shouldUpdateExistingEntryInBucket() {
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), SECURITY_MODULE);
+        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), SIGNER);
 
     bucket.offer(nodeSeq1);
     bucket.offer(nodeSeq2);
@@ -120,7 +119,7 @@ class KBucketTest {
   void offer_shouldNotUpdateExistingEntryWhenNewRecordIsOlder() {
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("record", Bytes.fromHexString("0x1234"), SECURITY_MODULE);
+        nodeSeq1.withUpdatedCustomField("record", Bytes.fromHexString("0x1234"), SIGNER);
 
     bucket.offer(nodeSeq2);
     bucket.offer(nodeSeq1);
@@ -147,7 +146,7 @@ class KBucketTest {
     final NodeRecord otherNode = createNewNodeRecord();
     final NodeRecord nodeSeq1 = createNewNodeRecord();
     final NodeRecord nodeSeq2 =
-        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), SECURITY_MODULE);
+        nodeSeq1.withUpdatedCustomField("hello", Bytes.fromHexString("0x1234"), SIGNER);
 
     bucket.offer(nodeSeq1);
     bucket.offer(otherNode);
