@@ -22,7 +22,7 @@ public class CryptoTests {
           Bytes32.fromHexString(
               "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
 
-  private final Signer signer = DefaultSigner.create(LOCAL_SECRET);
+  private final Signer signer = new DefaultSigner(LOCAL_SECRET);
 
   @Test
   void testECDH() {

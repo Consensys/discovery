@@ -48,10 +48,10 @@ class NodeSessionManagerTest {
       new NodeSessionManager(
           new LocalNodeRecordStore(
               homeNodeRecord,
-              DefaultSigner.create(homeNodeInfo.getSecretKey()),
+              new DefaultSigner(homeNodeInfo.getSecretKey()),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
-          DefaultSigner.create(STATIC_NODE_SECRET),
+          new DefaultSigner(STATIC_NODE_SECRET),
           nodeBucketStorage,
           outgoingPipeline,
           expirationSchedulerFactory);

@@ -53,7 +53,7 @@ public class FindNodeHandlerTest {
           Clock.fixed(Instant.ofEpochSecond(100000), ZoneId.of("UTC")),
           new LocalNodeRecordStore(
               homeNodeRecord,
-              DefaultSigner.create(Functions.randomKeyPair().secretKey()),
+              new DefaultSigner(Functions.randomKeyPair().secretKey()),
               NodeRecordListener.NOOP,
               NewAddressHandler.NOOP),
           new LivenessChecker(clock));

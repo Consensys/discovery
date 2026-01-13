@@ -11,7 +11,6 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.bouncycastle.math.ec.ECPoint;
-import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Functions.HKDFKeys;
@@ -71,18 +70,10 @@ public class FunctionsTest {
         Bytes.fromHexString("68b02a985ecb99cc2d10cf188879d93ae7684c4f4707770017b078c6497c5a5d");
     Functions.HKDFKeys keys1 =
         Functions.hkdfExpand(
-            nodeId1,
-            nodeId2,
-            new DefaultSigner(testKey1.secretKey()),
-            testKey2.publicKey().bytes(),
-            idNonce);
+            nodeId1, nodeId2, testKey1.secretKey(), testKey2.publicKey().bytes(), idNonce);
     Functions.HKDFKeys keys2 =
         Functions.hkdfExpand(
-            nodeId1,
-            nodeId2,
-            new DefaultSigner(testKey2.secretKey()),
-            testKey1.publicKey().bytes(),
-            idNonce);
+            nodeId1, nodeId2, testKey2.secretKey(), testKey1.publicKey().bytes(), idNonce);
     assertEquals(keys1, keys2);
   }
 
@@ -150,7 +141,7 @@ public class FunctionsTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
-    Bytes pubKey = new DefaultSigner(keyPair.secretKey()).deriveCompressedPublicKeyFromPrivate();
+    Bytes pubKey = Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
 
     Bytes message =
         Bytes.concatenate(Bytes.wrap("discovery-id-nonce".getBytes()), nonce, ephemeralKey);
@@ -162,7 +153,7 @@ public class FunctionsTest {
     final KeyPair keyPair = Functions.randomKeyPair();
     final Bytes fullPublicKey = keyPair.publicKey().bytes();
     final Bytes derivedPublicKey =
-        new DefaultSigner(keyPair.secretKey()).deriveCompressedPublicKeyFromPrivate();
+        Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
 
     final ECPoint fullPoint = Functions.publicKeyToPoint(fullPublicKey);
     final ECPoint derivedPoint = Functions.publicKeyToPoint(derivedPublicKey);
@@ -174,7 +165,7 @@ public class FunctionsTest {
     final KeyPair keyPair = Functions.randomKeyPair();
     final Bytes expectedPublicKey = keyPair.publicKey().bytes();
     final Bytes derivedPublicKey =
-        new DefaultSigner(keyPair.secretKey()).deriveCompressedPublicKeyFromPrivate();
+        Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey());
     final Bytes decompressedPublicKey =
         Functions.derivePublicKeyFromCompressed(derivedPublicKey).bytes();
     assertEquals(expectedPublicKey, decompressedPublicKey);

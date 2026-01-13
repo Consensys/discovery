@@ -67,7 +67,7 @@ class EnrUpdateTrackerTest {
     final NodeRecord currentNodeRecord =
         TestUtil.generateNode(8000)
             .getNodeRecord()
-            .withUpdatedCustomField("test", Bytes.EMPTY, DefaultSigner.create(SECRET_KEY));
+            .withUpdatedCustomField("test", Bytes.EMPTY, new DefaultSigner(SECRET_KEY));
     when(session.getNodeRecord()).thenReturn(Optional.of(currentNodeRecord));
     tracker.updateIfRequired(session, currentNodeRecord.getSeq().subtract(1));
 

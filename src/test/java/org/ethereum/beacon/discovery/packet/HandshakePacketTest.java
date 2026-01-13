@@ -37,7 +37,7 @@ public class HandshakePacketTest {
           Bytes32.fromHexString(
               "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
-  private final Signer signer = DefaultSigner.create(srcStaticPrivateKey);
+  private final Signer signer = new DefaultSigner(srcStaticPrivateKey);
 
   private final Bytes32 destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");

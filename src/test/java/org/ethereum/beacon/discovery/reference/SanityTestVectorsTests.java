@@ -42,7 +42,7 @@ public class SanityTestVectorsTests {
           Bytes32.fromHexString(
               "0xeef77acb6c6a6eebc5b363a475ac583ec7eccdb42b6481424c60f59aa326547f"));
 
-  private final Signer signer = DefaultSigner.create(nodeAKeyPair.secretKey());
+  private final Signer signer = new DefaultSigner(nodeAKeyPair.secretKey());
 
   @Test
   void testOrdinaryPingPacket() {

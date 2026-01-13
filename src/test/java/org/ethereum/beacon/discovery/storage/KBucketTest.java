@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 class KBucketTest {
 
   private static final Signer SECURITY_MODULE =
-      DefaultSigner.create(Functions.randomKeyPair().secretKey());
+      new DefaultSigner(Functions.randomKeyPair().secretKey());
 
   private final LivenessChecker livenessChecker = mock(LivenessChecker.class);
 

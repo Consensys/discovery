@@ -45,7 +45,7 @@ import org.mockito.ArgumentCaptor;
 
 public class NodeSessionTest {
   private static final Signer SECURITY_MODULE =
-      DefaultSigner.create(Functions.randomKeyPair().secretKey());
+      new DefaultSigner(Functions.randomKeyPair().secretKey());
   private final NodeSessionManager nodeSessionManager = mock(NodeSessionManager.class);
   private final Bytes32 nodeId = Bytes32.ZERO;
 

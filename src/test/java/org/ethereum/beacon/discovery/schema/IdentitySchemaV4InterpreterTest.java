@@ -31,8 +31,7 @@ class IdentitySchemaV4InterpreterTest {
       Bytes.fromHexString("0x02197B9014C6C0500CF168BD1F17A3B4A1307251849A5ECEEE0B5EBC76A7EBDB37");
   private static final Bytes32 PRIV_KEY =
       Bytes32.fromHexString("0x2E953344686E18C99CDE5292D822D4427BDC5B473F3A6D69D6D0D897D9595110");
-  private static final Signer SECRET_KEY =
-      DefaultSigner.create(Functions.createSecretKey(PRIV_KEY));
+  private static final Signer SECRET_KEY = new DefaultSigner(Functions.createSecretKey(PRIV_KEY));
   private static final Bytes IPV6_LOCALHOST =
       Bytes.fromHexString("0x00000000000000000000000000000001");
 

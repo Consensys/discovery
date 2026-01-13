@@ -83,11 +83,11 @@ public class HandshakeHandlersTest {
     // Node1
     NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
     NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
-    Signer signer1 = DefaultSigner.create(nodePair1.getSecretKey());
+    Signer signer1 = new DefaultSigner(nodePair1.getSecretKey());
     // Node2
     NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
     NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
-    Signer signer2 = DefaultSigner.create(nodePair2.getSecretKey());
+    Signer signer2 = new DefaultSigner(nodePair2.getSecretKey());
 
     final LocalNodeRecordStore localNodeRecordStoreAt1 =
         new LocalNodeRecordStore(

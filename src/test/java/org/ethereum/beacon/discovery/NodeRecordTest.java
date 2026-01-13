@@ -21,7 +21,6 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.units.bigints.UInt64;
 import org.ethereum.beacon.discovery.crypto.DefaultSigner;
-import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.schema.EnrField;
 import org.ethereum.beacon.discovery.schema.IdentitySchema;
 import org.ethereum.beacon.discovery.schema.IdentitySchemaInterpreter;
@@ -92,8 +91,6 @@ public class NodeRecordTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
-    final Signer signer = DefaultSigner.create(keyPair.secretKey());
-
     final NodeRecord record =
         NODE_RECORD_FACTORY.createFromValues(
             UInt64.ONE,
@@ -102,7 +99,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("foo", Bytes.fromHexString("0x1234")));
-    record.sign(signer);
+    record.sign(new DefaultSigner(keyPair.secretKey()));
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);
     assertEquals(record, result);
@@ -159,9 +156,6 @@ public class NodeRecordTest {
         Functions.createKeyPairFromSecretBytes(
             Bytes32.fromHexString(
                 "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"));
-
-    final Signer signer = DefaultSigner.create(keyPair.secretKey());
-
     final int seq = 1;
 
     NodeRecord nodeRecord =
@@ -174,7 +168,7 @@ public class NodeRecordTest {
                 new EnrField(
                     EnrField.PKEY_SECP256K1,
                     Functions.deriveCompressedPublicKeyFromPrivate(keyPair.secretKey())));
-    nodeRecord.sign(signer);
+    nodeRecord.sign(new DefaultSigner(keyPair.secretKey()));
     assertEquals(nodeId, nodeRecord.getNodeId());
     assertEquals(
         "enr:-IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8",
@@ -233,7 +227,7 @@ public class NodeRecordTest {
             new EnrField(EnrField.IP_V4, ip),
             new EnrField(EnrField.TCP, port),
             new EnrField("eth", Collections.singletonList(forkIdList)));
-    record.sign(DefaultSigner.create(keyPair.secretKey()));
+    record.sign(new DefaultSigner(keyPair.secretKey()));
 
     final String serialized = record.asBase64();
     final NodeRecord result = NODE_RECORD_FACTORY.fromBase64(serialized);

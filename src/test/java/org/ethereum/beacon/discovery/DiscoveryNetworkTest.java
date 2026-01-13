@@ -53,7 +53,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                DefaultSigner.create(Functions.randomKeyPair().secretKey()),
+                new DefaultSigner(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker1);
@@ -62,7 +62,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                DefaultSigner.create(Functions.randomKeyPair().secretKey()),
+                new DefaultSigner(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker2);
@@ -76,10 +76,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                DefaultSigner.create(nodePair1.getSecretKey()),
+                new DefaultSigner(nodePair1.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            DefaultSigner.create(nodePair1.getSecretKey()),
+            new DefaultSigner(nodePair1.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
@@ -95,10 +95,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                DefaultSigner.create(nodePair2.getSecretKey()),
+                new DefaultSigner(nodePair2.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            DefaultSigner.create(nodePair2.getSecretKey()),
+            new DefaultSigner(nodePair2.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,

@@ -35,7 +35,7 @@ class DefaultExternalAddressSelectorTest {
   private final LocalNodeRecordStore localNodeRecordStore =
       new LocalNodeRecordStore(
           originalNodeRecord,
-          DefaultSigner.create(Functions.randomKeyPair().secretKey()),
+          new DefaultSigner(Functions.randomKeyPair().secretKey()),
           NodeRecordListener.NOOP,
           ADDRESS_UPDATER);
 

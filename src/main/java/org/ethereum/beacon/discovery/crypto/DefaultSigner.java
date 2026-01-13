@@ -17,22 +17,13 @@ public class DefaultSigner implements Signer {
     this.secretKey = secretKey;
   }
 
-  public static DefaultSigner create(final SecretKey secretKey) {
-    return new DefaultSigner(secretKey);
-  }
-
   /** {@inheritDoc} */
   @Override
   public Bytes deriveECDHKeyAgreement(final Bytes peerPublicKey) {
     return Functions.deriveECDHKeyAgreement(secretKey, peerPublicKey);
   }
 
-  /**
-   * Creates a signature of message `x`.
-   *
-   * @param messageHash message, hashed
-   * @return ECDSA signature with properties merged together: r || s
-   */
+  /** {@inheritDoc} */
   @Override
   public Bytes sign(final Bytes32 messageHash) {
     return Functions.sign(secretKey, messageHash);

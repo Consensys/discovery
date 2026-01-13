@@ -89,7 +89,7 @@ public class CryptoTest {
     Assertions.assertEquals(
         expectedIdNonceSig,
         HandshakeAuthData.signId(
-            idNonce, ephemeralPubKey, nodeIdB, DefaultSigner.create(LOCAL_SECRET)));
+            idNonce, ephemeralPubKey, nodeIdB, new DefaultSigner(LOCAL_SECRET)));
   }
 
   /**
