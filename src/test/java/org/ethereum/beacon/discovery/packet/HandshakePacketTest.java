@@ -12,6 +12,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.message.PingMessage;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.packet.StaticHeader.Flag;
@@ -35,6 +37,8 @@ public class HandshakePacketTest {
           Bytes32.fromHexString(
               "0x66fb62bfbd66b9177a138c1e5cddbe4f7c30c343e94e68df8769459cb1cde628"));
 
+  private final Signer signer = new DefaultSigner(srcStaticPrivateKey);
+
   private final Bytes32 destNodeId =
       Bytes32.fromHexString("0xbbbb9d047f0488c0b5a93c1c3f2d8bafc7c8ff337024a55434a0d0555de64db9");
   private final Bytes16 headerMaskingKey = Bytes16.wrap(destNodeId, 0);
@@ -50,8 +54,7 @@ public class HandshakePacketTest {
   @Test
   void testPacketRoundtrip() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     Header<HandshakeAuthData> header =
         Header.createHandshakeHeader(
@@ -91,8 +94,7 @@ public class HandshakePacketTest {
   void testWrongVersionFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -118,8 +120,7 @@ public class HandshakePacketTest {
   void testTooLargeSigSizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(
@@ -145,8 +146,7 @@ public class HandshakePacketTest {
   void testTooLargeEphKeySizeFails() {
     PingMessage pingMessage = new PingMessage(Bytes.fromHexString("0x00000001"), UInt64.valueOf(1));
 
-    Bytes idSignature =
-        HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, srcStaticPrivateKey);
+    Bytes idSignature = HandshakeAuthData.signId(idNonce, ephemeralPubKey, destNodeId, signer);
 
     HandshakeAuthDataImpl authData =
         new HandshakeAuthDataImpl(

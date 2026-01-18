@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket.HandshakeAuthData;
 import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
@@ -19,6 +21,8 @@ public class CryptoTests {
       Functions.createSecretKey(
           Bytes32.fromHexString(
               "0xfb757dc581730490a1d7a00deea65e9b1936924caaea8f44d476014856b68736"));
+
+  private final Signer signer = new DefaultSigner(LOCAL_SECRET);
 
   @Test
   void testECDH() {
@@ -48,7 +52,7 @@ public class CryptoTests {
 
     HKDFKeys hkdfKeys =
         Functions.hkdfExpand(
-            nodeIdABytes, nodeIdBBytes, LOCAL_SECRET, destPubkeyBytes, challengeDataBytes);
+            nodeIdABytes, nodeIdBBytes, signer, destPubkeyBytes, challengeDataBytes);
     assertThat(hkdfKeys.getInitiatorKey()).isEqualTo(expectedInitiatorKeyBytes);
     assertThat(hkdfKeys.getRecipientKey()).isEqualTo(expectedRecipientKeyBytes);
   }
@@ -68,8 +72,7 @@ public class CryptoTests {
             "0x94852a1e2318c4e5e9d422c98eaf19d1d90d876b29cd06ca7cb7546d0fff7b484fe86c09a064fe72bdbef73ba8e9c34df0cd2b53e9d65528c2c7f336d5dfc6e6");
 
     Bytes signatureBytes =
-        HandshakeAuthData.signId(
-            challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, LOCAL_SECRET);
+        HandshakeAuthData.signId(challengeDataBytes, ephemeralPubkeyBytes, nodeIdBBytes, signer);
     assertThat(signatureBytes).isEqualTo(expectedSignatureBytes);
   }
 

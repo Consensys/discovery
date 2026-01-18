@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.ethereum.beacon.discovery.TestUtil.NodeInfo;
+import org.ethereum.beacon.discovery.crypto.DefaultSigner;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
 import org.ethereum.beacon.discovery.network.NettyDiscoveryServerImpl;
@@ -52,7 +53,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                Functions.randomKeyPair().secretKey(),
+                new DefaultSigner(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker1);
@@ -61,7 +62,7 @@ public class DiscoveryNetworkTest {
             clock,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                Functions.randomKeyPair().secretKey(),
+                new DefaultSigner(Functions.randomKeyPair().secretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
             livenessChecker2);
@@ -75,10 +76,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage1,
             new LocalNodeRecordStore(
                 nodeRecord1,
-                nodePair1.getSecretKey(),
+                new DefaultSigner(nodePair1.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair1.getSecretKey(),
+            new DefaultSigner(nodePair1.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-1"),
             expirationSchedulerFactory,
@@ -94,10 +95,10 @@ public class DiscoveryNetworkTest {
             nodeBucketStorage2,
             new LocalNodeRecordStore(
                 nodeRecord2,
-                nodePair2.getSecretKey(),
+                new DefaultSigner(nodePair2.getSecretKey()),
                 NodeRecordListener.NOOP,
                 NewAddressHandler.NOOP),
-            nodePair2.getSecretKey(),
+            new DefaultSigner(nodePair2.getSecretKey()),
             NODE_RECORD_FACTORY_NO_VERIFICATION,
             Schedulers.createDefault().newSingleThreadDaemon("tasks-2"),
             expirationSchedulerFactory,

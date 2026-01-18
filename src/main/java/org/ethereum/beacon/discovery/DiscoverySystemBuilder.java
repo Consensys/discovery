@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker;
 import org.ethereum.beacon.discovery.liveness.LivenessChecker.Pinger;
 import org.ethereum.beacon.discovery.message.handler.DefaultExternalAddressSelector;
@@ -52,7 +52,7 @@ public class DiscoverySystemBuilder {
   private List<NodeRecord> bootnodes = Collections.emptyList();
   private Optional<List<InetSocketAddress>> listenAddresses = Optional.empty();
   private NodeRecord localNodeRecord;
-  private SecretKey secretKey;
+  private Signer signer;
   private NodeRecordFactory nodeRecordFactory = NodeRecordFactory.DEFAULT;
   private Schedulers schedulers;
   private NodeRecordListener localNodeRecordListener = NodeRecordListener.NOOP;
@@ -89,8 +89,8 @@ public class DiscoverySystemBuilder {
     return this;
   }
 
-  public DiscoverySystemBuilder secretKey(final SecretKey secretKey) {
-    this.secretKey = secretKey;
+  public DiscoverySystemBuilder signer(final Signer signer) {
+    this.signer = signer;
     return this;
   }
 
@@ -215,7 +215,7 @@ public class DiscoverySystemBuilder {
                           newAddress,
                           oldTcpAddress.map(InetSocketAddress::getPort),
                           oldQuicAddress.map(InetSocketAddress::getPort),
-                          secretKey));
+                          signer));
                 });
     schedulers = requireNonNullElseGet(schedulers, Schedulers::createDefault);
     final List<InetSocketAddress> serverListenAddresses =
@@ -245,7 +245,7 @@ public class DiscoverySystemBuilder {
             localNodeRecordStore,
             () ->
                 new LocalNodeRecordStore(
-                    localNodeRecord, secretKey, localNodeRecordListener, newAddressHandler));
+                    localNodeRecord, signer, localNodeRecordListener, newAddressHandler));
     nodeBucketStorage =
         requireNonNullElseGet(
             nodeBucketStorage, () -> new KBuckets(clock, localNodeRecordStore, livenessChecker));
@@ -280,7 +280,7 @@ public class DiscoverySystemBuilder {
 
   private DiscoverySystemImpl buildImpl() {
     checkNotNull(localNodeRecord, "Missing local node record");
-    checkNotNull(secretKey, "Missing secret key");
+    checkNotNull(signer, "Missing signer");
     createDefaults();
 
     // Check local node record is valid
@@ -315,7 +315,7 @@ public class DiscoverySystemBuilder {
         discoveryServers,
         nodeBucketStorage,
         localNodeRecordStore,
-        secretKey,
+        signer,
         nodeRecordFactory,
         schedulers.newSingleThreadDaemon("discovery-client-" + clientNumber),
         expirationSchedulerFactory,

@@ -120,8 +120,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
           Functions.deriveCompressedPublicKeyFromPrivate(ephemeralKeyPair.secretKey());
 
       Bytes idSignature =
-          HandshakeAuthData.signId(
-              challengeData, ephemeralPubKey, destNodeId, session.getStaticNodeKey());
+          HandshakeAuthData.signId(challengeData, ephemeralPubKey, destNodeId, session.getSigner());
 
       NodeRecord respRecord = null;
       UInt64 lastKnownOurEnrVer = whoAreYouPacket.getHeader().getAuthData().getEnrSeq();

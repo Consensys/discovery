@@ -29,6 +29,7 @@ import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
 import org.bouncycastle.math.ec.ECPoint;
+import org.ethereum.beacon.discovery.crypto.Signer;
 
 /** Set of cryptography and utilities functions used in discovery */
 public class Functions {
@@ -185,8 +186,31 @@ public class Functions {
   }
 
   /**
-   * {@link #hkdfExpand(Bytes, Bytes, SecretKey, Bytes, Bytes)} but with keyAgreement already
-   * derived by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
+   * The ephemeral key is used to perform Diffie-Hellman key agreement with B's static public key
+   * and the session keys are derived from it using the HKDF key derivation function.
+   *
+   * <p><code>
+   * ephemeral-key = random private key
+   * ephemeral-pubkey = public key corresponding to ephemeral-key
+   * dest-pubkey = public key of B
+   * secret = agree(ephemeral-key, dest-pubkey)
+   * info = "discovery v5 key agreement" || node-id-A || node-id-B
+   * prk = HKDF-Extract(secret, id-nonce)
+   * initiator-key, recipient-key, auth-resp-key = HKDF-Expand(prk, info)</code>
+   */
+  public static HKDFKeys hkdfExpand(
+      final Bytes srcNodeId,
+      final Bytes destNodeId,
+      final Signer signer,
+      final Bytes destPubKey,
+      final Bytes idNonce) {
+    final Bytes keyAgreement = signer.deriveECDHKeyAgreement(destPubKey);
+    return hkdfExpand(srcNodeId, destNodeId, keyAgreement, idNonce);
+  }
+
+  /**
+   * {@link #hkdfExpand(Bytes, Bytes, Signer, Bytes, Bytes)} but with keyAgreement already derived
+   * by {@link #deriveECDHKeyAgreement(SecretKey, Bytes)}
    */
   @SuppressWarnings({"DefaultCharset"})
   public static HKDFKeys hkdfExpand(

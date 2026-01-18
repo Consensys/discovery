@@ -25,8 +25,8 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.bouncycastle.math.ec.ECPoint;
+import org.ethereum.beacon.discovery.crypto.Signer;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
@@ -86,9 +86,8 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
   }
 
   @Override
-  public void sign(final NodeRecord nodeRecord, final SecretKey secretKey) {
-    Bytes signature =
-        Functions.sign(secretKey, Functions.hashKeccak(nodeRecord.serializeNoSignature()));
+  public void sign(final NodeRecord nodeRecord, final Signer signer) {
+    Bytes signature = signer.sign(Functions.hashKeccak(nodeRecord.serializeNoSignature()));
     nodeRecord.setSignature(signature);
   }
 
@@ -131,7 +130,7 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       final InetSocketAddress newAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final SecretKey secretKey) {
+      final Signer signer) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(
             nodeRecord,
@@ -146,21 +145,18 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
     NodeRecordBuilder.addFieldsForAddress(
         fields, newAddress.getAddress(), newAddress.getPort(), newTcpPort, newQuicPort);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, secretKey);
+    sign(newRecord, signer);
     return newRecord;
   }
 
   @Override
   public NodeRecord createWithUpdatedCustomField(
-      final NodeRecord nodeRecord,
-      final String fieldName,
-      final Bytes value,
-      final SecretKey secretKey) {
+      final NodeRecord nodeRecord, final String fieldName, final Bytes value, final Signer signer) {
     final List<EnrField> fields =
         getAllFieldsThatMatch(nodeRecord, field -> !field.getName().equals(fieldName));
     addCustomField(fields, fieldName, value);
     final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
-    sign(newRecord, secretKey);
+    sign(newRecord, signer);
     return newRecord;
   }
 

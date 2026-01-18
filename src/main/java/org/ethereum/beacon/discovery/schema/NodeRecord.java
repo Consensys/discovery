@@ -19,10 +19,10 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.MutableBytes;
-import org.apache.tuweni.crypto.SECP256K1.SecretKey;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 import org.apache.tuweni.units.bigints.UInt64;
+import org.ethereum.beacon.discovery.crypto.Signer;
 
 /**
  * Ethereum Node Record V4
@@ -154,8 +154,8 @@ public class NodeRecord {
     return identitySchemaInterpreter.isValid(this);
   }
 
-  public void sign(final SecretKey secretKey) {
-    identitySchemaInterpreter.sign(this, secretKey);
+  public void sign(final Signer signer) {
+    identitySchemaInterpreter.sign(this, signer);
   }
 
   public void writeRlp(final RLPWriter writer) {
@@ -239,15 +239,14 @@ public class NodeRecord {
       final InetSocketAddress newUdpAddress,
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
-      final SecretKey secretKey) {
+      final Signer signer) {
     return identitySchemaInterpreter.createWithNewAddress(
-        this, newUdpAddress, newTcpPort, newQuicPort, secretKey);
+        this, newUdpAddress, newTcpPort, newQuicPort, signer);
   }
 
   public NodeRecord withUpdatedCustomField(
-      final String fieldName, final Bytes value, final SecretKey secretKey) {
-    return identitySchemaInterpreter.createWithUpdatedCustomField(
-        this, fieldName, value, secretKey);
+      final String fieldName, final Bytes value, final Signer signer) {
+    return identitySchemaInterpreter.createWithUpdatedCustomField(this, fieldName, value, signer);
   }
 
   @Override

@@ -81,7 +81,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
           Functions.hkdfExpand(
               session.getNodeId(),
               session.getHomeNodeId(),
-              session.getStaticNodeKey(),
+              session.getSigner(),
               ephemeralPubKeyCompressed,
               whoAreYouChallenge);
       // Swap keys because we are not initiator, other side is
