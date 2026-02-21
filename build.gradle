@@ -21,7 +21,6 @@ sourceCompatibility = JavaVersion.VERSION_21
 targetCompatibility = JavaVersion.VERSION_21
 
 repositories {
-  mavenLocal()
   mavenCentral()
   maven { url "https://artifacts.consensys.net/public/maven/maven/" }
 }
