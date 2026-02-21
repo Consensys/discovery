@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.schema;
 import static org.ethereum.beacon.discovery.schema.NodeRecordBuilder.addCustomField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -34,10 +35,19 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   private static final Logger LOG = LogManager.getLogger();
 
+  // key: compressed pubKey (33 bytes), value: nodeId (32 bytes)
+  // ~165 bytes/entry with overhead, 10000 entries ≈ 1.6 MB
   private final LoadingCache<Bytes, Bytes> nodeIdCache =
       CacheBuilder.newBuilder()
-          .maximumSize(4000)
+          .maximumSize(10000)
           .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeIdImpl));
+
+  // key: serializedNoSig || signature (up to ~298 bytes, bounded by EIP-778 300-byte ENR limit
+  // enforced in NodeRecord constructor)
+  // ~400 bytes/entry with overhead, 10000 entries ≈ 4 MB
+  // Only caches valid (true) results to prevent cache pollution attacks
+  private final Cache<Bytes, Boolean> enrSignatureCache =
+      CacheBuilder.newBuilder().maximumSize(10000).build();
 
   private static final ImmutableSet<String> ADDRESS_IP_V4_FIELD_NAMES =
       ImmutableSet.of(EnrField.IP_V4, EnrField.UDP);
@@ -58,8 +68,18 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       return false;
     }
     Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
-    return Functions.verifyECDSASignature(
-        nodeRecord.getSignature(), Functions.hashKeccak(nodeRecord.serializeNoSignature()), pubKey);
+    Bytes serializedNoSig = nodeRecord.serializeNoSignature();
+    Bytes cacheKey = Bytes.concatenate(serializedNoSig, nodeRecord.getSignature());
+    if (enrSignatureCache.getIfPresent(cacheKey) != null) {
+      return true;
+    }
+    boolean result =
+        Functions.verifyECDSASignature(
+            nodeRecord.getSignature(), Functions.hashKeccak(serializedNoSig), pubKey);
+    if (result) {
+      enrSignatureCache.put(cacheKey, Boolean.TRUE);
+    }
+    return result;
   }
 
   @Override
