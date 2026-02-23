@@ -112,8 +112,7 @@ public class NettyDiscoveryServerImpl implements NettyDiscoveryServer {
     if (channel != null && listenAddress.getPort() == 0) {
       // Ephemeral port: keep the configured IP (preserves IP-family) but return the actual port.
       return new InetSocketAddress(
-          listenAddress.getAddress(),
-          ((InetSocketAddress) channel.localAddress()).getPort());
+          listenAddress.getAddress(), ((InetSocketAddress) channel.localAddress()).getPort());
     }
     return listenAddress;
   }

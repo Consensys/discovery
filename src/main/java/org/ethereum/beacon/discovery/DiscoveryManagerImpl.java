@@ -164,7 +164,8 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                             .thenAccept(
                                 channel -> {
                                   // getListenAddress() returns the configured IP with the actual
-                                  // bound port (resolving port 0 to the OS-assigned ephemeral port).
+                                  // bound port (resolving port 0 to the OS-assigned ephemeral
+                                  // port).
                                   final InetSocketAddress boundAddress =
                                       discoveryServer.getListenAddress();
                                   // If port was 0, update the ENR with the real port while keeping
@@ -185,8 +186,7 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                                           addr ->
                                               localNodeRecordStore.onSocketAddressChanged(
                                                   new InetSocketAddress(
-                                                      addr.getAddress(),
-                                                      boundAddress.getPort())));
+                                                      addr.getAddress(), boundAddress.getPort())));
                                   channels.put(
                                       InternetProtocolFamily.of(boundAddress.getAddress()),
                                       channel);
