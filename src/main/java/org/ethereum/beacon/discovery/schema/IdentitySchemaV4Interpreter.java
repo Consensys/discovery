@@ -42,11 +42,12 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
           .maximumSize(10000)
           .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeIdImpl));
 
-  // key: serializedNoSig || signature (up to ~298 bytes, bounded by EIP-778 300-byte ENR limit
-  // enforced in NodeRecord constructor)
-  // ~400 bytes/entry with overhead, 10000 entries ≈ 4 MB
-  // Only caches valid (true) results to prevent cache pollution attacks
-  private final Cache<Bytes, Boolean> enrSignatureCache =
+  // key: signature (64 bytes), value: serializedNoSig (up to ~236 bytes, bounded by EIP-778
+  // 300-byte ENR limit enforced in NodeRecord constructor)
+  // ~400 bytes/entry (64 + 236 + ~100 Guava overhead), 10000 entries ≈ 3.8 MB
+  // Only caches valid (true) results to prevent cache pollution attacks.
+  // On cache hit, the stored content is compared to the current to prevent signature reuse attacks.
+  private final Cache<Bytes, Bytes> enrSignatureCache =
       CacheBuilder.newBuilder().maximumSize(10000).build();
 
   private static final ImmutableSet<String> ADDRESS_IP_V4_FIELD_NAMES =
@@ -68,16 +69,16 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
       return false;
     }
     Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
+    Bytes signature = nodeRecord.getSignature();
     Bytes serializedNoSig = nodeRecord.serializeNoSignature();
-    Bytes cacheKey = Bytes.concatenate(serializedNoSig, nodeRecord.getSignature());
-    if (enrSignatureCache.getIfPresent(cacheKey) != null) {
+    Bytes cachedContent = enrSignatureCache.getIfPresent(signature);
+    if (cachedContent != null && cachedContent.equals(serializedNoSig)) {
       return true;
     }
     boolean result =
-        Functions.verifyECDSASignature(
-            nodeRecord.getSignature(), Functions.hashKeccak(serializedNoSig), pubKey);
+        Functions.verifyECDSASignature(signature, Functions.hashKeccak(serializedNoSig), pubKey);
     if (result) {
-      enrSignatureCache.put(cacheKey, Boolean.TRUE);
+      enrSignatureCache.put(signature, serializedNoSig);
     }
     return result;
   }
