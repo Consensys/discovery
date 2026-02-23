@@ -56,4 +56,41 @@ public class LocalNodeRecordStoreTest {
     assertThat(listenerCalls.get(1).newRec.get("fieldName"))
         .isEqualTo(Bytes.fromHexString("0x112233"));
   }
+
+  @Test
+  void onBoundPortResolvedUpdatesEphemeralUdpPort() {
+    final NodeRecord nodeRecord =
+        SimpleIdentitySchemaInterpreter.createNodeRecord(
+            Bytes.ofUnsignedInt(1), new InetSocketAddress("127.0.0.1", 0));
+
+    final List<NodeRecord> updatedRecords = new ArrayList<>();
+    final LocalNodeRecordStore recordStore =
+        new LocalNodeRecordStore(
+            nodeRecord, null, (o, n) -> updatedRecords.add(n), ADDRESS_UPDATER);
+
+    recordStore.onBoundPortResolved(new InetSocketAddress("0.0.0.0", 54321));
+
+    assertThat(updatedRecords).hasSize(1);
+    final InetSocketAddress updatedAddress =
+        recordStore.getLocalNodeRecord().getUdpAddress().orElseThrow();
+    assertThat(updatedAddress.getPort()).isEqualTo(54321);
+    assertThat(updatedAddress.getAddress().getHostAddress()).isEqualTo("127.0.0.1");
+  }
+
+  @Test
+  void onBoundPortResolvedDoesNotUpdateNonEphemeralPort() {
+    final NodeRecord nodeRecord =
+        SimpleIdentitySchemaInterpreter.createNodeRecord(
+            Bytes.ofUnsignedInt(1), new InetSocketAddress("127.0.0.1", 30303));
+
+    final List<NodeRecord> updatedRecords = new ArrayList<>();
+    final LocalNodeRecordStore recordStore =
+        new LocalNodeRecordStore(
+            nodeRecord, null, (o, n) -> updatedRecords.add(n), ADDRESS_UPDATER);
+
+    recordStore.onBoundPortResolved(new InetSocketAddress("0.0.0.0", 54321));
+
+    assertThat(updatedRecords).isEmpty();
+    assertThat(recordStore.getLocalNodeRecord()).isEqualTo(nodeRecord);
+  }
 }

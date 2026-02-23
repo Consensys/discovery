@@ -9,7 +9,6 @@ import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDIC
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -168,25 +167,11 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                                   // port).
                                   final InetSocketAddress boundAddress =
                                       discoveryServer.getListenAddress();
-                                  // If port was 0, update the ENR with the real port while keeping
-                                  // the advertised IP intact.
-                                  final boolean isIpv6 =
-                                      boundAddress.getAddress() instanceof Inet6Address;
-                                  final Optional<InetSocketAddress> currentEnrAddress =
-                                      isIpv6
-                                          ? localNodeRecordStore
-                                              .getLocalNodeRecord()
-                                              .getUdp6Address()
-                                          : localNodeRecordStore
-                                              .getLocalNodeRecord()
-                                              .getUdpAddress();
-                                  currentEnrAddress
-                                      .filter(addr -> addr.getPort() == 0)
-                                      .ifPresent(
-                                          addr ->
-                                              localNodeRecordStore.onSocketAddressChanged(
-                                                  new InetSocketAddress(
-                                                      addr.getAddress(), boundAddress.getPort())));
+                                  // If the ENR was initialised with port 0, update it with the
+                                  // real OS-assigned port.  onBoundPortResolved bypasses the
+                                  // NewAddressHandler so the update is always applied regardless
+                                  // of how the caller configured external address changes.
+                                  localNodeRecordStore.onBoundPortResolved(boundAddress);
                                   channels.put(
                                       InternetProtocolFamily.of(boundAddress.getAddress()),
                                       channel);
