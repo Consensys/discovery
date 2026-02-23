@@ -9,6 +9,8 @@ import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDIC
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import java.net.Inet6Address;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -161,10 +163,33 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
                             .start()
                             .thenAccept(
                                 channel -> {
-                                  final InternetProtocolFamily ipFamily =
-                                      InternetProtocolFamily.of(
-                                          discoveryServer.getListenAddress().getAddress());
-                                  channels.put(ipFamily, channel);
+                                  // getListenAddress() returns the configured IP with the actual
+                                  // bound port (resolving port 0 to the OS-assigned ephemeral port).
+                                  final InetSocketAddress boundAddress =
+                                      discoveryServer.getListenAddress();
+                                  // If port was 0, update the ENR with the real port while keeping
+                                  // the advertised IP intact.
+                                  final boolean isIpv6 =
+                                      boundAddress.getAddress() instanceof Inet6Address;
+                                  final Optional<InetSocketAddress> currentEnrAddress =
+                                      isIpv6
+                                          ? localNodeRecordStore
+                                              .getLocalNodeRecord()
+                                              .getUdp6Address()
+                                          : localNodeRecordStore
+                                              .getLocalNodeRecord()
+                                              .getUdpAddress();
+                                  currentEnrAddress
+                                      .filter(addr -> addr.getPort() == 0)
+                                      .ifPresent(
+                                          addr ->
+                                              localNodeRecordStore.onSocketAddressChanged(
+                                                  new InetSocketAddress(
+                                                      addr.getAddress(),
+                                                      boundAddress.getPort())));
+                                  channels.put(
+                                      InternetProtocolFamily.of(boundAddress.getAddress()),
+                                      channel);
                                 }))
                 .toArray(CompletableFuture<?>[]::new))
         .thenRun(() -> discoveryClient = new NettyDiscoveryClientImpl(outgoingMessages, channels));
