@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.crypto.Signer;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
@@ -42,11 +43,10 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
           .maximumSize(10000)
           .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeIdImpl));
 
-  // key: signature (64 bytes), value: serializedNoSig (up to ~236 bytes, bounded by EIP-778
-  // 300-byte ENR limit enforced in NodeRecord constructor)
-  // ~400 bytes/entry (64 + 236 + ~100 Guava overhead), 10000 entries ≈ 3.8 MB
+  // key: sha256(serializedNoSig) (32 bytes), value: signature (64 bytes)
+  // ~196 bytes/entry (32 + 64 + ~100 Guava overhead), 10000 entries ≈ 1.9 MB
   // Only caches valid (true) results to prevent cache pollution attacks.
-  // On cache hit, the stored content is compared to the current to prevent signature reuse attacks.
+  // On cache hit, the stored signature is compared to the current to prevent reuse attacks.
   private final Cache<Bytes, Bytes> enrSignatureCache =
       CacheBuilder.newBuilder().maximumSize(10000).build();
 
@@ -68,17 +68,19 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
           getScheme());
       return false;
     }
-    Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
     Bytes signature = nodeRecord.getSignature();
     Bytes serializedNoSig = nodeRecord.serializeNoSignature();
-    Bytes cachedContent = enrSignatureCache.getIfPresent(signature);
-    if (cachedContent != null && cachedContent.equals(serializedNoSig)) {
+    Bytes serializedNoSigHash = CryptoUtil.sha256(serializedNoSig);
+    Bytes cachedSignature = enrSignatureCache.getIfPresent(serializedNoSigHash);
+    if (cachedSignature != null && cachedSignature.equals(signature)) {
       return true;
     }
+
+    Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
     boolean result =
         Functions.verifyECDSASignature(signature, Functions.hashKeccak(serializedNoSig), pubKey);
     if (result) {
-      enrSignatureCache.put(signature, serializedNoSig);
+      enrSignatureCache.put(serializedNoSigHash, signature);
     }
     return result;
   }
