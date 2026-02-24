@@ -447,6 +447,31 @@ public class DiscoveryIntegrationTest {
         });
   }
 
+  @Test
+  public void ephemeralPortIsReflectedInLocalNodeRecord() throws Exception {
+    final KeyPair keyPair = Functions.randomKeyPair();
+    final NodeRecord nodeRecord =
+        new NodeRecordBuilder()
+            .signer(new DefaultSigner(keyPair.secretKey()))
+            .address(LOCALHOST, 0)
+            .build();
+
+    final DiscoverySystem discoverySystem =
+        new DiscoverySystemBuilder()
+            .listen(new InetSocketAddress(LOCALHOST, 0))
+            .localNodeRecord(nodeRecord)
+            .signer(new DefaultSigner(keyPair.secretKey()))
+            .retryTimeout(RETRY_TIMEOUT)
+            .lifeCheckInterval(LIVE_CHECK_INTERVAL)
+            .build();
+    managers.add(discoverySystem);
+    waitFor(discoverySystem.start());
+
+    final int actualPort =
+        discoverySystem.getLocalNodeRecord().getUdpAddress().orElseThrow().getPort();
+    assertThat(actualPort).isNotEqualTo(0);
+  }
+
   private DiscoverySystem createDiscoveryClient(final NodeRecord... bootnodes) throws Exception {
     return createDiscoveryClient(true, bootnodes);
   }
