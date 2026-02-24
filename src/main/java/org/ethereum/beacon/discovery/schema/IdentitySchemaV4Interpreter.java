@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.schema;
 import static org.ethereum.beacon.discovery.schema.NodeRecordBuilder.addCustomField;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -27,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.beacon.discovery.crypto.Signer;
+import org.ethereum.beacon.discovery.util.CryptoUtil;
 import org.ethereum.beacon.discovery.util.Functions;
 import org.ethereum.beacon.discovery.util.Utils;
 
@@ -34,10 +36,19 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
 
   private static final Logger LOG = LogManager.getLogger();
 
+  // key: compressed pubKey (33 bytes), value: nodeId (32 bytes)
+  // ~165 bytes/entry with overhead, 10000 entries ≈ 1.6 MB
   private final LoadingCache<Bytes, Bytes> nodeIdCache =
       CacheBuilder.newBuilder()
-          .maximumSize(4000)
+          .maximumSize(10000)
           .build(CacheLoader.from(IdentitySchemaV4Interpreter::calculateNodeIdImpl));
+
+  // key: sha256(serializedNoSig) (32 bytes), value: signature (64 bytes)
+  // ~196 bytes/entry (32 + 64 + ~100 Guava overhead), 10000 entries ≈ 1.9 MB
+  // Only caches valid (true) results to prevent cache pollution attacks.
+  // On cache hit, the stored signature is compared to the current to prevent reuse attacks.
+  private final Cache<Bytes, Bytes> enrSignatureCache =
+      CacheBuilder.newBuilder().maximumSize(10000).build();
 
   private static final ImmutableSet<String> ADDRESS_IP_V4_FIELD_NAMES =
       ImmutableSet.of(EnrField.IP_V4, EnrField.UDP);
@@ -57,9 +68,21 @@ public class IdentitySchemaV4Interpreter implements IdentitySchemaInterpreter {
           getScheme());
       return false;
     }
+    Bytes signature = nodeRecord.getSignature();
+    Bytes serializedNoSig = nodeRecord.serializeNoSignature();
+    Bytes serializedNoSigHash = CryptoUtil.sha256(serializedNoSig);
+    Bytes cachedSignature = enrSignatureCache.getIfPresent(serializedNoSigHash);
+    if (cachedSignature != null && cachedSignature.equals(signature)) {
+      return true;
+    }
+
     Bytes pubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1); // compressed
-    return Functions.verifyECDSASignature(
-        nodeRecord.getSignature(), Functions.hashKeccak(nodeRecord.serializeNoSignature()), pubKey);
+    boolean result =
+        Functions.verifyECDSASignature(signature, Functions.hashKeccak(serializedNoSig), pubKey);
+    if (result) {
+      enrSignatureCache.put(serializedNoSigHash, signature);
+    }
+    return result;
   }
 
   @Override
