@@ -84,7 +84,7 @@ public class TimeControllerImpl implements TimeController {
 
     NavigableSet<OrderedTask> tasks = this.tasks.get(task.getTime());
     for (OrderedTask orderedTask : tasks) {
-      if (orderedTask.task == task) {
+      if (orderedTask.task.equals(task)) {
         this.tasks.remove(task.getTime(), orderedTask);
         return;
       }
