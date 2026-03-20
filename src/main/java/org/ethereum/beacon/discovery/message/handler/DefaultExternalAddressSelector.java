@@ -110,8 +110,7 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
 
   private Optional<InetSocketAddress> selectExternalAddress(final boolean ipv6) {
     return reportedAddresses.entrySet().stream()
-        .filter(
-            entry -> (entry.getKey().getAddress() instanceof Inet6Address) == ipv6)
+        .filter(entry -> (entry.getKey().getAddress() instanceof Inet6Address) == ipv6)
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
         .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
         .map(Map.Entry::getKey);

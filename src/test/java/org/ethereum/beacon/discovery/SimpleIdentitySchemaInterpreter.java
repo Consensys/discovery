@@ -154,13 +154,11 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
         fields.add(new EnrField(EnrField.IP_V4, nodeRecord.get(EnrField.IP_V4)));
         fields.add(new EnrField(EnrField.UDP, nodeRecord.get(EnrField.UDP)));
       }
-      fields.add(
-          new EnrField(EnrField.IP_V6, Bytes.wrap(newAddress.getAddress().getAddress())));
+      fields.add(new EnrField(EnrField.IP_V6, Bytes.wrap(newAddress.getAddress().getAddress())));
       fields.add(new EnrField(EnrField.UDP_V6, newAddress.getPort()));
     } else {
       // Updating IPv4 — preserve IPv6 fields if present
-      fields.add(
-          new EnrField(EnrField.IP_V4, Bytes.wrap(newAddress.getAddress().getAddress())));
+      fields.add(new EnrField(EnrField.IP_V4, Bytes.wrap(newAddress.getAddress().getAddress())));
       fields.add(new EnrField(EnrField.UDP, newAddress.getPort()));
       if (nodeRecord.get(EnrField.IP_V6) != null) {
         fields.add(new EnrField(EnrField.IP_V6, nodeRecord.get(EnrField.IP_V6)));
@@ -169,8 +167,7 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
     }
     fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
     fields.add(new EnrField(EnrField.PKEY_SECP256K1, getNodeId(nodeRecord)));
-    final NodeRecord newRecord =
-        NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
+    final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, signer);
     return newRecord;
   }
