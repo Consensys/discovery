@@ -57,18 +57,11 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     removeStaleAddresses(reportedTime);
     limitTrackedAddresses();
 
-    selectExternalAddress()
-        .ifPresent(
-            selectedAddress -> {
-              final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
-              final Optional<InetSocketAddress> currentAddress =
-                  selectedAddress.getAddress() instanceof Inet6Address
-                      ? homeNodeRecord.getUdp6Address()
-                      : homeNodeRecord.getUdpAddress();
-              if (currentAddress.map(current -> !current.equals(selectedAddress)).orElse(true)) {
-                localNodeRecordStore.onSocketAddressChanged(selectedAddress);
-              }
-            });
+    // Select best address per IP family independently to support dual-stack auto-discovery.
+    // Without per-family selection, the dominant IP family (usually IPv4) always wins
+    // and the other family's ENR fields are never populated.
+    selectExternalAddress(false).ifPresent(this::maybeUpdateAddress);
+    selectExternalAddress(true).ifPresent(this::maybeUpdateAddress);
   }
 
   private void removeStaleAddresses(final Instant now) {
@@ -104,8 +97,21 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
         (key, currentValue) -> currentValue != null ? currentValue.removeReport() : null);
   }
 
-  private Optional<InetSocketAddress> selectExternalAddress() {
+  private void maybeUpdateAddress(final InetSocketAddress selectedAddress) {
+    final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
+    final Optional<InetSocketAddress> currentAddress =
+        selectedAddress.getAddress() instanceof Inet6Address
+            ? homeNodeRecord.getUdp6Address()
+            : homeNodeRecord.getUdpAddress();
+    if (currentAddress.map(current -> !current.equals(selectedAddress)).orElse(true)) {
+      localNodeRecordStore.onSocketAddressChanged(selectedAddress);
+    }
+  }
+
+  private Optional<InetSocketAddress> selectExternalAddress(final boolean ipv6) {
     return reportedAddresses.entrySet().stream()
+        .filter(
+            entry -> (entry.getKey().getAddress() instanceof Inet6Address) == ipv6)
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
         .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
         .map(Map.Entry::getKey);
