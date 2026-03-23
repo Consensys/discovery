@@ -48,18 +48,6 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
         new EnrField(EnrField.UDP, udpAddress.getPort()));
   }
 
-  public static NodeRecord createDualStackNodeRecord(
-      final Bytes nodeId,
-      final InetSocketAddress ipv4Address,
-      final InetSocketAddress ipv6Address) {
-    return createNodeRecord(
-        nodeId,
-        new EnrField(EnrField.IP_V4, Bytes.wrap(ipv4Address.getAddress().getAddress())),
-        new EnrField(EnrField.UDP, ipv4Address.getPort()),
-        new EnrField(EnrField.IP_V6, Bytes.wrap(ipv6Address.getAddress().getAddress())),
-        new EnrField(EnrField.UDP_V6, ipv6Address.getPort()));
-  }
-
   public static NodeRecord createNodeRecord(final Bytes nodeId, final EnrField... extraFields) {
     final List<EnrField> fields = new ArrayList<>(List.of(extraFields));
     fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
