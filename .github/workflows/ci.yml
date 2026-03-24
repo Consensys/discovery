@@ -24,14 +24,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Java and Gradle
         id: setup-java-gradle
         uses: ConsenSys/github-actions/java-setup-gradle@main
       - name: Build
         run: ./gradlew --no-daemon --parallel build sourcesJar
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
@@ -39,7 +39,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-libs
           path: build/libs/
@@ -56,7 +56,7 @@ jobs:
       startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Java and Gradle
         id: setup-java-gradle
         uses: ConsenSys/github-actions/java-setup-gradle@main
