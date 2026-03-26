@@ -2,16 +2,37 @@
 
 plugins {
   id 'java-library'
+  id 'maven-publish'
   id 'com.diffplug.spotless' version '6.25.0'
   id 'com.github.ben-manes.versions' version '0.51.0'
   id 'com.github.hierynomus.license' version '0.16.1'
   id 'io.spring.dependency-management' version '1.1.5'
   id 'net.ltgt.errorprone' version '4.0.1'
-  id 'org.ajoberstar.grgit' version '5.2.2'
+  id 'me.qoomon.git-versioning' version '6.4.4'
+  id 'org.jreleaser' version '1.17.0'
 }
 
-rootProject.version = calculatePublishVersion()
-def specificVersion = calculateVersion()
+version = 'UNKNOWN'
+
+gitVersioning.apply {
+  refs {
+    tag('.+') {
+      version = '${ref}'
+    }
+    branch('master') {
+      version = 'develop'
+    }
+    branch('release-.+') {
+      version = '${ref.slug}+develop'
+    }
+    branch('.+') {
+      version = 'develop'
+    }
+  }
+  rev {
+    version = 'UNKNOWN'
+  }
+}
 
 apply from: "${rootDir}/gradle/versions.gradle"
 apply from: "${rootDir}/gradle/check-licenses.gradle"
@@ -135,7 +156,7 @@ tasks.withType(JavaCompile) {
           'Specification-Title': project.name,
           'Specification-Version': project.version,
           'Implementation-Title': project.name,
-          'Implementation-Version': specificVersion
+          'Implementation-Version': project.version
       )
     }
   }
@@ -158,9 +179,9 @@ javadoc {
   options.encoding = 'UTF-8'
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier = 'sources'
-  from sourceSets.main.allSource
+java {
+  withJavadocJar()
+  withSourcesJar()
 }
 
 task runTestDiscovery(type:JavaExec) {
@@ -169,19 +190,10 @@ task runTestDiscovery(type:JavaExec) {
     systemProperty "log4j.configurationFile", "log4j2-test-discovery.xml"
 }
 
-def cloudsmithUser = project.hasProperty('cloudsmithUser') ? project.property('cloudsmithUser') : System.getenv('CLOUDSMITH_USER')
-def cloudsmithKey = project.hasProperty('cloudsmithApiKey') ? project.property('cloudsmithApiKey') : System.getenv('CLOUDSMITH_API_KEY')
-
-apply plugin: 'maven-publish'
 publishing {
   repositories {
     maven {
-      name = "cloudsmith"
-      url = "https://api-g.cloudsmith.io/maven/consensys/maven/"
-      credentials {
-        username = cloudsmithUser
-        password = cloudsmithKey
-      }
+      url = layout.buildDirectory.dir("staging-deploy")
     }
   }
   publications {
@@ -189,7 +201,6 @@ publishing {
       groupId "tech.pegasys.discovery"
       version project.version
       from components.java
-      artifact sourcesJar
 
       versionMapping {
         usage('java-api') { fromResolutionOf('runtimeClasspath') }
@@ -197,11 +208,19 @@ publishing {
       }
       pom {
         name = "${project.name}"
+        description = "Java implementation of the Ethereum Node Discovery protocol"
         url = 'http://github.com/ConsenSys/discovery'
         licenses {
           license {
             name = 'The Apache License, Version 2.0'
             url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        developers {
+          developer {
+            id = "consensys"
+            name = "Protocols Team"
+            email = "devops@consensys.net"
           }
         }
         scm {
@@ -214,44 +233,33 @@ publishing {
   }
 }
 
-
-// Calculate the version that this build would be published under (if it is published)
-// If this exact commit is tagged, use the tag
-// If this is on a release-* branch, use the most recent tag appended with +develop (e.g. 0.1.1-RC1+develop)
-// Otherwise, use develop
-def calculatePublishVersion() {
-  if (!grgit) {
-    return 'UNKNOWN'
+jreleaser {
+  release {
+    github {
+      // Creating and tagging a release is done manually
+      skipRelease = true
+      skipTag = true
+      // injecting a fake value to make JReleaser happy
+      token = "foobar"
+    }
   }
-  def specificVersion = calculateVersion()
-  def isReleaseBranch = grgit.branch.current().name.startsWith('release-')
-  if (specificVersion.contains('+')) {
-    return isReleaseBranch ? "${specificVersion.substring(0, specificVersion.indexOf('+'))}+develop" : "develop"
+  signing {
+    active = 'ALWAYS'
+    armored = true
   }
-  return specificVersion
-}
-
-// Calculate the version that teku --version will report (among other places)
-// If this exact commit is tagged, use the tag
-// Otherwise use git describe --tags and replace the - after the tag with a +
-def calculateVersion() {
-  if (!grgit) {
-    return 'UNKNOWN'
-  }
-  String version = grgit.describe(tags: true)
-  if (version == null) {
-    return "UNKNOWN+g${grgit.head().abbreviatedId}"
-  }
-  def versionPattern = ~/^(?<lastVersion>.*)-(?<devVersion>[0-9]+-g[a-z0-9]+)$/
-  def matcher = version =~ versionPattern
-  if (matcher.find()) {
-    return "${matcher.group("lastVersion")}+${matcher.group("devVersion")}"
-  }
-  return version
-}
-
-task printVersion() {
-  doFirst {
-    print "Specific version: ${specificVersion}  Publish version: ${project.version}"
+  deploy {
+    maven {
+      mavenCentral {
+        sonatype {
+          active = 'ALWAYS'
+          url = 'https://central.sonatype.com/api/v1/publisher'
+          stagingRepository('build/staging-deploy')
+          retryDelay = 15
+          maxRetries = 100
+        }
+      }
+    }
   }
 }
+
+
