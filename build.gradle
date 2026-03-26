@@ -1,17 +1,46 @@
-//discovery v5
+buildscript {
+    configurations.classpath {
+        // Force JGit 6.x to resolve conflict between git-versioning (7.x) and JReleaser (5.x)
+        // JGit 7.x removed GpgObjectSigner which JReleaser still references
+        // See: https://github.com/jreleaser/jreleaser/discussions/1897
+        resolutionStrategy.force 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
+    }
+}
 
 plugins {
   id 'java-library'
+  id 'maven-publish'
   id 'com.diffplug.spotless' version '6.25.0'
   id 'com.github.ben-manes.versions' version '0.51.0'
   id 'com.github.hierynomus.license' version '0.16.1'
   id 'io.spring.dependency-management' version '1.1.5'
-  id 'net.ltgt.errorprone' version '4.0.1'
-  id 'org.ajoberstar.grgit' version '5.2.2'
+  id 'net.ltgt.errorprone' version '5.1.0'
+  id 'me.qoomon.git-versioning' version '6.4.4'
+  id 'org.jreleaser' version '1.23.0'
 }
 
-rootProject.version = calculatePublishVersion()
-def specificVersion = calculateVersion()
+group = "io.consensys.protocols"
+version = "UNKNOWN"
+
+gitVersioning.apply {
+    refs {
+        tag(".+") {
+            version = "\${ref}"
+        }
+        branch("master") {
+            version = "develop"
+        }
+        branch("release-.+") {
+            version = "\${ref}-develop"
+        }
+        branch(".+") {
+            version = "\${ref}"
+        }
+    }
+    rev {
+        version = "UNKNOWN"
+    }
+}
 
 apply from: "${rootDir}/gradle/versions.gradle"
 apply from: "${rootDir}/gradle/check-licenses.gradle"
@@ -48,7 +77,7 @@ dependencies {
   testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
 
   errorprone("com.google.errorprone:error_prone_core")
-  errorprone("tech.pegasys.tools.epchecks:errorprone-checks")
+  errorprone("io.consensys.protocols:errorprone-checks")
 }
 
 spotless {
@@ -104,6 +133,8 @@ tasks.withType(JavaCompile) {
     check('CanIgnoreReturnValueSuggester', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
     // We prefer to be more explicit in address selection especially in tests, so removing this check
     check('AddressSelection', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
+    // Interface constant initializing a subclass is intentional in IdentitySchemaInterpreter
+    check('ClassInitializationDeadlock', net.ltgt.gradle.errorprone.CheckSeverity.OFF)
 
     // These are experimental checks that we want enabled.
     check('MissingBraces', net.ltgt.gradle.errorprone.CheckSeverity.WARN)
@@ -135,10 +166,15 @@ tasks.withType(JavaCompile) {
           'Specification-Title': project.name,
           'Specification-Version': project.version,
           'Implementation-Title': project.name,
-          'Implementation-Version': specificVersion
+          'Implementation-Version': project.version
       )
     }
   }
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
 }
 
 test {
@@ -153,14 +189,9 @@ test {
 }
 
 javadoc {
-  options.addStringOption('Xdoclint:all', '-quiet')
+  options.addStringOption('Xdoclint:all,-missing', '-quiet')
   options.addStringOption('Xwerror', '-html5')
   options.encoding = 'UTF-8'
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier = 'sources'
-  from sourceSets.main.allSource
 }
 
 task runTestDiscovery(type:JavaExec) {
@@ -169,39 +200,30 @@ task runTestDiscovery(type:JavaExec) {
     systemProperty "log4j.configurationFile", "log4j2-test-discovery.xml"
 }
 
-def cloudsmithUser = project.hasProperty('cloudsmithUser') ? project.property('cloudsmithUser') : System.getenv('CLOUDSMITH_USER')
-def cloudsmithKey = project.hasProperty('cloudsmithApiKey') ? project.property('cloudsmithApiKey') : System.getenv('CLOUDSMITH_API_KEY')
-
-apply plugin: 'maven-publish'
 publishing {
-  repositories {
-    maven {
-      name = "cloudsmith"
-      url = "https://api-g.cloudsmith.io/maven/consensys/maven/"
-      credentials {
-        username = cloudsmithUser
-        password = cloudsmithKey
-      }
-    }
-  }
   publications {
     mavenJava(MavenPublication) {
-      groupId "tech.pegasys.discovery"
-      version project.version
+      groupId "io.consensys.protocols"
       from components.java
-      artifact sourcesJar
-
       versionMapping {
         usage('java-api') { fromResolutionOf('runtimeClasspath') }
         usage('java-runtime') { fromResolutionResult() }
       }
       pom {
         name = "${project.name}"
-        url = 'http://github.com/ConsenSys/discovery'
+        description = 'Java implementation of the Ethereum Discovery v5 protocol'
+        url = 'https://github.com/ConsenSys/discovery'
         licenses {
           license {
             name = 'The Apache License, Version 2.0'
             url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        developers {
+          developer {
+            id = "consensys"
+            name = "Protocols Team"
+            email = "devops@consensys.net"
           }
         }
         scm {
@@ -212,46 +234,38 @@ publishing {
       }
     }
   }
+  repositories {
+    maven {
+      url = layout.buildDirectory.dir("staging-deploy")
+    }
+  }
 }
 
-
-// Calculate the version that this build would be published under (if it is published)
-// If this exact commit is tagged, use the tag
-// If this is on a release-* branch, use the most recent tag appended with +develop (e.g. 0.1.1-RC1+develop)
-// Otherwise, use develop
-def calculatePublishVersion() {
-  if (!grgit) {
-    return 'UNKNOWN'
+jreleaser {
+  release {
+    github {
+      // Creating and tagging a release is done manually
+      skipRelease = true
+      skipTag = true
+      // injecting a fake value to make JReleaser happy
+      token = "foobar"
+    }
   }
-  def specificVersion = calculateVersion()
-  def isReleaseBranch = grgit.branch.current().name.startsWith('release-')
-  if (specificVersion.contains('+')) {
-    return isReleaseBranch ? "${specificVersion.substring(0, specificVersion.indexOf('+'))}+develop" : "develop"
+  signing {
+    active = 'ALWAYS'
+    armored = true
   }
-  return specificVersion
-}
-
-// Calculate the version that teku --version will report (among other places)
-// If this exact commit is tagged, use the tag
-// Otherwise use git describe --tags and replace the - after the tag with a +
-def calculateVersion() {
-  if (!grgit) {
-    return 'UNKNOWN'
-  }
-  String version = grgit.describe(tags: true)
-  if (version == null) {
-    return "UNKNOWN+g${grgit.head().abbreviatedId}"
-  }
-  def versionPattern = ~/^(?<lastVersion>.*)-(?<devVersion>[0-9]+-g[a-z0-9]+)$/
-  def matcher = version =~ versionPattern
-  if (matcher.find()) {
-    return "${matcher.group("lastVersion")}+${matcher.group("devVersion")}"
-  }
-  return version
-}
-
-task printVersion() {
-  doFirst {
-    print "Specific version: ${specificVersion}  Publish version: ${project.version}"
+  deploy {
+    maven {
+      mavenCentral {
+        sonatype {
+          active = 'ALWAYS'
+          url = 'https://central.sonatype.com/api/v1/publisher'
+          stagingRepository('build/staging-deploy')
+          retryDelay = 15
+          maxRetries = 100
+        }
+      }
+    }
   }
 }

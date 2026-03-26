@@ -1,13 +1,13 @@
 dependencyManagement {
   dependencies {
-    dependencySet(group: 'com.google.errorprone', version: '2.28.0') {
+    dependencySet(group: 'com.google.errorprone', version: '2.36.0') {
       entry 'error_prone_annotation'
       entry 'error_prone_check_api'
       entry 'error_prone_core'
       entry 'error_prone_test_helpers'
     }
 
-    dependency 'tech.pegasys.tools.epchecks:errorprone-checks:1.1.1'
+    dependency 'io.consensys.protocols:errorprone-checks:1.1.2'
 
     dependency 'com.google.guava:guava:33.2.1-jre'
 
