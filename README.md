@@ -1,7 +1,7 @@
 # discovery
 
 [![ci](https://github.com/Consensys/discovery/actions/workflows/ci.yml/badge.svg)](https://github.com/Consensys/discovery/actions/workflows/ci.yml)
-[![Latest version of 'discovery' @ Cloudsmith](https://api-prd.cloudsmith.io/v1/badges/version/consensys/maven/maven/discovery/latest/a=noarch;xg=tech.pegasys.discovery/?render=true&show_latest=true)](https://cloudsmith.io/~consensys/repos/maven/packages/detail/maven/discovery/latest/a=noarch;xg=tech.pegasys.discovery/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.consensys.protocols/discovery)](https://central.sonatype.com/artifact/io.consensys.protocols/discovery)
 
 ## Overview
 
@@ -12,10 +12,10 @@ peer discovery protocol.
 
 ```groovy
 repositories {
-    maven { url "https://artifacts.consensys.net/public/maven/maven/" }
+    mavenCentral()
 }
 
 dependencies {
-    implementation("tech.pegasys:discovery:<version>")
+    implementation("io.consensys.protocols:discovery:<version>")
 }
 ```

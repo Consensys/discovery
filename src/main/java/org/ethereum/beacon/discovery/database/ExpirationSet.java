@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Set-alike collection with data expiring in configured time. This structure is not thread safe,
  * please, synchronize usage
  *
- * @param <V> data type should extend Comparable<V> to avoid collisions
+ * @param <V> data type should extend {@code Comparable<V>} to avoid collisions
  */
 public class ExpirationSet<V extends Comparable<V>> {
 
