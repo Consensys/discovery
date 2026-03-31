@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Schedules `runnable` in delay which is set by constructor. When runnable is renewed by putting it
- * in map again, old task is cancelled and removed. Task are equalled by the <Key>
+ * in map again, old task is cancelled and removed. Task are equalled by the {@code Key}
  */
 public class ExpirationScheduler<Key> {
   private final ScheduledExecutorService scheduler;
