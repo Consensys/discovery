@@ -7,6 +7,7 @@ package org.ethereum.beacon.discovery.message.handler;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -60,8 +61,8 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     // Select best address per IP family independently to support dual-stack auto-discovery.
     // Without per-family selection, the dominant IP family (usually IPv4) always wins
     // and the other family's ENR fields are never populated.
-    selectExternalAddress(false).ifPresent(this::maybeUpdateAddress);
-    selectExternalAddress(true).ifPresent(this::maybeUpdateAddress);
+    selectExternalIPV4Address().ifPresent(this::maybeUpdateAddress);
+    selectExternalIPV6Address().ifPresent(this::maybeUpdateAddress);
   }
 
   private void removeStaleAddresses(final Instant now) {
@@ -108,9 +109,17 @@ public class DefaultExternalAddressSelector implements ExternalAddressSelector {
     }
   }
 
-  private Optional<InetSocketAddress> selectExternalAddress(final boolean ipv6) {
+  private Optional<InetSocketAddress> selectExternalIPV4Address() {
     return reportedAddresses.entrySet().stream()
-        .filter(entry -> (entry.getKey().getAddress() instanceof Inet6Address) == ipv6)
+        .filter(entry -> (entry.getKey().getAddress() instanceof Inet4Address))
+        .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
+        .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
+        .map(Map.Entry::getKey);
+  }
+
+  private Optional<InetSocketAddress> selectExternalIPV6Address() {
+    return reportedAddresses.entrySet().stream()
+        .filter(entry -> (entry.getKey().getAddress() instanceof Inet6Address))
         .filter(entry -> entry.getValue().getReportCount() >= MIN_CONFIRMATIONS)
         .max(Map.Entry.comparingByValue(Comparator.comparing(ReportData::getReportCount)))
         .map(Map.Entry::getKey);
