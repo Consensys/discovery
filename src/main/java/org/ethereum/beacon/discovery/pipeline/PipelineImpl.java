@@ -29,7 +29,18 @@ public class PipelineImpl implements Pipeline {
   public synchronized Pipeline build() {
     started.set(true);
     for (EnvelopeHandler handler : envelopeHandlers) {
-      pipeline = pipeline.doOnNext(handler::handle);
+      pipeline =
+          pipeline.doOnNext(
+              envelope -> {
+                try {
+                  handler.handle(envelope);
+                } catch (Throwable t) {
+                  LOG.warn(
+                      "Unexpected error in pipeline handler {}",
+                      handler.getClass().getSimpleName(),
+                      t);
+                }
+              });
     }
     Flux.from(pipeline)
         .onErrorContinue(

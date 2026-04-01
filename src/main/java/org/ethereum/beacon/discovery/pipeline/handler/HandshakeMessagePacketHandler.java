@@ -151,6 +151,13 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
               packet, session.getNodeRecord(), session.getState()),
           ex);
       markHandshakeAsFailed(envelope, session);
+    } catch (Throwable t) {
+      LOG.warn(
+          "Unexpected error while processing handshake [{}] from node {}",
+          packet,
+          session.getNodeRecord(),
+          t);
+      markHandshakeAsFailed(envelope, session);
     }
   }
 
