@@ -4,6 +4,7 @@
 
 package org.ethereum.beacon.discovery;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -35,6 +36,12 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
 
   public static NodeRecord createNodeRecord(
       final Bytes nodeId, final InetSocketAddress udpAddress) {
+    if (udpAddress.getAddress() instanceof Inet6Address) {
+      return createNodeRecord(
+          nodeId,
+          new EnrField(EnrField.IP_V6, Bytes.wrap(udpAddress.getAddress().getAddress())),
+          new EnrField(EnrField.UDP_V6, udpAddress.getPort()));
+    }
     return createNodeRecord(
         nodeId,
         new EnrField(EnrField.IP_V4, Bytes.wrap(udpAddress.getAddress().getAddress())),
@@ -86,8 +93,18 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
   }
 
   @Override
-  public Optional<InetSocketAddress> getUdp6Address(NodeRecord nodeRecord) {
-    return Optional.empty();
+  public Optional<InetSocketAddress> getUdp6Address(final NodeRecord nodeRecord) {
+    try {
+      final Bytes ipBytes = (Bytes) nodeRecord.get(EnrField.IP_V6);
+      if (ipBytes == null) {
+        return Optional.empty();
+      }
+      final InetAddress ipAddress = InetAddress.getByAddress(ipBytes.toArrayUnsafe());
+      final int port = (int) nodeRecord.get(EnrField.UDP_V6);
+      return Optional.of(new InetSocketAddress(ipAddress, port));
+    } catch (UnknownHostException e) {
+      return Optional.empty();
+    }
   }
 
   @Override
@@ -117,7 +134,28 @@ public class SimpleIdentitySchemaInterpreter implements IdentitySchemaInterprete
       final Optional<Integer> newTcpPort,
       final Optional<Integer> newQuicPort,
       final Signer signer) {
-    final NodeRecord newRecord = createNodeRecord(getNodeId(nodeRecord), newAddress);
+    final List<EnrField> fields = new ArrayList<>();
+    // Preserve fields from the other IP family
+    if (newAddress.getAddress() instanceof Inet6Address) {
+      // Updating IPv6 — preserve IPv4 fields if present
+      if (nodeRecord.get(EnrField.IP_V4) != null) {
+        fields.add(new EnrField(EnrField.IP_V4, nodeRecord.get(EnrField.IP_V4)));
+        fields.add(new EnrField(EnrField.UDP, nodeRecord.get(EnrField.UDP)));
+      }
+      fields.add(new EnrField(EnrField.IP_V6, Bytes.wrap(newAddress.getAddress().getAddress())));
+      fields.add(new EnrField(EnrField.UDP_V6, newAddress.getPort()));
+    } else {
+      // Updating IPv4 — preserve IPv6 fields if present
+      fields.add(new EnrField(EnrField.IP_V4, Bytes.wrap(newAddress.getAddress().getAddress())));
+      fields.add(new EnrField(EnrField.UDP, newAddress.getPort()));
+      if (nodeRecord.get(EnrField.IP_V6) != null) {
+        fields.add(new EnrField(EnrField.IP_V6, nodeRecord.get(EnrField.IP_V6)));
+        fields.add(new EnrField(EnrField.UDP_V6, nodeRecord.get(EnrField.UDP_V6)));
+      }
+    }
+    fields.add(new EnrField(EnrField.ID, IdentitySchema.V4));
+    fields.add(new EnrField(EnrField.PKEY_SECP256K1, getNodeId(nodeRecord)));
+    final NodeRecord newRecord = NodeRecord.fromValues(this, nodeRecord.getSeq().add(1), fields);
     sign(newRecord, signer);
     return newRecord;
   }
