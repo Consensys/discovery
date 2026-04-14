@@ -27,6 +27,8 @@ class DefaultExternalAddressSelectorTest {
   private static final InetSocketAddress ADDRESS1 = new InetSocketAddress("127.0.0.1", 2000);
   private static final InetSocketAddress ADDRESS2 = new InetSocketAddress("127.0.0.2", 2002);
   private static final InetSocketAddress ADDRESS3 = new InetSocketAddress("127.0.0.3", 2003);
+  private static final InetSocketAddress IPV6_ADDRESS1 = new InetSocketAddress("::1", 3000);
+  private static final InetSocketAddress IPV6_ADDRESS2 = new InetSocketAddress("::2", 3002);
   private static final Instant START_TIME = Instant.ofEpochSecond(1_000_000);
   private final Bytes nodeId = Bytes.fromHexString("0x1234567890");
   private final NodeRecord originalNodeRecord =
@@ -141,7 +143,58 @@ class DefaultExternalAddressSelectorTest {
     assertSelectedAddress(ADDRESS3);
   }
 
-  private void assertSelectedAddress(final InetSocketAddress address2) {
-    assertThat(localNodeRecordStore.getLocalNodeRecord().getUdpAddress()).contains(address2);
+  @Test
+  void shouldAutoDiscoverBothIpv4AndIpv6Addresses() {
+    // IPv4 gets enough confirmations
+    for (int i = 0; i < MIN_CONFIRMATIONS; i++) {
+      selector.onExternalAddressReport(Optional.empty(), ADDRESS2, START_TIME);
+    }
+    assertSelectedAddress(ADDRESS2);
+
+    // IPv6 also gets enough confirmations
+    for (int i = 0; i < MIN_CONFIRMATIONS; i++) {
+      selector.onExternalAddressReport(Optional.empty(), IPV6_ADDRESS1, START_TIME);
+    }
+    // Both families should be present in the ENR
+    assertSelectedAddress(ADDRESS2);
+    assertSelectedIpv6Address(IPV6_ADDRESS1);
+  }
+
+  @Test
+  void shouldAutoDiscoverIpv6EvenWhenIpv4HasMoreVotes() {
+    // IPv4 accumulates many more votes than IPv6
+    for (int i = 0; i < MIN_CONFIRMATIONS * 10; i++) {
+      selector.onExternalAddressReport(Optional.empty(), ADDRESS2, START_TIME);
+    }
+    assertSelectedAddress(ADDRESS2);
+
+    // IPv6 gets just enough confirmations
+    for (int i = 0; i < MIN_CONFIRMATIONS; i++) {
+      selector.onExternalAddressReport(Optional.empty(), IPV6_ADDRESS1, START_TIME);
+    }
+    // IPv6 should still be discovered despite IPv4 having far more votes
+    assertSelectedAddress(ADDRESS2);
+    assertSelectedIpv6Address(IPV6_ADDRESS1);
+  }
+
+  @Test
+  void shouldSelectMostVotedIpv6AddressIndependentlyFromIpv4() {
+    // Two competing IPv6 addresses
+    for (int i = 0; i < MIN_CONFIRMATIONS; i++) {
+      selector.onExternalAddressReport(Optional.empty(), IPV6_ADDRESS1, START_TIME);
+    }
+    for (int i = 0; i < MIN_CONFIRMATIONS + 1; i++) {
+      selector.onExternalAddressReport(Optional.empty(), IPV6_ADDRESS2, START_TIME);
+    }
+    // IPV6_ADDRESS2 should win (more votes)
+    assertSelectedIpv6Address(IPV6_ADDRESS2);
+  }
+
+  private void assertSelectedAddress(final InetSocketAddress address) {
+    assertThat(localNodeRecordStore.getLocalNodeRecord().getUdpAddress()).contains(address);
+  }
+
+  private void assertSelectedIpv6Address(final InetSocketAddress address) {
+    assertThat(localNodeRecordStore.getLocalNodeRecord().getUdp6Address()).contains(address);
   }
 }
