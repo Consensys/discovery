@@ -3,17 +3,17 @@ buildscript {
         // Force JGit 6.x to resolve conflict between git-versioning (7.x) and JReleaser (5.x)
         // JGit 7.x removed GpgObjectSigner which JReleaser still references
         // See: https://github.com/jreleaser/jreleaser/discussions/1897
-        resolutionStrategy.force 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
+        resolutionStrategy.force 'org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r'
     }
 }
 
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'com.diffplug.spotless' version '6.25.0'
-  id 'com.github.ben-manes.versions' version '0.51.0'
+  id 'com.diffplug.spotless' version '8.4.0'
+  id 'com.github.ben-manes.versions' version '0.53.0'
   id 'com.github.hierynomus.license' version '0.16.1'
-  id 'io.spring.dependency-management' version '1.1.5'
+  id 'io.spring.dependency-management' version '1.1.7'
   id 'net.ltgt.errorprone' version '5.1.0'
   id 'me.qoomon.git-versioning' version '6.4.4'
   id 'org.jreleaser' version '1.23.0'
