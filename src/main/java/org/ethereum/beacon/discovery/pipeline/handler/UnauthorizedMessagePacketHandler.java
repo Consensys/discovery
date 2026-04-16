@@ -61,7 +61,7 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
           String.format(
               "Failed to read message [%s] from node %s in status %s",
               unknownPacket, session.getNodeRecord(), session.getState());
-      LOG.debug(error, ex);
+      LOG.trace(error, ex);
       envelope.put(Field.BAD_PACKET, unknownPacket);
       envelope.put(Field.BAD_EXCEPTION, ex);
     }

@@ -68,7 +68,7 @@ public class WhoAreYouPacketHandler implements EnvelopeHandler {
       boolean nonceMatches =
           session.getLastOutboundNonce().map(whoAreYouNonce::equals).orElse(false);
       if (!nonceMatches) {
-        LOG.debug(
+        LOG.trace(
             "Verification not passed for message [{}] from node {} in status {}",
             whoAreYouPacket,
             nodeRecord,

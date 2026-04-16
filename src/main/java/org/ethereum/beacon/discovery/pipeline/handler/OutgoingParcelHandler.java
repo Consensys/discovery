@@ -47,7 +47,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
       if (parcel.getPacket().getBytes().size() > IncomingDataPacker.MAX_PACKET_SIZE) {
         LOG.error("Outgoing packet is too large, dropping it: {}", parcel.getPacket());
       } else if (!addressAccessPolicy.allow(parcel.getDestination())) {
-        LOG.debug(
+        LOG.trace(
             "Dropping outgoing packet to disallowed destination: {}", parcel.getDestination());
       } else {
         outgoingSink.next(parcel);
