@@ -73,7 +73,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
 
   private boolean isValid(final NodeRecord record) {
     if (!record.isValid()) {
-      LOG.debug("Rejecting invalid node record {}", record);
+      LOG.trace("Rejecting invalid node record {}", record);
       return false;
     }
     return true;
@@ -82,7 +82,7 @@ public class FindNodeResponseHandler implements MultiPacketResponseHandler<Nodes
   private boolean hasCorrectDistance(final NodeSession session, final NodeRecord nodeRecordV5) {
     final int actualDistance = Functions.logDistance(nodeRecordV5.getNodeId(), session.getNodeId());
     if (!distances.contains(actualDistance)) {
-      LOG.debug(
+      LOG.trace(
           "Rejecting node record {} received from {} because distance was not in {}.",
           nodeRecordV5.getNodeId(),
           session.getNodeId(),
