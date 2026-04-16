@@ -234,7 +234,7 @@ public class NodeSession {
 
   /** Updates request info. Thread-safe. */
   public synchronized void cancelAllRequests(final String message) {
-    LOG.debug(() -> String.format("Cancelling all requests in session %s", this));
+    LOG.trace(() -> String.format("Cancelling all requests in session %s", this));
     final Set<Bytes> requestIdsCopy = new HashSet<>(requestIdStatuses.keySet());
     requestIdsCopy.forEach(
         requestId -> {
