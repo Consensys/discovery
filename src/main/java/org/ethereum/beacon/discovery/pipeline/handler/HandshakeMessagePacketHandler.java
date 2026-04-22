@@ -152,7 +152,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
           ex);
       markHandshakeAsFailed(envelope, session);
     } catch (Throwable t) {
-      LOG.warn(
+      LOG.debug(
           "Unexpected error while processing handshake [{}] from node {}",
           packet,
           session.getNodeRecord(),
