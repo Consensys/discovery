@@ -6,8 +6,8 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 
@@ -15,11 +15,11 @@ import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
  * Searches for node in {@link Field#NODE} and requests session resolving using {@link
  * Field#SESSION_LOOKUP}
  */
-public class NodeSessionRequestHandler implements EnvelopeHandler {
+public class NodeSessionRequestHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(NodeSessionRequestHandler.class);
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.NODE, envelope)) {
       return;
     }
