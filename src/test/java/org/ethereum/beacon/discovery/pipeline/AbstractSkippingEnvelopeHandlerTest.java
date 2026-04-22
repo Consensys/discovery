@@ -35,11 +35,7 @@ class AbstractSkippingEnvelopeHandlerTest {
     final EnvelopeHandler terminal = envelope -> terminalInvocations.incrementAndGet();
 
     final Pipeline pipeline =
-        new PipelineImpl()
-            .addHandler(markBad)
-            .addHandler(downstream)
-            .addHandler(terminal)
-            .build();
+        new PipelineImpl().addHandler(markBad).addHandler(downstream).addHandler(terminal).build();
 
     pipeline.push(new Envelope());
 
@@ -70,16 +66,11 @@ class AbstractSkippingEnvelopeHandlerTest {
   @Test
   void handlerChainStopsAtFirstBadMarking() {
     final CountingHandler first = new CountingHandler();
-    final EnvelopeHandler markBadMidway =
-        envelope -> envelope.put(Field.BAD_PACKET, new Object());
+    final EnvelopeHandler markBadMidway = envelope -> envelope.put(Field.BAD_PACKET, new Object());
     final CountingHandler last = new CountingHandler();
 
     final Pipeline pipeline =
-        new PipelineImpl()
-            .addHandler(first)
-            .addHandler(markBadMidway)
-            .addHandler(last)
-            .build();
+        new PipelineImpl().addHandler(first).addHandler(markBadMidway).addHandler(last).build();
 
     pipeline.push(new Envelope());
 
