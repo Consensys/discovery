@@ -35,8 +35,11 @@ class UnauthorizedMessagePacketHandlerTest {
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
 
-    final Envelope envelope = envelopeWith(session, createOrdinaryPacket());
-    handler.handle(envelope);
+    final OrdinaryMessagePacket packet = createOrdinaryPacket();
+    final Bytes12 nonce = packet.getHeader().getStaticHeader().getNonce();
+    when(session.getPendingWhoAreYouNonce()).thenReturn(Optional.of(nonce));
+
+    handler.handle(envelopeWith(session, packet));
 
     verify(session).resendOutgoingWhoAreYou();
     verify(session, never()).sendOutgoingWhoAreYou(any());
@@ -48,9 +51,32 @@ class UnauthorizedMessagePacketHandlerTest {
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
 
-    handler.handle(envelopeWith(session, createOrdinaryPacket()));
+    final OrdinaryMessagePacket packet = createOrdinaryPacket();
+    final Bytes12 nonce = packet.getHeader().getStaticHeader().getNonce();
+    when(session.getPendingWhoAreYouNonce()).thenReturn(Optional.of(nonce));
+
+    handler.handle(envelopeWith(session, packet));
 
     verify(session, never()).setState(any());
+  }
+
+  @Test
+  void shouldSendNewWhoAreYouWhenInWhoAreYouSentStateButDifferentNonce() {
+    final NodeSession session = mock(NodeSession.class);
+    when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
+    when(session.getNodeRecord()).thenReturn(Optional.empty());
+    // Pending WhoAreYou was for a different nonce
+    when(session.getPendingWhoAreYouNonce())
+        .thenReturn(Optional.of(Bytes12.wrap(Bytes.random(12))));
+
+    final OrdinaryMessagePacket packet = createOrdinaryPacket();
+    handler.handle(envelopeWith(session, packet));
+
+    verify(session, never()).resendOutgoingWhoAreYou();
+    final ArgumentCaptor<WhoAreYouPacket> captor = ArgumentCaptor.forClass(WhoAreYouPacket.class);
+    verify(session).sendOutgoingWhoAreYou(captor.capture());
+    final Bytes12 expectedNonce = packet.getHeader().getStaticHeader().getNonce();
+    assertThat(captor.getValue().getHeader().getStaticHeader().getNonce()).isEqualTo(expectedNonce);
   }
 
   @Test

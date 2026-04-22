@@ -170,6 +170,11 @@ public class NodeSession {
     dispatchWhoAreYou(maskingIV, packet);
   }
 
+  public synchronized Optional<Bytes12> getPendingWhoAreYouNonce() {
+    return pendingWhoAreYouPacket.map(
+        p -> p.getHeader().getStaticHeader().getNonce());
+  }
+
   public synchronized void resendOutgoingWhoAreYou() {
     pendingWhoAreYouPacket.ifPresent(
         packet -> {
