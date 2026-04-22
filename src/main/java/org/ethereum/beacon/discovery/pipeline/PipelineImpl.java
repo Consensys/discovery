@@ -35,7 +35,7 @@ public class PipelineImpl implements Pipeline {
                 try {
                   handler.handle(envelope);
                 } catch (Throwable t) {
-                  LOG.warn(
+                  LOG.debug(
                       "Unexpected error in pipeline handler {}",
                       handler.getClass().getSimpleName(),
                       t);
