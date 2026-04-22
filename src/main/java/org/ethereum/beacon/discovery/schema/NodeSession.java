@@ -171,8 +171,7 @@ public class NodeSession {
   }
 
   public synchronized Optional<Bytes12> getPendingWhoAreYouNonce() {
-    return pendingWhoAreYouPacket.map(
-        p -> p.getHeader().getStaticHeader().getNonce());
+    return pendingWhoAreYouPacket.map(p -> p.getHeader().getStaticHeader().getNonce());
   }
 
   public synchronized void resendOutgoingWhoAreYou() {
