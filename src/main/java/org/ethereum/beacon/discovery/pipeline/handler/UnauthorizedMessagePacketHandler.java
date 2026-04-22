@@ -41,6 +41,15 @@ public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
                 envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
+
+    // If already awaiting handshake completion, resend the original WHOAREYOU so the
+    // initiator can complete it using the same challenge nonce, rather than issuing a
+    // new challenge with the retransmitted packet's nonce.
+    if (session.getState() == SessionState.WHOAREYOU_SENT) {
+      session.resendOutgoingWhoAreYou();
+      return;
+    }
+
     OrdinaryMessagePacket unknownPacket = envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
     try {
       // packet it either random or message packet if session is expired
