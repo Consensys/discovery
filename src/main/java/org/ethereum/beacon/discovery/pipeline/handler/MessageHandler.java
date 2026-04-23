@@ -10,8 +10,8 @@ import org.ethereum.beacon.discovery.TalkHandler;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.message.handler.EnrUpdateTracker.EnrUpdater;
 import org.ethereum.beacon.discovery.message.handler.ExternalAddressSelector;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.processor.DiscoveryV5MessageProcessor;
@@ -19,7 +19,7 @@ import org.ethereum.beacon.discovery.processor.MessageProcessor;
 import org.ethereum.beacon.discovery.schema.NodeSession;
 import org.ethereum.beacon.discovery.storage.LocalNodeRecordStore;
 
-public class MessageHandler implements EnvelopeHandler {
+public class MessageHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(MessageHandler.class);
   private final MessageProcessor messageProcessor;
 
@@ -36,7 +36,7 @@ public class MessageHandler implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.MESSAGE, envelope)) {
       return;
     }
