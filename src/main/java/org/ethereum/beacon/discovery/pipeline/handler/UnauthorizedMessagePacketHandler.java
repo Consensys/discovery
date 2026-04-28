@@ -41,10 +41,21 @@ public class UnauthorizedMessagePacketHandler extends AbstractSkippingEnvelopeHa
                 envelope.getIdString()));
 
     NodeSession session = envelope.get(Field.SESSION);
+
     OrdinaryMessagePacket unknownPacket = envelope.get(Field.UNAUTHORIZED_PACKET_MESSAGE);
+    Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
+
+    // If already awaiting handshake completion, resend the original WHOAREYOU for retransmissions
+    // of the same packet (same nonce). For a new nonce, fall through and issue a fresh WHOAREYOU
+    // so the initiator's nonce check can pass.
+    if (session.getState() == SessionState.WHOAREYOU_SENT) {
+      if (session.getPendingWhoAreYouNonce().map(msgNonce::equals).orElse(false)) {
+        session.resendOutgoingWhoAreYou();
+        return;
+      }
+    }
+
     try {
-      // packet it either random or message packet if session is expired
-      Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
       Bytes16 idNonce = Bytes16.random(Functions.getRandom());
 
       Header<WhoAreYouAuthData> header =
