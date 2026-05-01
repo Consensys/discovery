@@ -3,7 +3,7 @@
   "extends": [
     "config:recommended"
   ],
-  "enabledManagers": ["github-actions", "gradle", "gradle-wrapper"],
+  "enabledManagers": ["github-actions"],
   "dependencyDashboard": false,
   "packageRules": [
     {
@@ -12,18 +12,6 @@
       "pinDigests": true,
       "minimumReleaseAge": "7 days",
       "groupName": "Renovatebot GHA Updates"
-    },
-    {
-      "description": "Group all Gradle wrapper updates into a single PR",
-      "matchManagers": ["gradle-wrapper"],
-      "minimumReleaseAge": "7 days",
-      "groupName": "Renovatebot Gradle Wrapper Updates"
-    },
-    {
-      "description": "Group all Gradle dependency updates into a single PR",
-      "matchManagers": ["gradle"],
-      "minimumReleaseAge": "7 days",
-      "groupName": "Renovatebot Gradle Updates"
     }
   ]
 }
