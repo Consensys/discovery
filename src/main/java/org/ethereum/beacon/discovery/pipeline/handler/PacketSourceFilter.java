@@ -30,7 +30,7 @@ public class PacketSourceFilter extends AbstractSkippingEnvelopeHandler {
     final InetSocketAddress sender = envelope.get(Field.REMOTE_SENDER);
     if (!addressAccessPolicy.allow(sender)) {
       envelope.remove(Field.INCOMING);
-      LOG.debug("Ignoring message from disallowed source {}", sender);
+      LOG.trace("Ignoring message from disallowed source {}", sender);
     }
   }
 }
