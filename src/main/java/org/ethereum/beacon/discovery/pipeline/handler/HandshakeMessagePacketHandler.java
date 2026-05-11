@@ -13,8 +13,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.HandshakeMessagePacket;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -27,7 +27,7 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
 /** Handles {@link HandshakeMessagePacket} in {@link Field#PACKET_HANDSHAKE} field */
-public class HandshakeMessagePacketHandler implements EnvelopeHandler {
+public class HandshakeMessagePacketHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(HandshakeMessagePacketHandler.class);
   private final Pipeline outgoingPipeline;
   private final Scheduler scheduler;
@@ -49,7 +49,7 @@ public class HandshakeMessagePacketHandler implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.PACKET_HANDSHAKE, envelope)) {
       return;
     }

@@ -8,8 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.AddressAccessPolicy;
 import org.ethereum.beacon.discovery.network.NetworkParcel;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import reactor.core.publisher.FluxSink;
@@ -19,7 +19,7 @@ import reactor.core.publisher.FluxSink;
  * we have outgoing parcel at the very first stage. Handler pushes it to `outgoingSink` stream which
  * is linked with discovery client.
  */
-public class OutgoingParcelHandler implements EnvelopeHandler {
+public class OutgoingParcelHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(OutgoingParcelHandler.class);
 
   private final FluxSink<NetworkParcel> outgoingSink;
@@ -32,7 +32,7 @@ public class OutgoingParcelHandler implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }

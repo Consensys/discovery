@@ -9,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.message.V5Message;
 import org.ethereum.beacon.discovery.packet.MessagePacket;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory;
@@ -19,7 +19,7 @@ import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecryptException;
 
 /** Handles {@link MessagePacket} in {@link Field#PACKET_MESSAGE} field */
-public class MessagePacketHandler implements EnvelopeHandler {
+public class MessagePacketHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(MessagePacketHandler.class);
   private final NodeRecordFactory nodeRecordFactory;
 
@@ -28,7 +28,7 @@ public class MessagePacketHandler implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.PACKET_MESSAGE, envelope)) {
       return;
     }

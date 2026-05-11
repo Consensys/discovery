@@ -11,8 +11,8 @@ import org.ethereum.beacon.discovery.packet.Header;
 import org.ethereum.beacon.discovery.packet.OrdinaryMessagePacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket.WhoAreYouAuthData;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeRecord;
@@ -22,12 +22,12 @@ import org.ethereum.beacon.discovery.type.Bytes12;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.Functions;
 
-public class UnauthorizedMessagePacketHandler implements EnvelopeHandler {
+public class UnauthorizedMessagePacketHandler extends AbstractSkippingEnvelopeHandler {
 
   private static final Logger LOG = LogManager.getLogger(UnauthorizedMessagePacketHandler.class);
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.UNAUTHORIZED_PACKET_MESSAGE, envelope)) {
       return;
     }

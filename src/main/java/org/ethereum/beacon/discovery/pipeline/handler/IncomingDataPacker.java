@@ -9,15 +9,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.RawPacket;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.type.Bytes16;
 import org.ethereum.beacon.discovery.util.DecodeException;
 
 /** Handles raw BytesValue incoming data in {@link Field#INCOMING} */
-public class IncomingDataPacker implements EnvelopeHandler {
+public class IncomingDataPacker extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(IncomingDataPacker.class);
   public static final int MAX_PACKET_SIZE = 1280;
   public static final int MIN_PACKET_SIZE = 63;
@@ -28,7 +28,7 @@ public class IncomingDataPacker implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.INCOMING, envelope)) {
       return;
     }

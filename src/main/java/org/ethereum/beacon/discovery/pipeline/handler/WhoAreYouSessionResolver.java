@@ -9,8 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.packet.Packet;
 import org.ethereum.beacon.discovery.packet.WhoAreYouPacket;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.schema.NodeSession;
@@ -19,7 +19,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession;
  * Resolves session using `nonceRepository` for `WHOAREYOU` packets which should be placed in {@link
  * Field#PACKET_WHOAREYOU}
  */
-public class WhoAreYouSessionResolver implements EnvelopeHandler {
+public class WhoAreYouSessionResolver extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(WhoAreYouSessionResolver.class);
   private final NodeSessionManager nodeSessionManager;
 
@@ -28,7 +28,7 @@ public class WhoAreYouSessionResolver implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireField(Field.PACKET, envelope)) {
       return;
     }

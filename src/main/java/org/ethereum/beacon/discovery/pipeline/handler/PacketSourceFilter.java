@@ -8,12 +8,12 @@ import java.net.InetSocketAddress;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.beacon.discovery.AddressAccessPolicy;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 
-public class PacketSourceFilter implements EnvelopeHandler {
+public class PacketSourceFilter extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(PacketSourceFilter.class);
 
   private final AddressAccessPolicy addressAccessPolicy;
@@ -23,7 +23,7 @@ public class PacketSourceFilter implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(final Envelope envelope) {
+  protected void handlePacket(final Envelope envelope) {
     if (!HandlerUtil.requireField(Field.REMOTE_SENDER, envelope)) {
       return;
     }

@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.ethereum.beacon.discovery.message.V5Message;
+import org.ethereum.beacon.discovery.pipeline.AbstractSkippingEnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Envelope;
-import org.ethereum.beacon.discovery.pipeline.EnvelopeHandler;
 import org.ethereum.beacon.discovery.pipeline.Field;
 import org.ethereum.beacon.discovery.pipeline.HandlerUtil;
 import org.ethereum.beacon.discovery.pipeline.Pipeline;
@@ -23,7 +23,7 @@ import org.ethereum.beacon.discovery.schema.NodeSession.SessionState;
 import org.ethereum.beacon.discovery.task.TaskStatus;
 
 /** Gets next request task in session and processes it */
-public class NextTaskHandler implements EnvelopeHandler {
+public class NextTaskHandler extends AbstractSkippingEnvelopeHandler {
   private static final Logger LOG = LogManager.getLogger(NextTaskHandler.class);
   private static final int DEFAULT_DELAY_MS = 1000;
   private static final int RANDOM_MESSAGE_SIZE = 128;
@@ -46,7 +46,7 @@ public class NextTaskHandler implements EnvelopeHandler {
   }
 
   @Override
-  public void handle(Envelope envelope) {
+  protected void handlePacket(Envelope envelope) {
     if (!HandlerUtil.requireSessionWithNodeRecord(envelope)) {
       return;
     }
