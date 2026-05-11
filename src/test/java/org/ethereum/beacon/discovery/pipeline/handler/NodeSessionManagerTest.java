@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
@@ -140,7 +139,8 @@ class NodeSessionManagerTest {
         new InetSocketAddress(Inet6Address.getByName("2001:db8::1"), 30304);
     final NodeRecord dualStackPeer = createDualStackPeerRecord(peerIpv4, peerIpv6);
 
-    final NodeSession session = lookupSessionForOutgoingMessage(dualStackPeer, ipv6BindAvailableHandler);
+    final NodeSession session =
+        lookupSessionForOutgoingMessage(dualStackPeer, ipv6BindAvailableHandler);
 
     assertThat(session).isNotNull();
     assertThat(session.getRemoteAddress().getAddress()).isInstanceOf(Inet6Address.class);
