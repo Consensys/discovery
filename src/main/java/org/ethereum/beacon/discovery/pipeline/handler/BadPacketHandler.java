@@ -26,7 +26,7 @@ public class BadPacketHandler implements EnvelopeHandler {
                 "Envelope %s in BadPacketHandler, requirements are satisfied!",
                 envelope.getIdString()));
 
-    LOG.debug(
+    LOG.trace(
         () ->
             String.format(
                 "Bad packet: %s in envelope #%s: %s",
