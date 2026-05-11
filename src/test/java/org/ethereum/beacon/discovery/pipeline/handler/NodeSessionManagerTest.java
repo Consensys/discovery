@@ -7,7 +7,10 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.SecretKey;
@@ -54,7 +57,8 @@ class NodeSessionManagerTest {
           new DefaultSigner(STATIC_NODE_SECRET),
           nodeBucketStorage,
           outgoingPipeline,
-          expirationSchedulerFactory);
+          expirationSchedulerFactory,
+          false);
 
   @AfterEach
   public void tearDown() {
@@ -116,6 +120,48 @@ class NodeSessionManagerTest {
   }
 
   @Test
+  public void shouldDialPeerOverIpv6WhenIpv6BindAvailableEvenIfHomeRecordIsIpv4Only()
+      throws UnknownHostException {
+    final NodeSessionManager ipv6BindAvailableHandler =
+        new NodeSessionManager(
+            new LocalNodeRecordStore(
+                homeNodeRecord,
+                new DefaultSigner(homeNodeInfo.getSecretKey()),
+                NodeRecordListener.NOOP,
+                NewAddressHandler.NOOP),
+            new DefaultSigner(STATIC_NODE_SECRET),
+            nodeBucketStorage,
+            outgoingPipeline,
+            expirationSchedulerFactory,
+            true);
+
+    final InetSocketAddress peerIpv4 = new InetSocketAddress("192.0.2.1", 30303);
+    final InetSocketAddress peerIpv6 =
+        new InetSocketAddress(Inet6Address.getByName("2001:db8::1"), 30304);
+    final NodeRecord dualStackPeer = createDualStackPeerRecord(peerIpv4, peerIpv6);
+
+    final NodeSession session = lookupSessionForOutgoingMessage(dualStackPeer, ipv6BindAvailableHandler);
+
+    assertThat(session).isNotNull();
+    assertThat(session.getRemoteAddress().getAddress()).isInstanceOf(Inet6Address.class);
+    assertThat(session.getRemoteAddress()).isEqualTo(peerIpv6);
+  }
+
+  @Test
+  public void shouldDialPeerOverIpv4WhenIpv6BindNotAvailableAndHomeRecordIsIpv4Only()
+      throws UnknownHostException {
+    final InetSocketAddress peerIpv4 = new InetSocketAddress("192.0.2.1", 30303);
+    final InetSocketAddress peerIpv6 =
+        new InetSocketAddress(Inet6Address.getByName("2001:db8::1"), 30304);
+    final NodeRecord dualStackPeer = createDualStackPeerRecord(peerIpv4, peerIpv6);
+
+    final NodeSession session = lookupSessionForOutgoingMessage(dualStackPeer, handler);
+
+    assertThat(session).isNotNull();
+    assertThat(session.getRemoteAddress()).isEqualTo(peerIpv4);
+  }
+
+  @Test
   void shouldNotGetASessionWhenNoAddressIsAvailable() {
     final NodeRecord nodeRecord =
         new NodeRecordFactory(new SimpleIdentitySchemaInterpreter())
@@ -149,5 +195,25 @@ class NodeSessionManagerTest {
     handler.handle(envelope);
 
     return envelope.get(Field.SESSION);
+  }
+
+  private NodeSession lookupSessionForOutgoingMessage(
+      final NodeRecord peerRecord, final NodeSessionManager handlerToUse) {
+    final Envelope envelope = new Envelope();
+    envelope.put(Field.SESSION_LOOKUP, new SessionLookup(NODE_ID));
+    envelope.put(Field.NODE, peerRecord);
+    handlerToUse.handle(envelope);
+
+    return envelope.get(Field.SESSION);
+  }
+
+  private NodeRecord createDualStackPeerRecord(
+      final InetSocketAddress ipv4, final InetSocketAddress ipv6) {
+    return SimpleIdentitySchemaInterpreter.createNodeRecord(
+        NODE_ID,
+        new EnrField(EnrField.IP_V4, Bytes.wrap(ipv4.getAddress().getAddress())),
+        new EnrField(EnrField.UDP, ipv4.getPort()),
+        new EnrField(EnrField.IP_V6, Bytes.wrap(ipv6.getAddress().getAddress())),
+        new EnrField(EnrField.UDP_V6, ipv6.getPort()));
   }
 }
