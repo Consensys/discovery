@@ -243,6 +243,139 @@ public class HandshakeHandlersTest {
     assertNotNull(envelopeAt2From1WithMessage.get(MESSAGE));
   }
 
+  /**
+   * A handshake signed against an earlier WHOAREYOU must still be accepted by the responder even
+   * when a fresh WHOAREYOU has been issued for a different ordinary packet nonce in the meantime.
+   */
+  @Test
+  public void responderAcceptsHandshakeForEarlierPendingWhoAreYou() throws Exception {
+    NodeInfo nodePair1 = TestUtil.generateUnverifiedNode(30303);
+    NodeRecord nodeRecord1 = nodePair1.getNodeRecord();
+    Signer signer1 = new DefaultSigner(nodePair1.getSecretKey());
+    NodeInfo nodePair2 = TestUtil.generateUnverifiedNode(30304);
+    NodeRecord nodeRecord2 = nodePair2.getNodeRecord();
+    Signer signer2 = new DefaultSigner(nodePair2.getSecretKey());
+
+    final LocalNodeRecordStore localNodeRecordStoreAt1 =
+        new LocalNodeRecordStore(
+            nodeRecord1, signer1, NodeRecordListener.NOOP, NewAddressHandler.NOOP);
+    KBuckets nodeBucketStorage1 =
+        new KBuckets(clock, localNodeRecordStoreAt1, new LivenessChecker(clock));
+    KBuckets nodeBucketStorage2 =
+        new KBuckets(
+            clock,
+            new LocalNodeRecordStore(
+                nodeRecord2, signer2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            new LivenessChecker(clock));
+
+    LinkedBlockingQueue<RawPacket> outgoing1Packets = new LinkedBlockingQueue<>();
+    final Consumer<NetworkParcel> outgoingMessages1to2 =
+        parcel -> outgoing1Packets.add(parcel.getPacket());
+    final ExpirationSchedulerFactory expirationSchedulerFactory =
+        new ExpirationSchedulerFactory(Executors.newSingleThreadScheduledExecutor());
+    final ExpirationScheduler<Bytes> requestExpirationScheduler =
+        expirationSchedulerFactory.create(60, TimeUnit.SECONDS);
+    NodeSession nodeSessionAt1For2 =
+        new NodeSession(
+            nodeRecord2.getNodeId(),
+            Optional.of(nodeRecord2),
+            nodePair2.getNodeRecord().getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
+            localNodeRecordStoreAt1,
+            signer1,
+            nodeBucketStorage1,
+            outgoingMessages1to2,
+            rnd,
+            requestExpirationScheduler);
+    LinkedBlockingQueue<RawPacket> outgoing2Packets = new LinkedBlockingQueue<>();
+    final Consumer<NetworkParcel> outgoingMessages2to1 =
+        parcel -> outgoing2Packets.add(parcel.getPacket());
+    NodeSession nodeSessionAt2For1 =
+        new NodeSession(
+            nodeRecord1.getNodeId(),
+            Optional.of(nodeRecord1),
+            nodeRecord1.getUdpAddress().orElseThrow(),
+            mock(NodeSessionManager.class),
+            new LocalNodeRecordStore(
+                nodeRecord2, signer2, NodeRecordListener.NOOP, NewAddressHandler.NOOP),
+            signer2,
+            nodeBucketStorage2,
+            outgoingMessages2to1,
+            rnd,
+            requestExpirationScheduler);
+
+    Scheduler taskScheduler = Schedulers.createDefault().events();
+    Pipeline outgoingPipeline = new PipelineImpl().build();
+    WhoAreYouPacketHandler whoAreYouPacketHandlerNode1 =
+        new WhoAreYouPacketHandler(outgoingPipeline, taskScheduler);
+
+    // Step 1: Node1 sends ordinary packet n1.
+    nodeSessionAt1For2.sendOutgoingRandom(Bytes.random(128));
+    Bytes12 firstMessageNonce = nodeSessionAt1For2.getLastOutboundNonce().orElseThrow();
+    outgoing1Packets.clear();
+
+    // Step 2: Node2 issues WHOAREYOU c1 for n1.
+    Bytes16 firstIdNonce = Bytes16.random(rnd);
+    WhoAreYouPacket firstWhoAreYouPacket =
+        WhoAreYouPacket.create(
+            Header.createWhoAreYouHeader(firstMessageNonce, firstIdNonce, UInt64.ZERO));
+    nodeSessionAt2For1.sendOutgoingWhoAreYou(firstWhoAreYouPacket);
+
+    // Step 3: Node1 receives c1 and produces a handshake signed against it. Hold the handshake.
+    Envelope envelopeAt1From2 = new Envelope();
+    envelopeAt1From2.put(Field.PACKET_WHOAREYOU, firstWhoAreYouPacket);
+    envelopeAt1From2.put(Field.SESSION, nodeSessionAt1For2);
+    Request<Void> request =
+        new Request<>(
+            new CompletableFuture<>(),
+            id -> new FindNodeMessage(id, singletonList(1)),
+            new FindNodeResponseHandler(singletonList(1), ALLOW_ALL));
+    nodeSessionAt1For2.createNextRequest(request);
+
+    RawPacket firstWhoAreYouRawPacket = outgoing2Packets.poll(1, TimeUnit.SECONDS);
+    envelopeAt1From2.put(MASKING_IV, firstWhoAreYouRawPacket.getMaskingIV());
+    whoAreYouPacketHandlerNode1.handle(envelopeAt1From2);
+
+    RawPacket heldHandshakeRawPacket = outgoing1Packets.poll(1, TimeUnit.SECONDS);
+    assertNotNull(heldHandshakeRawPacket);
+
+    // Step 4: Before the handshake is delivered, Node1 sends a second ordinary packet n2, and
+    // Node2 issues a fresh WHOAREYOU c2 for it. With the fix, both c1 and c2 are tracked.
+    Bytes12 secondMessageNonce = Bytes12.wrap(Bytes.random(12));
+    Bytes16 secondIdNonce = Bytes16.random(rnd);
+    WhoAreYouPacket secondWhoAreYouPacket =
+        WhoAreYouPacket.create(
+            Header.createWhoAreYouHeader(secondMessageNonce, secondIdNonce, UInt64.ZERO));
+    nodeSessionAt2For1.sendOutgoingWhoAreYou(secondWhoAreYouPacket);
+    // Two challenges are now pending on the responder.
+    assertTrue(nodeSessionAt2For1.hasPendingWhoAreYouForNonce(firstMessageNonce));
+    assertTrue(nodeSessionAt2For1.hasPendingWhoAreYouForNonce(secondMessageNonce));
+
+    // Step 5: Deliver the held handshake (signed against c1) to Node2.
+    HandshakeMessagePacketHandler handshakeMessagePacketHandlerNode2 =
+        new HandshakeMessagePacketHandler(
+            outgoingPipeline,
+            taskScheduler,
+            NODE_RECORD_FACTORY_NO_VERIFICATION,
+            mock(NodeSessionManager.class),
+            ALLOW_ALL);
+    Envelope envelopeAt2From1 = new Envelope();
+    envelopeAt2From1.put(
+        PACKET_HANDSHAKE,
+        (HandshakeMessagePacket)
+            heldHandshakeRawPacket.demaskPacket(nodePair2.getNodeRecord().getNodeId()));
+    envelopeAt2From1.put(SESSION, nodeSessionAt2For1);
+    envelopeAt2From1.put(MASKING_IV, heldHandshakeRawPacket.getMaskingIV());
+    assertFalse(nodeSessionAt2For1.isAuthenticated());
+
+    handshakeMessagePacketHandlerNode2.handle(envelopeAt2From1);
+
+    // Step 6: Responder must accept the handshake and authenticate the session.
+    assertTrue(nodeSessionAt2For1.isAuthenticated());
+    assertNotNull(envelopeAt2From1.get(MESSAGE));
+    assertNull(envelopeAt2From1.get(BAD_PACKET));
+  }
+
   private OrdinaryMessagePacket createPingPacket(
       Bytes16 maskingIV, Bytes12 authTag, NodeSession session, Bytes requestId) {
 
