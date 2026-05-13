@@ -69,6 +69,7 @@ public class NodeSession {
   private final Signer signer;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
   private Optional<Bytes> whoAreYouChallenge = Optional.empty();
+  private Optional<WhoAreYouPacket> pendingWhoAreYouPacket = Optional.empty();
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
   private boolean active = true;
   private final Function<Random, Bytes12> nonceGenerator;
@@ -161,10 +162,33 @@ public class NodeSession {
     sendOutgoing(generateMaskingIV(), packet);
   }
 
-  public void sendOutgoingWhoAreYou(final WhoAreYouPacket packet) {
+  public synchronized void sendOutgoingWhoAreYou(final WhoAreYouPacket packet) {
     LOG.trace(
         () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
     Bytes16 maskingIV = generateMaskingIV();
+    pendingWhoAreYouPacket = Optional.of(packet);
+    dispatchWhoAreYou(maskingIV, packet);
+  }
+
+  public synchronized Optional<Bytes12> getPendingWhoAreYouNonce() {
+    return pendingWhoAreYouPacket.map(p -> p.getHeader().getStaticHeader().getNonce());
+  }
+
+  public synchronized void resendOutgoingWhoAreYou() {
+    pendingWhoAreYouPacket.ifPresent(
+        packet -> {
+          LOG.trace(
+              () ->
+                  String.format(
+                      "Resending outgoing WhoAreYou message %s in session %s", packet, this));
+          // Reuse the original maskingIV so the stored challenge remains stable; the initiator
+          // may have already signed against it.
+          Bytes16 maskingIV = Bytes16.wrap(whoAreYouChallenge.orElseThrow().slice(0, 16));
+          sendOutgoing(maskingIV, packet);
+        });
+  }
+
+  private void dispatchWhoAreYou(final Bytes16 maskingIV, final WhoAreYouPacket packet) {
     whoAreYouChallenge = Optional.of(Bytes.wrap(maskingIV, packet.getHeader().getBytes()));
     sendOutgoing(maskingIV, packet);
   }
@@ -228,6 +252,7 @@ public class NodeSession {
 
   private synchronized void resetHandshakeState() {
     if (state == SessionState.WHOAREYOU_SENT || state == SessionState.RANDOM_PACKET_SENT) {
+      pendingWhoAreYouPacket = Optional.empty();
       setState(SessionState.INITIAL);
     }
   }
