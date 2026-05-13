@@ -3,6 +3,7 @@
  */
 package org.ethereum.beacon.discovery;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,9 +152,11 @@ public class TestManagerWrapper {
             .signer(new DefaultSigner(keyPair.secretKey()))
             .address(LOCALHOST, port)
             .build();
+    final NettyDiscoveryServer mockServer = Mockito.mock(NettyDiscoveryServer.class);
+    Mockito.when(mockServer.getListenAddress()).thenReturn(new InetSocketAddress(LOCALHOST, port));
     DiscoverySystemBuilder builder = new DiscoverySystemBuilder();
     builder
-        .discoveryServer(Mockito.mock(NettyDiscoveryServer.class))
+        .discoveryServer(mockServer)
         .localNodeRecord(nodeRecord)
         .signer(new DefaultSigner(keyPair.secretKey()))
         .retryTimeout(RETRY_TIMEOUT)
