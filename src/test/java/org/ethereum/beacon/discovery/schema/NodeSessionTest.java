@@ -198,14 +198,15 @@ public class NodeSessionTest {
   }
 
   @Test
-  void resendOutgoingWhoAreYou_shouldSendPacketWhenPendingPacketExists() {
-    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(Bytes12.wrap(Bytes.random(12))));
+  void resendOutgoingWhoAreYouFor_shouldSendPacketWhenPendingPacketExists() {
+    final Bytes12 nonce = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce));
 
     final ArgumentCaptor<NetworkParcelV5> firstCaptor =
         ArgumentCaptor.forClass(NetworkParcelV5.class);
     verify(outgoingPipeline).accept(firstCaptor.capture());
 
-    session.resendOutgoingWhoAreYou();
+    session.resendOutgoingWhoAreYouFor(nonce);
 
     final ArgumentCaptor<NetworkParcelV5> secondCaptor =
         ArgumentCaptor.forClass(NetworkParcelV5.class);
@@ -215,46 +216,126 @@ public class NodeSessionTest {
   }
 
   @Test
-  void resendOutgoingWhoAreYou_shouldDoNothingWhenNoPendingPacket() {
-    session.resendOutgoingWhoAreYou();
+  void resendOutgoingWhoAreYouFor_shouldDoNothingWhenNoPendingPacket() {
+    session.resendOutgoingWhoAreYouFor(Bytes12.wrap(Bytes.random(12)));
 
     verify(outgoingPipeline, never()).accept(any());
   }
 
   @Test
-  void resendOutgoingWhoAreYou_shouldDoNothingAfterHandshakeStateReset() {
+  void resendOutgoingWhoAreYouFor_shouldDoNothingForUnknownNonce() {
+    final Bytes12 storedNonce = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(storedNonce));
+    verify(outgoingPipeline, times(1)).accept(any());
+
+    session.resendOutgoingWhoAreYouFor(Bytes12.wrap(Bytes.random(12)));
+
+    verify(outgoingPipeline, times(1)).accept(any());
+  }
+
+  @Test
+  void resendOutgoingWhoAreYouFor_shouldDoNothingAfterHandshakeStateReset() {
     final Request<?> request = createRequestMock();
     final RequestInfo requestInfo = session.createNextRequest(request);
 
     final ArgumentCaptor<Runnable> timeoutHandlerCaptor = ArgumentCaptor.forClass(Runnable.class);
     verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
 
-    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(Bytes12.wrap(Bytes.random(12))));
+    final Bytes12 nonce = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce));
     session.setState(SessionState.WHOAREYOU_SENT);
 
     // Simulate request timeout which resets the handshake state.
     timeoutHandlerCaptor.getValue().run();
     assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
 
-    session.resendOutgoingWhoAreYou();
+    session.resendOutgoingWhoAreYouFor(nonce);
 
     // sendOutgoingWhoAreYou was called once above; resend should not add another send.
     verify(outgoingPipeline, times(1)).accept(any());
   }
 
   @Test
-  void resendOutgoingWhoAreYou_shouldPreserveOriginalNonce() {
+  void resendOutgoingWhoAreYouFor_shouldPreserveOriginalChallenge() {
     final Bytes12 originalNonce = Bytes12.wrap(Bytes.random(12));
-    final WhoAreYouPacket originalPacket = createWhoAreYouPacket(originalNonce);
-    session.sendOutgoingWhoAreYou(originalPacket);
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(originalNonce));
 
-    final Bytes challengeAfterSend = session.getWhoAreYouChallenge().orElseThrow();
+    final Bytes challengeAfterSend = singleChallenge();
 
-    session.resendOutgoingWhoAreYou();
+    session.resendOutgoingWhoAreYouFor(originalNonce);
 
     // Challenge must be unchanged after resend so a handshake signed against the original
     // challenge remains valid.
-    assertThat(session.getWhoAreYouChallenge()).contains(challengeAfterSend);
+    assertThat(singleChallenge()).isEqualTo(challengeAfterSend);
+  }
+
+  @Test
+  void sendOutgoingWhoAreYou_shouldStoreMultiplePendingChallengesWithoutOverwriting() {
+    final Bytes12 nonce1 = Bytes12.wrap(Bytes.random(12));
+    final Bytes12 nonce2 = Bytes12.wrap(Bytes.random(12));
+
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce1));
+    final Bytes challenge1 = singleChallenge();
+
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce2));
+
+    assertThat(session.hasPendingWhoAreYouForNonce(nonce1)).isTrue();
+    assertThat(session.hasPendingWhoAreYouForNonce(nonce2)).isTrue();
+    assertThat(session.getPendingWhoAreYouChallenges()).hasSize(2).contains(challenge1);
+  }
+
+  @Test
+  void pendingWhoAreYou_shouldBeBoundedAndEvictOldestEntry() {
+    final Bytes12[] nonces = new Bytes12[NodeSession.MAX_PENDING_WHOAREYOU + 1];
+    for (int i = 0; i < nonces.length; i++) {
+      nonces[i] = Bytes12.wrap(Bytes.random(12));
+      session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonces[i]));
+    }
+
+    // The oldest entry must have been evicted to keep the map bounded.
+    assertThat(session.hasPendingWhoAreYouForNonce(nonces[0])).isFalse();
+    for (int i = 1; i < nonces.length; i++) {
+      assertThat(session.hasPendingWhoAreYouForNonce(nonces[i])).isTrue();
+    }
+    assertThat(session.getPendingWhoAreYouChallenges()).hasSize(NodeSession.MAX_PENDING_WHOAREYOU);
+  }
+
+  @Test
+  void clearPendingWhoAreYouChallenges_shouldClearAllPending() {
+    final Bytes12 nonce1 = Bytes12.wrap(Bytes.random(12));
+    final Bytes12 nonce2 = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce1));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce2));
+    assertThat(session.getPendingWhoAreYouChallenges()).hasSize(2);
+
+    session.clearPendingWhoAreYouChallenges();
+
+    assertThat(session.getPendingWhoAreYouChallenges()).isEmpty();
+    assertThat(session.hasPendingWhoAreYouForNonce(nonce1)).isFalse();
+    assertThat(session.hasPendingWhoAreYouForNonce(nonce2)).isFalse();
+  }
+
+  @Test
+  void resetHandshakeState_shouldClearAllPendingChallenges() {
+    final Request<?> request = createRequestMock();
+    final RequestInfo requestInfo = session.createNextRequest(request);
+    final ArgumentCaptor<Runnable> timeoutHandlerCaptor = ArgumentCaptor.forClass(Runnable.class);
+    verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
+
+    final Bytes12 nonce1 = Bytes12.wrap(Bytes.random(12));
+    final Bytes12 nonce2 = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce1));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonce2));
+    session.setState(SessionState.WHOAREYOU_SENT);
+
+    timeoutHandlerCaptor.getValue().run();
+
+    assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
+    assertThat(session.getPendingWhoAreYouChallenges()).isEmpty();
+  }
+
+  private Bytes singleChallenge() {
+    return session.getPendingWhoAreYouChallenges().iterator().next();
   }
 
   private static WhoAreYouPacket createWhoAreYouPacket(final Bytes12 nonce) {

@@ -31,29 +31,29 @@ class UnauthorizedMessagePacketHandlerTest {
   private final UnauthorizedMessagePacketHandler handler = new UnauthorizedMessagePacketHandler();
 
   @Test
-  void shouldResendExistingWhoAreYouWhenInWhoAreYouSentState() {
+  void shouldResendExistingWhoAreYouWhenNonceMatchesPending() {
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
 
     final OrdinaryMessagePacket packet = createOrdinaryPacket();
     final Bytes12 nonce = packet.getHeader().getStaticHeader().getNonce();
-    when(session.getPendingWhoAreYouNonce()).thenReturn(Optional.of(nonce));
+    when(session.hasPendingWhoAreYouForNonce(nonce)).thenReturn(true);
 
     handler.handle(envelopeWith(session, packet));
 
-    verify(session).resendOutgoingWhoAreYou();
+    verify(session).resendOutgoingWhoAreYouFor(nonce);
     verify(session, never()).sendOutgoingWhoAreYou(any());
     verify(session, never()).setState(any());
   }
 
   @Test
-  void shouldNotChangeStateWhenResendingInWhoAreYouSentState() {
+  void shouldNotChangeStateWhenResendingForKnownNonce() {
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
 
     final OrdinaryMessagePacket packet = createOrdinaryPacket();
     final Bytes12 nonce = packet.getHeader().getStaticHeader().getNonce();
-    when(session.getPendingWhoAreYouNonce()).thenReturn(Optional.of(nonce));
+    when(session.hasPendingWhoAreYouForNonce(nonce)).thenReturn(true);
 
     handler.handle(envelopeWith(session, packet));
 
@@ -61,22 +61,22 @@ class UnauthorizedMessagePacketHandlerTest {
   }
 
   @Test
-  void shouldSendNewWhoAreYouWhenInWhoAreYouSentStateButDifferentNonce() {
+  void shouldSendNewWhoAreYouWhenIncomingNonceIsUnknown() {
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
     when(session.getNodeRecord()).thenReturn(Optional.empty());
-    // Pending WhoAreYou was for a different nonce
-    when(session.getPendingWhoAreYouNonce())
-        .thenReturn(Optional.of(Bytes12.wrap(Bytes.random(12))));
 
     final OrdinaryMessagePacket packet = createOrdinaryPacket();
+    final Bytes12 incomingNonce = packet.getHeader().getStaticHeader().getNonce();
+    // No pending WhoAreYou for this nonce — an earlier challenge was for a different nonce.
+    when(session.hasPendingWhoAreYouForNonce(incomingNonce)).thenReturn(false);
+
     handler.handle(envelopeWith(session, packet));
 
-    verify(session, never()).resendOutgoingWhoAreYou();
+    verify(session, never()).resendOutgoingWhoAreYouFor(any());
     final ArgumentCaptor<WhoAreYouPacket> captor = ArgumentCaptor.forClass(WhoAreYouPacket.class);
     verify(session).sendOutgoingWhoAreYou(captor.capture());
-    final Bytes12 expectedNonce = packet.getHeader().getStaticHeader().getNonce();
-    assertThat(captor.getValue().getHeader().getStaticHeader().getNonce()).isEqualTo(expectedNonce);
+    assertThat(captor.getValue().getHeader().getStaticHeader().getNonce()).isEqualTo(incomingNonce);
   }
 
   @Test
@@ -90,7 +90,7 @@ class UnauthorizedMessagePacketHandlerTest {
 
     final ArgumentCaptor<WhoAreYouPacket> captor = ArgumentCaptor.forClass(WhoAreYouPacket.class);
     verify(session).sendOutgoingWhoAreYou(captor.capture());
-    verify(session, never()).resendOutgoingWhoAreYou();
+    verify(session, never()).resendOutgoingWhoAreYouFor(any());
     verify(session).setState(SessionState.WHOAREYOU_SENT);
 
     // The WHOAREYOU nonce must echo the incoming packet's nonce so the initiator can
@@ -107,7 +107,7 @@ class UnauthorizedMessagePacketHandlerTest {
 
     handler.handle(envelope);
 
-    verify(session, never()).resendOutgoingWhoAreYou();
+    verify(session, never()).resendOutgoingWhoAreYouFor(any());
     verify(session, never()).sendOutgoingWhoAreYou(any());
   }
 

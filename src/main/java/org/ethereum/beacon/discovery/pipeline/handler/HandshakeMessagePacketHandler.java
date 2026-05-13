@@ -6,6 +6,7 @@ package org.ethereum.beacon.discovery.pipeline.handler;
 
 import static org.ethereum.beacon.discovery.schema.NodeSession.SessionState.AUTHENTICATED;
 
+import java.util.Collection;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,24 +70,12 @@ public class HandshakeMessagePacketHandler extends AbstractSkippingEnvelopeHandl
     NodeSession session = envelope.get(Field.SESSION);
     try {
 
-      if (session.getWhoAreYouChallenge().isEmpty()) {
+      Collection<Bytes> pendingChallenges = session.getPendingWhoAreYouChallenges();
+      if (pendingChallenges.isEmpty()) {
         LOG.trace(String.format("Outbound WhoAreYou challenge not found for session %s", session));
         markHandshakeAsFailed(envelope, session);
         return;
       }
-      Bytes whoAreYouChallenge = session.getWhoAreYouChallenge().get();
-
-      Bytes ephemeralPubKeyCompressed = packet.getHeader().getAuthData().getEphemeralPubKey();
-      Functions.HKDFKeys keys =
-          Functions.hkdfExpand(
-              session.getNodeId(),
-              session.getHomeNodeId(),
-              session.getSigner(),
-              ephemeralPubKeyCompressed,
-              whoAreYouChallenge);
-      // Swap keys because we are not initiator, other side is
-      session.setInitiatorKey(keys.getRecipientKey());
-      session.setRecipientKey(keys.getInitiatorKey());
 
       Optional<NodeRecord> enr = packet.getHeader().getAuthData().getNodeRecord(nodeRecordFactory);
       if (!enr.map(NodeRecord::isValid).orElse(true)) {
@@ -116,17 +105,23 @@ public class HandshakeMessagePacketHandler extends AbstractSkippingEnvelopeHandl
         return;
       }
       NodeRecord nodeRecord = nodeRecordMaybe.get();
+      Bytes remotePubKey = (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1);
 
-      boolean idNonceVerifyResult =
-          packet
-              .getHeader()
-              .getAuthData()
-              .verify(
-                  whoAreYouChallenge,
-                  session.getHomeNodeId(),
-                  (Bytes) nodeRecord.get(EnrField.PKEY_SECP256K1));
+      // The handshake packet does not directly identify which WHOAREYOU it answers, so we try
+      // each pending challenge and accept the one whose ID signature verifies.
+      Bytes ephemeralPubKeyCompressed = packet.getHeader().getAuthData().getEphemeralPubKey();
+      Bytes matchedChallenge = null;
+      for (Bytes candidate : pendingChallenges) {
+        if (packet
+            .getHeader()
+            .getAuthData()
+            .verify(candidate, session.getHomeNodeId(), remotePubKey)) {
+          matchedChallenge = candidate;
+          break;
+        }
+      }
 
-      if (!idNonceVerifyResult) {
+      if (matchedChallenge == null) {
         LOG.trace(
             String.format(
                 "ID signature not valid for message [%s] from node %s in status %s",
@@ -135,12 +130,24 @@ public class HandshakeMessagePacketHandler extends AbstractSkippingEnvelopeHandl
         return;
       }
 
+      Functions.HKDFKeys keys =
+          Functions.hkdfExpand(
+              session.getNodeId(),
+              session.getHomeNodeId(),
+              session.getSigner(),
+              ephemeralPubKeyCompressed,
+              matchedChallenge);
+      // Swap keys because we are not initiator, other side is
+      session.setInitiatorKey(keys.getRecipientKey());
+      session.setRecipientKey(keys.getInitiatorKey());
+
       Bytes16 maskingIV = envelope.get(Field.MASKING_IV);
       V5Message message =
           packet.decryptMessage(maskingIV, session.getRecipientKey(), nodeRecordFactory);
       envelope.put(Field.MESSAGE, message);
 
       session.setState(AUTHENTICATED);
+      session.clearPendingWhoAreYouChallenges();
       envelope.remove(Field.PACKET_HANDSHAKE);
       enr.ifPresent(session::onNodeRecordReceived);
       NextTaskHandler.tryToSendAwaitTaskIfAny(session, outgoingPipeline, scheduler);

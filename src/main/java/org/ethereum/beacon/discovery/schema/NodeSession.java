@@ -10,7 +10,10 @@ import static org.ethereum.beacon.discovery.task.TaskStatus.SENT;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -18,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +56,13 @@ public class NodeSession {
   private static final Logger LOG = LogManager.getLogger(NodeSession.class);
 
   public static final int REQUEST_ID_SIZE = 8;
+
+  /**
+   * Maximum number of in-flight WHOAREYOU challenges retained per session. Bounds memory when an
+   * initiator sends many ordinary packets before completing the handshake.
+   */
+  @VisibleForTesting static final int MAX_PENDING_WHOAREYOU = 5;
+
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
@@ -68,8 +79,21 @@ public class NodeSession {
   private final ExpirationScheduler<Bytes> requestExpirationScheduler;
   private final Signer signer;
   private Optional<InetSocketAddress> reportedExternalAddress = Optional.empty();
-  private Optional<Bytes> whoAreYouChallenge = Optional.empty();
-  private Optional<WhoAreYouPacket> pendingWhoAreYouPacket = Optional.empty();
+
+  // Pending WHOAREYOU challenges keyed by the ordinary packet nonce that caused each challenge.
+  // The discv5 wire spec requires the WHOAREYOU nonce to mirror the offending packet's nonce, and
+  // a handshake response signed against a prior challenge may arrive after a fresh challenge has
+  // been issued for a different ordinary packet. Keeping the set bounded prevents an attacker (or
+  // a busy peer) from forcing unbounded growth.
+  private final Map<Bytes12, PendingWhoAreYou> pendingWhoAreYou =
+      Collections.synchronizedMap(
+          new LinkedHashMap<>(MAX_PENDING_WHOAREYOU + 1, 1.0f, false) {
+            @Override
+            protected boolean removeEldestEntry(final Map.Entry<Bytes12, PendingWhoAreYou> eldest) {
+              return size() > MAX_PENDING_WHOAREYOU;
+            }
+          });
+
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
   private boolean active = true;
   private final Function<Random, Bytes12> nonceGenerator;
@@ -139,10 +163,6 @@ public class NodeSession {
     return remoteAddress;
   }
 
-  public Optional<Bytes> getWhoAreYouChallenge() {
-    return whoAreYouChallenge;
-  }
-
   public void sendOutgoingOrdinary(final V5Message message) {
     LOG.trace(() -> String.format("Sending outgoing message %s in session %s", message, this));
     Bytes16 maskingIV = generateMaskingIV();
@@ -166,31 +186,45 @@ public class NodeSession {
     LOG.trace(
         () -> String.format("Sending outgoing WhoAreYou message %s in session %s", packet, this));
     Bytes16 maskingIV = generateMaskingIV();
-    pendingWhoAreYouPacket = Optional.of(packet);
-    dispatchWhoAreYou(maskingIV, packet);
-  }
-
-  public synchronized Optional<Bytes12> getPendingWhoAreYouNonce() {
-    return pendingWhoAreYouPacket.map(p -> p.getHeader().getStaticHeader().getNonce());
-  }
-
-  public synchronized void resendOutgoingWhoAreYou() {
-    pendingWhoAreYouPacket.ifPresent(
-        packet -> {
-          LOG.trace(
-              () ->
-                  String.format(
-                      "Resending outgoing WhoAreYou message %s in session %s", packet, this));
-          // Reuse the original maskingIV so the stored challenge remains stable; the initiator
-          // may have already signed against it.
-          Bytes16 maskingIV = Bytes16.wrap(whoAreYouChallenge.orElseThrow().slice(0, 16));
-          sendOutgoing(maskingIV, packet);
-        });
-  }
-
-  private void dispatchWhoAreYou(final Bytes16 maskingIV, final WhoAreYouPacket packet) {
-    whoAreYouChallenge = Optional.of(Bytes.wrap(maskingIV, packet.getHeader().getBytes()));
+    Bytes challengeData = Bytes.wrap(maskingIV, packet.getHeader().getBytes());
+    Bytes12 msgNonce = packet.getHeader().getStaticHeader().getNonce();
+    pendingWhoAreYou.put(msgNonce, new PendingWhoAreYou(packet, maskingIV, challengeData));
     sendOutgoing(maskingIV, packet);
+  }
+
+  public boolean hasPendingWhoAreYouForNonce(final Bytes12 nonce) {
+    return pendingWhoAreYou.containsKey(nonce);
+  }
+
+  public void resendOutgoingWhoAreYouFor(final Bytes12 nonce) {
+    final PendingWhoAreYou pending = pendingWhoAreYou.get(nonce);
+    if (pending == null) {
+      return;
+    }
+    LOG.trace(
+        () ->
+            String.format(
+                "Resending outgoing WhoAreYou message %s in session %s", pending.packet(), this));
+    // Reuse the original maskingIV so the challenge bytes the initiator signed over remain
+    // identical.
+    sendOutgoing(pending.maskingIV(), pending.packet());
+  }
+
+  /**
+   * Returns the challenge data ({@code maskingIV || header bytes}) for every pending WHOAREYOU. The
+   * handshake handler attempts to match the incoming handshake against each candidate because the
+   * handshake packet does not directly identify which challenge it answers.
+   */
+  public Collection<Bytes> getPendingWhoAreYouChallenges() {
+    synchronized (pendingWhoAreYou) {
+      return pendingWhoAreYou.values().stream()
+          .map(PendingWhoAreYou::challengeData)
+          .collect(Collectors.toUnmodifiableList());
+    }
+  }
+
+  public void clearPendingWhoAreYouChallenges() {
+    pendingWhoAreYou.clear();
   }
 
   public void sendOutgoingHandshake(
@@ -252,7 +286,7 @@ public class NodeSession {
 
   private synchronized void resetHandshakeState() {
     if (state == SessionState.WHOAREYOU_SENT || state == SessionState.RANDOM_PACKET_SENT) {
-      pendingWhoAreYouPacket = Optional.empty();
+      pendingWhoAreYou.clear();
       setState(SessionState.INITIAL);
     }
   }
@@ -434,4 +468,6 @@ public class NodeSession {
     RANDOM_PACKET_SENT, // our node is initiator, we've sent random packet
     AUTHENTICATED
   }
+
+  private record PendingWhoAreYou(WhoAreYouPacket packet, Bytes16 maskingIV, Bytes challengeData) {}
 }
