@@ -92,9 +92,12 @@ public class LocalNodeRecordStore {
   }
 
   public void onCustomFieldValueChanged(final String fieldName, final Bytes value) {
-    NodeRecord oldRecord = this.latestRecord.get();
-    NodeRecord newRecord = oldRecord.withUpdatedCustomField(fieldName, value, signer);
-    this.latestRecord.set(newRecord);
+    NodeRecord oldRecord;
+    NodeRecord newRecord;
+    do {
+      oldRecord = this.latestRecord.get();
+      newRecord = oldRecord.withUpdatedCustomField(fieldName, value, signer);
+    } while (!latestRecord.compareAndSet(oldRecord, newRecord));
     recordListener.recordUpdated(oldRecord, newRecord);
   }
 }

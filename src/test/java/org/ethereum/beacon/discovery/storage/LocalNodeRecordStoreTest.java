@@ -12,7 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
 import org.ethereum.beacon.discovery.crypto.DefaultSigner;
@@ -164,5 +166,75 @@ public class LocalNodeRecordStoreTest {
     assertThat(finalRecord.getUdp6Address().orElseThrow().getPort())
         .as("IPv6 UDP port must be resolved")
         .isEqualTo(30304);
+  }
+
+  /**
+   * Reproduces the lost update from issue #190. Both threads build their replacement record from
+   * the same original ENR, so a plain set can let the second write overwrite the first write's
+   * custom field.
+   */
+  @Test
+  void onCustomFieldValueChangedHandlesConcurrentUpdates() throws Exception {
+    final Signer signer =
+        new BarrierSigner(new DefaultSigner(Functions.randomKeyPair().secretKey()));
+    final NodeRecord nodeRecord =
+        new NodeRecordBuilder().signer(signer).address("127.0.0.1", 30303).build();
+
+    final LocalNodeRecordStore recordStore =
+        new LocalNodeRecordStore(nodeRecord, signer, (o, n) -> {}, ADDRESS_UPDATER);
+
+    ((BarrierSigner) signer).enableBlocking();
+
+    final Thread fieldAThread =
+        new Thread(
+            () -> recordStore.onCustomFieldValueChanged("fieldA", Bytes.fromHexString("0xaaaa")));
+    final Thread fieldBThread =
+        new Thread(
+            () -> recordStore.onCustomFieldValueChanged("fieldB", Bytes.fromHexString("0xbbbb")));
+
+    fieldAThread.start();
+    fieldBThread.start();
+    fieldAThread.join();
+    fieldBThread.join();
+
+    final NodeRecord finalRecord = recordStore.getLocalNodeRecord();
+    assertThat(finalRecord.get("fieldA")).isEqualTo(Bytes.fromHexString("0xaaaa"));
+    assertThat(finalRecord.get("fieldB")).isEqualTo(Bytes.fromHexString("0xbbbb"));
+  }
+
+  private static class BarrierSigner implements Signer {
+    private final Signer delegate;
+    private final CyclicBarrier barrier = new CyclicBarrier(2);
+    private final AtomicInteger signaturesToBlock = new AtomicInteger();
+
+    private BarrierSigner(final Signer delegate) {
+      this.delegate = delegate;
+    }
+
+    private void enableBlocking() {
+      signaturesToBlock.set(2);
+    }
+
+    @Override
+    public Bytes sign(final Bytes32 messageHash) {
+      if (signaturesToBlock.getAndUpdate(value -> Math.max(0, value - 1)) > 0) {
+        try {
+          barrier.await();
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+      return delegate.sign(messageHash);
+    }
+
+    @Override
+    public Bytes deriveECDHKeyAgreement(final Bytes destPubKey) {
+      return delegate.deriveECDHKeyAgreement(destPubKey);
+    }
+
+    @Override
+    public Bytes deriveCompressedPublicKeyFromPrivate() {
+      return delegate.deriveCompressedPublicKeyFromPrivate();
+    }
   }
 }
