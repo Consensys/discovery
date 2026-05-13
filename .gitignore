@@ -31,5 +31,7 @@ out/
 *.d
 *.a
 *.class
-
+.claude/
+.worktrees
+.codex/
 
