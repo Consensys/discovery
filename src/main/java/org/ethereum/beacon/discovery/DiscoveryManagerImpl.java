@@ -9,6 +9,7 @@ import static org.ethereum.beacon.discovery.util.Utils.RECOVERABLE_ERRORS_PREDIC
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -92,13 +93,22 @@ public class DiscoveryManagerImpl implements DiscoveryManager {
     final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
 
     this.discoveryServers = discoveryServers;
+    // Detect whether any of the bound discovery servers is listening on IPv6. The session manager
+    // uses this to allow IPv6 outbound dialing when the home record has not (yet) advertised IPv6
+    // — required for IPv6 external-address auto-discovery to bootstrap.
+    final boolean ipv6BindAvailable =
+        discoveryServers.stream()
+            .map(NettyDiscoveryServer::getListenAddress)
+            .map(InetSocketAddress::getAddress)
+            .anyMatch(addr -> addr instanceof Inet6Address);
     nodeSessionManager =
         new NodeSessionManager(
             localNodeRecordStore,
             signer,
             nodeBucketStorage,
             outgoingPipeline,
-            expirationSchedulerFactory);
+            expirationSchedulerFactory,
+            ipv6BindAvailable);
     incomingPipeline
         .addHandler(new PacketSourceFilter(addressAccessPolicy))
         .addHandler(new IncomingDataPacker(homeNodeRecord.getNodeId()))

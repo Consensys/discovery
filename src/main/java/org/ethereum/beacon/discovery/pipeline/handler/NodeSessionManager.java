@@ -44,6 +44,7 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
   private final LocalNodeRecordStore localNodeRecordStore;
   private final Signer signer;
   private final KBuckets nodeBucketStorage;
+  private final boolean ipv6BindAvailable;
   private final Map<SessionKey, NodeSession> recentSessions = new ConcurrentHashMap<>();
   private final Map<Bytes12, NodeSession> lastNonceToSession = new ConcurrentHashMap<>();
   private final Pipeline outgoingPipeline;
@@ -55,11 +56,13 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
       final Signer signer,
       final KBuckets nodeBucketStorage,
       final Pipeline outgoingPipeline,
-      final ExpirationSchedulerFactory expirationSchedulerFactory) {
+      final ExpirationSchedulerFactory expirationSchedulerFactory,
+      final boolean ipv6BindAvailable) {
     this.localNodeRecordStore = localNodeRecordStore;
     this.signer = signer;
     this.nodeBucketStorage = nodeBucketStorage;
     this.outgoingPipeline = outgoingPipeline;
+    this.ipv6BindAvailable = ipv6BindAvailable;
     this.sessionExpirationScheduler =
         expirationSchedulerFactory.create(SESSION_CLEANUP_DELAY_SECONDS, TimeUnit.SECONDS);
     this.requestExpirationScheduler =
@@ -174,11 +177,14 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
               final NodeRecord homeNodeRecord = localNodeRecordStore.getLocalNodeRecord();
               final Optional<InetSocketAddress> homeUdpAddress = homeNodeRecord.getUdpAddress();
               final Optional<InetSocketAddress> homeUdp6Address = homeNodeRecord.getUdp6Address();
-              // Check for dual-stack and prefer IPv6 if available, otherwise check IPv6, then
-              // default to IPv4
-              if (homeUdpAddress.isPresent() && homeUdp6Address.isPresent()) {
+              // Prefer IPv6 outbound when the home record advertises IPv6 OR when an IPv6 socket
+              // is bound but the home record has not (yet) advertised IPv6 — the latter case
+              // matters for IPv6 external-address auto-discovery, where we must dial IPv6 in order
+              // to receive PONGs reporting our IPv6 source address.
+              final boolean preferIpv6Outbound = homeUdp6Address.isPresent() || ipv6BindAvailable;
+              if (homeUdpAddress.isPresent() && preferIpv6Outbound) {
                 return nodeRecord.getUdp6Address().or(nodeRecord::getUdpAddress);
-              } else if (homeUdp6Address.isPresent()) {
+              } else if (preferIpv6Outbound) {
                 return nodeRecord.getUdp6Address();
               } else {
                 return nodeRecord.getUdpAddress();
