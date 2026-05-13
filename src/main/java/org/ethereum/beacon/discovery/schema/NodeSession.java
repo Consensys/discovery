@@ -87,7 +87,7 @@ public class NodeSession {
   // a busy peer) from forcing unbounded growth.
   private final Map<Bytes12, PendingWhoAreYou> pendingWhoAreYou =
       Collections.synchronizedMap(
-          new LinkedHashMap<>(MAX_PENDING_WHOAREYOU + 1, 1.0f, false) {
+          new LinkedHashMap<>(MAX_PENDING_WHOAREYOU + 1, 1.0f, true) {
             @Override
             protected boolean removeEldestEntry(final Map.Entry<Bytes12, PendingWhoAreYou> eldest) {
               return size() > MAX_PENDING_WHOAREYOU;

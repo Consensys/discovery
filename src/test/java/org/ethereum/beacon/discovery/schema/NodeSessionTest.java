@@ -301,6 +301,30 @@ public class NodeSessionTest {
   }
 
   @Test
+  void pendingWhoAreYou_shouldEvictLeastRecentlyAccessedEntry() {
+    // Fill the cache to capacity.
+    final Bytes12[] nonces = new Bytes12[NodeSession.MAX_PENDING_WHOAREYOU];
+    for (int i = 0; i < nonces.length; i++) {
+      nonces[i] = Bytes12.wrap(Bytes.random(12));
+      session.sendOutgoingWhoAreYou(createWhoAreYouPacket(nonces[i]));
+    }
+
+    // Touch the eldest entry via a resend so it becomes most-recently-used.
+    session.resendOutgoingWhoAreYouFor(nonces[0]);
+
+    // Inserting one more must evict the now-eldest (nonces[1]), not nonces[0].
+    final Bytes12 newNonce = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(newNonce));
+
+    assertThat(session.hasPendingWhoAreYouForNonce(nonces[0])).isTrue();
+    assertThat(session.hasPendingWhoAreYouForNonce(nonces[1])).isFalse();
+    for (int i = 2; i < nonces.length; i++) {
+      assertThat(session.hasPendingWhoAreYouForNonce(nonces[i])).isTrue();
+    }
+    assertThat(session.hasPendingWhoAreYouForNonce(newNonce)).isTrue();
+  }
+
+  @Test
   void clearPendingWhoAreYouChallenges_shouldClearAllPending() {
     final Bytes12 nonce1 = Bytes12.wrap(Bytes.random(12));
     final Bytes12 nonce2 = Bytes12.wrap(Bytes.random(12));
