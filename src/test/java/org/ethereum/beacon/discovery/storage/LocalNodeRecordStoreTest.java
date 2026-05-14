@@ -11,7 +11,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.ethereum.beacon.discovery.SimpleIdentitySchemaInterpreter;
@@ -24,6 +30,8 @@ import org.junit.jupiter.api.Test;
 
 public class LocalNodeRecordStoreTest {
 
+  private record Update(NodeRecord oldRecord, NodeRecord newRecord) {}
+
   @Test
   void testListenerIsCalled() {
     NodeRecord nodeRecord1 =
@@ -33,15 +41,6 @@ public class LocalNodeRecordStoreTest {
         SimpleIdentitySchemaInterpreter.createNodeRecord(
             Bytes.ofUnsignedInt(2), new InetSocketAddress("127.0.0.1", 9002));
 
-    class Update {
-      NodeRecord oldRec;
-      NodeRecord newRec;
-
-      public Update(NodeRecord oldRec, NodeRecord newRec) {
-        this.oldRec = oldRec;
-        this.newRec = newRec;
-      }
-    }
     List<Update> listenerCalls = new ArrayList<>();
     LocalNodeRecordStore recordStore =
         new LocalNodeRecordStore(
@@ -51,8 +50,8 @@ public class LocalNodeRecordStoreTest {
     recordStore.onSocketAddressChanged(nodeRecord2.getUdpAddress().orElseThrow());
 
     assertThat(listenerCalls).hasSize(1);
-    assertThat(listenerCalls.get(0).oldRec).isEqualTo(nodeRecord1);
-    assertThat(listenerCalls.get(0).newRec.getUdpAddress())
+    assertThat(listenerCalls.get(0).oldRecord()).isEqualTo(nodeRecord1);
+    assertThat(listenerCalls.get(0).newRecord().getUdpAddress())
         .contains(nodeRecord2.getUdpAddress().orElseThrow());
     assertThat(recordStore.getLocalNodeRecord().getUdpAddress().orElseThrow())
         .isEqualTo(nodeRecord2.getUdpAddress().get());
@@ -60,8 +59,8 @@ public class LocalNodeRecordStoreTest {
     recordStore.onCustomFieldValueChanged("fieldName", Bytes.fromHexString("0x112233"));
 
     assertThat(listenerCalls).hasSize(2);
-    assertThat(listenerCalls.get(1).oldRec).isEqualTo(listenerCalls.get(0).newRec);
-    assertThat(listenerCalls.get(1).newRec.get("fieldName"))
+    assertThat(listenerCalls.get(1).oldRecord()).isEqualTo(listenerCalls.get(0).newRecord());
+    assertThat(listenerCalls.get(1).newRecord().get("fieldName"))
         .isEqualTo(Bytes.fromHexString("0x112233"));
   }
 
@@ -104,8 +103,8 @@ public class LocalNodeRecordStoreTest {
 
   /**
    * Verifies that concurrent IPv4 and IPv6 {@code onBoundPortResolved} calls in a dual-stack
-   * configuration do not lose either port update. Without the CAS retry loop, the second write
-   * would overwrite the first's update leaving one port still at 0.
+   * configuration do not lose either port update. Without serialized writes, the second write would
+   * overwrite the first's update leaving one port still at 0.
    */
   @Test
   void onBoundPortResolvedHandlesConcurrentDualStackUpdates() throws Exception {
@@ -120,42 +119,20 @@ public class LocalNodeRecordStoreTest {
             .address("::1", 0) // udp6=0
             .build();
 
-    final List<NodeRecord> updates = Collections.synchronizedList(new ArrayList<>());
+    final List<Update> updates = Collections.synchronizedList(new ArrayList<>());
     final LocalNodeRecordStore recordStore =
         new LocalNodeRecordStore(
-            nodeRecord, signer, (o, n) -> updates.add(n), (rec, addr) -> Optional.empty());
+            nodeRecord,
+            signer,
+            (o, n) -> updates.add(new Update(o, n)),
+            (rec, addr) -> Optional.empty());
 
-    // Force both threads to call onBoundPortResolved at exactly the same time.
-    final CyclicBarrier barrier = new CyclicBarrier(2);
     final InetSocketAddress ipv4Bound = new InetSocketAddress("0.0.0.0", 30303);
     final InetSocketAddress ipv6Bound = new InetSocketAddress("::1", 30304);
 
-    final Thread ipv4Thread =
-        new Thread(
-            () -> {
-              try {
-                barrier.await();
-              } catch (Exception e) {
-                throw new RuntimeException(e);
-              }
-              recordStore.onBoundPortResolved(ipv4Bound);
-            });
-
-    final Thread ipv6Thread =
-        new Thread(
-            () -> {
-              try {
-                barrier.await();
-              } catch (Exception e) {
-                throw new RuntimeException(e);
-              }
-              recordStore.onBoundPortResolved(ipv6Bound);
-            });
-
-    ipv4Thread.start();
-    ipv6Thread.start();
-    ipv4Thread.join();
-    ipv6Thread.join();
+    runConcurrently(
+        () -> recordStore.onBoundPortResolved(ipv4Bound),
+        () -> recordStore.onBoundPortResolved(ipv6Bound));
 
     final NodeRecord finalRecord = recordStore.getLocalNodeRecord();
     assertThat(finalRecord.getUdpAddress().orElseThrow().getPort())
@@ -164,5 +141,112 @@ public class LocalNodeRecordStoreTest {
     assertThat(finalRecord.getUdp6Address().orElseThrow().getPort())
         .as("IPv6 UDP port must be resolved")
         .isEqualTo(30304);
+    assertThat(updates).hasSize(2);
+    assertChainedUpdates(updates, nodeRecord, finalRecord);
+  }
+
+  /**
+   * Verifies that concurrent custom field updates from issue #190 do not lose either field and keep
+   * listener notifications chained.
+   */
+  @Test
+  void onCustomFieldValueChangedHandlesConcurrentUpdates() throws Exception {
+    final Signer signer = new DefaultSigner(Functions.randomKeyPair().secretKey());
+    final NodeRecord nodeRecord =
+        new NodeRecordBuilder().signer(signer).address("127.0.0.1", 30303).build();
+
+    final List<Update> updates = Collections.synchronizedList(new ArrayList<>());
+    final LocalNodeRecordStore recordStore =
+        new LocalNodeRecordStore(
+            nodeRecord, signer, (o, n) -> updates.add(new Update(o, n)), ADDRESS_UPDATER);
+
+    runConcurrently(
+        () -> recordStore.onCustomFieldValueChanged("fieldA", Bytes.fromHexString("0xaaaa")),
+        () -> recordStore.onCustomFieldValueChanged("fieldB", Bytes.fromHexString("0xbbbb")));
+
+    final NodeRecord finalRecord = recordStore.getLocalNodeRecord();
+    assertThat(finalRecord.get("fieldA")).isEqualTo(Bytes.fromHexString("0xaaaa"));
+    assertThat(finalRecord.get("fieldB")).isEqualTo(Bytes.fromHexString("0xbbbb"));
+    assertThat(updates).hasSize(2);
+    assertChainedUpdates(updates, nodeRecord, finalRecord);
+  }
+
+  @Test
+  void onSocketAddressChangedAndCustomFieldValueChangedHandleConcurrentUpdates() throws Exception {
+    final Signer signer = new DefaultSigner(Functions.randomKeyPair().secretKey());
+    final NodeRecord nodeRecord =
+        new NodeRecordBuilder().signer(signer).address("127.0.0.1", 30303).build();
+    final List<Update> updates = Collections.synchronizedList(new ArrayList<>());
+    final LocalNodeRecordStore recordStore =
+        new LocalNodeRecordStore(
+            nodeRecord,
+            signer,
+            (o, n) -> updates.add(new Update(o, n)),
+            (oldRecord, newAddress) ->
+                Optional.of(
+                    oldRecord.withNewAddress(
+                        newAddress, Optional.empty(), Optional.empty(), signer)));
+    final InetSocketAddress newAddress = new InetSocketAddress("127.0.0.2", 30304);
+
+    runConcurrently(
+        () -> recordStore.onSocketAddressChanged(newAddress),
+        () -> recordStore.onCustomFieldValueChanged("fieldA", Bytes.fromHexString("0xaaaa")));
+
+    final NodeRecord finalRecord = recordStore.getLocalNodeRecord();
+    final InetSocketAddress finalAddress = finalRecord.getUdpAddress().orElseThrow();
+    assertThat(finalAddress.getAddress().getHostAddress()).isEqualTo("127.0.0.2");
+    assertThat(finalAddress.getPort()).isEqualTo(30304);
+    assertThat(finalRecord.get("fieldA")).isEqualTo(Bytes.fromHexString("0xaaaa"));
+    assertThat(updates).hasSize(2);
+    assertChainedUpdates(updates, nodeRecord, finalRecord);
+  }
+
+  private static void runConcurrently(final CheckedRunnable... tasks) throws Exception {
+    final ExecutorService executor = Executors.newFixedThreadPool(tasks.length);
+    final CyclicBarrier startBarrier = new CyclicBarrier(tasks.length);
+    try {
+      final List<Future<?>> futures = new ArrayList<>();
+      for (CheckedRunnable task : tasks) {
+        futures.add(
+            executor.submit(
+                () -> {
+                  awaitBarrier(startBarrier);
+                  task.run();
+                  return null;
+                }));
+      }
+      for (Future<?> future : futures) {
+        future.get(5, TimeUnit.SECONDS);
+      }
+    } finally {
+      executor.shutdownNow();
+      assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+    }
+  }
+
+  private static void awaitBarrier(final CyclicBarrier barrier) {
+    try {
+      barrier.await(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(e);
+    } catch (BrokenBarrierException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static void assertChainedUpdates(
+      final List<Update> updates, final NodeRecord initialRecord, final NodeRecord finalRecord) {
+    NodeRecord expectedOldRecord = initialRecord;
+    for (Update update : updates) {
+      assertThat(update.oldRecord()).isEqualTo(expectedOldRecord);
+      expectedOldRecord = update.newRecord();
+    }
+    assertThat(expectedOldRecord).isEqualTo(finalRecord);
+  }
+
+  @FunctionalInterface
+  private interface CheckedRunnable {
+    void run() throws Exception;
   }
 }
