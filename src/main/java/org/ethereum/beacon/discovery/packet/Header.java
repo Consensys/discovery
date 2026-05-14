@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.ethereum.beacon.discovery.packet;
 
 import static org.ethereum.beacon.discovery.packet.StaticHeader.PROTOCOL_ID;

@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.ethereum.beacon.discovery;
 
 import static java.time.Duration.ofSeconds;

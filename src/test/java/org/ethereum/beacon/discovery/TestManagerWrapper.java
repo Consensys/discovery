@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.ethereum.beacon.discovery;
 
 import java.net.InetSocketAddress;
