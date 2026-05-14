@@ -13,7 +13,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord;
 
 public class LocalNodeRecordStore {
 
-  private NodeRecord latestRecord;
+  private volatile NodeRecord latestRecord;
   private final Signer signer;
   private final NodeRecordListener recordListener;
   private final NewAddressHandler newAddressHandler;
@@ -29,7 +29,7 @@ public class LocalNodeRecordStore {
     this.newAddressHandler = newAddressHandler;
   }
 
-  public synchronized NodeRecord getLocalNodeRecord() {
+  public NodeRecord getLocalNodeRecord() {
     return latestRecord;
   }
 
@@ -37,7 +37,7 @@ public class LocalNodeRecordStore {
     NodeRecord oldRecord = this.latestRecord;
     newAddressHandler
         .newAddress(oldRecord, newAddress)
-        .ifPresent(record -> updateLocalNodeRecord(oldRecord, record, false));
+        .ifPresent(record -> updateLocalNodeRecord(oldRecord, record));
   }
 
   /**
@@ -76,19 +76,18 @@ public class LocalNodeRecordStore {
             : current.getQuicAddress().map(InetSocketAddress::getPort);
     final NodeRecord updated =
         current.withNewAddress(newUdpAddress, existingTcpPort, existingQuicPort, signer);
-    updateLocalNodeRecord(current, updated, false);
+    updateLocalNodeRecord(current, updated);
   }
 
   public synchronized void onCustomFieldValueChanged(final String fieldName, final Bytes value) {
     final NodeRecord oldRecord = this.latestRecord;
     final NodeRecord newRecord = oldRecord.withUpdatedCustomField(fieldName, value, signer);
-    updateLocalNodeRecord(oldRecord, newRecord, true);
+    updateLocalNodeRecord(oldRecord, newRecord);
   }
 
-  private void updateLocalNodeRecord(
-      final NodeRecord oldRecord, final NodeRecord newRecord, final boolean notifyWhenUnchanged) {
+  private void updateLocalNodeRecord(final NodeRecord oldRecord, final NodeRecord newRecord) {
     this.latestRecord = newRecord;
-    if (notifyWhenUnchanged || !newRecord.equals(oldRecord)) {
+    if (!newRecord.equals(oldRecord)) {
       recordListener.recordUpdated(oldRecord, newRecord);
     }
   }
