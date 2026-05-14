@@ -378,6 +378,17 @@ public class DiscoveryIntegrationTest {
             bootnode.getLocalNodeRecord());
     final DiscoverySystem otherClient = createDiscoveryClient(client.getLocalNodeRecord());
 
+    // Warm-up: ensure the otherClient<->client session is fully authenticated BEFORE we
+    // enable the error injection. Without this, otherClient's startup auto-ping to its
+    // bootnode (client) races with throwError.set(true) below; if otherClient's
+    // HandshakeMessagePacket happens to land on client during the error window, the buggy
+    // factory throws StackOverflowError while decoding otherClient's ENR, client drops the
+    // session, and recovery becomes unreliable.
+    final CompletableFuture<Void> warmupPing = otherClient.ping(client.getLocalNodeRecord());
+    waitFor(warmupPing, 60);
+    assertTrue(warmupPing.isDone());
+    assertFalse(warmupPing.isCompletedExceptionally());
+
     final CompletableFuture<Void> pingResult = client.ping(bootnode.getLocalNodeRecord());
     waitFor(pingResult, 60);
     assertTrue(pingResult.isDone());
