@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.ethereum.beacon.discovery.network;
 
 import static org.assertj.core.api.Assertions.assertThat;

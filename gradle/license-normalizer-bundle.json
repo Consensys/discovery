@@ -1,0 +1,27 @@
+{
+  "bundles": [
+    { "bundleName": "Apache-2.0",  "licenseName": "Apache License, Version 2.0",       "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0" },
+    { "bundleName": "MIT",         "licenseName": "MIT License",                       "licenseUrl": "https://opensource.org/licenses/MIT" },
+    { "bundleName": "BSD-2-Clause","licenseName": "BSD 2-Clause",                      "licenseUrl": "https://opensource.org/licenses/BSD-2-Clause" },
+    { "bundleName": "BSD-3-Clause","licenseName": "BSD 3-Clause",                      "licenseUrl": "https://opensource.org/licenses/BSD-3-Clause" },
+    { "bundleName": "EPL-1.0",     "licenseName": "Eclipse Public License - v 1.0",    "licenseUrl": "https://www.eclipse.org/legal/epl-v10.html" },
+    { "bundleName": "EPL-2.0",     "licenseName": "Eclipse Public License - v 2.0",    "licenseUrl": "https://www.eclipse.org/legal/epl-2.0/" },
+    { "bundleName": "EDL-1.0",     "licenseName": "Eclipse Distribution License - v 1.0", "licenseUrl": "https://www.eclipse.org/org/documents/edl-v10.php" },
+    { "bundleName": "MPL-2.0",     "licenseName": "Mozilla Public License Version 2.0","licenseUrl": "https://www.mozilla.org/MPL/2.0/" },
+    { "bundleName": "CDDL-1.0",    "licenseName": "Common Development and Distribution License 1.0", "licenseUrl": "https://opensource.org/licenses/CDDL-1.0" },
+    { "bundleName": "BCL",         "licenseName": "Bouncy Castle Licence",             "licenseUrl": "https://www.bouncycastle.org/licence.html" }
+  ],
+  "transformationRules": [
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "The Apache Software License, Version 2\\.0" },
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "Apache Software License - Version 2\\.0" },
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "Apache License 2(\\.0)?" },
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "Apache 2(\\.0)?" },
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "Apache-2\\.0" },
+    { "bundleName": "Apache-2.0",  "licenseNamePattern": "The Apache License, Version 2\\.0" },
+    { "bundleName": "MIT",         "licenseNamePattern": "The MIT License" },
+    { "bundleName": "BSD-3-Clause","licenseNamePattern": "3-Clause BSD License" },
+    { "bundleName": "BSD-3-Clause","licenseNamePattern": "New BSD License" },
+    { "bundleName": "EPL-2.0",     "licenseNamePattern": "Eclipse Public License v?2\\.0" },
+    { "bundleName": "BCL",         "licenseNamePattern": "Bouncy Castle Licen[cs]e" }
+  ]
+}

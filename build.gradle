@@ -10,10 +10,10 @@ buildscript {
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'com.diffplug.spotless' version '6.25.0'
+  id 'com.diffplug.spotless' version '8.4.0'
   id 'com.github.ben-manes.versions' version '0.51.0'
-  id 'com.github.hierynomus.license' version '0.16.1'
-  id 'io.spring.dependency-management' version '1.1.5'
+  id 'com.github.jk1.dependency-license-report' version '3.1.2'
+  id 'io.spring.dependency-management' version '1.1.7'
   id 'net.ltgt.errorprone' version '5.1.0'
   id 'me.qoomon.git-versioning' version '6.4.4'
   id 'org.jreleaser' version '1.23.0'
@@ -43,15 +43,25 @@ gitVersioning.apply {
 }
 
 apply from: "${rootDir}/gradle/versions.gradle"
-apply from: "${rootDir}/gradle/check-licenses.gradle"
-defaultTasks 'build', 'checkLicenses'
+defaultTasks 'build'
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+// Third-party dependency license audit. Fails the build if any runtime
+// dependency declares a license not on `gradle/allowed-licenses.json`.
+// License-name variants are normalized via `gradle/license-normalizer-bundle.json`.
+// Plugin: https://github.com/jk1/Gradle-License-Report
+licenseReport {
+  configurations = ['runtimeClasspath']
+  renderers = [new com.github.jk1.license.render.InventoryHtmlReportRenderer('report.html', 'Discovery v5')]
+  filters = [new com.github.jk1.license.filter.LicenseBundleNormalizer(
+      bundlePath: rootProject.file('gradle/license-normalizer-bundle.json'),
+      createDefaultTransformationRules: true)]
+  allowedLicensesFile = rootProject.file('gradle/allowed-licenses.json')
+}
+tasks.named('check').configure { dependsOn 'checkLicense' }
 
 repositories {
   mavenCentral()
-  maven { url "https://artifacts.consensys.net/public/maven/maven/" }
+  maven { url = "https://artifacts.consensys.net/public/maven/maven/" }
 }
 
 dependencies {
@@ -74,6 +84,7 @@ dependencies {
   testImplementation 'org.mockito:mockito-core'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
   testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
 
   errorprone("com.google.errorprone:error_prone_core")
@@ -93,17 +104,9 @@ spotless {
     importOrder 'tech.pegasys', 'net.consensys', 'java', ''
     trimTrailingWhitespace()
     endWithNewline()
-    googleJavaFormat('1.17.0')
+    googleJavaFormat('1.35.0')
+    licenseHeaderFile rootProject.file('gradle/java.license')
   }
-}
-
-license {
-  header rootProject.file("gradle/java.license")
-  skipExistingHeaders true
-  mapping('java', 'SLASHSTAR_STYLE')
-  exclude 'Dockerfile'
-  exclude '*.go'
-  ext.year = Calendar.getInstance().get(Calendar.YEAR)
 }
 
 tasks.withType(JavaCompile) {
@@ -173,6 +176,9 @@ tasks.withType(JavaCompile) {
 }
 
 java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
   withJavadocJar()
   withSourcesJar()
 }
@@ -203,7 +209,7 @@ task runTestDiscovery(type:JavaExec) {
 publishing {
   publications {
     mavenJava(MavenPublication) {
-      groupId "io.consensys.protocols"
+      groupId = "io.consensys.protocols"
       from components.java
       versionMapping {
         usage('java-api') { fromResolutionOf('runtimeClasspath') }

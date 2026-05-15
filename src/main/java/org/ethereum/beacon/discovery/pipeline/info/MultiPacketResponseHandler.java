@@ -1,6 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.ethereum.beacon.discovery.pipeline.info;
 
 import org.ethereum.beacon.discovery.message.V5Message;
