@@ -149,7 +149,8 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
   public void onSessionLastNonceUpdate(
       final NodeSession session, final Optional<Bytes12> previousNonce, final Bytes12 newNonce) {
     // Keep the previous nonce in the map — a WHOAREYOU echoing it may still arrive if the remote
-    // resends an earlier challenge. All nonces for a session are removed together on session delete.
+    // resends an earlier challenge. All nonces for a session are removed together on session
+    // delete.
     lastNonceToSession.put(newNonce, session);
   }
 
