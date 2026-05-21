@@ -128,8 +128,9 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
     if (removedSession != null) {
       // Mark inactive to prevent registering any new nonces
       removedSession.markInactive();
-      // And then clean up the last recorded nonce, if any
-      removedSession.getLastOutboundNonce().ifPresent(lastNonceToSession::remove);
+      // Remove all nonces associated with this session (we keep multiple recent nonces per session
+      // so a single-nonce removal is no longer sufficient).
+      lastNonceToSession.values().removeIf(s -> s == removedSession); // identity check intentional
     }
   }
 
@@ -147,7 +148,9 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
 
   public void onSessionLastNonceUpdate(
       final NodeSession session, final Optional<Bytes12> previousNonce, final Bytes12 newNonce) {
-    previousNonce.ifPresent(lastNonceToSession::remove);
+    // Keep the previous nonce in the map — a WHOAREYOU echoing it may still arrive if the remote
+    // resends an earlier challenge. All nonces for a session are removed together on session
+    // delete.
     lastNonceToSession.put(newNonce, session);
   }
 

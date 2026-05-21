@@ -65,8 +65,9 @@ public class WhoAreYouPacketHandler extends AbstractSkippingEnvelopeHandler {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
       Bytes12 whoAreYouNonce = whoAreYouPacket.getHeader().getStaticHeader().getNonce();
-      boolean nonceMatches =
-          session.getLastOutboundNonce().map(whoAreYouNonce::equals).orElse(false);
+      // Accept WHOAREYOU for any recently sent nonce, not just the last one. The remote may echo
+      // back an earlier nonce if it resends the original challenge rather than issuing a new one.
+      boolean nonceMatches = session.hasRecentOutboundNonce(whoAreYouNonce);
       if (!nonceMatches) {
         LOG.trace(
             "Verification not passed for message [{}] from node {} in status {}",

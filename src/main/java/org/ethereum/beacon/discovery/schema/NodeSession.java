@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -63,6 +65,13 @@ public class NodeSession {
    */
   @VisibleForTesting static final int MAX_PENDING_WHOAREYOU = 5;
 
+  /**
+   * Maximum number of recent outbound nonces tracked per session on the initiator side. Allows
+   * WHOAREYOU validation to succeed even when the remote echoes back the nonce of an earlier
+   * ordinary packet rather than the most recent one.
+   */
+  @VisibleForTesting static final int MAX_RECENT_OUTBOUND_NONCES = 8;
+
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
@@ -93,6 +102,10 @@ public class NodeSession {
               return size() > MAX_PENDING_WHOAREYOU;
             }
           });
+
+  // Bounded set of recent outbound nonces in insertion order. Used by the initiator to accept
+  // WHOAREYOU packets that echo an earlier nonce rather than the most recent one.
+  private final LinkedHashSet<Bytes12> recentOutboundNonces = new LinkedHashSet<>();
 
   private Optional<Bytes12> lastOutboundNonce = Optional.empty();
   private boolean active = true;
@@ -196,6 +209,17 @@ public class NodeSession {
     return pendingWhoAreYou.containsKey(nonce);
   }
 
+  public void resendFirstPendingWhoAreYou() {
+    final Bytes12 firstNonce;
+    synchronized (pendingWhoAreYou) {
+      if (pendingWhoAreYou.isEmpty()) {
+        return;
+      }
+      firstNonce = pendingWhoAreYou.keySet().iterator().next();
+    }
+    resendOutgoingWhoAreYouFor(firstNonce);
+  }
+
   public void resendOutgoingWhoAreYouFor(final Bytes12 nonce) {
     final PendingWhoAreYou pending = pendingWhoAreYou.get(nonce);
     if (pending == null) {
@@ -287,6 +311,7 @@ public class NodeSession {
   private synchronized void resetHandshakeState() {
     if (state == SessionState.WHOAREYOU_SENT || state == SessionState.RANDOM_PACKET_SENT) {
       pendingWhoAreYou.clear();
+      recentOutboundNonces.clear();
       setState(SessionState.INITIAL);
     }
   }
@@ -321,6 +346,10 @@ public class NodeSession {
     final Bytes12 newNonce = nonceGenerator.apply(rnd);
     final Optional<Bytes12> oldNonce = lastOutboundNonce;
     lastOutboundNonce = Optional.of(newNonce);
+    recentOutboundNonces.add(newNonce);
+    if (recentOutboundNonces.size() > MAX_RECENT_OUTBOUND_NONCES) {
+      recentOutboundNonces.remove(recentOutboundNonces.iterator().next());
+    }
     if (active) {
       // Update while synchronized to ensure only one update in flight at a time. Otherwise the
       // previous nonce may not have been recorded before we try to remove it leading to a memory
@@ -328,6 +357,14 @@ public class NodeSession {
       nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
     }
     return newNonce;
+  }
+
+  public synchronized boolean hasRecentOutboundNonce(final Bytes12 nonce) {
+    return recentOutboundNonces.contains(nonce);
+  }
+
+  public synchronized Collection<Bytes12> getRecentOutboundNonces() {
+    return List.copyOf(recentOutboundNonces);
   }
 
   public synchronized Optional<Bytes12> getLastOutboundNonce() {
@@ -456,6 +493,9 @@ public class NodeSession {
     LOG.trace(
         () -> String.format("Switching status of node %s from %s to %s", nodeId, state, newStatus));
     this.state = newStatus;
+    if (newStatus == SessionState.AUTHENTICATED) {
+      recentOutboundNonces.clear();
+    }
   }
 
   public Signer getSigner() {
