@@ -270,6 +270,58 @@ public class NodeSessionTest {
   }
 
   @Test
+  void resendFirstPendingWhoAreYou_shouldResendEarliestPendingPacket() {
+    final Bytes12 firstNonce = Bytes12.wrap(Bytes.random(12));
+    final Bytes12 secondNonce = Bytes12.wrap(Bytes.random(12));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(firstNonce));
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(secondNonce));
+
+    final ArgumentCaptor<NetworkParcelV5> sendsBefore =
+        ArgumentCaptor.forClass(NetworkParcelV5.class);
+    verify(outgoingPipeline, times(2)).accept(sendsBefore.capture());
+    final Bytes firstSentBytes = sendsBefore.getAllValues().get(0).getPacket().getBytes();
+
+    final boolean resent = session.resendFirstPendingWhoAreYou();
+    assertThat(resent).isTrue();
+
+    final ArgumentCaptor<NetworkParcelV5> sendsAfter =
+        ArgumentCaptor.forClass(NetworkParcelV5.class);
+    verify(outgoingPipeline, times(3)).accept(sendsAfter.capture());
+    // Third send must be byte-for-byte identical to the first WHOAREYOU emission, not the
+    // second — earliest pending is preserved so an initiator signing against challenge #1
+    // continues to validate.
+    assertThat(sendsAfter.getAllValues().get(2).getPacket().getBytes()).isEqualTo(firstSentBytes);
+  }
+
+  @Test
+  void resendFirstPendingWhoAreYou_shouldReturnFalseWhenNoPendingPacket() {
+    final boolean resent = session.resendFirstPendingWhoAreYou();
+
+    assertThat(resent).isFalse();
+    verify(outgoingPipeline, never()).accept(any());
+  }
+
+  @Test
+  void resendFirstPendingWhoAreYou_shouldReturnFalseAfterHandshakeStateReset() {
+    final Request<?> request = createRequestMock();
+    final RequestInfo requestInfo = session.createNextRequest(request);
+
+    final ArgumentCaptor<Runnable> timeoutHandlerCaptor = ArgumentCaptor.forClass(Runnable.class);
+    verify(expirationScheduler).put(eq(requestInfo.getRequestId()), timeoutHandlerCaptor.capture());
+
+    session.sendOutgoingWhoAreYou(createWhoAreYouPacket(Bytes12.wrap(Bytes.random(12))));
+    session.setState(SessionState.WHOAREYOU_SENT);
+    // Simulate request timeout — clears pendingWhoAreYou and resets state to INITIAL.
+    timeoutHandlerCaptor.getValue().run();
+    assertThat(session.getState()).isEqualTo(SessionState.INITIAL);
+
+    final boolean resent = session.resendFirstPendingWhoAreYou();
+
+    assertThat(resent).isFalse();
+    verify(outgoingPipeline, times(1)).accept(any()); // only the original send
+  }
+
+  @Test
   void sendOutgoingWhoAreYou_shouldStoreMultiplePendingChallengesWithoutOverwriting() {
     final Bytes12 nonce1 = Bytes12.wrap(Bytes.random(12));
     final Bytes12 nonce2 = Bytes12.wrap(Bytes.random(12));

@@ -46,11 +46,19 @@ public class UnauthorizedMessagePacketHandler extends AbstractSkippingEnvelopeHa
     Bytes12 msgNonce = unknownPacket.getHeader().getStaticHeader().getNonce();
 
     // If we have already issued a WHOAREYOU for this exact ordinary packet nonce, resend that
-    // same challenge — the initiator may have already signed against it. For any other nonce,
-    // fall through and issue a fresh WHOAREYOU; previous in-flight challenges remain queued so a
-    // delayed handshake signed against one of them can still be validated.
+    // same challenge — the initiator may have already signed against it.
     if (session.hasPendingWhoAreYouForNonce(msgNonce)) {
       session.resendOutgoingWhoAreYouFor(msgNonce);
+      return;
+    }
+
+    // Otherwise, if the session is still mid-handshake (WHOAREYOU_SENT), resend the earliest
+    // pending challenge rather than issue a brand-new one. Per devp2p discv5 conformance
+    // (geth v5test TestHandshakeResend): an unauthorized ordinary packet arriving while a
+    // handshake is in flight must receive the SAME WHOAREYOU as the first one, even if the
+    // peer's retry carries a fresh per-packet nonce.
+    if (session.getState() == SessionState.WHOAREYOU_SENT
+        && session.resendFirstPendingWhoAreYou()) {
       return;
     }
 

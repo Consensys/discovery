@@ -65,8 +65,11 @@ public class WhoAreYouPacketHandler extends AbstractSkippingEnvelopeHandler {
       final NodeRecord nodeRecord = session.getNodeRecord().orElseThrow();
 
       Bytes12 whoAreYouNonce = whoAreYouPacket.getHeader().getStaticHeader().getNonce();
-      boolean nonceMatches =
-          session.getLastOutboundNonce().map(whoAreYouNonce::equals).orElse(false);
+      // Accept the WHOAREYOU if its nonce names ANY of our recently-sent outbound nonces, not
+      // only the latest. The peer (per devp2p discv5 conformance) is allowed to resend the
+      // original WHOAREYOU when an unauthorized retry arrives, in which case the nonce points
+      // back to an earlier outbound of ours rather than the most recent one.
+      boolean nonceMatches = session.isRecentOutboundNonce(whoAreYouNonce);
       if (!nonceMatches) {
         LOG.trace(
             "Verification not passed for message [{}] from node {} in status {}",

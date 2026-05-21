@@ -13,7 +13,10 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -63,6 +66,15 @@ public class NodeSession {
    */
   @VisibleForTesting static final int MAX_PENDING_WHOAREYOU = 5;
 
+  /**
+   * Maximum number of recent outbound packet nonces remembered per session. A WHOAREYOU received
+   * from the peer is accepted only when its nonce matches one of these (i.e. references an ordinary
+   * message we recently sent and have not yet had answered). Bounded for the same reason as {@link
+   * #MAX_PENDING_WHOAREYOU} — and sized the same so that, in the worst case, the peer's cached
+   * challenges and our recent outbound nonces correspond one-for-one.
+   */
+  @VisibleForTesting static final int MAX_RECENT_OUTBOUND_NONCES = MAX_PENDING_WHOAREYOU;
+
   private final Bytes32 homeNodeId;
   private final LocalNodeRecordStore localNodeRecordStore;
   private final NodeSessionManager nodeSessionManager;
@@ -94,7 +106,15 @@ public class NodeSession {
             }
           });
 
-  private Optional<Bytes12> lastOutboundNonce = Optional.empty();
+  // Recent outbound packet nonces, in insertion order so the oldest can be evicted when the
+  // bound is reached. Used by the WHOAREYOU handler on the initiator side: an incoming WHOAREYOU
+  // is accepted iff its nonce names one of these — i.e. references an ordinary message we
+  // recently sent and have not yet had answered. Strict equality against only the *latest*
+  // outbound nonce would reject a peer that resends an earlier WHOAREYOU after we have sent
+  // another ordinary packet in between (e.g. a retry), which is exactly what the devp2p discv5
+  // conformance test TestHandshakeResend exercises.
+  private final LinkedHashSet<Bytes12> recentOutboundNonces = new LinkedHashSet<>();
+
   private boolean active = true;
   private final Function<Random, Bytes12> nonceGenerator;
 
@@ -211,6 +231,30 @@ public class NodeSession {
   }
 
   /**
+   * Resends the earliest pending WHOAREYOU (byte-for-byte, same maskingIV) without requiring a
+   * matching msgNonce. Used when an unauthorized ordinary message arrives from a peer that is still
+   * mid-handshake (session state {@code WHOAREYOU_SENT}) but is carrying a fresh per-packet nonce,
+   * i.e. a retry rather than a literal retransmit. Returns {@code true} if a pending challenge was
+   * found and resent.
+   */
+  public boolean resendFirstPendingWhoAreYou() {
+    final PendingWhoAreYou pending;
+    synchronized (pendingWhoAreYou) {
+      final Iterator<PendingWhoAreYou> it = pendingWhoAreYou.values().iterator();
+      if (!it.hasNext()) {
+        return false;
+      }
+      pending = it.next();
+    }
+    LOG.trace(
+        () ->
+            String.format(
+                "Resending earliest pending WhoAreYou %s in session %s", pending.packet(), this));
+    sendOutgoing(pending.maskingIV(), pending.packet());
+    return true;
+  }
+
+  /**
    * Returns the challenge data ({@code maskingIV || header bytes}) for every pending WHOAREYOU. The
    * handshake handler attempts to match the incoming handshake against each candidate because the
    * handshake packet does not directly identify which challenge it answers.
@@ -319,19 +363,60 @@ public class NodeSession {
   /** Generates random nonce */
   public synchronized Bytes12 generateNonce() {
     final Bytes12 newNonce = nonceGenerator.apply(rnd);
-    final Optional<Bytes12> oldNonce = lastOutboundNonce;
-    lastOutboundNonce = Optional.of(newNonce);
+    Optional<Bytes12> evictedNonce = Optional.empty();
+    // Add to the recent-nonce set, evicting the oldest entry if we exceed the bound. Insertion
+    // order is preserved by LinkedHashSet, so the iterator's first element is the oldest.
+    if (recentOutboundNonces.size() >= MAX_RECENT_OUTBOUND_NONCES) {
+      final Iterator<Bytes12> it = recentOutboundNonces.iterator();
+      if (it.hasNext()) {
+        evictedNonce = Optional.of(it.next());
+        it.remove();
+      }
+    }
+    recentOutboundNonces.add(newNonce);
     if (active) {
       // Update while synchronized to ensure only one update in flight at a time. Otherwise the
-      // previous nonce may not have been recorded before we try to remove it leading to a memory
-      // leak. Also only records the session if it's active to avoid re-adding a removed session
-      nodeSessionManager.onSessionLastNonceUpdate(this, oldNonce, newNonce);
+      // evicted nonce may not have been removed from the index before we try to add the new one,
+      // leading to a memory leak. Also only records the session if it's active to avoid re-adding
+      // a removed session.
+      nodeSessionManager.onSessionRecentNonceUpdate(this, evictedNonce, newNonce);
     }
     return newNonce;
   }
 
+  /**
+   * Returns the most recently generated outbound nonce. Retained for callers that only need the
+   * latest; new code that needs to check whether a nonce was ever recently sent should use {@link
+   * #isRecentOutboundNonce(Bytes12)} instead.
+   */
   public synchronized Optional<Bytes12> getLastOutboundNonce() {
-    return lastOutboundNonce;
+    if (recentOutboundNonces.isEmpty()) {
+      return Optional.empty();
+    }
+    Bytes12 last = null;
+    for (final Bytes12 nonce : recentOutboundNonces) {
+      last = nonce;
+    }
+    return Optional.ofNullable(last);
+  }
+
+  /**
+   * Returns {@code true} if {@code nonce} is one of the recently generated outbound nonces still
+   * tracked on this session (bounded by {@link #MAX_RECENT_OUTBOUND_NONCES}). Used by the WHOAREYOU
+   * handler to accept challenges that name any unanswered recent outbound, not only the latest one
+   * — see the class-level comment on {@code recentOutboundNonces}.
+   */
+  public synchronized boolean isRecentOutboundNonce(final Bytes12 nonce) {
+    return recentOutboundNonces.contains(nonce);
+  }
+
+  /**
+   * Returns an immutable snapshot of all recent outbound nonces, oldest first. Intended for use by
+   * {@code NodeSessionManager} when the session is being torn down so that every indexed nonce can
+   * be cleaned up.
+   */
+  public synchronized Collection<Bytes12> getRecentOutboundNonces() {
+    return List.copyOf(recentOutboundNonces);
   }
 
   public synchronized void markInactive() {

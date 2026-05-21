@@ -128,8 +128,10 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
     if (removedSession != null) {
       // Mark inactive to prevent registering any new nonces
       removedSession.markInactive();
-      // And then clean up the last recorded nonce, if any
-      removedSession.getLastOutboundNonce().ifPresent(lastNonceToSession::remove);
+      // And then clean up every nonce that was indexed for this session. The session may have
+      // recorded multiple recent outbound nonces (bounded by MAX_RECENT_OUTBOUND_NONCES on the
+      // session), and each one points back to this session in lastNonceToSession.
+      removedSession.getRecentOutboundNonces().forEach(lastNonceToSession::remove);
     }
   }
 
@@ -145,9 +147,14 @@ public class NodeSessionManager extends AbstractSkippingEnvelopeHandler {
     return Optional.ofNullable(lastNonceToSession.get(nonce));
   }
 
-  public void onSessionLastNonceUpdate(
-      final NodeSession session, final Optional<Bytes12> previousNonce, final Bytes12 newNonce) {
-    previousNonce.ifPresent(lastNonceToSession::remove);
+  /**
+   * Called when the session records a new outbound nonce. {@code evictedNonce} is the
+   * oldest-tracked nonce that was dropped to make room (if any), and must be removed from the
+   * lookup index so it no longer points back at this session. {@code newNonce} is then indexed.
+   */
+  public void onSessionRecentNonceUpdate(
+      final NodeSession session, final Optional<Bytes12> evictedNonce, final Bytes12 newNonce) {
+    evictedNonce.ifPresent(lastNonceToSession::remove);
     lastNonceToSession.put(newNonce, session);
   }
 
