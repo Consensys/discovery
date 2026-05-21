@@ -61,22 +61,22 @@ class UnauthorizedMessagePacketHandlerTest {
   }
 
   @Test
-  void shouldSendNewWhoAreYouWhenIncomingNonceIsUnknown() {
+  void shouldResendFirstPendingWhoAreYouForDifferentNonceDuringHandshake() {
+    // When WHOAREYOU_SENT and the incoming nonce doesn't match any pending challenge, resend the
+    // original challenge so the initiator can complete the handshake it already started.
     final NodeSession session = mock(NodeSession.class);
     when(session.getState()).thenReturn(SessionState.WHOAREYOU_SENT);
-    when(session.getNodeRecord()).thenReturn(Optional.empty());
 
     final OrdinaryMessagePacket packet = createOrdinaryPacket();
     final Bytes12 incomingNonce = packet.getHeader().getStaticHeader().getNonce();
-    // No pending WhoAreYou for this nonce — an earlier challenge was for a different nonce.
     when(session.hasPendingWhoAreYouForNonce(incomingNonce)).thenReturn(false);
 
     handler.handle(envelopeWith(session, packet));
 
+    verify(session).resendFirstPendingWhoAreYou();
     verify(session, never()).resendOutgoingWhoAreYouFor(any());
-    final ArgumentCaptor<WhoAreYouPacket> captor = ArgumentCaptor.forClass(WhoAreYouPacket.class);
-    verify(session).sendOutgoingWhoAreYou(captor.capture());
-    assertThat(captor.getValue().getHeader().getStaticHeader().getNonce()).isEqualTo(incomingNonce);
+    verify(session, never()).sendOutgoingWhoAreYou(any());
+    verify(session, never()).setState(any());
   }
 
   @Test
